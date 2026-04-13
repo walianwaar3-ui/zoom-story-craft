@@ -1,0 +1,1 @@
+CREATE POLICY "Anyone can delete transcripts" ON public.zoom_transcripts FOR DELETE TO public USING (true);
