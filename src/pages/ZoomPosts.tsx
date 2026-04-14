@@ -21,7 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Sparkles, Video, Calendar, User, Loader2, Eye, Send, Trash2, Plus } from "lucide-react";
+import { Sparkles, Video, Calendar, User, Loader2, Eye, Send, Trash2, Plus, Download } from "lucide-react";
+import ImportFathomDialog from "@/components/ImportFathomDialog";
 import { useToast } from "@/hooks/use-toast";
 
 type Transcript = {
@@ -48,6 +49,7 @@ const ZoomPosts = () => {
   const [viewTranscript, setViewTranscript] = useState<Transcript | null>(null);
   const [customPrompt, setCustomPrompt] = useState("");
   const [aspectRatio, setAspectRatio] = useState("1:1");
+  const [showFathomImport, setShowFathomImport] = useState(false);
   // GHL popup state
   const [ghlData, setGhlData] = useState<GeneratedResult | null>(null);
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
@@ -238,6 +240,10 @@ const ZoomPosts = () => {
           <Badge variant="secondary" className="text-sm">
             {transcripts?.length || 0} transcripts
           </Badge>
+          <Button size="sm" variant="outline" onClick={() => setShowFathomImport(true)}>
+            <Download className="h-4 w-4 mr-1" />
+            Import from Fathom
+          </Button>
           <Button size="sm" onClick={() => setShowUpload(true)}>
             <Plus className="h-4 w-4 mr-1" />
             Upload Transcript
@@ -592,7 +598,8 @@ const ZoomPosts = () => {
                   <><Send className="h-4 w-4 mr-2" /> Post Now</>
                 )}
               </Button>
-            </div>
+      <ImportFathomDialog open={showFathomImport} onOpenChange={setShowFathomImport} />
+    </div>
           </div>
         </DialogContent>
       </Dialog>
