@@ -49,6 +49,7 @@ const ZoomPosts = () => {
   const [viewTranscript, setViewTranscript] = useState<Transcript | null>(null);
   const [customPrompt, setCustomPrompt] = useState("");
   const [aspectRatio, setAspectRatio] = useState("1:1");
+  const [showFathomImport, setShowFathomImport] = useState(false);
   // GHL popup state
   const [ghlData, setGhlData] = useState<GeneratedResult | null>(null);
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
