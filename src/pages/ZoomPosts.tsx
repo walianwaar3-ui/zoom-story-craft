@@ -598,7 +598,8 @@ const ZoomPosts = () => {
                   <><Send className="h-4 w-4 mr-2" /> Post Now</>
                 )}
               </Button>
-            </div>
+      <ImportFathomDialog open={showFathomImport} onOpenChange={setShowFathomImport} />
+    </div>
           </div>
         </DialogContent>
       </Dialog>
