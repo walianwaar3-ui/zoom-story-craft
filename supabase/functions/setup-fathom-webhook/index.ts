@@ -23,24 +23,24 @@ serve(async (req) => {
     const webhookUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/zoom-webhook`;
 
     // First, list existing webhooks to avoid duplicates
-    const listRes = await fetch("https://api.fathom.video/v2/webhooks", {
-      headers: { Authorization: `Bearer ${FATHOM_API_KEY}` },
+    const listRes = await fetch("https://api.fathom.ai/external/v1/webhooks", {
+      headers: { "X-Api-Key": FATHOM_API_KEY },
     });
 
     let existing: any[] = [];
     if (listRes.ok) {
       const listData = await listRes.json();
-      existing = listData.webhooks || listData.data || (Array.isArray(listData) ? listData : []);
+      existing = listData.webhooks || listData.items || listData.data || (Array.isArray(listData) ? listData : []);
       console.log("Existing webhooks:", JSON.stringify(existing));
     } else {
       console.log("Could not list webhooks:", listRes.status, await listRes.text());
     }
 
     // Create new webhook with full data
-    const createRes = await fetch("https://api.fathom.video/v2/webhooks", {
+    const createRes = await fetch("https://api.fathom.ai/external/v1/webhooks", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${FATHOM_API_KEY}`,
+        "X-Api-Key": FATHOM_API_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
