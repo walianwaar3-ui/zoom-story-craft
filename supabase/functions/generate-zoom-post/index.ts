@@ -77,12 +77,12 @@ serve(async (req) => {
     const kbContext = contextParts.length ? "\n\nADDITIONAL CONTEXT FROM KNOWLEDGEBASE:\n" + contextParts.join("\n\n") : "";
 
     // --- STEP 1: Generate Caption ---
-    const baseCaptionPrompt = kbMap["Caption Prompt"] || "You are a social media content strategist. Generate a compelling Facebook post from the meeting content.";
+    const baseCaptionPrompt = kbMap["Caption Prompt"] || "You are a social media content strategist. Generate a compelling Facebook post from the meeting content. Focus on the actual topics discussed in the meeting.";
     const captionSystemPrompt = baseCaptionPrompt + kbContext;
 
     const captionPrompt = custom_prompt
       ? `${custom_prompt}\n\nMeeting: ${transcript.meeting_topic}\nClient: ${transcript.client_name || "N/A"}\nSummary: ${transcript.summary || "N/A"}\nIssues: ${transcript.issues_discussed || "N/A"}\nTranscript excerpt: ${(transcript.transcript || "").slice(0, 3000)}`
-      : `Generate a Facebook post from this construction sales conversation.
+      : `Generate a Facebook post based on this meeting conversation. Use the actual content and topics discussed — do not assume any industry or context beyond what is provided.
 
 Meeting: ${transcript.meeting_topic}
 Client: ${transcript.client_name || "N/A"}
@@ -166,7 +166,7 @@ Transcript: ${(transcript.transcript || "").slice(0, 3000)}`;
         .replace("{supporting_line}", supportingLine.slice(0, 60))
         .replace("{aspect_ratio}", aspect_ratio || "1:1");
     } else {
-      imagePrompt = `Create a high-impact social media image. Hook: "${hookLine.slice(0, 80)}". Aspect ratio: ${aspect_ratio || "1:1"}`;
+      imagePrompt = `Create a clean, professional social media image related to this topic: "${hookLine.slice(0, 80)}". Aspect ratio: ${aspect_ratio || "1:1"}. Use modern, minimal design.`;
     }
 
     let imageUrl: string | null = null;
