@@ -21,7 +21,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Sparkles, Video, Calendar, User, Loader2, Eye, Send, Trash2, Plus } from "lucide-react";
+import { Sparkles, Video, Calendar, User, Loader2, Eye, Send, Trash2, Plus, Download } from "lucide-react";
+import ImportFathomDialog from "@/components/ImportFathomDialog";
 import { useToast } from "@/hooks/use-toast";
 
 type Transcript = {
