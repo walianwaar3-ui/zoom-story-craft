@@ -240,6 +240,10 @@ const ZoomPosts = () => {
           <Badge variant="secondary" className="text-sm">
             {transcripts?.length || 0} transcripts
           </Badge>
+          <Button size="sm" variant="outline" onClick={() => setShowFathomImport(true)}>
+            <Download className="h-4 w-4 mr-1" />
+            Import from Fathom
+          </Button>
           <Button size="sm" onClick={() => setShowUpload(true)}>
             <Plus className="h-4 w-4 mr-1" />
             Upload Transcript
