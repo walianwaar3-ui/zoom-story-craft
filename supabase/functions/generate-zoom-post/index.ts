@@ -77,18 +77,18 @@ serve(async (req) => {
     const kbContext = contextParts.length ? "\n\nADDITIONAL CONTEXT FROM KNOWLEDGEBASE:\n" + contextParts.join("\n\n") : "";
 
     // --- STEP 1: Generate Caption ---
-    const baseCaptionPrompt = kbMap["Caption Prompt"] || "You are a social media content strategist. Generate a compelling Facebook post from the meeting content. Focus on the actual topics discussed in the meeting.";
+    const baseCaptionPrompt = kbMap["Caption Prompt"];
+    if (!baseCaptionPrompt) {
+      return new Response(
+        JSON.stringify({ error: "No 'Caption Prompt' found in knowledgebase. Please add one before generating posts." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
     const captionSystemPrompt = baseCaptionPrompt + kbContext;
 
     const captionPrompt = custom_prompt
       ? `${custom_prompt}\n\nMeeting: ${transcript.meeting_topic}\nClient: ${transcript.client_name || "N/A"}\nSummary: ${transcript.summary || "N/A"}\nIssues: ${transcript.issues_discussed || "N/A"}\nTranscript excerpt: ${(transcript.transcript || "").slice(0, 3000)}`
-      : `Generate a Facebook post based on this meeting conversation. Use the actual content and topics discussed — do not assume any industry or context beyond what is provided.
-
-Meeting: ${transcript.meeting_topic}
-Client: ${transcript.client_name || "N/A"}
-Summary: ${transcript.summary || "N/A"}
-Key Issues: ${transcript.issues_discussed || "N/A"}
-Transcript: ${(transcript.transcript || "").slice(0, 3000)}`;
+      : `Meeting: ${transcript.meeting_topic}\nClient: ${transcript.client_name || "N/A"}\nSummary: ${transcript.summary || "N/A"}\nKey Issues: ${transcript.issues_discussed || "N/A"}\nTranscript: ${(transcript.transcript || "").slice(0, 3000)}`;
 
     const captionResponse = await fetch(
       "https://ai.gateway.lovable.dev/v1/chat/completions",
@@ -156,18 +156,19 @@ Transcript: ${(transcript.transcript || "").slice(0, 3000)}`;
     const captionLines = caption.split("\n").filter((l: string) => l.trim().length > 0);
     const supportingLine = captionLines.length > 1 ? captionLines[1].trim() : "";
 
-    // Build image prompt from knowledgebase template or fallback
-    const imagePromptTemplate = kbMap["Image Prompt"] || "";
-    let imagePrompt: string;
-
-    if (imagePromptTemplate) {
-      imagePrompt = imagePromptTemplate
-        .replace("{hook_line}", hookLine.slice(0, 80))
-        .replace("{supporting_line}", supportingLine.slice(0, 60))
-        .replace("{aspect_ratio}", aspect_ratio || "1:1");
-    } else {
-      imagePrompt = `Create a clean, professional social media image related to this topic: "${hookLine.slice(0, 80)}". Aspect ratio: ${aspect_ratio || "1:1"}. Use modern, minimal design.`;
+    // Build image prompt from knowledgebase template — required
+    const imagePromptTemplate = kbMap["Image Prompt"];
+    if (!imagePromptTemplate) {
+      return new Response(
+        JSON.stringify({ error: "No 'Image Prompt' found in knowledgebase. Please add one before generating posts." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
+
+    const imagePrompt = imagePromptTemplate
+      .replace("{hook_line}", hookLine.slice(0, 80))
+      .replace("{supporting_line}", supportingLine.slice(0, 60))
+      .replace("{aspect_ratio}", aspect_ratio || "1:1");
 
     let imageUrl: string | null = null;
     const FAL_KEY = Deno.env.get("FAL_KEY");
