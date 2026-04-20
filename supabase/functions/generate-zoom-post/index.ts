@@ -60,9 +60,19 @@ serve(async (req) => {
       // Index by category AND title so prompts can be found either way
       if (!kbMap[entry.category]) kbMap[entry.category] = entry.content;
       if (!kbMap[entry.title]) kbMap[entry.title] = entry.content;
+      if (!kbMap[entry.category.toLowerCase()]) kbMap[entry.category.toLowerCase()] = entry.content;
+      if (!kbMap[entry.title.toLowerCase()]) kbMap[entry.title.toLowerCase()] = entry.content;
       if (!kbByCategory[entry.category]) kbByCategory[entry.category] = [];
       kbByCategory[entry.category].push(`[${entry.title}]: ${entry.content}`);
     }
+
+    const getPrompt = (...keys: string[]) => {
+      for (const key of keys) {
+        if (kbMap[key]) return kbMap[key];
+        if (kbMap[key.toLowerCase()]) return kbMap[key.toLowerCase()];
+      }
+      return null;
+    };
 
     // Build context from all KB categories
     const contextParts: string[] = [];
@@ -78,10 +88,10 @@ serve(async (req) => {
     const kbContext = contextParts.length ? "\n\nADDITIONAL CONTEXT FROM KNOWLEDGEBASE:\n" + contextParts.join("\n\n") : "";
 
     // --- STEP 1: Generate Caption ---
-    const baseCaptionPrompt = kbMap["Caption Prompt"];
+    const baseCaptionPrompt = getPrompt("Caption Prompt", "Master", "Master Prompt", "MASTER PROMPT");
     if (!baseCaptionPrompt) {
       return new Response(
-        JSON.stringify({ error: "No 'Caption Prompt' found in knowledgebase. Please add one before generating posts." }),
+        JSON.stringify({ error: "No caption prompt source found in knowledgebase. Add a 'Caption Prompt' entry or a 'Master' entry before generating posts." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -129,7 +139,11 @@ serve(async (req) => {
     }
 
     const captionData = await captionResponse.json();
-    const caption = captionData.choices?.[0]?.message?.content || "";
+    const rawCaption = captionData.choices?.[0]?.message?.content || "";
+    const postMatch = rawCaption.match(/\[POST\]\s*([\s\S]*?)(?:\n\s*\[VISUAL DIRECTION\]|$)/i);
+    const visualDirectionMatch = rawCaption.match(/\[VISUAL DIRECTION\]\s*([\s\S]*)$/i);
+    const caption = postMatch?.[1]?.trim() || rawCaption.trim();
+    const visualDirection = visualDirectionMatch?.[1]?.trim() || "";
 
     // --- STEP 2: Generate Image using fal.ai ---
 
@@ -158,18 +172,22 @@ serve(async (req) => {
     const supportingLine = captionLines.length > 1 ? captionLines[1].trim() : "";
 
     // Build image prompt from knowledgebase template — required
-    const imagePromptTemplate = kbMap["Image Prompt"];
-    if (!imagePromptTemplate) {
-      return new Response(
-        JSON.stringify({ error: "No 'Image Prompt' found in knowledgebase. Please add one before generating posts." }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
+    const imagePromptTemplate = getPrompt("Image Prompt");
     const imagePrompt = imagePromptTemplate
-      .replace("{hook_line}", hookLine.slice(0, 80))
-      .replace("{supporting_line}", supportingLine.slice(0, 60))
-      .replace("{aspect_ratio}", aspect_ratio || "1:1");
+      ? imagePromptTemplate
+          .replace("{hook_line}", hookLine.slice(0, 80))
+          .replace("{supporting_line}", supportingLine.slice(0, 60))
+          .replace("{aspect_ratio}", aspect_ratio || "1:1")
+      : [
+          `Create a high-contrast social media graphic in aspect ratio ${aspect_ratio || "1:1"}.`,
+          `Primary hook text: ${hookLine.slice(0, 80)}.`,
+          supportingLine ? `Supporting text: ${supportingLine.slice(0, 60)}.` : null,
+          visualDirection ? `Visual direction: ${visualDirection}` : null,
+          "Use the provided overlay photo as the main subject and preserve a polished, professional social-post composition.",
+          "Add clean typography hierarchy, strong contrast, and layout spacing suitable for a feed post."
+        ]
+          .filter(Boolean)
+          .join(" ");
 
     let imageUrl: string | null = null;
     const FAL_KEY = Deno.env.get("FAL_KEY");
