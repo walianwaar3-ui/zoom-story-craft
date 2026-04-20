@@ -376,7 +376,7 @@ const ZoomPosts = () => {
 
       {/* Generate Post Dialog */}
       <Dialog open={!!selectedTranscript} onOpenChange={() => setSelectedTranscript(null)}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Generate Social Post</DialogTitle>
             <DialogDescription>
