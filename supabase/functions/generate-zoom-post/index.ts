@@ -49,16 +49,17 @@ serve(async (req) => {
       );
     }
 
-    // --- Fetch prompts from knowledgebase ---
+    // --- Fetch all prompts from knowledgebase ---
     const { data: kbEntries } = await supabaseAdmin
       .from("knowledgebase")
-      .select("category, title, content")
-      .in("category", ["Caption Prompt", "Image Prompt", "Brand Guidelines", "Voice & Tone", "Campaign Strategy"]);
+      .select("category, title, content");
 
     const kbMap: Record<string, string> = {};
     const kbByCategory: Record<string, string[]> = {};
     for (const entry of kbEntries || []) {
-      kbMap[entry.category] = entry.content;
+      // Index by category AND title so prompts can be found either way
+      if (!kbMap[entry.category]) kbMap[entry.category] = entry.content;
+      if (!kbMap[entry.title]) kbMap[entry.title] = entry.content;
       if (!kbByCategory[entry.category]) kbByCategory[entry.category] = [];
       kbByCategory[entry.category].push(`[${entry.title}]: ${entry.content}`);
     }
