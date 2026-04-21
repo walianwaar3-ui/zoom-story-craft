@@ -70,9 +70,12 @@ const SMART_LOADING_LABEL = "Analyzing image → Diagnosing issues → Regenerat
 const GeneratedPosts = () => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
+  const [regenMode, setRegenMode] = useState<"image" | "caption" | null>(null);
   const [smartRegenPost, setSmartRegenPost] = useState<GeneratedPost | null>(null);
   const [smartComplaints, setSmartComplaints] = useState<string[]>([]);
   const [smartFreeText, setSmartFreeText] = useState("");
+  const [captionRegenPost, setCaptionRegenPost] = useState<GeneratedPost | null>(null);
+  const [captionNotes, setCaptionNotes] = useState("");
   const [postToGHL, setPostToGHL] = useState<GeneratedPost | null>(null);
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
   const [scheduleDate, setScheduleDate] = useState("");
