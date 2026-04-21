@@ -65,7 +65,8 @@ const COMPLAINT_OPTIONS = [
   { id: "vague", label: "Overall vague or unclear" },
 ];
 
-const SMART_LOADING_LABEL = "Analyzing image → Diagnosing issues → Regenerating with fixes...";
+const SMART_IMAGE_LOADING_LABEL = "Analyzing image → Diagnosing issues → Regenerating with fixes...";
+const CAPTION_LOADING_LABEL = "Rewriting caption with fresh angle...";
 
 const GeneratedPosts = () => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
