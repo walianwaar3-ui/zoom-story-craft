@@ -113,17 +113,24 @@ const ZoomPosts = () => {
       return data as GeneratedResult;
     },
     onSuccess: (data) => {
-      toast({
-        title: "Post Generated!",
-        description: "Your social post has been created. You can now post it to GHL.",
-      });
+      if (data?.image_url) {
+        toast({
+          title: "Post Generated!",
+          description: "Caption + image ready. You can now post it to GHL.",
+        });
+      } else {
+        toast({
+          title: "Caption Generated (no image)",
+          description: (data as any)?.warning || "Image generation failed — you can still post the caption.",
+          variant: "destructive",
+        });
+      }
       setSelectedTranscript(null);
       setCustomPrompt("");
       queryClient.invalidateQueries({ queryKey: ["zoom-transcripts"] });
       queryClient.invalidateQueries({ queryKey: ["generated-content"] });
       queryClient.invalidateQueries({ queryKey: ["posts-count"] });
       queryClient.invalidateQueries({ queryKey: ["new-transcripts-count"] });
-      // Open GHL posting popup
       setGhlData(data);
       setSelectedAccounts([]);
       setScheduleDate("");
