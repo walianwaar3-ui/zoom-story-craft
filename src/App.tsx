@@ -27,6 +27,7 @@ const App = () => (
             <Route path="/generate-post" element={<GeneratePost />} />
             <Route path="/generated" element={<GeneratedPosts />} />
             <Route path="/knowledgebase" element={<Knowledgebase />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AppLayout>
