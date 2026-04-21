@@ -7,6 +7,17 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Helper: fetch with timeout
+async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(id);
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -27,7 +38,6 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    // Fetch transcript
     const { data: transcript, error: fetchError } = await supabaseAdmin
       .from("zoom_transcripts")
       .select("*")
@@ -49,7 +59,7 @@ serve(async (req) => {
       );
     }
 
-    // --- Fetch all prompts from knowledgebase ---
+    // --- Fetch all knowledgebase entries ---
     const { data: kbEntries } = await supabaseAdmin
       .from("knowledgebase")
       .select("category, title, content");
@@ -57,7 +67,6 @@ serve(async (req) => {
     const kbMap: Record<string, string> = {};
     const kbByCategory: Record<string, string[]> = {};
     for (const entry of kbEntries || []) {
-      // Index by category AND title so prompts can be found either way
       if (!kbMap[entry.category]) kbMap[entry.category] = entry.content;
       if (!kbMap[entry.title]) kbMap[entry.title] = entry.content;
       if (!kbMap[entry.category.toLowerCase()]) kbMap[entry.category.toLowerCase()] = entry.content;
@@ -74,7 +83,7 @@ serve(async (req) => {
       return null;
     };
 
-    // Build context from all KB categories
+    // Build context from KB categories
     const contextParts: string[] = [];
     if (kbByCategory["Brand Guidelines"]?.length) {
       contextParts.push(`BRAND GUIDELINES:\n${kbByCategory["Brand Guidelines"].join("\n\n")}`);
@@ -85,13 +94,17 @@ serve(async (req) => {
     if (kbByCategory["Campaign Strategy"]?.length) {
       contextParts.push(`CAMPAIGN STRATEGY:\n${kbByCategory["Campaign Strategy"].join("\n\n")}`);
     }
-    const kbContext = contextParts.length ? "\n\nADDITIONAL CONTEXT FROM KNOWLEDGEBASE:\n" + contextParts.join("\n\n") : "";
+    const kbContext = contextParts.length
+      ? "\n\nADDITIONAL CONTEXT FROM KNOWLEDGEBASE:\n" + contextParts.join("\n\n")
+      : "";
 
-    // --- STEP 1: Generate Caption ---
+    // ============================================================
+    // STEP 1: Generate Caption
+    // ============================================================
     const baseCaptionPrompt = getPrompt("Caption Prompt", "Master", "Master Prompt", "MASTER PROMPT");
     if (!baseCaptionPrompt) {
       return new Response(
-        JSON.stringify({ error: "No caption prompt source found in knowledgebase. Add a 'Caption Prompt' entry or a 'Master' entry before generating posts." }),
+        JSON.stringify({ error: "No caption prompt source found in knowledgebase. Add a 'Caption Prompt' or 'Master' entry." }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -145,54 +158,128 @@ serve(async (req) => {
     const caption = postMatch?.[1]?.trim() || rawCaption.trim();
     const visualDirection = visualDirectionMatch?.[1]?.trim() || "";
 
-    // --- STEP 2: Generate Image using fal.ai ---
+    // ============================================================
+    // STEP 2: Build the fal.ai prompt via LLM (Image Prompt Builder)
+    // ============================================================
+    // Look up KB entry under several aliases (renamed to "Image Prompt Builder")
+    const imagePromptBuilder = getPrompt(
+      "Image Prompt Builder",
+      "Image Prompt",
+      "image prompt builder",
+      "image prompt"
+    );
 
-    // Fetch overlay images from knowledgebase
+    // Fetch overlay images library
     const { data: overlayEntries } = await supabaseAdmin
       .from("knowledgebase")
-      .select("image_url")
+      .select("title, content, image_url")
       .eq("category", "Overlay Images")
       .not("image_url", "is", null);
 
-    const overlayPhotos = (overlayEntries || [])
-      .map((e: any) => e.image_url)
-      .filter((url: string) => url);
+    const overlays = (overlayEntries || []).filter((e: any) => e.image_url);
+    const overlayLibraryList = overlays
+      .map((e: any) => `- ${e.title}: ${(e.content || "").slice(0, 120)}`)
+      .join("\n");
 
-    if (!overlayPhotos.length) {
-      console.error("No overlay images found in knowledgebase");
+    let imageDescription = "";
+    let overlayTag = "";
+    let imagePrompt = ""; // final prompt sent to fal.ai
+    let selectedPhoto: string | null = null;
+    let llmBuilderError: string | null = null;
+
+    if (imagePromptBuilder && overlays.length > 0) {
+      // Augment system prompt with available overlay tags so the LLM can pick one
+      const builderSystem = `${imagePromptBuilder}
+
+AVAILABLE OVERLAY IMAGES (pick one tag from this list for [OVERLAY_TAG]):
+${overlayLibraryList}
+
+OUTPUT FORMAT — respond with EXACTLY these two blocks and nothing else:
+[OVERLAY_TAG]
+<single overlay title from the list above>
+
+[IMAGE_DESCRIPTION]
+<a concise 300-500 character visual description for an image generation model — describe composition, mood, lighting, text overlays, layout. Do NOT include the overlay-image instructions, only the final scene description.>`;
+
+      const builderUser = `CAPTION:\n${caption}\n\n[VISUAL DIRECTION]\n${visualDirection || "(none provided)"}\n\nASPECT RATIO: ${aspect_ratio || "1:1"}`;
+
+      try {
+        const builderRes = await fetchWithTimeout(
+          "https://ai.gateway.lovable.dev/v1/chat/completions",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${LOVABLE_API_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              model: "google/gemini-3-flash-preview",
+              max_tokens: 800,
+              messages: [
+                { role: "system", content: builderSystem },
+                { role: "user", content: builderUser },
+              ],
+            }),
+          },
+          30_000
+        );
+
+        if (!builderRes.ok) {
+          const errText = await builderRes.text();
+          console.error("Image prompt builder failed:", builderRes.status, errText);
+          llmBuilderError = `LLM error ${builderRes.status}`;
+        } else {
+          const builderData = await builderRes.json();
+          const raw = builderData.choices?.[0]?.message?.content || "";
+          const tagMatch = raw.match(/\[OVERLAY_TAG\]\s*([\s\S]*?)(?:\n\s*\[IMAGE_DESCRIPTION\]|$)/i);
+          const descMatch = raw.match(/\[IMAGE_DESCRIPTION\]\s*([\s\S]*)$/i);
+          overlayTag = tagMatch?.[1]?.trim() || "";
+          imageDescription = descMatch?.[1]?.trim() || "";
+
+          if (!overlayTag || !imageDescription) {
+            console.error("Image prompt builder returned invalid format:", raw);
+            llmBuilderError = "Image description generation failed — retry";
+          } else {
+            // Match overlay by title (case-insensitive contains both ways)
+            const tagLower = overlayTag.toLowerCase();
+            const matched =
+              overlays.find((o: any) => o.title?.toLowerCase() === tagLower) ||
+              overlays.find((o: any) =>
+                o.title?.toLowerCase().includes(tagLower) || tagLower.includes(o.title?.toLowerCase())
+              );
+            selectedPhoto = (matched || overlays[Math.floor(Math.random() * overlays.length)]).image_url;
+            imagePrompt = imageDescription;
+          }
+        }
+      } catch (e) {
+        console.error("Image prompt builder exception:", e);
+        llmBuilderError = e instanceof Error && e.name === "AbortError"
+          ? "Image description generation timed out — retry"
+          : "Image description generation failed — retry";
+      }
+    } else {
+      // Fallback: no builder entry → simple prompt + random overlay
+      selectedPhoto = overlays.length
+        ? overlays[Math.floor(Math.random() * overlays.length)].image_url
+        : null;
+      const hookLine = caption.split("\n").find((l: string) => l.trim().length > 0) || transcript.meeting_topic;
+      imagePrompt = [
+        `High-contrast social media graphic, ${aspect_ratio || "1:1"}.`,
+        `Hook: ${hookLine.slice(0, 80)}.`,
+        visualDirection ? `Visual direction: ${visualDirection.slice(0, 200)}` : null,
+        "Use the overlay photo as main subject. Clean typography, professional layout.",
+      ]
+        .filter(Boolean)
+        .join(" ");
     }
 
-    const selectedPhoto = overlayPhotos.length
-      ? overlayPhotos[Math.floor(Math.random() * overlayPhotos.length)]
-      : null;
-
-    // Extract hook from caption (first line/sentence)
-    const hookLine = caption.split("\n").find((l: string) => l.trim().length > 0) || transcript.meeting_topic;
-    const captionLines = caption.split("\n").filter((l: string) => l.trim().length > 0);
-    const supportingLine = captionLines.length > 1 ? captionLines[1].trim() : "";
-
-    // Build image prompt from knowledgebase template — required
-    const imagePromptTemplate = getPrompt("Image Prompt");
-    const imagePrompt = imagePromptTemplate
-      ? imagePromptTemplate
-          .replace("{hook_line}", hookLine.slice(0, 80))
-          .replace("{supporting_line}", supportingLine.slice(0, 60))
-          .replace("{aspect_ratio}", aspect_ratio || "1:1")
-      : [
-          `Create a high-contrast social media graphic in aspect ratio ${aspect_ratio || "1:1"}.`,
-          `Primary hook text: ${hookLine.slice(0, 80)}.`,
-          supportingLine ? `Supporting text: ${supportingLine.slice(0, 60)}.` : null,
-          visualDirection ? `Visual direction: ${visualDirection}` : null,
-          "Use the provided overlay photo as the main subject and preserve a polished, professional social-post composition.",
-          "Add clean typography hierarchy, strong contrast, and layout spacing suitable for a feed post."
-        ]
-          .filter(Boolean)
-          .join(" ");
-
+    // ============================================================
+    // STEP 3: Generate image with fal.ai (60s timeout)
+    // ============================================================
     let imageUrl: string | null = null;
     const FAL_KEY = Deno.env.get("FAL_KEY");
 
-    if (FAL_KEY && selectedPhoto) {
+    if (FAL_KEY && selectedPhoto && imagePrompt && !llmBuilderError) {
       const sizeMap: Record<string, { width: number; height: number }> = {
         "1:1": { width: 1024, height: 1024 },
         "9:16": { width: 768, height: 1344 },
@@ -202,8 +289,8 @@ serve(async (req) => {
       const imageSize = sizeMap[aspect_ratio || "1:1"] || sizeMap["1:1"];
 
       try {
-        // Submit to fal.ai async queue to avoid edge function timeout
-        const submitRes = await fetch(
+        // Submit async
+        const submitRes = await fetchWithTimeout(
           "https://queue.fal.run/fal-ai/nano-banana-2/edit",
           {
             method: "POST",
@@ -217,7 +304,8 @@ serve(async (req) => {
               image_size: imageSize,
               num_images: 1,
             }),
-          }
+          },
+          15_000
         );
 
         if (!submitRes.ok) {
@@ -227,11 +315,10 @@ serve(async (req) => {
           const statusUrl = submitData.status_url;
           const responseUrl = submitData.response_url;
 
-          // Poll for up to ~110s (leaves headroom under the 150s edge limit)
-          const maxAttempts = 55;
-          const intervalMs = 2000;
-          for (let i = 0; i < maxAttempts; i++) {
-            await new Promise((r) => setTimeout(r, intervalMs));
+          // Poll for up to 60s
+          const deadline = Date.now() + 60_000;
+          while (Date.now() < deadline) {
+            await new Promise((r) => setTimeout(r, 2000));
             const statusRes = await fetch(statusUrl, {
               headers: { Authorization: `Key ${FAL_KEY}` },
             });
@@ -253,17 +340,21 @@ serve(async (req) => {
             }
           }
           if (!imageUrl) {
-            console.error("fal.ai polling timed out without image");
+            console.error("fal.ai polling timed out within 60s window");
           }
         }
       } catch (falErr) {
         console.error("fal.ai error:", falErr);
       }
     } else {
-      console.error("FAL_KEY not configured or no overlay photo, skipping image generation");
+      if (!FAL_KEY) console.error("FAL_KEY not configured");
+      if (!selectedPhoto) console.error("No overlay photo available");
+      if (llmBuilderError) console.error("Skipping fal.ai due to builder error:", llmBuilderError);
     }
 
-    // --- STEP 3: Save to generated_content ---
+    // ============================================================
+    // STEP 4: Save to generated_content
+    // ============================================================
     const { data: content, error: insertError } = await supabaseAdmin
       .from("generated_content")
       .insert({
@@ -285,7 +376,6 @@ serve(async (req) => {
       );
     }
 
-    // Update transcript status
     await supabaseAdmin
       .from("zoom_transcripts")
       .update({ status: "used" })
@@ -297,6 +387,7 @@ serve(async (req) => {
         content_id: content.id,
         caption,
         image_url: imageUrl,
+        warning: llmBuilderError || (imageUrl ? null : "Image generation failed — caption saved only"),
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
