@@ -9,6 +9,7 @@ import ZoomPosts from "./pages/ZoomPosts";
 import GeneratePost from "./pages/GeneratePost";
 import GeneratedPosts from "./pages/GeneratedPosts";
 import Knowledgebase from "./pages/Knowledgebase";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
             <Route path="/generate-post" element={<GeneratePost />} />
             <Route path="/generated" element={<GeneratedPosts />} />
             <Route path="/knowledgebase" element={<Knowledgebase />} />
+            <Route path="/settings" element={<Settings />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AppLayout>
