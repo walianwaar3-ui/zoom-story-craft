@@ -36,6 +36,8 @@ import {
   ChevronDown,
   Sparkles,
   Search,
+  Image as ImageIcon,
+  Type,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
@@ -63,14 +65,18 @@ const COMPLAINT_OPTIONS = [
   { id: "vague", label: "Overall vague or unclear" },
 ];
 
-const SMART_LOADING_LABEL = "Analyzing image → Diagnosing issues → Regenerating with fixes...";
+const SMART_IMAGE_LOADING_LABEL = "Analyzing image → Diagnosing issues → Regenerating with fixes...";
+const CAPTION_LOADING_LABEL = "Rewriting caption with fresh angle...";
 
 const GeneratedPosts = () => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
+  const [regenMode, setRegenMode] = useState<"image" | "caption" | null>(null);
   const [smartRegenPost, setSmartRegenPost] = useState<GeneratedPost | null>(null);
   const [smartComplaints, setSmartComplaints] = useState<string[]>([]);
   const [smartFreeText, setSmartFreeText] = useState("");
+  const [captionRegenPost, setCaptionRegenPost] = useState<GeneratedPost | null>(null);
+  const [captionNotes, setCaptionNotes] = useState("");
   const [postToGHL, setPostToGHL] = useState<GeneratedPost | null>(null);
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
   const [scheduleDate, setScheduleDate] = useState("");
@@ -161,7 +167,7 @@ const GeneratedPosts = () => {
     },
   });
 
-  // Smart regenerate — analyzes image first, then regenerates with fixes
+  // Smart regenerate — analyzes image first, then regenerates IMAGE with fixes
   const smartRegenerateMutation = useMutation({
     mutationFn: async ({
       post,
@@ -175,6 +181,7 @@ const GeneratedPosts = () => {
       autoAnalyze: boolean;
     }) => {
       setRegeneratingId(post.id);
+      setRegenMode("image");
       const { data, error } = await supabase.functions.invoke("smart-regenerate-image", {
         body: {
           content_id: post.id,
@@ -189,22 +196,58 @@ const GeneratedPosts = () => {
     },
     onSuccess: () => {
       toast({
-        title: "Smart Regenerate complete!",
-        description: "Image updated based on diagnostic. See 'What was fixed' below.",
+        title: "Image regenerated!",
+        description: "New image saved. See 'What was fixed' below.",
       });
       queryClient.invalidateQueries({ queryKey: ["generated-content"] });
       setRegeneratingId(null);
+      setRegenMode(null);
       setSmartRegenPost(null);
       setSmartComplaints([]);
       setSmartFreeText("");
     },
     onError: (error: any) => {
       toast({
-        title: "Smart Regenerate Failed",
+        title: "Image Regeneration Failed",
         description: error.message || "Something went wrong.",
         variant: "destructive",
       });
       setRegeneratingId(null);
+      setRegenMode(null);
+    },
+  });
+
+  // Caption-only regenerate — keeps image, rewrites caption
+  const captionRegenerateMutation = useMutation({
+    mutationFn: async ({ post, notes }: { post: GeneratedPost; notes: string }) => {
+      setRegeneratingId(post.id);
+      setRegenMode("caption");
+      const { data, error } = await supabase.functions.invoke("regenerate-caption-only", {
+        body: { content_id: post.id, notes },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Caption regenerated!",
+        description: "Image kept, caption rewritten with a fresh angle.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["generated-content"] });
+      setRegeneratingId(null);
+      setRegenMode(null);
+      setCaptionRegenPost(null);
+      setCaptionNotes("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Caption Regeneration Failed",
+        description: error.message || "Something went wrong.",
+        variant: "destructive",
+      });
+      setRegeneratingId(null);
+      setRegenMode(null);
     },
   });
 
@@ -316,7 +359,9 @@ const GeneratedPosts = () => {
                     {isThisRegenerating && (
                       <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center gap-2 p-4 text-center">
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <p className="text-sm font-medium">{SMART_LOADING_LABEL}</p>
+                        <p className="text-sm font-medium">
+                          {regenMode === "caption" ? CAPTION_LOADING_LABEL : SMART_IMAGE_LOADING_LABEL}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -457,11 +502,31 @@ const GeneratedPosts = () => {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem
+                            onClick={() => {
+                              setSmartRegenPost(post);
+                              setSmartComplaints([]);
+                              setSmartFreeText("");
+                            }}
+                            disabled={!post.image_url}
+                          >
+                            <ImageIcon className="h-4 w-4 mr-2" />
+                            Regenerate Image Only
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setCaptionRegenPost(post);
+                              setCaptionNotes("");
+                            }}
+                          >
+                            <Type className="h-4 w-4 mr-2" />
+                            Regenerate Caption Only
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
                             onClick={() => quickRegenerateMutation.mutate(post)}
                             disabled={!post.transcript_id}
                           >
                             <RefreshCw className="h-4 w-4 mr-2" />
-                            Quick Regenerate
+                            Quick Regenerate (both)
                             {!post.transcript_id && (
                               <span className="ml-2 text-xs text-muted-foreground">(no transcript)</span>
                             )}
@@ -577,14 +642,74 @@ const GeneratedPosts = () => {
 
             {smartRegenerateMutation.isPending && (
               <p className="text-xs text-center text-muted-foreground">
-                {SMART_LOADING_LABEL}
+                {SMART_IMAGE_LOADING_LABEL}
               </p>
             )}
           </div>
         </DialogContent>
       </Dialog>
 
-      {/* Post to GHL Dialog */}
+      {/* Caption-Only Regenerate Dialog */}
+      <Dialog
+        open={!!captionRegenPost}
+        onOpenChange={(open) => {
+          if (!open && !captionRegenerateMutation.isPending) {
+            setCaptionRegenPost(null);
+            setCaptionNotes("");
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Regenerate Caption Only</DialogTitle>
+            <DialogDescription>
+              Keep the existing image, rewrite the caption with a fresh angle.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">
+                What's wrong with the caption? (optional)
+              </label>
+              <Textarea
+                value={captionNotes}
+                onChange={(e) => setCaptionNotes(e.target.value)}
+                placeholder="e.g. Hook is weak, too long, CTA unclear, tone is off..."
+                className="min-h-[100px] text-sm"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Leave empty to auto-rewrite with a fresh hook & structure.
+              </p>
+            </div>
+
+            <Button
+              className="w-full"
+              disabled={captionRegenerateMutation.isPending}
+              onClick={() => {
+                if (!captionRegenPost) return;
+                captionRegenerateMutation.mutate({
+                  post: captionRegenPost,
+                  notes: captionNotes,
+                });
+              }}
+            >
+              {captionRegenerateMutation.isPending ? (
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Rewriting caption...</>
+              ) : (
+                <><Type className="h-4 w-4 mr-2" />Regenerate Caption</>
+              )}
+            </Button>
+
+            {captionRegenerateMutation.isPending && (
+              <p className="text-xs text-center text-muted-foreground">
+                {CAPTION_LOADING_LABEL}
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={!!postToGHL} onOpenChange={() => setPostToGHL(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
