@@ -166,7 +166,7 @@ const GeneratedPosts = () => {
     },
   });
 
-  // Smart regenerate — analyzes image first, then regenerates with fixes
+  // Smart regenerate — analyzes image first, then regenerates IMAGE with fixes
   const smartRegenerateMutation = useMutation({
     mutationFn: async ({
       post,
@@ -180,6 +180,7 @@ const GeneratedPosts = () => {
       autoAnalyze: boolean;
     }) => {
       setRegeneratingId(post.id);
+      setRegenMode("image");
       const { data, error } = await supabase.functions.invoke("smart-regenerate-image", {
         body: {
           content_id: post.id,
@@ -194,22 +195,58 @@ const GeneratedPosts = () => {
     },
     onSuccess: () => {
       toast({
-        title: "Smart Regenerate complete!",
-        description: "Image updated based on diagnostic. See 'What was fixed' below.",
+        title: "Image regenerated!",
+        description: "New image saved. See 'What was fixed' below.",
       });
       queryClient.invalidateQueries({ queryKey: ["generated-content"] });
       setRegeneratingId(null);
+      setRegenMode(null);
       setSmartRegenPost(null);
       setSmartComplaints([]);
       setSmartFreeText("");
     },
     onError: (error: any) => {
       toast({
-        title: "Smart Regenerate Failed",
+        title: "Image Regeneration Failed",
         description: error.message || "Something went wrong.",
         variant: "destructive",
       });
       setRegeneratingId(null);
+      setRegenMode(null);
+    },
+  });
+
+  // Caption-only regenerate — keeps image, rewrites caption
+  const captionRegenerateMutation = useMutation({
+    mutationFn: async ({ post, notes }: { post: GeneratedPost; notes: string }) => {
+      setRegeneratingId(post.id);
+      setRegenMode("caption");
+      const { data, error } = await supabase.functions.invoke("regenerate-caption-only", {
+        body: { content_id: post.id, notes },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      return data;
+    },
+    onSuccess: () => {
+      toast({
+        title: "Caption regenerated!",
+        description: "Image kept, caption rewritten with a fresh angle.",
+      });
+      queryClient.invalidateQueries({ queryKey: ["generated-content"] });
+      setRegeneratingId(null);
+      setRegenMode(null);
+      setCaptionRegenPost(null);
+      setCaptionNotes("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Caption Regeneration Failed",
+        description: error.message || "Something went wrong.",
+        variant: "destructive",
+      });
+      setRegeneratingId(null);
+      setRegenMode(null);
     },
   });
 
