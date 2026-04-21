@@ -13,6 +13,8 @@ import {
   Check,
   Webhook,
   Link2,
+  Lock,
+  Unlock,
 } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -48,6 +50,20 @@ const WEBHOOKS = [
 const Settings = () => {
   const { toast } = useToast();
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [unlockedId, setUnlockedId] = useState<string | null>(null);
+
+  const maskUrl = (url: string) => {
+    try {
+      const u = new URL(url);
+      return `${u.origin}/${"•".repeat(Math.min(24, u.pathname.length - 1))}`;
+    } catch {
+      return "•".repeat(40);
+    }
+  };
+
+  const toggleLock = (id: string) => {
+    setUnlockedId((prev) => (prev === id ? null : id));
+  };
 
   const ghlQuery = useQuery({
     queryKey: ["ghl-connection-check"],
@@ -184,20 +200,44 @@ const Settings = () => {
               </div>
 
               <div>
-                <label className="text-xs font-medium text-muted-foreground mb-1.5 block">
+                <label className="text-xs font-medium text-muted-foreground mb-1.5 block flex items-center gap-1.5">
                   Webhook URL
+                  {unlockedId !== wh.id && (
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4">
+                      <Lock className="h-2.5 w-2.5 mr-0.5" />
+                      Locked
+                    </Badge>
+                  )}
                 </label>
                 <div className="flex gap-2">
                   <Input
                     readOnly
-                    value={wh.url}
+                    value={unlockedId === wh.id ? wh.url : maskUrl(wh.url)}
                     className="font-mono text-xs"
-                    onClick={(e) => (e.target as HTMLInputElement).select()}
+                    onClick={(e) => {
+                      if (unlockedId === wh.id) {
+                        (e.target as HTMLInputElement).select();
+                      }
+                    }}
                   />
                   <Button
                     variant="outline"
                     size="sm"
+                    onClick={() => toggleLock(wh.id)}
+                    title={unlockedId === wh.id ? "Lock URL" : "Unlock URL"}
+                  >
+                    {unlockedId === wh.id ? (
+                      <Unlock className="h-4 w-4" />
+                    ) : (
+                      <Lock className="h-4 w-4" />
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
                     onClick={() => copy(wh.url, `${wh.id}-url`)}
+                    disabled={unlockedId !== wh.id}
+                    title={unlockedId !== wh.id ? "Unlock to copy" : "Copy URL"}
                   >
                     {copiedId === `${wh.id}-url` ? (
                       <Check className="h-4 w-4" />
@@ -206,6 +246,11 @@ const Settings = () => {
                     )}
                   </Button>
                 </div>
+                {unlockedId !== wh.id && (
+                  <p className="text-[11px] text-muted-foreground mt-1.5">
+                    Click the lock to reveal and copy this URL.
+                  </p>
+                )}
               </div>
 
               <div>
