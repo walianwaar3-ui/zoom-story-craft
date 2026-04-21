@@ -622,7 +622,7 @@ const GeneratedPosts = () => {
 
             {smartRegenerateMutation.isPending && (
               <p className="text-xs text-center text-muted-foreground">
-                {SMART_LOADING_LABEL}
+                {SMART_IMAGE_LOADING_LABEL}
               </p>
             )}
           </div>
