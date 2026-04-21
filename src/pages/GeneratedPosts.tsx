@@ -359,7 +359,9 @@ const GeneratedPosts = () => {
                     {isThisRegenerating && (
                       <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center gap-2 p-4 text-center">
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-                        <p className="text-sm font-medium">{SMART_LOADING_LABEL}</p>
+                        <p className="text-sm font-medium">
+                          {regenMode === "caption" ? CAPTION_LOADING_LABEL : SMART_IMAGE_LOADING_LABEL}
+                        </p>
                       </div>
                     )}
                   </div>
