@@ -36,6 +36,8 @@ import {
   ChevronDown,
   Sparkles,
   Search,
+  Image as ImageIcon,
+  Type,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
