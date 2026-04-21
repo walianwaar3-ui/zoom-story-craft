@@ -649,7 +649,67 @@ const GeneratedPosts = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Post to GHL Dialog */}
+      {/* Caption-Only Regenerate Dialog */}
+      <Dialog
+        open={!!captionRegenPost}
+        onOpenChange={(open) => {
+          if (!open && !captionRegenerateMutation.isPending) {
+            setCaptionRegenPost(null);
+            setCaptionNotes("");
+          }
+        }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Regenerate Caption Only</DialogTitle>
+            <DialogDescription>
+              Keep the existing image, rewrite the caption with a fresh angle.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">
+                What's wrong with the caption? (optional)
+              </label>
+              <Textarea
+                value={captionNotes}
+                onChange={(e) => setCaptionNotes(e.target.value)}
+                placeholder="e.g. Hook is weak, too long, CTA unclear, tone is off..."
+                className="min-h-[100px] text-sm"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Leave empty to auto-rewrite with a fresh hook & structure.
+              </p>
+            </div>
+
+            <Button
+              className="w-full"
+              disabled={captionRegenerateMutation.isPending}
+              onClick={() => {
+                if (!captionRegenPost) return;
+                captionRegenerateMutation.mutate({
+                  post: captionRegenPost,
+                  notes: captionNotes,
+                });
+              }}
+            >
+              {captionRegenerateMutation.isPending ? (
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Rewriting caption...</>
+              ) : (
+                <><Type className="h-4 w-4 mr-2" />Regenerate Caption</>
+              )}
+            </Button>
+
+            {captionRegenerateMutation.isPending && (
+              <p className="text-xs text-center text-muted-foreground">
+                {CAPTION_LOADING_LABEL}
+              </p>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={!!postToGHL} onOpenChange={() => setPostToGHL(null)}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
