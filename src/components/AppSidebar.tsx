@@ -1,4 +1,4 @@
-import { Video, FileText, LayoutDashboard, BookOpen } from "lucide-react";
+import { Video, FileText, LayoutDashboard, BookOpen, Sparkles } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -17,6 +17,7 @@ import {
 const navItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Zoom Transcripts", url: "/zoom-posts", icon: Video },
+  { title: "Generate Post", url: "/generate-post", icon: Sparkles },
   { title: "Generated Posts", url: "/generated", icon: FileText },
   { title: "Knowledgebase", url: "/knowledgebase", icon: BookOpen },
 ];
