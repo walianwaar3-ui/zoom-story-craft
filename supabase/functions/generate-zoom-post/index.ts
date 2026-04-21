@@ -202,8 +202,9 @@ serve(async (req) => {
       const imageSize = sizeMap[aspect_ratio || "1:1"] || sizeMap["1:1"];
 
       try {
-        const falResponse = await fetch(
-          "https://fal.run/fal-ai/nano-banana-2/edit",
+        // Submit to fal.ai async queue to avoid edge function timeout
+        const submitRes = await fetch(
+          "https://queue.fal.run/fal-ai/nano-banana-2/edit",
           {
             method: "POST",
             headers: {
@@ -219,12 +220,41 @@ serve(async (req) => {
           }
         );
 
-        if (falResponse.ok) {
-          const falData = await falResponse.json();
-          imageUrl = falData.images?.[0]?.url || null;
+        if (!submitRes.ok) {
+          console.error("fal.ai submit failed:", submitRes.status, await submitRes.text());
         } else {
-          const errText = await falResponse.text();
-          console.error("fal.ai image generation failed:", falResponse.status, errText);
+          const submitData = await submitRes.json();
+          const statusUrl = submitData.status_url;
+          const responseUrl = submitData.response_url;
+
+          // Poll for up to ~110s (leaves headroom under the 150s edge limit)
+          const maxAttempts = 55;
+          const intervalMs = 2000;
+          for (let i = 0; i < maxAttempts; i++) {
+            await new Promise((r) => setTimeout(r, intervalMs));
+            const statusRes = await fetch(statusUrl, {
+              headers: { Authorization: `Key ${FAL_KEY}` },
+            });
+            if (!statusRes.ok) continue;
+            const statusData = await statusRes.json();
+            if (statusData.status === "COMPLETED") {
+              const finalRes = await fetch(responseUrl, {
+                headers: { Authorization: `Key ${FAL_KEY}` },
+              });
+              if (finalRes.ok) {
+                const finalData = await finalRes.json();
+                imageUrl = finalData.images?.[0]?.url || null;
+              }
+              break;
+            }
+            if (statusData.status === "FAILED" || statusData.status === "ERROR") {
+              console.error("fal.ai generation failed:", statusData);
+              break;
+            }
+          }
+          if (!imageUrl) {
+            console.error("fal.ai polling timed out without image");
+          }
         }
       } catch (falErr) {
         console.error("fal.ai error:", falErr);
