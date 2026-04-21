@@ -1,4 +1,4 @@
-import { Video, FileText, LayoutDashboard, BookOpen, Sparkles } from "lucide-react";
+import { Video, FileText, LayoutDashboard, BookOpen, Sparkles, Settings as SettingsIcon } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import {
@@ -20,6 +20,7 @@ const navItems = [
   { title: "Generate Post", url: "/generate-post", icon: Sparkles },
   { title: "Generated Posts", url: "/generated", icon: FileText },
   { title: "Knowledgebase", url: "/knowledgebase", icon: BookOpen },
+  { title: "Settings", url: "/settings", icon: SettingsIcon },
 ];
 
 export function AppSidebar() {
