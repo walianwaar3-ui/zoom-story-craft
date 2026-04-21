@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppLayout } from "@/components/AppLayout";
 import Index from "./pages/Index";
 import ZoomPosts from "./pages/ZoomPosts";
+import GeneratePost from "./pages/GeneratePost";
 import GeneratedPosts from "./pages/GeneratedPosts";
 import Knowledgebase from "./pages/Knowledgebase";
 import NotFound from "./pages/NotFound";
@@ -22,6 +23,7 @@ const App = () => (
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/zoom-posts" element={<ZoomPosts />} />
+            <Route path="/generate-post" element={<GeneratePost />} />
             <Route path="/generated" element={<GeneratedPosts />} />
             <Route path="/knowledgebase" element={<Knowledgebase />} />
             <Route path="*" element={<NotFound />} />

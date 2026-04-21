@@ -1,0 +1,418 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
+
+async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number) {
+  const controller = new AbortController();
+  const id = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } finally {
+    clearTimeout(id);
+  }
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const form = await req.json();
+    const {
+      post_date,
+      post_type,
+      hook,
+      context,
+      cta_goal,
+      image_style,
+      aspect_ratio,
+    } = form || {};
+
+    if (!post_date || !post_type || !hook || !String(hook).trim()) {
+      return new Response(
+        JSON.stringify({ error: "post_date, post_type and hook are required" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL")!,
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+    );
+
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      return new Response(
+        JSON.stringify({ error: "LOVABLE_API_KEY not configured" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Fetch all KB entries
+    const { data: kbEntries } = await supabaseAdmin
+      .from("knowledgebase")
+      .select("category, title, content");
+
+    const kbMap: Record<string, string> = {};
+    const kbByCategory: Record<string, string[]> = {};
+    for (const entry of kbEntries || []) {
+      if (!kbMap[entry.category]) kbMap[entry.category] = entry.content;
+      if (!kbMap[entry.title]) kbMap[entry.title] = entry.content;
+      if (!kbMap[entry.category.toLowerCase()]) kbMap[entry.category.toLowerCase()] = entry.content;
+      if (!kbMap[entry.title.toLowerCase()]) kbMap[entry.title.toLowerCase()] = entry.content;
+      if (!kbByCategory[entry.category]) kbByCategory[entry.category] = [];
+      kbByCategory[entry.category].push(`[${entry.title}]: ${entry.content}`);
+    }
+
+    const getPrompt = (...keys: string[]) => {
+      for (const key of keys) {
+        if (kbMap[key]) return kbMap[key];
+        if (kbMap[key.toLowerCase()]) return kbMap[key.toLowerCase()];
+      }
+      return null;
+    };
+
+    const callLLM = async (systemPrompt: string, userPrompt: string, maxTokens: number, timeoutMs: number) => {
+      return await fetchWithTimeout(
+        "https://ai.gateway.lovable.dev/v1/chat/completions",
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            model: "google/gemini-3-flash-preview",
+            max_tokens: maxTokens,
+            messages: [
+              { role: "system", content: systemPrompt },
+              { role: "user", content: userPrompt },
+            ],
+          }),
+        },
+        timeoutMs
+      );
+    };
+
+    const handleLLMError = (status: number) => {
+      if (status === 429) {
+        return new Response(JSON.stringify({ error: "Rate limited. Please try again later." }), {
+          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      if (status === 402) {
+        return new Response(JSON.stringify({ error: "Credits exhausted. Please add funds." }), {
+          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      return null;
+    };
+
+    // ============================================================
+    // STEP 1: Format Input via "Manual Input Formatter"
+    // ============================================================
+    const formatterPrompt = getPrompt("Manual Input Formatter", "manual input formatter");
+    if (!formatterPrompt) {
+      return new Response(
+        JSON.stringify({ error: "No 'Manual Input Formatter' entry in knowledgebase." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const formatterUser = JSON.stringify({
+      post_date,
+      post_type,
+      hook,
+      context: context || "",
+      cta_goal: cta_goal && cta_goal !== "auto" ? cta_goal : "auto-pick",
+      image_style: image_style && image_style !== "auto" ? image_style : "auto",
+      aspect_ratio: aspect_ratio || "1:1",
+    }, null, 2);
+
+    let formattedBrief = "";
+    try {
+      const formatterRes = await callLLM(formatterPrompt, formatterUser, 600, 20_000);
+      if (!formatterRes.ok) {
+        const errResp = handleLLMError(formatterRes.status);
+        if (errResp) return errResp;
+        const t = await formatterRes.text();
+        console.error("Formatter LLM error:", formatterRes.status, t);
+        return new Response(JSON.stringify({ error: "Failed to format input" }), {
+          status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const data = await formatterRes.json();
+      const raw = data.choices?.[0]?.message?.content || "";
+      // Look for [MANUAL POST BRIEF] block, otherwise use raw
+      const briefMatch = raw.match(/\[MANUAL POST BRIEF\]\s*([\s\S]*)$/i);
+      formattedBrief = (briefMatch?.[1] || raw).trim();
+
+      if (/INSUFFICIENT INPUT/i.test(formattedBrief) || /INSUFFICIENT INPUT/i.test(raw)) {
+        return new Response(
+          JSON.stringify({ error: "Insufficient input — please add more detail to the Hook or Context fields." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    } catch (e) {
+      console.error("Formatter exception:", e);
+      const isTimeout = e instanceof Error && e.name === "AbortError";
+      return new Response(
+        JSON.stringify({ error: isTimeout ? "Input formatting timed out — retry" : "Input formatting failed — retry" }),
+        { status: 504, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // ============================================================
+    // STEP 2: Generate Caption
+    // ============================================================
+    const baseCaptionPrompt = getPrompt("Caption Prompt", "Master", "Master Prompt", "MASTER PROMPT");
+    if (!baseCaptionPrompt) {
+      return new Response(
+        JSON.stringify({ error: "No 'Caption Prompt' entry in knowledgebase." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const contextParts: string[] = [];
+    if (kbByCategory["Brand Guidelines"]?.length) {
+      contextParts.push(`BRAND GUIDELINES:\n${kbByCategory["Brand Guidelines"].join("\n\n")}`);
+    }
+    if (kbByCategory["Voice & Tone"]?.length) {
+      contextParts.push(`VOICE & TONE:\n${kbByCategory["Voice & Tone"].join("\n\n")}`);
+    }
+    if (kbByCategory["Campaign Strategy"]?.length) {
+      contextParts.push(`CAMPAIGN STRATEGY:\n${kbByCategory["Campaign Strategy"].join("\n\n")}`);
+    }
+    const kbContext = contextParts.length
+      ? "\n\nADDITIONAL CONTEXT FROM KNOWLEDGEBASE:\n" + contextParts.join("\n\n")
+      : "";
+
+    const captionSystemPrompt = baseCaptionPrompt + kbContext;
+
+    const captionRes = await callLLM(captionSystemPrompt, formattedBrief, 1500, 60_000);
+    if (!captionRes.ok) {
+      const errResp = handleLLMError(captionRes.status);
+      if (errResp) return errResp;
+      const errText = await captionRes.text();
+      console.error("Caption LLM error:", captionRes.status, errText);
+      return new Response(JSON.stringify({ error: "Failed to generate caption" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const captionData = await captionRes.json();
+    const rawCaption = captionData.choices?.[0]?.message?.content || "";
+    const postMatch = rawCaption.match(/\[POST\]\s*([\s\S]*?)(?:\n\s*\[VISUAL DIRECTION\]|$)/i);
+    const visualDirectionMatch = rawCaption.match(/\[VISUAL DIRECTION\]\s*([\s\S]*)$/i);
+    const caption = postMatch?.[1]?.trim() || rawCaption.trim();
+    const visualDirection = visualDirectionMatch?.[1]?.trim() || "";
+
+    // ============================================================
+    // STEP 3: Build image prompt via "Image Prompt Builder"
+    // ============================================================
+    const imagePromptBuilder = getPrompt(
+      "Image Prompt Builder",
+      "Image Prompt",
+      "image prompt builder",
+      "image prompt"
+    );
+
+    const { data: overlayEntries } = await supabaseAdmin
+      .from("knowledgebase")
+      .select("title, content, image_url")
+      .eq("category", "Overlay Images")
+      .not("image_url", "is", null);
+
+    const overlays = (overlayEntries || []).filter((e: any) => e.image_url);
+    const overlayLibraryList = overlays
+      .map((e: any) => `- ${e.title}: ${(e.content || "").slice(0, 120)}`)
+      .join("\n");
+
+    let imageDescription = "";
+    let overlayTag = "";
+    let imagePrompt = "";
+    let selectedPhoto: string | null = null;
+    let llmBuilderError: string | null = null;
+
+    if (imagePromptBuilder && overlays.length > 0) {
+      const builderSystem = `${imagePromptBuilder}
+
+AVAILABLE OVERLAY IMAGES (pick one tag from this list for [OVERLAY_TAG]):
+${overlayLibraryList}
+
+OUTPUT FORMAT — respond with EXACTLY these two blocks and nothing else:
+[OVERLAY_TAG]
+<single overlay title from the list above>
+
+[IMAGE_DESCRIPTION]
+<a concise 300-500 character visual description for an image generation model — describe composition, mood, lighting, text overlays, layout. Do NOT include the overlay-image instructions, only the final scene description.>`;
+
+      const styleHint = image_style && image_style !== "auto" ? `\nIMAGE STYLE PREFERENCE: ${image_style}` : "";
+      const builderUser = `CAPTION:\n${caption}\n\n[VISUAL DIRECTION]\n${visualDirection || "(none provided)"}${styleHint}\n\nASPECT RATIO: ${aspect_ratio || "1:1"}`;
+
+      try {
+        const builderRes = await callLLM(builderSystem, builderUser, 800, 30_000);
+        if (!builderRes.ok) {
+          const errText = await builderRes.text();
+          console.error("Image prompt builder failed:", builderRes.status, errText);
+          llmBuilderError = `LLM error ${builderRes.status}`;
+        } else {
+          const builderData = await builderRes.json();
+          const raw = builderData.choices?.[0]?.message?.content || "";
+          const tagMatch = raw.match(/\[OVERLAY_TAG\]\s*([\s\S]*?)(?:\n\s*\[IMAGE_DESCRIPTION\]|$)/i);
+          const descMatch = raw.match(/\[IMAGE_DESCRIPTION\]\s*([\s\S]*)$/i);
+          overlayTag = tagMatch?.[1]?.trim() || "";
+          imageDescription = descMatch?.[1]?.trim() || "";
+
+          if (!overlayTag || !imageDescription) {
+            console.error("Image prompt builder returned invalid format:", raw);
+            llmBuilderError = "Image description generation failed — retry";
+          } else {
+            const tagLower = overlayTag.toLowerCase();
+            const matched =
+              overlays.find((o: any) => o.title?.toLowerCase() === tagLower) ||
+              overlays.find((o: any) =>
+                o.title?.toLowerCase().includes(tagLower) || tagLower.includes(o.title?.toLowerCase())
+              );
+            selectedPhoto = (matched || overlays[Math.floor(Math.random() * overlays.length)]).image_url;
+            imagePrompt = imageDescription;
+          }
+        }
+      } catch (e) {
+        console.error("Image prompt builder exception:", e);
+        llmBuilderError = e instanceof Error && e.name === "AbortError"
+          ? "Image description generation timed out — retry"
+          : "Image description generation failed — retry";
+      }
+    } else {
+      selectedPhoto = overlays.length
+        ? overlays[Math.floor(Math.random() * overlays.length)].image_url
+        : null;
+      const hookLine = caption.split("\n").find((l: string) => l.trim().length > 0) || hook;
+      imagePrompt = [
+        `High-contrast social media graphic, ${aspect_ratio || "1:1"}.`,
+        `Hook: ${hookLine.slice(0, 80)}.`,
+        visualDirection ? `Visual direction: ${visualDirection.slice(0, 200)}` : null,
+        "Use the overlay photo as main subject. Clean typography, professional layout.",
+      ].filter(Boolean).join(" ");
+    }
+
+    // ============================================================
+    // STEP 4: Generate image with fal.ai (60s polling)
+    // ============================================================
+    let imageUrl: string | null = null;
+    const FAL_KEY = Deno.env.get("FAL_KEY");
+
+    if (FAL_KEY && selectedPhoto && imagePrompt && !llmBuilderError) {
+      const sizeMap: Record<string, { width: number; height: number }> = {
+        "1:1": { width: 1024, height: 1024 },
+        "9:16": { width: 768, height: 1344 },
+        "16:9": { width: 1344, height: 768 },
+        "4:5": { width: 896, height: 1120 },
+      };
+      const imageSize = sizeMap[aspect_ratio || "1:1"] || sizeMap["1:1"];
+
+      try {
+        const submitRes = await fetchWithTimeout(
+          "https://queue.fal.run/fal-ai/nano-banana-2/edit",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Key ${FAL_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              prompt: imagePrompt,
+              image_urls: [selectedPhoto],
+              image_size: imageSize,
+              num_images: 1,
+            }),
+          },
+          15_000
+        );
+
+        if (!submitRes.ok) {
+          console.error("fal.ai submit failed:", submitRes.status, await submitRes.text());
+        } else {
+          const submitData = await submitRes.json();
+          const statusUrl = submitData.status_url;
+          const responseUrl = submitData.response_url;
+
+          const deadline = Date.now() + 60_000;
+          while (Date.now() < deadline) {
+            await new Promise((r) => setTimeout(r, 2000));
+            const statusRes = await fetch(statusUrl, {
+              headers: { Authorization: `Key ${FAL_KEY}` },
+            });
+            if (!statusRes.ok) continue;
+            const statusData = await statusRes.json();
+            if (statusData.status === "COMPLETED") {
+              const finalRes = await fetch(responseUrl, {
+                headers: { Authorization: `Key ${FAL_KEY}` },
+              });
+              if (finalRes.ok) {
+                const finalData = await finalRes.json();
+                imageUrl = finalData.images?.[0]?.url || null;
+              }
+              break;
+            }
+            if (statusData.status === "FAILED" || statusData.status === "ERROR") {
+              console.error("fal.ai generation failed:", statusData);
+              break;
+            }
+          }
+          if (!imageUrl) console.error("fal.ai polling timed out within 60s window");
+        }
+      } catch (falErr) {
+        console.error("fal.ai error:", falErr);
+      }
+    }
+
+    // ============================================================
+    // STEP 5: Save
+    // ============================================================
+    const { data: content, error: insertError } = await supabaseAdmin
+      .from("generated_content")
+      .insert({
+        transcript_id: null,
+        caption,
+        image_url: imageUrl,
+        image_prompt: imagePrompt,
+        aspect_ratio: aspect_ratio || "1:1",
+        status: imageUrl ? "complete" : "text_only",
+        source: "manual",
+      })
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error("Insert error:", insertError);
+      return new Response(
+        JSON.stringify({ error: insertError.message }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        content_id: content.id,
+        caption,
+        image_url: imageUrl,
+        warning: llmBuilderError || (imageUrl ? null : "Image generation failed — caption saved only"),
+      }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  } catch (e) {
+    console.error("Generate manual error:", e);
+    return new Response(
+      JSON.stringify({ error: e instanceof Error ? e.message : "Unknown error" }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
+  }
+});

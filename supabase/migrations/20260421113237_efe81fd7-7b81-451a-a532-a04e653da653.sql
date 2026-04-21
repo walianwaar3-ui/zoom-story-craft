@@ -1,0 +1,1 @@
+ALTER TABLE public.generated_content ADD COLUMN IF NOT EXISTS source text NOT NULL DEFAULT 'transcript';
