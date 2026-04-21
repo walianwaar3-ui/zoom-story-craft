@@ -502,11 +502,31 @@ const GeneratedPosts = () => {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem
+                            onClick={() => {
+                              setSmartRegenPost(post);
+                              setSmartComplaints([]);
+                              setSmartFreeText("");
+                            }}
+                            disabled={!post.image_url}
+                          >
+                            <ImageIcon className="h-4 w-4 mr-2" />
+                            Regenerate Image Only
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setCaptionRegenPost(post);
+                              setCaptionNotes("");
+                            }}
+                          >
+                            <Type className="h-4 w-4 mr-2" />
+                            Regenerate Caption Only
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
                             onClick={() => quickRegenerateMutation.mutate(post)}
                             disabled={!post.transcript_id}
                           >
                             <RefreshCw className="h-4 w-4 mr-2" />
-                            Quick Regenerate
+                            Quick Regenerate (both)
                             {!post.transcript_id && (
                               <span className="ml-2 text-xs text-muted-foreground">(no transcript)</span>
                             )}
