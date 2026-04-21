@@ -22,6 +22,8 @@ export type Database = {
           id: string
           image_prompt: string | null
           image_url: string | null
+          last_diagnostic: string | null
+          regenerated_count: number
           source: string
           status: string
           transcript_id: string | null
@@ -33,6 +35,8 @@ export type Database = {
           id?: string
           image_prompt?: string | null
           image_url?: string | null
+          last_diagnostic?: string | null
+          regenerated_count?: number
           source?: string
           status?: string
           transcript_id?: string | null
@@ -44,6 +48,8 @@ export type Database = {
           id?: string
           image_prompt?: string | null
           image_url?: string | null
+          last_diagnostic?: string | null
+          regenerated_count?: number
           source?: string
           status?: string
           transcript_id?: string | null
