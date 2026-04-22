@@ -305,9 +305,10 @@ You MUST write this post about the assigned angle above and nothing else. Do NOT
       const caption = postMatch?.[1]?.trim() || rawCaption.trim();
       const visualDirection = visualDirectionMatch?.[1]?.trim() || "";
 
-      // Track first non-empty line as the "hook" so future posts in the series don't repeat it
+      // Track first non-empty line as the "hook" + assigned theme so future posts don't repeat
       const firstLine = caption.split("\n").find((l: string) => l.trim().length > 0)?.trim() || "";
       if (firstLine) previousHooks.push(firstLine.slice(0, 140));
+      if (assignedAngle?.theme) previousThemes.push(assignedAngle.theme);
 
       // ============================================================
       // STEP 2: Build the fal.ai prompt via LLM (Image Prompt Builder)
