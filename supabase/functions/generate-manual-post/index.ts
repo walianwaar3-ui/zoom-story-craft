@@ -9,6 +9,113 @@ const corsHeaders = {
 
 const ANTHROPIC_MODEL = "claude-sonnet-4-5";
 
+const BANNED_WORDS: Array<{ word: string; replacement: string }> = [
+  { word: "practitioner", replacement: "operator" },
+  { word: "practitioners", replacement: "operators" },
+  { word: "session", replacement: "delivery call" },
+  { word: "sessions", replacement: "delivery calls" },
+  { word: "modality", replacement: "offering" },
+  { word: "modalities", replacement: "offerings" },
+  { word: "intake", replacement: "onboarding" },
+  { word: "roster", replacement: "client base" },
+  { word: "healing", replacement: "transformation" },
+  { word: "therapy", replacement: "coaching" },
+  { word: "NLP", replacement: "method" },
+  { word: "contractor", replacement: "operator" },
+  { word: "construction", replacement: "industry" },
+];
+
+const OUTPUT_RULES_BLOCK = `
+
+CRITICAL OUTPUT RULES (override anything else):
+- Output ONLY two blocks, in this order: [POST] then [VISUAL DIRECTION]
+- Do NOT output [MEETING CLASSIFICATION], [MEETING TYPE], [UNIVERSAL PATTERN], [SUGGESTED MOMENT FOR POST], or any preamble headers
+- Do NOT use markdown headings (# or ##) anywhere in the output
+- The [POST] block must contain ONLY the publishable Facebook post — no labels, no commentary, no meta text
+- BANNED words (never appear in [POST]): practitioner, session, modality, intake, roster, healing, therapy, NLP, contractor, construction
+- Translate any client-specific nouns to: founder, operator, coach, consultant, service provider, delivery call, offering, client base`;
+
+function extractCleanCaption(rawText: string): { caption: string; visualDirection: string } {
+  if (!rawText) return { caption: "", visualDirection: "" };
+  let postBody = "";
+  let visualDirection = "";
+  const tagPostMatch = rawText.match(/\[POST\]\s*([\s\S]*?)(?:\n\s*\[VISUAL DIRECTION\]|$)/i);
+  const tagVisualMatch = rawText.match(/\[VISUAL DIRECTION\]\s*([\s\S]*)$/i);
+  if (tagPostMatch?.[1]?.trim()) {
+    postBody = tagPostMatch[1].trim();
+    visualDirection = tagVisualMatch?.[1]?.trim() || "";
+  } else {
+    const mdPostMatch = rawText.match(
+      /(?:^|\n)\s*(?:#{1,6}\s*POST|\*\*POST\*\*|POST:)\s*\n([\s\S]*?)(?=\n\s*(?:#{1,6}\s*VISUAL DIRECTION|\*\*VISUAL DIRECTION\*\*|VISUAL DIRECTION:|\[VISUAL DIRECTION\])|$)/i,
+    );
+    const mdVisualMatch = rawText.match(
+      /(?:^|\n)\s*(?:#{1,6}\s*VISUAL DIRECTION|\*\*VISUAL DIRECTION\*\*|VISUAL DIRECTION:|\[VISUAL DIRECTION\])\s*\n([\s\S]*)$/i,
+    );
+    if (mdPostMatch?.[1]?.trim()) {
+      postBody = mdPostMatch[1].trim();
+      visualDirection = mdVisualMatch?.[1]?.trim() || "";
+    } else {
+      postBody = rawText;
+    }
+  }
+
+  const headerPatterns = [
+    /^\s*\[?\s*MEETING CLASSIFICATION\s*\]?\s*:?\s*$/i,
+    /^\s*\[?\s*MEETING TYPE\s*\]?\s*:?.*$/i,
+    /^\s*\[?\s*UNIVERSAL PATTERN\s*\]?\s*:?.*$/i,
+    /^\s*\[?\s*SUGGESTED MOMENT FOR POST\s*\]?\s*:?\s*$/i,
+    /^\s*\[?\s*POST\s*\]?\s*:?\s*$/i,
+    /^\s*\[?\s*VISUAL DIRECTION\s*\]?\s*:?\s*$/i,
+    /^\s*\[?\s*OVERLAY_TAG\s*\]?\s*:?\s*$/i,
+    /^\s*\[?\s*IMAGE_DESCRIPTION\s*\]?\s*:?\s*$/i,
+    /^\s*#{1,6}\s*MEETING.*$/i,
+    /^\s*#{1,6}\s*POST\s*$/i,
+    /^\s*#{1,6}\s*VISUAL DIRECTION\s*$/i,
+    /^\s*\*\*\s*(?:POST|VISUAL DIRECTION|MEETING CLASSIFICATION|UNIVERSAL PATTERN|SUGGESTED MOMENT FOR POST)\s*\*\*\s*:?\s*$/i,
+    /^\s*(?:ARCHETYPE|SUBJECT OF IMAGE|SUPPORTING OBJECTS|HEADLINE FOR GRAPHIC|MOOD|IMAGE FROM LIBRARY|BACKGROUND STYLE)\s*:.*$/i,
+    /^\s*\*\*\s*(?:ARCHETYPE|SUBJECT OF IMAGE|SUPPORTING OBJECTS|HEADLINE FOR GRAPHIC|MOOD|IMAGE FROM LIBRARY|BACKGROUND STYLE)\s*\*\*\s*:.*$/i,
+    /^\s*-{3,}\s*$/,
+  ];
+
+  if (postBody === rawText) {
+    const cutMatch = postBody.match(
+      /(?:^|\n)\s*(?:\[VISUAL DIRECTION\]|#{1,6}\s*VISUAL DIRECTION|\*\*VISUAL DIRECTION\*\*|VISUAL DIRECTION:)/i,
+    );
+    if (cutMatch && typeof cutMatch.index === "number") {
+      visualDirection = postBody.slice(cutMatch.index).replace(/^[\s\S]*?\n/, "").trim();
+      postBody = postBody.slice(0, cutMatch.index);
+    }
+  }
+
+  const cleanedLines = postBody
+    .split("\n")
+    .filter((line) => !headerPatterns.some((re) => re.test(line)));
+  while (cleanedLines.length && cleanedLines[0].trim() === "") cleanedLines.shift();
+  while (cleanedLines.length && cleanedLines[cleanedLines.length - 1].trim() === "") cleanedLines.pop();
+
+  const collapsed: string[] = [];
+  let blankRun = 0;
+  for (const line of cleanedLines) {
+    if (line.trim() === "") {
+      blankRun++;
+      if (blankRun <= 2) collapsed.push(line);
+    } else {
+      blankRun = 0;
+      collapsed.push(line);
+    }
+  }
+  return { caption: collapsed.join("\n").trim(), visualDirection };
+}
+
+function findBannedWords(text: string): string[] {
+  const found: string[] = [];
+  for (const { word } of BANNED_WORDS) {
+    const re = new RegExp(`\\b${word}\\b`, "i");
+    if (re.test(text)) found.push(word);
+  }
+  return found;
+}
+
 async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
