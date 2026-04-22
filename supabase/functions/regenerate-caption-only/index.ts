@@ -249,21 +249,41 @@ function parseClaudeText(data: any): string {
 async function auditAndRewrite(
   caption: string,
   apiKey: string,
-): Promise<{ caption: string; rewritten: boolean; banned: string[] }> {
+  clientName?: string | null,
+  archetype?: string | null,
+): Promise<{ caption: string; rewritten: boolean; banned: string[]; names: string[]; brands: string[] }> {
   const banned = findBannedWords(caption);
-  if (banned.length === 0) return { caption, rewritten: false, banned: [] };
+  const names = findClientNameMentions(caption, clientName);
+  const brands = findToolBrandMentions(caption);
 
-  console.warn("Banned words detected, attempting one-shot rewrite:", banned.join(", "));
-  const replacementHints = BANNED_WORDS
-    .filter((b) => banned.some((w) => w.toLowerCase() === b.word.toLowerCase()))
-    .map((b) => `- "${b.word}" → "${b.replacement}"`)
-    .join("\n");
+  if (banned.length === 0 && names.length === 0 && brands.length === 0) {
+    return { caption, rewritten: false, banned: [], names: [], brands: [] };
+  }
 
-  const sys = `You rewrite social media posts to remove banned words while preserving voice, structure, hook, CTA, and length. Output ONLY the rewritten post — no preamble, no labels, no markdown headings.`;
-  const user = `Rewrite the post below, replacing every occurrence of these banned words with the suggested alternatives. Keep everything else identical (tone, line breaks, emoji, CTA).
+  const issues: string[] = [];
+  if (banned.length) issues.push(`banned: ${banned.join(", ")}`);
+  if (names.length) issues.push(`names: ${names.join(", ")}`);
+  if (brands.length) issues.push(`brands: ${brands.map((b) => b.brand).join(", ")}`);
+  console.warn("Audit issues detected, attempting one-shot rewrite:", issues.join(" | "));
+
+  const replacementLines: string[] = [];
+  for (const b of BANNED_WORDS) {
+    if (banned.some((w) => w.toLowerCase() === b.word.toLowerCase())) {
+      replacementLines.push(`- "${b.word}" → "${b.replacement}"`);
+    }
+  }
+  for (const name of names) {
+    replacementLines.push(`- "${name}" (real name) → "${archetype || "a founder"}" — never use the real name`);
+  }
+  for (const tb of brands) {
+    replacementLines.push(`- "${tb.brand}" (specific tool) → "${tb.replacement}"`);
+  }
+
+  const sys = `You rewrite social media posts to anonymize them while preserving voice, structure, hook, CTA, and length. Output ONLY the rewritten post — no preamble, no labels, no markdown headings.`;
+  const user = `Rewrite the post below, applying ALL of the following replacements exactly. Keep everything else identical (tone, line breaks, emoji, CTA, length).
 
 Replacements:
-${replacementHints}
+${replacementLines.join("\n")}
 
 POST:
 ${caption}`;
