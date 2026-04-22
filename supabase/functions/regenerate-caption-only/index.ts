@@ -25,6 +25,28 @@ const BANNED_WORDS: Array<{ word: string; replacement: string }> = [
   { word: "construction", replacement: "industry" },
 ];
 
+const TOOL_BRANDS: Array<{ brand: string; replacement: string }> = [
+  { brand: "GoHighLevel", replacement: "their CRM" },
+  { brand: "HighLevel", replacement: "their CRM" },
+  { brand: "GHL", replacement: "their CRM" },
+  { brand: "ClickFunnels", replacement: "their funnel builder" },
+  { brand: "Kajabi", replacement: "their course platform" },
+  { brand: "HubSpot", replacement: "their CRM" },
+  { brand: "Salesforce", replacement: "their CRM" },
+  { brand: "Zapier", replacement: "their automation stack" },
+  { brand: "Make.com", replacement: "their automation stack" },
+  { brand: "ActiveCampaign", replacement: "their email platform" },
+  { brand: "Mailchimp", replacement: "their email platform" },
+  { brand: "ConvertKit", replacement: "their email platform" },
+  { brand: "Calendly", replacement: "their booking tool" },
+  { brand: "ManyChat", replacement: "their chatbot tool" },
+  { brand: "Typeform", replacement: "their form builder" },
+];
+
+const NAME_ALLOWLIST = new Set<string>([
+  "Wali", "Wali Digital", "Carolyn", "Carolyn Miller",
+]);
+
 const OUTPUT_RULES_BLOCK = `
 
 CRITICAL OUTPUT RULES (override anything else):
@@ -33,7 +55,59 @@ CRITICAL OUTPUT RULES (override anything else):
 - Do NOT use markdown headings (# or ##) anywhere in the output
 - The [POST] block must contain ONLY the publishable Facebook post — no labels, no commentary, no meta text
 - BANNED words (never appear in [POST]): practitioner, session, modality, intake, roster, healing, therapy, NLP, contractor, construction
-- Translate any client-specific nouns to: founder, operator, coach, consultant, service provider, delivery call, offering, client base`;
+- Translate any client-specific nouns to: founder, operator, coach, consultant, service provider, delivery call, offering, client base
+- NEVER use real first or last names of clients, team members, or anyone mentioned in the input. Refer to them as "a founder", "an operator", "a coach", or use the archetype label provided.
+- NEVER name specific third-party tools/brands (GoHighLevel, ClickFunnels, Kajabi, HubSpot, Zapier, ActiveCampaign, Calendly, ManyChat, etc.). Use generic terms: "their CRM", "their funnel builder", "their automation stack", "their email platform", "their booking tool".
+- The post must read as a universal lesson — anyone could be the subject. No proper nouns identifying a specific client or vendor.`;
+
+function deriveArchetype(transcript: any): string {
+  const blob = `${transcript?.meeting_topic || ""} ${transcript?.summary || ""} ${transcript?.issues_discussed || ""}`.toLowerCase();
+  if (/\bagency\b/.test(blob)) return "agency founder";
+  if (/\bsaas\b|\bsoftware\b|\bplatform\b/.test(blob)) return "SaaS founder";
+  if (/\bcoach|coaching|program\b/.test(blob)) return "coach scaling delivery";
+  if (/\bconsult/.test(blob)) return "consultant";
+  if (/\bservice|done.for.you|dfy\b/.test(blob)) return "service provider";
+  if (/\bstrategy|systems?|scal(e|ing)|operator|c-?suite\b/.test(blob)) return "high-level strategic operator";
+  return "founder";
+}
+
+function findClientNameMentions(text: string, clientName: string | null | undefined): string[] {
+  const found = new Set<string>();
+  if (clientName) {
+    const parts = clientName.split(/\s+/).filter((p) => p.length >= 2);
+    for (const p of parts) {
+      if (NAME_ALLOWLIST.has(p)) continue;
+      const re = new RegExp(`\\b${p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
+      if (re.test(text)) found.add(p);
+    }
+  }
+  return Array.from(found);
+}
+
+function findToolBrandMentions(text: string): Array<{ brand: string; replacement: string }> {
+  const found: Array<{ brand: string; replacement: string }> = [];
+  for (const tb of TOOL_BRANDS) {
+    const re = new RegExp(`\\b${tb.brand.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
+    if (re.test(text)) found.push(tb);
+  }
+  return found;
+}
+
+function scrubKnownPII(text: string, clientName: string | null | undefined, archetype: string): string {
+  let out = text;
+  if (clientName) {
+    for (const p of clientName.split(/\s+/).filter((s) => s.length >= 2 && !NAME_ALLOWLIST.has(s))) {
+      out = out.replace(new RegExp(`\\b${p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "gi"), archetype);
+    }
+  }
+  for (const tb of TOOL_BRANDS) {
+    out = out.replace(
+      new RegExp(`\\b${tb.brand.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "gi"),
+      tb.replacement,
+    );
+  }
+  return out;
+}
 
 function extractCleanCaption(rawText: string): { caption: string; visualDirection: string } {
   if (!rawText) return { caption: "", visualDirection: "" };
@@ -175,21 +249,41 @@ function parseClaudeText(data: any): string {
 async function auditAndRewrite(
   caption: string,
   apiKey: string,
-): Promise<{ caption: string; rewritten: boolean; banned: string[] }> {
+  clientName?: string | null,
+  archetype?: string | null,
+): Promise<{ caption: string; rewritten: boolean; banned: string[]; names: string[]; brands: string[] }> {
   const banned = findBannedWords(caption);
-  if (banned.length === 0) return { caption, rewritten: false, banned: [] };
+  const names = findClientNameMentions(caption, clientName);
+  const brands = findToolBrandMentions(caption);
 
-  console.warn("Banned words detected, attempting one-shot rewrite:", banned.join(", "));
-  const replacementHints = BANNED_WORDS
-    .filter((b) => banned.some((w) => w.toLowerCase() === b.word.toLowerCase()))
-    .map((b) => `- "${b.word}" → "${b.replacement}"`)
-    .join("\n");
+  if (banned.length === 0 && names.length === 0 && brands.length === 0) {
+    return { caption, rewritten: false, banned: [], names: [], brands: [] };
+  }
 
-  const sys = `You rewrite social media posts to remove banned words while preserving voice, structure, hook, CTA, and length. Output ONLY the rewritten post — no preamble, no labels, no markdown headings.`;
-  const user = `Rewrite the post below, replacing every occurrence of these banned words with the suggested alternatives. Keep everything else identical (tone, line breaks, emoji, CTA).
+  const issues: string[] = [];
+  if (banned.length) issues.push(`banned: ${banned.join(", ")}`);
+  if (names.length) issues.push(`names: ${names.join(", ")}`);
+  if (brands.length) issues.push(`brands: ${brands.map((b) => b.brand).join(", ")}`);
+  console.warn("Audit issues detected, attempting one-shot rewrite:", issues.join(" | "));
+
+  const replacementLines: string[] = [];
+  for (const b of BANNED_WORDS) {
+    if (banned.some((w) => w.toLowerCase() === b.word.toLowerCase())) {
+      replacementLines.push(`- "${b.word}" → "${b.replacement}"`);
+    }
+  }
+  for (const name of names) {
+    replacementLines.push(`- "${name}" (real name) → "${archetype || "a founder"}" — never use the real name`);
+  }
+  for (const tb of brands) {
+    replacementLines.push(`- "${tb.brand}" (specific tool) → "${tb.replacement}"`);
+  }
+
+  const sys = `You rewrite social media posts to anonymize them while preserving voice, structure, hook, CTA, and length. Output ONLY the rewritten post — no preamble, no labels, no markdown headings.`;
+  const user = `Rewrite the post below, applying ALL of the following replacements exactly. Keep everything else identical (tone, line breaks, emoji, CTA, length).
 
 Replacements:
-${replacementHints}
+${replacementLines.join("\n")}
 
 POST:
 ${caption}`;
@@ -198,18 +292,23 @@ ${caption}`;
     const res = await callClaude(apiKey, sys, user, 1500, 30_000);
     if (!res.ok) {
       console.error("Audit rewrite call failed:", res.status);
-      return { caption, rewritten: false, banned };
+      return { caption, rewritten: false, banned, names, brands };
     }
     const data = await res.json();
     const rewrittenRaw = parseClaudeText(data);
     const { caption: cleaned } = extractCleanCaption(rewrittenRaw);
-    if (cleaned && findBannedWords(cleaned).length === 0) {
-      return { caption: cleaned, rewritten: true, banned };
+    if (
+      cleaned &&
+      findBannedWords(cleaned).length === 0 &&
+      findClientNameMentions(cleaned, clientName).length === 0 &&
+      findToolBrandMentions(cleaned).length === 0
+    ) {
+      return { caption: cleaned, rewritten: true, banned, names, brands };
     }
-    return { caption, rewritten: false, banned };
+    return { caption, rewritten: false, banned, names, brands };
   } catch (e) {
     console.error("Audit rewrite exception:", e);
-    return { caption, rewritten: false, banned };
+    return { caption, rewritten: false, banned, names, brands };
   }
 }
 
@@ -288,8 +387,11 @@ serve(async (req) => {
       .map((e: any) => `### ${e.title}\n${e.content}`)
       .join("\n\n");
 
-    // Build source material — try transcript if linked, else fall back to existing caption
+    // Build source material — try transcript if linked, else fall back to existing caption.
+    // We anonymize before handing anything to Claude.
     let sourceMaterial = "";
+    let transcriptForArchetype: any = null;
+    let clientName: string | null = null;
     if (post.transcript_id) {
       const { data: transcript } = await supabaseAdmin
         .from("zoom_transcripts")
@@ -297,16 +399,23 @@ serve(async (req) => {
         .eq("id", post.transcript_id)
         .single();
       if (transcript) {
+        transcriptForArchetype = transcript;
+        clientName = transcript.client_name || null;
+        const archetypeForBrief = deriveArchetype(transcript);
         sourceMaterial = `MEETING TOPIC: ${transcript.meeting_topic || ""}
-CLIENT: ${transcript.client_name || ""}
+CLIENT ARCHETYPE: ${archetypeForBrief}
 SUMMARY: ${transcript.summary || ""}
 ISSUES DISCUSSED: ${transcript.issues_discussed || ""}
 TRANSCRIPT EXCERPT: ${(transcript.transcript || "").slice(0, 4000)}`;
       }
     }
 
+    const archetype = deriveArchetype(transcriptForArchetype);
+
     if (!sourceMaterial) {
-      sourceMaterial = `PREVIOUS CAPTION (rewrite this with a fresh angle — same topic, different hook & structure):\n${post.caption || "(none)"}`;
+      // Pre-scrub the previous caption so a leaked name/brand doesn't get recycled.
+      const scrubbedPrevious = scrubKnownPII(post.caption || "(none)", clientName, archetype);
+      sourceMaterial = `PREVIOUS CAPTION (rewrite this with a fresh angle — same topic, different hook & structure):\n${scrubbedPrevious}\n\nClient archetype: ${archetype}`;
     }
 
     const userMessage = `${sourceMaterial}
@@ -378,12 +487,16 @@ Respond with the [POST] block and [VISUAL DIRECTION] block as specified.${OUTPUT
       });
     }
 
-    // Banned-word audit + one-shot rewrite
-    const auditResult = await auditAndRewrite(newCaption, ANTHROPIC_API_KEY);
+    // Banned-word + name + brand audit (one-shot rewrite if any leaks)
+    const auditResult = await auditAndRewrite(newCaption, ANTHROPIC_API_KEY, clientName, archetype);
     newCaption = auditResult.caption;
-    if (auditResult.banned.length > 0) {
+    if (auditResult.banned.length > 0 || auditResult.names.length > 0 || auditResult.brands.length > 0) {
+      const parts: string[] = [];
+      if (auditResult.banned.length) parts.push(`banned: ${auditResult.banned.join(", ")}`);
+      if (auditResult.names.length) parts.push(`names: ${auditResult.names.join(", ")}`);
+      if (auditResult.brands.length) parts.push(`brands: ${auditResult.brands.map((b) => b.brand).join(", ")}`);
       console.log(
-        `Audit: banned words ${auditResult.banned.join(", ")} — ${auditResult.rewritten ? "rewritten" : "rewrite failed, keeping original"}`,
+        `Regenerate audit — ${parts.join(" | ")} — ${auditResult.rewritten ? "rewritten" : "rewrite failed, keeping original"}`,
       );
     }
 
