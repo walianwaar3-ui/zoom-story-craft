@@ -82,6 +82,7 @@ const GeneratedPosts = () => {
   const [scheduleDate, setScheduleDate] = useState("");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editCaption, setEditCaption] = useState("");
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -348,16 +349,30 @@ const GeneratedPosts = () => {
           {posts.map((post) => {
             const isThisRegenerating = regeneratingId === post.id;
             return (
-              <Card key={post.id} className="overflow-visible">
+              <Card key={post.id} className="overflow-hidden">
                 {post.image_url && (
-                  <div className="aspect-square bg-muted relative group/image rounded-t-lg [perspective:1000px]">
+                  <div
+                    className="aspect-square bg-muted relative group/image overflow-hidden cursor-zoom-in"
+                    onClick={() => !isThisRegenerating && setPreviewImage(post.image_url)}
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Open full image preview"
+                  >
                     <img
                       src={post.image_url}
                       alt="Generated post visual"
-                      className="absolute inset-0 w-full h-full object-cover rounded-t-lg transition-all duration-300 ease-out group-hover/image:scale-[1.6] group-hover/image:z-30 group-hover/image:shadow-2xl group-hover/image:rounded-lg group-hover/image:object-contain group-hover/image:bg-background cursor-zoom-in"
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 ease-out group-hover/image:scale-110"
                     />
+                    {/* Subtle hover overlay with hint — stays inside the frame so caption never doubles */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/0 to-black/0 opacity-0 group-hover/image:opacity-100 transition-opacity duration-300 pointer-events-none" />
+                    <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between opacity-0 group-hover/image:opacity-100 transition-opacity duration-300 pointer-events-none">
+                      <span className="inline-flex items-center gap-1.5 rounded-full bg-background/90 backdrop-blur-sm px-3 py-1 text-xs font-medium text-foreground shadow-lg">
+                        <Search className="h-3 w-3" />
+                        Click to view full image
+                      </span>
+                    </div>
                     {isThisRegenerating && (
-                      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center gap-2 p-4 text-center rounded-t-lg z-40">
+                      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center gap-2 p-4 text-center z-40">
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
                         <p className="text-sm font-medium">
                           {regenMode === "caption" ? CAPTION_LOADING_LABEL : SMART_IMAGE_LOADING_LABEL}
@@ -799,6 +814,25 @@ const GeneratedPosts = () => {
               )}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Full-image preview lightbox — clean, no caption overlap */}
+      <Dialog open={!!previewImage} onOpenChange={(open) => !open && setPreviewImage(null)}>
+        <DialogContent className="max-w-5xl p-2 sm:p-3 bg-background border-border">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Full image preview</DialogTitle>
+            <DialogDescription>Press Escape or click outside to close.</DialogDescription>
+          </DialogHeader>
+          {previewImage && (
+            <div className="relative w-full max-h-[85vh] flex items-center justify-center bg-muted/30 rounded-md overflow-hidden">
+              <img
+                src={previewImage}
+                alt="Full generated post visual"
+                className="max-w-full max-h-[85vh] w-auto h-auto object-contain"
+              />
+            </div>
+          )}
         </DialogContent>
       </Dialog>
     </div>
