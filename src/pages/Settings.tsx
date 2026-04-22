@@ -122,6 +122,75 @@ const Settings = () => {
         </p>
       </div>
 
+      {/* AI Provider */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Sparkles className="h-5 w-5" />
+                AI Provider
+              </CardTitle>
+              <CardDescription>
+                Powers caption generation, image-prompt building, and the smart-regenerate diagnostic.
+              </CardDescription>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => anthropicQuery.refetch()}
+              disabled={anthropicQuery.isFetching}
+            >
+              {anthropicQuery.isFetching ? (
+                <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+              ) : (
+                <RefreshCw className="h-4 w-4 mr-1" />
+              )}
+              Test connection
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {anthropicQuery.isLoading || anthropicQuery.isFetching ? (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              Checking connection...
+            </div>
+          ) : anthropicQuery.isError ? (
+            <div className="flex items-start gap-3 rounded-lg border border-destructive/30 bg-destructive/5 p-4">
+              <XCircle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <p className="text-sm font-medium text-destructive">
+                  Not connected
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  {(anthropicQuery.error as Error)?.message ||
+                    "Unable to reach Anthropic. Check that ANTHROPIC_API_KEY is configured."}
+                </p>
+              </div>
+            </div>
+          ) : (
+            <div className="flex items-start gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4">
+              <CheckCircle2 className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-sm font-medium">Connected</p>
+                  <Badge variant="secondary" className="text-xs">
+                    Claude (Anthropic)
+                  </Badge>
+                  <Badge variant="outline" className="text-xs font-mono">
+                    {anthropicQuery.data?.model || "claude-sonnet-4-5"}
+                  </Badge>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Anthropic API is reachable and your key is valid. Image generation continues to use fal.ai.
+                </p>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       {/* GHL Connection */}
       <Card>
         <CardHeader>
