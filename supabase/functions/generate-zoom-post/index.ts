@@ -80,7 +80,7 @@ serve(async (req) => {
   }
 
   try {
-    const { transcript_id, custom_prompt, aspect_ratio } = await req.json();
+    const { transcript_id, custom_prompt, aspect_ratio, post_count } = await req.json();
 
     if (!transcript_id) {
       return new Response(
@@ -88,6 +88,10 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // Clamp post count between 1 and 14
+    const requestedCount = Number.isFinite(Number(post_count)) ? Math.floor(Number(post_count)) : 1;
+    const totalPosts = Math.max(1, Math.min(14, requestedCount));
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -154,7 +158,7 @@ serve(async (req) => {
       : "";
 
     // ============================================================
-    // STEP 1: Generate Caption
+    // STEP 1: Generate Caption (looped for batch generation)
     // ============================================================
     const baseCaptionPrompt = getPrompt("Caption Prompt", "Master", "Master Prompt", "MASTER PROMPT");
     if (!baseCaptionPrompt) {
@@ -165,58 +169,73 @@ serve(async (req) => {
     }
     const captionSystemPrompt = baseCaptionPrompt + kbContext;
 
-    const captionUserPrompt = custom_prompt
-      ? `${custom_prompt}\n\nMeeting: ${transcript.meeting_topic}\nClient: ${transcript.client_name || "N/A"}\nSummary: ${transcript.summary || "N/A"}\nIssues: ${transcript.issues_discussed || "N/A"}\nTranscript excerpt: ${(transcript.transcript || "").slice(0, 3000)}`
-      : `Meeting: ${transcript.meeting_topic}\nClient: ${transcript.client_name || "N/A"}\nSummary: ${transcript.summary || "N/A"}\nKey Issues: ${transcript.issues_discussed || "N/A"}\nTranscript: ${(transcript.transcript || "").slice(0, 3000)}`;
+    const results: Array<{ content_id: string; caption: string; image_url: string | null; warning: string | null }> = [];
+    const errors: string[] = [];
+    const previousHooks: string[] = [];
 
-    const captionResponse = await callClaude(ANTHROPIC_API_KEY, captionSystemPrompt, captionUserPrompt, 1500, 60_000);
+    for (let postIndex = 1; postIndex <= totalPosts; postIndex++) {
+      const variationHint = totalPosts > 1
+        ? `\n\nIMPORTANT — VARIATION: This is post ${postIndex} of ${totalPosts} from the SAME transcript. Each post must explore a DIFFERENT angle, hook, takeaway, or quote so the series feels fresh across ${totalPosts} days. Do not repeat hooks or core messages from earlier posts in this series. Pick a distinct insight, story beat, or objection to highlight for this one.${previousHooks.length ? `\n\nHOOKS ALREADY USED (do NOT repeat or paraphrase):\n${previousHooks.map((h, i) => `${i + 1}. ${h}`).join("\n")}` : ""}`
+        : "";
 
-    if (!captionResponse.ok) {
-      const errResp = handleClaudeError(captionResponse.status);
-      if (errResp) return errResp;
-      const errText = await captionResponse.text();
-      console.error("Caption generation error:", captionResponse.status, errText);
-      return new Response(JSON.stringify({ error: "Failed to generate caption" }), {
-        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+      const baseUser = custom_prompt
+        ? `${custom_prompt}\n\nMeeting: ${transcript.meeting_topic}\nClient: ${transcript.client_name || "N/A"}\nSummary: ${transcript.summary || "N/A"}\nIssues: ${transcript.issues_discussed || "N/A"}\nTranscript excerpt: ${(transcript.transcript || "").slice(0, 3000)}`
+        : `Meeting: ${transcript.meeting_topic}\nClient: ${transcript.client_name || "N/A"}\nSummary: ${transcript.summary || "N/A"}\nKey Issues: ${transcript.issues_discussed || "N/A"}\nTranscript: ${(transcript.transcript || "").slice(0, 3000)}`;
 
-    const captionData = await captionResponse.json();
-    const rawCaption = parseClaudeText(captionData);
-    const postMatch = rawCaption.match(/\[POST\]\s*([\s\S]*?)(?:\n\s*\[VISUAL DIRECTION\]|$)/i);
-    const visualDirectionMatch = rawCaption.match(/\[VISUAL DIRECTION\]\s*([\s\S]*)$/i);
-    const caption = postMatch?.[1]?.trim() || rawCaption.trim();
-    const visualDirection = visualDirectionMatch?.[1]?.trim() || "";
+      const captionUserPrompt = baseUser + variationHint;
 
-    // ============================================================
-    // STEP 2: Build the fal.ai prompt via LLM (Image Prompt Builder)
-    // ============================================================
-    const imagePromptBuilder = getPrompt(
-      "Image Prompt Builder",
-      "Image Prompt",
-      "image prompt builder",
-      "image prompt"
-    );
+      const captionResponse = await callClaude(ANTHROPIC_API_KEY, captionSystemPrompt, captionUserPrompt, 1500, 60_000);
 
-    const { data: overlayEntries } = await supabaseAdmin
-      .from("knowledgebase")
-      .select("title, content, image_url")
-      .eq("category", "Overlay Images")
-      .not("image_url", "is", null);
+      if (!captionResponse.ok) {
+        const errResp = handleClaudeError(captionResponse.status);
+        // For batch, only abort the whole request on first post; otherwise log & continue
+        if (errResp && postIndex === 1) return errResp;
+        const errText = await captionResponse.text();
+        console.error(`Caption generation error (post ${postIndex}):`, captionResponse.status, errText);
+        errors.push(`Post ${postIndex}: caption failed (HTTP ${captionResponse.status})`);
+        continue;
+      }
 
-    const overlays = (overlayEntries || []).filter((e: any) => e.image_url);
-    const overlayLibraryList = overlays
-      .map((e: any) => `- ${e.title}: ${(e.content || "").slice(0, 120)}`)
-      .join("\n");
+      const captionData = await captionResponse.json();
+      const rawCaption = parseClaudeText(captionData);
+      const postMatch = rawCaption.match(/\[POST\]\s*([\s\S]*?)(?:\n\s*\[VISUAL DIRECTION\]|$)/i);
+      const visualDirectionMatch = rawCaption.match(/\[VISUAL DIRECTION\]\s*([\s\S]*)$/i);
+      const caption = postMatch?.[1]?.trim() || rawCaption.trim();
+      const visualDirection = visualDirectionMatch?.[1]?.trim() || "";
 
-    let imageDescription = "";
-    let overlayTag = "";
-    let imagePrompt = "";
-    let selectedPhoto: string | null = null;
-    let llmBuilderError: string | null = null;
+      // Track first non-empty line as the "hook" so future posts in the series don't repeat it
+      const firstLine = caption.split("\n").find((l: string) => l.trim().length > 0)?.trim() || "";
+      if (firstLine) previousHooks.push(firstLine.slice(0, 140));
 
-    if (imagePromptBuilder && overlays.length > 0) {
-      const builderSystem = `${imagePromptBuilder}
+      // ============================================================
+      // STEP 2: Build the fal.ai prompt via LLM (Image Prompt Builder)
+      // ============================================================
+      const imagePromptBuilder = getPrompt(
+        "Image Prompt Builder",
+        "Image Prompt",
+        "image prompt builder",
+        "image prompt"
+      );
+
+      const { data: overlayEntries } = await supabaseAdmin
+        .from("knowledgebase")
+        .select("title, content, image_url")
+        .eq("category", "Overlay Images")
+        .not("image_url", "is", null);
+
+      const overlays = (overlayEntries || []).filter((e: any) => e.image_url);
+      const overlayLibraryList = overlays
+        .map((e: any) => `- ${e.title}: ${(e.content || "").slice(0, 120)}`)
+        .join("\n");
+
+      let imageDescription = "";
+      let overlayTag = "";
+      let imagePrompt = "";
+      let selectedPhoto: string | null = null;
+      let llmBuilderError: string | null = null;
+
+      if (imagePromptBuilder && overlays.length > 0) {
+        const builderSystem = `${imagePromptBuilder}
 
 AVAILABLE OVERLAY IMAGES (pick one tag from this list for [OVERLAY_TAG]):
 ${overlayLibraryList}
@@ -228,173 +247,197 @@ OUTPUT FORMAT — respond with EXACTLY these two blocks and nothing else:
 [IMAGE_DESCRIPTION]
 <a concise 300-500 character visual description for an image generation model — describe composition, mood, lighting, text overlays, layout. Do NOT include the overlay-image instructions, only the final scene description.>`;
 
-      const builderUser = `CAPTION:\n${caption}\n\n[VISUAL DIRECTION]\n${visualDirection || "(none provided)"}\n\nASPECT RATIO: ${aspect_ratio || "1:1"}`;
+        const builderUser = `CAPTION:\n${caption}\n\n[VISUAL DIRECTION]\n${visualDirection || "(none provided)"}\n\nASPECT RATIO: ${aspect_ratio || "1:1"}`;
 
-      try {
-        const builderRes = await callClaude(ANTHROPIC_API_KEY, builderSystem, builderUser, 800, 30_000);
+        try {
+          const builderRes = await callClaude(ANTHROPIC_API_KEY, builderSystem, builderUser, 800, 30_000);
 
-        if (!builderRes.ok) {
-          const errResp = handleClaudeError(builderRes.status);
-          if (errResp) return errResp;
-          const errText = await builderRes.text();
-          console.error("Image prompt builder failed:", builderRes.status, errText);
-          llmBuilderError = `LLM error ${builderRes.status}`;
-        } else {
-          const builderData = await builderRes.json();
-          const raw = parseClaudeText(builderData);
-          const tagMatch = raw.match(/\[OVERLAY_TAG\]\s*([\s\S]*?)(?:\n\s*\[IMAGE_DESCRIPTION\]|$)/i);
-          const descMatch = raw.match(/\[IMAGE_DESCRIPTION\]\s*([\s\S]*)$/i);
-          overlayTag = tagMatch?.[1]?.trim() || "";
-          imageDescription = descMatch?.[1]?.trim() || "";
-
-          if (!overlayTag || !imageDescription) {
-            console.error("Image prompt builder returned invalid format:", raw);
-            llmBuilderError = "Image description generation failed — retry";
+          if (!builderRes.ok) {
+            const errResp = handleClaudeError(builderRes.status);
+            if (errResp && postIndex === 1) return errResp;
+            const errText = await builderRes.text();
+            console.error(`Image prompt builder failed (post ${postIndex}):`, builderRes.status, errText);
+            llmBuilderError = `LLM error ${builderRes.status}`;
           } else {
-            const tagLower = overlayTag.toLowerCase();
-            const matched =
-              overlays.find((o: any) => o.title?.toLowerCase() === tagLower) ||
-              overlays.find((o: any) =>
-                o.title?.toLowerCase().includes(tagLower) || tagLower.includes(o.title?.toLowerCase())
-              );
-            selectedPhoto = (matched || overlays[Math.floor(Math.random() * overlays.length)]).image_url;
-            imagePrompt = imageDescription;
+            const builderData = await builderRes.json();
+            const raw = parseClaudeText(builderData);
+            const tagMatch = raw.match(/\[OVERLAY_TAG\]\s*([\s\S]*?)(?:\n\s*\[IMAGE_DESCRIPTION\]|$)/i);
+            const descMatch = raw.match(/\[IMAGE_DESCRIPTION\]\s*([\s\S]*)$/i);
+            overlayTag = tagMatch?.[1]?.trim() || "";
+            imageDescription = descMatch?.[1]?.trim() || "";
+
+            if (!overlayTag || !imageDescription) {
+              console.error("Image prompt builder returned invalid format:", raw);
+              llmBuilderError = "Image description generation failed — retry";
+            } else {
+              const tagLower = overlayTag.toLowerCase();
+              const matched =
+                overlays.find((o: any) => o.title?.toLowerCase() === tagLower) ||
+                overlays.find((o: any) =>
+                  o.title?.toLowerCase().includes(tagLower) || tagLower.includes(o.title?.toLowerCase())
+                );
+              selectedPhoto = (matched || overlays[Math.floor(Math.random() * overlays.length)]).image_url;
+              imagePrompt = imageDescription;
+            }
           }
+        } catch (e) {
+          console.error("Image prompt builder exception:", e);
+          llmBuilderError = e instanceof Error && e.name === "AbortError"
+            ? "Image description generation timed out — retry"
+            : "Image description generation failed — retry";
         }
-      } catch (e) {
-        console.error("Image prompt builder exception:", e);
-        llmBuilderError = e instanceof Error && e.name === "AbortError"
-          ? "Image description generation timed out — retry"
-          : "Image description generation failed — retry";
+      } else {
+        selectedPhoto = overlays.length
+          ? overlays[Math.floor(Math.random() * overlays.length)].image_url
+          : null;
+        const hookLine = caption.split("\n").find((l: string) => l.trim().length > 0) || transcript.meeting_topic;
+        imagePrompt = [
+          `High-contrast social media graphic, ${aspect_ratio || "1:1"}.`,
+          `Hook: ${hookLine.slice(0, 80)}.`,
+          visualDirection ? `Visual direction: ${visualDirection.slice(0, 200)}` : null,
+          "Use the overlay photo as main subject. Clean typography, professional layout.",
+        ]
+          .filter(Boolean)
+          .join(" ");
       }
-    } else {
-      selectedPhoto = overlays.length
-        ? overlays[Math.floor(Math.random() * overlays.length)].image_url
-        : null;
-      const hookLine = caption.split("\n").find((l: string) => l.trim().length > 0) || transcript.meeting_topic;
-      imagePrompt = [
-        `High-contrast social media graphic, ${aspect_ratio || "1:1"}.`,
-        `Hook: ${hookLine.slice(0, 80)}.`,
-        visualDirection ? `Visual direction: ${visualDirection.slice(0, 200)}` : null,
-        "Use the overlay photo as main subject. Clean typography, professional layout.",
-      ]
-        .filter(Boolean)
-        .join(" ");
-    }
 
-    // ============================================================
-    // STEP 3: Generate image with fal.ai (60s timeout)
-    // ============================================================
-    let imageUrl: string | null = null;
-    const FAL_KEY = Deno.env.get("FAL_KEY");
+      // ============================================================
+      // STEP 3: Generate image with fal.ai (60s timeout)
+      // ============================================================
+      let imageUrl: string | null = null;
+      const FAL_KEY = Deno.env.get("FAL_KEY");
 
-    if (FAL_KEY && selectedPhoto && imagePrompt && !llmBuilderError) {
-      const sizeMap: Record<string, { width: number; height: number }> = {
-        "1:1": { width: 1024, height: 1024 },
-        "9:16": { width: 768, height: 1344 },
-        "16:9": { width: 1344, height: 768 },
-        "4:5": { width: 896, height: 1120 },
-      };
-      const imageSize = sizeMap[aspect_ratio || "1:1"] || sizeMap["1:1"];
+      if (FAL_KEY && selectedPhoto && imagePrompt && !llmBuilderError) {
+        const sizeMap: Record<string, { width: number; height: number }> = {
+          "1:1": { width: 1024, height: 1024 },
+          "9:16": { width: 768, height: 1344 },
+          "16:9": { width: 1344, height: 768 },
+          "4:5": { width: 896, height: 1120 },
+        };
+        const imageSize = sizeMap[aspect_ratio || "1:1"] || sizeMap["1:1"];
 
-      try {
-        const submitRes = await fetchWithTimeout(
-          "https://queue.fal.run/fal-ai/nano-banana-2/edit",
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Key ${FAL_KEY}`,
-              "Content-Type": "application/json",
+        try {
+          const submitRes = await fetchWithTimeout(
+            "https://queue.fal.run/fal-ai/nano-banana-2/edit",
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Key ${FAL_KEY}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                prompt: imagePrompt,
+                image_urls: [selectedPhoto],
+                image_size: imageSize,
+                num_images: 1,
+              }),
             },
-            body: JSON.stringify({
-              prompt: imagePrompt,
-              image_urls: [selectedPhoto],
-              image_size: imageSize,
-              num_images: 1,
-            }),
-          },
-          15_000
-        );
+            15_000
+          );
 
-        if (!submitRes.ok) {
-          console.error("fal.ai submit failed:", submitRes.status, await submitRes.text());
-        } else {
-          const submitData = await submitRes.json();
-          const statusUrl = submitData.status_url;
-          const responseUrl = submitData.response_url;
+          if (!submitRes.ok) {
+            console.error("fal.ai submit failed:", submitRes.status, await submitRes.text());
+          } else {
+            const submitData = await submitRes.json();
+            const statusUrl = submitData.status_url;
+            const responseUrl = submitData.response_url;
 
-          const deadline = Date.now() + 60_000;
-          while (Date.now() < deadline) {
-            await new Promise((r) => setTimeout(r, 2000));
-            const statusRes = await fetch(statusUrl, {
-              headers: { Authorization: `Key ${FAL_KEY}` },
-            });
-            if (!statusRes.ok) continue;
-            const statusData = await statusRes.json();
-            if (statusData.status === "COMPLETED") {
-              const finalRes = await fetch(responseUrl, {
+            const deadline = Date.now() + 60_000;
+            while (Date.now() < deadline) {
+              await new Promise((r) => setTimeout(r, 2000));
+              const statusRes = await fetch(statusUrl, {
                 headers: { Authorization: `Key ${FAL_KEY}` },
               });
-              if (finalRes.ok) {
-                const finalData = await finalRes.json();
-                imageUrl = finalData.images?.[0]?.url || null;
+              if (!statusRes.ok) continue;
+              const statusData = await statusRes.json();
+              if (statusData.status === "COMPLETED") {
+                const finalRes = await fetch(responseUrl, {
+                  headers: { Authorization: `Key ${FAL_KEY}` },
+                });
+                if (finalRes.ok) {
+                  const finalData = await finalRes.json();
+                  imageUrl = finalData.images?.[0]?.url || null;
+                }
+                break;
               }
-              break;
+              if (statusData.status === "FAILED" || statusData.status === "ERROR") {
+                console.error("fal.ai generation failed:", statusData);
+                break;
+              }
             }
-            if (statusData.status === "FAILED" || statusData.status === "ERROR") {
-              console.error("fal.ai generation failed:", statusData);
-              break;
+            if (!imageUrl) {
+              console.error("fal.ai polling timed out within 60s window");
             }
           }
-          if (!imageUrl) {
-            console.error("fal.ai polling timed out within 60s window");
-          }
+        } catch (falErr) {
+          console.error("fal.ai error:", falErr);
         }
-      } catch (falErr) {
-        console.error("fal.ai error:", falErr);
+      } else {
+        if (!FAL_KEY) console.error("FAL_KEY not configured");
+        if (!selectedPhoto) console.error("No overlay photo available");
+        if (llmBuilderError) console.error("Skipping fal.ai due to builder error:", llmBuilderError);
       }
-    } else {
-      if (!FAL_KEY) console.error("FAL_KEY not configured");
-      if (!selectedPhoto) console.error("No overlay photo available");
-      if (llmBuilderError) console.error("Skipping fal.ai due to builder error:", llmBuilderError);
-    }
 
-    // ============================================================
-    // STEP 4: Save to generated_content
-    // ============================================================
-    const { data: content, error: insertError } = await supabaseAdmin
-      .from("generated_content")
-      .insert({
-        transcript_id,
-        caption,
-        image_url: imageUrl,
-        image_prompt: imagePrompt,
-        aspect_ratio: aspect_ratio || "1:1",
-        status: imageUrl ? "complete" : "text_only",
-      })
-      .select()
-      .single();
+      // ============================================================
+      // STEP 4: Save to generated_content
+      // ============================================================
+      const { data: content, error: insertError } = await supabaseAdmin
+        .from("generated_content")
+        .insert({
+          transcript_id,
+          caption,
+          image_url: imageUrl,
+          image_prompt: imagePrompt,
+          aspect_ratio: aspect_ratio || "1:1",
+          status: imageUrl ? "complete" : "text_only",
+        })
+        .select()
+        .single();
 
-    if (insertError) {
-      console.error("Insert error:", insertError);
-      return new Response(
-        JSON.stringify({ error: insertError.message }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
+      if (insertError) {
+        console.error(`Insert error (post ${postIndex}):`, insertError);
+        errors.push(`Post ${postIndex}: save failed`);
+        continue;
+      }
 
-    await supabaseAdmin
-      .from("zoom_transcripts")
-      .update({ status: "used" })
-      .eq("id", transcript_id);
-
-    return new Response(
-      JSON.stringify({
-        success: true,
+      results.push({
         content_id: content.id,
         caption,
         image_url: imageUrl,
         warning: llmBuilderError || (imageUrl ? null : "Image generation failed — caption saved only"),
+      });
+    }
+    // end batch loop
+
+    // Mark transcript as used if we produced at least one post
+    if (results.length > 0) {
+      await supabaseAdmin
+        .from("zoom_transcripts")
+        .update({ status: "used" })
+        .eq("id", transcript_id);
+    }
+
+    if (results.length === 0) {
+      return new Response(
+        JSON.stringify({ error: "All post generations failed", details: errors }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Backwards-compatible response: include first post at top level + full array
+    const first = results[0];
+    return new Response(
+      JSON.stringify({
+        success: true,
+        total_posts: results.length,
+        requested_count: totalPosts,
+        posts: results,
+        errors: errors.length ? errors : undefined,
+        // legacy single-post fields (first post)
+        content_id: first.content_id,
+        caption: first.caption,
+        image_url: first.image_url,
+        warning: first.warning,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
