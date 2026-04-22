@@ -88,6 +88,19 @@ const Settings = () => {
     retry: false,
   });
 
+  const anthropicQuery = useQuery({
+    queryKey: ["anthropic-connection-check"],
+    queryFn: async () => {
+      const { data, error } = await supabase.functions.invoke("test-anthropic", {
+        body: {},
+      });
+      if (error) throw error;
+      if (!data?.connected) throw new Error(data?.error || "Not connected");
+      return { connected: true, model: data.model as string };
+    },
+    retry: false,
+  });
+
   const copy = async (text: string, id: string) => {
     await navigator.clipboard.writeText(text);
     setCopiedId(id);
