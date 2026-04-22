@@ -432,7 +432,7 @@ const GeneratedPosts = () => {
                       onClick={() => { setEditingId(post.id); setEditCaption(post.caption!); }}
                     >
                       <Pencil className="h-4 w-4 absolute top-3 right-3 opacity-0 group-hover:opacity-60 transition-opacity" />
-                      <p className="text-sm whitespace-pre-wrap leading-relaxed">
+                      <p className="text-sm whitespace-pre-wrap leading-[1.7] tracking-[0.005em]">
                         {post.caption}
                       </p>
                     </div>
