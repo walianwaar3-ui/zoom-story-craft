@@ -47,7 +47,7 @@ type GeneratedResult = {
 const ZoomPosts = () => {
   const [selectedTranscript, setSelectedTranscript] = useState<Transcript | null>(null);
   const [viewTranscript, setViewTranscript] = useState<Transcript | null>(null);
-  const [customPrompt, setCustomPrompt] = useState("");
+  const [postCount, setPostCount] = useState<number>(1);
   const [aspectRatio, setAspectRatio] = useState("1:1");
   const [showFathomImport, setShowFathomImport] = useState(false);
   // GHL popup state
