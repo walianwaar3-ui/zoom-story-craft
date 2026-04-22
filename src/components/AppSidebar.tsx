@@ -1,6 +1,5 @@
 import { Video, FileText, LayoutDashboard, BookOpen, Sparkles, Settings as SettingsIcon } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
-import { useLocation } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
@@ -11,14 +10,18 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarHeader,
+  SidebarFooter,
   useSidebar,
 } from "@/components/ui/sidebar";
 
-const navItems = [
+const primaryNav = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
   { title: "Zoom Transcripts", url: "/zoom-posts", icon: Video },
   { title: "Generate Post", url: "/generate-post", icon: Sparkles },
   { title: "Generated Posts", url: "/generated", icon: FileText },
+];
+
+const secondaryNav = [
   { title: "Knowledgebase", url: "/knowledgebase", icon: BookOpen },
   { title: "Settings", url: "/settings", icon: SettingsIcon },
 ];
@@ -26,46 +29,78 @@ const navItems = [
 export function AppSidebar() {
   const { state } = useSidebar();
   const collapsed = state === "collapsed";
-  const location = useLocation();
 
   return (
-    <Sidebar collapsible="icon">
-      <SidebarHeader className="border-b border-sidebar-border px-4 py-4">
-        {!collapsed && (
-          <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-              <Video className="h-4 w-4" />
+    <Sidebar collapsible="icon" className="border-r border-sidebar-border">
+      <SidebarHeader className="border-b border-sidebar-border/60 px-4 py-5 bg-gradient-sidebar">
+        {!collapsed ? (
+          <div className="flex items-center gap-3">
+            <div className="relative flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-brand shadow-glow">
+              <Sparkles className="h-4 w-4 text-primary-foreground" strokeWidth={2.5} />
             </div>
-            <div>
-              <p className="text-sm font-semibold text-sidebar-foreground" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+            <div className="min-w-0">
+              <p className="font-display text-lg leading-none text-sidebar-foreground tracking-tight">
                 ZoomPost
               </p>
-              <p className="text-xs text-sidebar-foreground/60">Content Generator</p>
+              <p className="text-[11px] uppercase tracking-[0.14em] text-sidebar-foreground/50 mt-1">
+                Content Studio
+              </p>
             </div>
           </div>
-        )}
-        {collapsed && (
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground mx-auto">
-            <Video className="h-4 w-4" />
+        ) : (
+          <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-brand mx-auto shadow-glow">
+            <Sparkles className="h-4 w-4 text-primary-foreground" strokeWidth={2.5} />
           </div>
         )}
       </SidebarHeader>
-      <SidebarContent>
+
+      <SidebarContent className="bg-gradient-sidebar px-2 py-3">
         <SidebarGroup>
-          <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+          {!collapsed && (
+            <SidebarGroupLabel className="text-[10px] uppercase tracking-[0.14em] text-sidebar-foreground/40 px-3 mb-1">
+              Workspace
+            </SidebarGroupLabel>
+          )}
           <SidebarGroupContent>
             <SidebarMenu>
-              {navItems.map((item) => (
+              {primaryNav.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
+                  <SidebarMenuButton asChild className="h-9">
                     <NavLink
                       to={item.url}
                       end
-                      className="hover:bg-sidebar-accent/50"
-                      activeClassName="bg-sidebar-accent text-sidebar-primary font-medium"
+                      className="flex items-center gap-3 rounded-md px-3 text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-xs"
                     >
-                      <item.icon className="mr-2 h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
+                      <item.icon className="h-4 w-4 shrink-0" />
+                      {!collapsed && <span className="truncate">{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup className="mt-4">
+          {!collapsed && (
+            <SidebarGroupLabel className="text-[10px] uppercase tracking-[0.14em] text-sidebar-foreground/40 px-3 mb-1">
+              System
+            </SidebarGroupLabel>
+          )}
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {secondaryNav.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild className="h-9">
+                    <NavLink
+                      to={item.url}
+                      end
+                      className="flex items-center gap-3 rounded-md px-3 text-sm text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors"
+                      activeClassName="bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-xs"
+                    >
+                      <item.icon className="h-4 w-4 shrink-0" />
+                      {!collapsed && <span className="truncate">{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -74,6 +109,15 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+
+      <SidebarFooter className="bg-gradient-sidebar border-t border-sidebar-border/60 px-4 py-3">
+        {!collapsed && (
+          <div className="text-[10px] text-sidebar-foreground/40 leading-relaxed">
+            Operator-grade content<br />
+            powered by AI.
+          </div>
+        )}
+      </SidebarFooter>
     </Sidebar>
   );
 }
