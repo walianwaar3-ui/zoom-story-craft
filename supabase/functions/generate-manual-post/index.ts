@@ -375,7 +375,8 @@ serve(async (req) => {
 
     const captionSystemPrompt = baseCaptionPrompt + kbContext;
 
-    const captionRes = await callClaude(ANTHROPIC_API_KEY, captionSystemPrompt, formattedBrief, 1500, 60_000);
+    const captionUserPrompt = formattedBrief + OUTPUT_RULES_BLOCK;
+    const captionRes = await callClaude(ANTHROPIC_API_KEY, captionSystemPrompt, captionUserPrompt, 1500, 60_000);
     if (!captionRes.ok) {
       const errResp = handleClaudeError(captionRes.status, corsHeaders);
       if (errResp) return errResp;
@@ -387,10 +388,14 @@ serve(async (req) => {
     }
     const captionData = await captionRes.json();
     const rawCaption = parseClaudeText(captionData);
-    const postMatch = rawCaption.match(/\[POST\]\s*([\s\S]*?)(?:\n\s*\[VISUAL DIRECTION\]|$)/i);
-    const visualDirectionMatch = rawCaption.match(/\[VISUAL DIRECTION\]\s*([\s\S]*)$/i);
-    const caption = postMatch?.[1]?.trim() || rawCaption.trim();
-    const visualDirection = visualDirectionMatch?.[1]?.trim() || "";
+    const { caption: extractedCaption, visualDirection } = extractCleanCaption(rawCaption);
+    const auditResult = await auditAndRewrite(extractedCaption, ANTHROPIC_API_KEY);
+    const caption = auditResult.caption;
+    if (auditResult.banned.length > 0) {
+      console.log(
+        `Audit: banned words ${auditResult.banned.join(", ")} — ${auditResult.rewritten ? "rewritten" : "rewrite failed, keeping original"}`,
+      );
+    }
 
     // ============================================================
     // STEP 3: Build image prompt via "Image Prompt Builder"
