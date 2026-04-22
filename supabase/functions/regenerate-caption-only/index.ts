@@ -487,12 +487,16 @@ Respond with the [POST] block and [VISUAL DIRECTION] block as specified.${OUTPUT
       });
     }
 
-    // Banned-word audit + one-shot rewrite
-    const auditResult = await auditAndRewrite(newCaption, ANTHROPIC_API_KEY);
+    // Banned-word + name + brand audit (one-shot rewrite if any leaks)
+    const auditResult = await auditAndRewrite(newCaption, ANTHROPIC_API_KEY, clientName, archetype);
     newCaption = auditResult.caption;
-    if (auditResult.banned.length > 0) {
+    if (auditResult.banned.length > 0 || auditResult.names.length > 0 || auditResult.brands.length > 0) {
+      const parts: string[] = [];
+      if (auditResult.banned.length) parts.push(`banned: ${auditResult.banned.join(", ")}`);
+      if (auditResult.names.length) parts.push(`names: ${auditResult.names.join(", ")}`);
+      if (auditResult.brands.length) parts.push(`brands: ${auditResult.brands.map((b) => b.brand).join(", ")}`);
       console.log(
-        `Audit: banned words ${auditResult.banned.join(", ")} — ${auditResult.rewritten ? "rewritten" : "rewrite failed, keeping original"}`,
+        `Regenerate audit — ${parts.join(" | ")} — ${auditResult.rewritten ? "rewritten" : "rewrite failed, keeping original"}`,
       );
     }
 
