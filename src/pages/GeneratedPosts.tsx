@@ -816,6 +816,25 @@ const GeneratedPosts = () => {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Full-image preview lightbox — clean, no caption overlap */}
+      <Dialog open={!!previewImage} onOpenChange={(open) => !open && setPreviewImage(null)}>
+        <DialogContent className="max-w-5xl p-2 sm:p-3 bg-background border-border">
+          <DialogHeader className="sr-only">
+            <DialogTitle>Full image preview</DialogTitle>
+            <DialogDescription>Press Escape or click outside to close.</DialogDescription>
+          </DialogHeader>
+          {previewImage && (
+            <div className="relative w-full max-h-[85vh] flex items-center justify-center bg-muted/30 rounded-md overflow-hidden">
+              <img
+                src={previewImage}
+                alt="Full generated post visual"
+                className="max-w-full max-h-[85vh] w-auto h-auto object-contain"
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
