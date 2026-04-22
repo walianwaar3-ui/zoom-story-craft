@@ -25,6 +25,29 @@ const BANNED_WORDS: Array<{ word: string; replacement: string }> = [
   { word: "construction", replacement: "industry" },
 ];
 
+const TOOL_BRANDS: Array<{ brand: string; replacement: string }> = [
+  { brand: "GoHighLevel", replacement: "their CRM" },
+  { brand: "HighLevel", replacement: "their CRM" },
+  { brand: "GHL", replacement: "their CRM" },
+  { brand: "ClickFunnels", replacement: "their funnel builder" },
+  { brand: "Kajabi", replacement: "their course platform" },
+  { brand: "HubSpot", replacement: "their CRM" },
+  { brand: "Salesforce", replacement: "their CRM" },
+  { brand: "Zapier", replacement: "their automation stack" },
+  { brand: "Make.com", replacement: "their automation stack" },
+  { brand: "ActiveCampaign", replacement: "their email platform" },
+  { brand: "Mailchimp", replacement: "their email platform" },
+  { brand: "ConvertKit", replacement: "their email platform" },
+  { brand: "Calendly", replacement: "their booking tool" },
+  { brand: "ManyChat", replacement: "their chatbot tool" },
+  { brand: "Typeform", replacement: "their form builder" },
+];
+
+// Names that are allowed to appear (brand assets, not client names)
+const NAME_ALLOWLIST = new Set<string>([
+  "Wali", "Wali Digital", "Carolyn", "Carolyn Miller",
+]);
+
 const OUTPUT_RULES_BLOCK = `
 
 CRITICAL OUTPUT RULES (override anything else):
@@ -33,7 +56,43 @@ CRITICAL OUTPUT RULES (override anything else):
 - Do NOT use markdown headings (# or ##) anywhere in the output
 - The [POST] block must contain ONLY the publishable Facebook post — no labels, no commentary, no meta text
 - BANNED words (never appear in [POST]): practitioner, session, modality, intake, roster, healing, therapy, NLP, contractor, construction
-- Translate any client-specific nouns to: founder, operator, coach, consultant, service provider, delivery call, offering, client base`;
+- Translate any client-specific nouns to: founder, operator, coach, consultant, service provider, delivery call, offering, client base
+- NEVER use real first or last names of clients, team members, or anyone mentioned in the transcript. Refer to them as "a founder", "an operator", "a coach", or use the archetype label provided in the brief.
+- NEVER name specific third-party tools/brands (GoHighLevel, ClickFunnels, Kajabi, HubSpot, Zapier, ActiveCampaign, Calendly, ManyChat, etc.). Use generic terms: "their CRM", "their funnel builder", "their automation stack", "their email platform", "their booking tool".
+- The post must read as a universal lesson — anyone could be the subject. No proper nouns identifying a specific client or vendor.`;
+
+function deriveArchetype(transcript: any): string {
+  const blob = `${transcript?.meeting_topic || ""} ${transcript?.summary || ""} ${transcript?.issues_discussed || ""}`.toLowerCase();
+  if (/\bagency\b/.test(blob)) return "agency founder";
+  if (/\bsaas\b|\bsoftware\b|\bplatform\b/.test(blob)) return "SaaS founder";
+  if (/\bcoach|coaching|program\b/.test(blob)) return "coach scaling delivery";
+  if (/\bconsult/.test(blob)) return "consultant";
+  if (/\bservice|done.for.you|dfy\b/.test(blob)) return "service provider";
+  if (/\bstrategy|systems?|scal(e|ing)|operator|c-?suite\b/.test(blob)) return "high-level strategic operator";
+  return "founder";
+}
+
+function findClientNameMentions(text: string, clientName: string | null | undefined): string[] {
+  const found = new Set<string>();
+  if (clientName) {
+    const parts = clientName.split(/\s+/).filter((p) => p.length >= 2);
+    for (const p of parts) {
+      if (NAME_ALLOWLIST.has(p)) continue;
+      const re = new RegExp(`\\b${p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
+      if (re.test(text)) found.add(p);
+    }
+  }
+  return Array.from(found);
+}
+
+function findToolBrandMentions(text: string): Array<{ brand: string; replacement: string }> {
+  const found: Array<{ brand: string; replacement: string }> = [];
+  for (const tb of TOOL_BRANDS) {
+    const re = new RegExp(`\\b${tb.brand.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
+    if (re.test(text)) found.push(tb);
+  }
+  return found;
+}
 
 function extractCleanCaption(rawText: string): { caption: string; visualDirection: string } {
   if (!rawText) return { caption: "", visualDirection: "" };
@@ -184,21 +243,41 @@ function parseClaudeText(data: any): string {
 async function auditAndRewrite(
   caption: string,
   apiKey: string,
-): Promise<{ caption: string; rewritten: boolean; banned: string[] }> {
+  clientName?: string | null,
+  archetype?: string | null,
+): Promise<{ caption: string; rewritten: boolean; banned: string[]; names: string[]; brands: string[] }> {
   const banned = findBannedWords(caption);
-  if (banned.length === 0) return { caption, rewritten: false, banned: [] };
+  const names = findClientNameMentions(caption, clientName);
+  const brands = findToolBrandMentions(caption);
 
-  console.warn("Banned words detected, attempting one-shot rewrite:", banned.join(", "));
-  const replacementHints = BANNED_WORDS
-    .filter((b) => banned.some((w) => w.toLowerCase() === b.word.toLowerCase()))
-    .map((b) => `- "${b.word}" → "${b.replacement}"`)
-    .join("\n");
+  if (banned.length === 0 && names.length === 0 && brands.length === 0) {
+    return { caption, rewritten: false, banned: [], names: [], brands: [] };
+  }
 
-  const sys = `You rewrite social media posts to remove banned words while preserving voice, structure, hook, CTA, and length. Output ONLY the rewritten post — no preamble, no labels, no markdown headings.`;
-  const user = `Rewrite the post below, replacing every occurrence of these banned words with the suggested alternatives. Keep everything else identical (tone, line breaks, emoji, CTA).
+  const issues: string[] = [];
+  if (banned.length) issues.push(`banned words: ${banned.join(", ")}`);
+  if (names.length) issues.push(`client names: ${names.join(", ")}`);
+  if (brands.length) issues.push(`tool brands: ${brands.map((b) => b.brand).join(", ")}`);
+  console.warn("Audit issues detected, attempting one-shot rewrite:", issues.join(" | "));
+
+  const replacementLines: string[] = [];
+  for (const b of BANNED_WORDS) {
+    if (banned.some((w) => w.toLowerCase() === b.word.toLowerCase())) {
+      replacementLines.push(`- "${b.word}" → "${b.replacement}"`);
+    }
+  }
+  for (const name of names) {
+    replacementLines.push(`- "${name}" (real name) → "${archetype || "a founder"}" or "they / them" — never use the real name`);
+  }
+  for (const tb of brands) {
+    replacementLines.push(`- "${tb.brand}" (specific tool) → "${tb.replacement}"`);
+  }
+
+  const sys = `You rewrite social media posts to anonymize them while preserving voice, structure, hook, CTA, and length. Output ONLY the rewritten post — no preamble, no labels, no markdown headings.`;
+  const user = `Rewrite the post below, applying ALL of the following replacements exactly. Keep everything else identical (tone, line breaks, emoji, CTA, length).
 
 Replacements:
-${replacementHints}
+${replacementLines.join("\n")}
 
 POST:
 ${caption}`;
