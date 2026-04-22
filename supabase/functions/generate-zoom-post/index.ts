@@ -432,7 +432,7 @@ You MUST write this post about the assigned angle above and nothing else. Do NOT
         ? `${custom_prompt}\n\nMeeting: ${transcript.meeting_topic}\nClient: ${transcript.client_name || "N/A"}\nSummary: ${transcript.summary || "N/A"}\nIssues: ${transcript.issues_discussed || "N/A"}\nTranscript excerpt: ${(transcript.transcript || "").slice(0, 3000)}`
         : `Meeting: ${transcript.meeting_topic}\nClient: ${transcript.client_name || "N/A"}\nSummary: ${transcript.summary || "N/A"}\nKey Issues: ${transcript.issues_discussed || "N/A"}\nTranscript: ${(transcript.transcript || "").slice(0, 3000)}`;
 
-      const captionUserPrompt = baseUser + variationHint;
+      const captionUserPrompt = baseUser + variationHint + OUTPUT_RULES_BLOCK;
 
       const captionResponse = await callClaude(ANTHROPIC_API_KEY, captionSystemPrompt, captionUserPrompt, 1500, 60_000);
 
@@ -448,10 +448,16 @@ You MUST write this post about the assigned angle above and nothing else. Do NOT
 
       const captionData = await captionResponse.json();
       const rawCaption = parseClaudeText(captionData);
-      const postMatch = rawCaption.match(/\[POST\]\s*([\s\S]*?)(?:\n\s*\[VISUAL DIRECTION\]|$)/i);
-      const visualDirectionMatch = rawCaption.match(/\[VISUAL DIRECTION\]\s*([\s\S]*)$/i);
-      const caption = postMatch?.[1]?.trim() || rawCaption.trim();
-      const visualDirection = visualDirectionMatch?.[1]?.trim() || "";
+      const { caption: extractedCaption, visualDirection } = extractCleanCaption(rawCaption);
+
+      // Banned-word audit + one-shot rewrite
+      const auditResult = await auditAndRewrite(extractedCaption, ANTHROPIC_API_KEY);
+      const caption = auditResult.caption;
+      if (auditResult.banned.length > 0) {
+        console.log(
+          `Post ${postIndex} audit: banned words ${auditResult.banned.join(", ")} — ${auditResult.rewritten ? "rewritten" : "rewrite failed, keeping original"}`,
+        );
+      }
 
       // Track first non-empty line as the "hook" + assigned theme so future posts don't repeat
       const firstLine = caption.split("\n").find((l: string) => l.trim().length > 0)?.trim() || "";
