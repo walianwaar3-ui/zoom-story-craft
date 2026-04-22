@@ -314,7 +314,7 @@ TRANSCRIPT EXCERPT: ${(transcript.transcript || "").slice(0, 4000)}`;
 ${notes ? `USER NOTES ON WHAT TO IMPROVE:\n${notes}\n` : ""}
 IMPORTANT: The image for this post is already generated and will NOT change. Write a NEW caption that fits the existing visual concept but with a stronger hook, sharper structure, and clearer CTA than the previous version.
 
-Respond with the [POST] block and [VISUAL DIRECTION] block as specified.`;
+Respond with the [POST] block and [VISUAL DIRECTION] block as specified.${OUTPUT_RULES_BLOCK}`;
 
     const systemPrompt = extraContext
       ? `${captionPrompt}\n\n---\nADDITIONAL BRAND CONTEXT:\n${extraContext}`
@@ -322,24 +322,7 @@ Respond with the [POST] block and [VISUAL DIRECTION] block as specified.`;
 
     let captionRaw = "";
     try {
-      const res = await fetchWithTimeout(
-        "https://api.anthropic.com/v1/messages",
-        {
-          method: "POST",
-          headers: {
-            "x-api-key": ANTHROPIC_API_KEY,
-            "anthropic-version": "2023-06-01",
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: ANTHROPIC_MODEL,
-            max_tokens: 1500,
-            system: systemPrompt,
-            messages: [{ role: "user", content: userMessage }],
-          }),
-        },
-        45_000,
-      );
+      const res = await callClaude(ANTHROPIC_API_KEY, systemPrompt, userMessage, 1500, 45_000);
 
       if (!res.ok) {
         const status = res.status;
@@ -370,13 +353,7 @@ Respond with the [POST] block and [VISUAL DIRECTION] block as specified.`;
       }
 
       const data = await res.json();
-      const blocks = data?.content;
-      captionRaw = Array.isArray(blocks)
-        ? blocks
-            .filter((b: any) => b?.type === "text" && typeof b.text === "string")
-            .map((b: any) => b.text)
-            .join("")
-        : "";
+      captionRaw = parseClaudeText(data);
     } catch (e) {
       console.error("Caption exception:", e);
       return new Response(
@@ -390,15 +367,24 @@ Respond with the [POST] block and [VISUAL DIRECTION] block as specified.`;
       );
     }
 
-    // Extract [POST] block
-    const postMatch = captionRaw.match(/\[POST\]\s*([\s\S]*?)(?:\n\s*\[VISUAL DIRECTION\]|$)/i);
-    const newCaption = postMatch?.[1]?.trim() || captionRaw.trim();
+    // Layered extraction (handles [POST], # POST, **POST**, fallback strip)
+    const { caption: extractedCaption } = extractCleanCaption(captionRaw);
+    let newCaption = extractedCaption;
 
     if (!newCaption) {
       return new Response(JSON.stringify({ error: "Empty caption returned — retry" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Banned-word audit + one-shot rewrite
+    const auditResult = await auditAndRewrite(newCaption, ANTHROPIC_API_KEY);
+    newCaption = auditResult.caption;
+    if (auditResult.banned.length > 0) {
+      console.log(
+        `Audit: banned words ${auditResult.banned.join(", ")} — ${auditResult.rewritten ? "rewritten" : "rewrite failed, keeping original"}`,
+      );
     }
 
     // Update only caption (and bump regenerated_count)
