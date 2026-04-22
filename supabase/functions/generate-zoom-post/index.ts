@@ -158,7 +158,7 @@ serve(async (req) => {
       : "";
 
     // ============================================================
-    // STEP 1: Generate Caption
+    // STEP 1: Generate Caption (looped for batch generation)
     // ============================================================
     const baseCaptionPrompt = getPrompt("Caption Prompt", "Master", "Master Prompt", "MASTER PROMPT");
     if (!baseCaptionPrompt) {
@@ -169,9 +169,20 @@ serve(async (req) => {
     }
     const captionSystemPrompt = baseCaptionPrompt + kbContext;
 
-    const captionUserPrompt = custom_prompt
-      ? `${custom_prompt}\n\nMeeting: ${transcript.meeting_topic}\nClient: ${transcript.client_name || "N/A"}\nSummary: ${transcript.summary || "N/A"}\nIssues: ${transcript.issues_discussed || "N/A"}\nTranscript excerpt: ${(transcript.transcript || "").slice(0, 3000)}`
-      : `Meeting: ${transcript.meeting_topic}\nClient: ${transcript.client_name || "N/A"}\nSummary: ${transcript.summary || "N/A"}\nKey Issues: ${transcript.issues_discussed || "N/A"}\nTranscript: ${(transcript.transcript || "").slice(0, 3000)}`;
+    const results: Array<{ content_id: string; caption: string; image_url: string | null; warning: string | null }> = [];
+    const errors: string[] = [];
+    const previousHooks: string[] = [];
+
+    for (let postIndex = 1; postIndex <= totalPosts; postIndex++) {
+      const variationHint = totalPosts > 1
+        ? `\n\nIMPORTANT — VARIATION: This is post ${postIndex} of ${totalPosts} from the SAME transcript. Each post must explore a DIFFERENT angle, hook, takeaway, or quote so the series feels fresh across ${totalPosts} days. Do not repeat hooks or core messages from earlier posts in this series. Pick a distinct insight, story beat, or objection to highlight for this one.${previousHooks.length ? `\n\nHOOKS ALREADY USED (do NOT repeat or paraphrase):\n${previousHooks.map((h, i) => `${i + 1}. ${h}`).join("\n")}` : ""}`
+        : "";
+
+      const baseUser = custom_prompt
+        ? `${custom_prompt}\n\nMeeting: ${transcript.meeting_topic}\nClient: ${transcript.client_name || "N/A"}\nSummary: ${transcript.summary || "N/A"}\nIssues: ${transcript.issues_discussed || "N/A"}\nTranscript excerpt: ${(transcript.transcript || "").slice(0, 3000)}`
+        : `Meeting: ${transcript.meeting_topic}\nClient: ${transcript.client_name || "N/A"}\nSummary: ${transcript.summary || "N/A"}\nKey Issues: ${transcript.issues_discussed || "N/A"}\nTranscript: ${(transcript.transcript || "").slice(0, 3000)}`;
+
+      const captionUserPrompt = baseUser + variationHint;
 
     const captionResponse = await callClaude(ANTHROPIC_API_KEY, captionSystemPrompt, captionUserPrompt, 1500, 60_000);
 
