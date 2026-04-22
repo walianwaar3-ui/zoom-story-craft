@@ -387,8 +387,11 @@ serve(async (req) => {
       .map((e: any) => `### ${e.title}\n${e.content}`)
       .join("\n\n");
 
-    // Build source material — try transcript if linked, else fall back to existing caption
+    // Build source material — try transcript if linked, else fall back to existing caption.
+    // We anonymize before handing anything to Claude.
     let sourceMaterial = "";
+    let transcriptForArchetype: any = null;
+    let clientName: string | null = null;
     if (post.transcript_id) {
       const { data: transcript } = await supabaseAdmin
         .from("zoom_transcripts")
@@ -396,16 +399,23 @@ serve(async (req) => {
         .eq("id", post.transcript_id)
         .single();
       if (transcript) {
+        transcriptForArchetype = transcript;
+        clientName = transcript.client_name || null;
+        const archetypeForBrief = deriveArchetype(transcript);
         sourceMaterial = `MEETING TOPIC: ${transcript.meeting_topic || ""}
-CLIENT: ${transcript.client_name || ""}
+CLIENT ARCHETYPE: ${archetypeForBrief}
 SUMMARY: ${transcript.summary || ""}
 ISSUES DISCUSSED: ${transcript.issues_discussed || ""}
 TRANSCRIPT EXCERPT: ${(transcript.transcript || "").slice(0, 4000)}`;
       }
     }
 
+    const archetype = deriveArchetype(transcriptForArchetype);
+
     if (!sourceMaterial) {
-      sourceMaterial = `PREVIOUS CAPTION (rewrite this with a fresh angle — same topic, different hook & structure):\n${post.caption || "(none)"}`;
+      // Pre-scrub the previous caption so a leaked name/brand doesn't get recycled.
+      const scrubbedPrevious = scrubKnownPII(post.caption || "(none)", clientName, archetype);
+      sourceMaterial = `PREVIOUS CAPTION (rewrite this with a fresh angle — same topic, different hook & structure):\n${scrubbedPrevious}\n\nClient archetype: ${archetype}`;
     }
 
     const userMessage = `${sourceMaterial}
