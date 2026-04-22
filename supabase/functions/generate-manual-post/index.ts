@@ -462,9 +462,13 @@ serve(async (req) => {
     const { caption: extractedCaption, visualDirection } = extractCleanCaption(rawCaption);
     const auditResult = await auditAndRewrite(extractedCaption, ANTHROPIC_API_KEY);
     const caption = auditResult.caption;
-    if (auditResult.banned.length > 0) {
+    if (auditResult.banned.length > 0 || auditResult.names.length > 0 || auditResult.brands.length > 0) {
+      const parts: string[] = [];
+      if (auditResult.banned.length) parts.push(`banned: ${auditResult.banned.join(", ")}`);
+      if (auditResult.names.length) parts.push(`names: ${auditResult.names.join(", ")}`);
+      if (auditResult.brands.length) parts.push(`brands: ${auditResult.brands.map((b) => b.brand).join(", ")}`);
       console.log(
-        `Audit: banned words ${auditResult.banned.join(", ")} — ${auditResult.rewritten ? "rewritten" : "rewrite failed, keeping original"}`,
+        `Manual post audit — ${parts.join(" | ")} — ${auditResult.rewritten ? "rewritten" : "rewrite failed, keeping original"}`,
       );
     }
 
