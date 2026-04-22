@@ -25,6 +25,28 @@ const BANNED_WORDS: Array<{ word: string; replacement: string }> = [
   { word: "construction", replacement: "industry" },
 ];
 
+const TOOL_BRANDS: Array<{ brand: string; replacement: string }> = [
+  { brand: "GoHighLevel", replacement: "their CRM" },
+  { brand: "HighLevel", replacement: "their CRM" },
+  { brand: "GHL", replacement: "their CRM" },
+  { brand: "ClickFunnels", replacement: "their funnel builder" },
+  { brand: "Kajabi", replacement: "their course platform" },
+  { brand: "HubSpot", replacement: "their CRM" },
+  { brand: "Salesforce", replacement: "their CRM" },
+  { brand: "Zapier", replacement: "their automation stack" },
+  { brand: "Make.com", replacement: "their automation stack" },
+  { brand: "ActiveCampaign", replacement: "their email platform" },
+  { brand: "Mailchimp", replacement: "their email platform" },
+  { brand: "ConvertKit", replacement: "their email platform" },
+  { brand: "Calendly", replacement: "their booking tool" },
+  { brand: "ManyChat", replacement: "their chatbot tool" },
+  { brand: "Typeform", replacement: "their form builder" },
+];
+
+const NAME_ALLOWLIST = new Set<string>([
+  "Wali", "Wali Digital", "Carolyn", "Carolyn Miller",
+]);
+
 const OUTPUT_RULES_BLOCK = `
 
 CRITICAL OUTPUT RULES (override anything else):
@@ -33,7 +55,59 @@ CRITICAL OUTPUT RULES (override anything else):
 - Do NOT use markdown headings (# or ##) anywhere in the output
 - The [POST] block must contain ONLY the publishable Facebook post — no labels, no commentary, no meta text
 - BANNED words (never appear in [POST]): practitioner, session, modality, intake, roster, healing, therapy, NLP, contractor, construction
-- Translate any client-specific nouns to: founder, operator, coach, consultant, service provider, delivery call, offering, client base`;
+- Translate any client-specific nouns to: founder, operator, coach, consultant, service provider, delivery call, offering, client base
+- NEVER use real first or last names of clients, team members, or anyone mentioned in the input. Refer to them as "a founder", "an operator", "a coach", or use the archetype label provided.
+- NEVER name specific third-party tools/brands (GoHighLevel, ClickFunnels, Kajabi, HubSpot, Zapier, ActiveCampaign, Calendly, ManyChat, etc.). Use generic terms: "their CRM", "their funnel builder", "their automation stack", "their email platform", "their booking tool".
+- The post must read as a universal lesson — anyone could be the subject. No proper nouns identifying a specific client or vendor.`;
+
+function deriveArchetype(transcript: any): string {
+  const blob = `${transcript?.meeting_topic || ""} ${transcript?.summary || ""} ${transcript?.issues_discussed || ""}`.toLowerCase();
+  if (/\bagency\b/.test(blob)) return "agency founder";
+  if (/\bsaas\b|\bsoftware\b|\bplatform\b/.test(blob)) return "SaaS founder";
+  if (/\bcoach|coaching|program\b/.test(blob)) return "coach scaling delivery";
+  if (/\bconsult/.test(blob)) return "consultant";
+  if (/\bservice|done.for.you|dfy\b/.test(blob)) return "service provider";
+  if (/\bstrategy|systems?|scal(e|ing)|operator|c-?suite\b/.test(blob)) return "high-level strategic operator";
+  return "founder";
+}
+
+function findClientNameMentions(text: string, clientName: string | null | undefined): string[] {
+  const found = new Set<string>();
+  if (clientName) {
+    const parts = clientName.split(/\s+/).filter((p) => p.length >= 2);
+    for (const p of parts) {
+      if (NAME_ALLOWLIST.has(p)) continue;
+      const re = new RegExp(`\\b${p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
+      if (re.test(text)) found.add(p);
+    }
+  }
+  return Array.from(found);
+}
+
+function findToolBrandMentions(text: string): Array<{ brand: string; replacement: string }> {
+  const found: Array<{ brand: string; replacement: string }> = [];
+  for (const tb of TOOL_BRANDS) {
+    const re = new RegExp(`\\b${tb.brand.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "i");
+    if (re.test(text)) found.push(tb);
+  }
+  return found;
+}
+
+function scrubKnownPII(text: string, clientName: string | null | undefined, archetype: string): string {
+  let out = text;
+  if (clientName) {
+    for (const p of clientName.split(/\s+/).filter((s) => s.length >= 2 && !NAME_ALLOWLIST.has(s))) {
+      out = out.replace(new RegExp(`\\b${p.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "gi"), archetype);
+    }
+  }
+  for (const tb of TOOL_BRANDS) {
+    out = out.replace(
+      new RegExp(`\\b${tb.brand.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`, "gi"),
+      tb.replacement,
+    );
+  }
+  return out;
+}
 
 function extractCleanCaption(rawText: string): { caption: string; visualDirection: string } {
   if (!rawText) return { caption: "", visualDirection: "" };
