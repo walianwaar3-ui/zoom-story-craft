@@ -7,7 +7,8 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Helper: fetch with timeout
+const ANTHROPIC_MODEL = "claude-sonnet-4-5";
+
 async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
@@ -16,6 +17,61 @@ async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: nu
   } finally {
     clearTimeout(id);
   }
+}
+
+async function callClaude(
+  apiKey: string,
+  systemPrompt: string,
+  userPrompt: string,
+  maxTokens: number,
+  timeoutMs: number,
+) {
+  return await fetchWithTimeout(
+    "https://api.anthropic.com/v1/messages",
+    {
+      method: "POST",
+      headers: {
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: ANTHROPIC_MODEL,
+        max_tokens: maxTokens,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userPrompt }],
+      }),
+    },
+    timeoutMs,
+  );
+}
+
+function handleClaudeError(status: number) {
+  if (status === 429) {
+    return new Response(JSON.stringify({ error: "Rate limited by Claude. Please try again in a moment." }), {
+      status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  if (status === 529) {
+    return new Response(JSON.stringify({ error: "Claude API is overloaded. Please retry shortly." }), {
+      status: 529, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  if (status === 401) {
+    return new Response(JSON.stringify({ error: "Invalid Anthropic API key. Update ANTHROPIC_API_KEY in Settings." }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  return null;
+}
+
+function parseClaudeText(data: any): string {
+  const blocks = data?.content;
+  if (!Array.isArray(blocks)) return "";
+  return blocks
+    .filter((b: any) => b?.type === "text" && typeof b.text === "string")
+    .map((b: any) => b.text)
+    .join("");
 }
 
 serve(async (req) => {
@@ -51,10 +107,10 @@ serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!ANTHROPIC_API_KEY) {
       return new Response(
-        JSON.stringify({ error: "LOVABLE_API_KEY not configured" }),
+        JSON.stringify({ error: "ANTHROPIC_API_KEY not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -83,7 +139,6 @@ serve(async (req) => {
       return null;
     };
 
-    // Build context from KB categories
     const contextParts: string[] = [];
     if (kbByCategory["Brand Guidelines"]?.length) {
       contextParts.push(`BRAND GUIDELINES:\n${kbByCategory["Brand Guidelines"].join("\n\n")}`);
@@ -110,49 +165,24 @@ serve(async (req) => {
     }
     const captionSystemPrompt = baseCaptionPrompt + kbContext;
 
-    const captionPrompt = custom_prompt
+    const captionUserPrompt = custom_prompt
       ? `${custom_prompt}\n\nMeeting: ${transcript.meeting_topic}\nClient: ${transcript.client_name || "N/A"}\nSummary: ${transcript.summary || "N/A"}\nIssues: ${transcript.issues_discussed || "N/A"}\nTranscript excerpt: ${(transcript.transcript || "").slice(0, 3000)}`
       : `Meeting: ${transcript.meeting_topic}\nClient: ${transcript.client_name || "N/A"}\nSummary: ${transcript.summary || "N/A"}\nKey Issues: ${transcript.issues_discussed || "N/A"}\nTranscript: ${(transcript.transcript || "").slice(0, 3000)}`;
 
-    const captionResponse = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-3-flash-preview",
-          messages: [
-            { role: "system", content: captionSystemPrompt },
-            { role: "user", content: captionPrompt },
-          ],
-        }),
-      }
-    );
+    const captionResponse = await callClaude(ANTHROPIC_API_KEY, captionSystemPrompt, captionUserPrompt, 1500, 60_000);
 
     if (!captionResponse.ok) {
-      const status = captionResponse.status;
-      if (status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limited. Please try again later." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (status === 402) {
-        return new Response(JSON.stringify({ error: "Credits exhausted. Please add funds." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
+      const errResp = handleClaudeError(captionResponse.status);
+      if (errResp) return errResp;
       const errText = await captionResponse.text();
-      console.error("Caption generation error:", status, errText);
+      console.error("Caption generation error:", captionResponse.status, errText);
       return new Response(JSON.stringify({ error: "Failed to generate caption" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const captionData = await captionResponse.json();
-    const rawCaption = captionData.choices?.[0]?.message?.content || "";
+    const rawCaption = parseClaudeText(captionData);
     const postMatch = rawCaption.match(/\[POST\]\s*([\s\S]*?)(?:\n\s*\[VISUAL DIRECTION\]|$)/i);
     const visualDirectionMatch = rawCaption.match(/\[VISUAL DIRECTION\]\s*([\s\S]*)$/i);
     const caption = postMatch?.[1]?.trim() || rawCaption.trim();
@@ -161,7 +191,6 @@ serve(async (req) => {
     // ============================================================
     // STEP 2: Build the fal.ai prompt via LLM (Image Prompt Builder)
     // ============================================================
-    // Look up KB entry under several aliases (renamed to "Image Prompt Builder")
     const imagePromptBuilder = getPrompt(
       "Image Prompt Builder",
       "Image Prompt",
@@ -169,7 +198,6 @@ serve(async (req) => {
       "image prompt"
     );
 
-    // Fetch overlay images library
     const { data: overlayEntries } = await supabaseAdmin
       .from("knowledgebase")
       .select("title, content, image_url")
@@ -183,12 +211,11 @@ serve(async (req) => {
 
     let imageDescription = "";
     let overlayTag = "";
-    let imagePrompt = ""; // final prompt sent to fal.ai
+    let imagePrompt = "";
     let selectedPhoto: string | null = null;
     let llmBuilderError: string | null = null;
 
     if (imagePromptBuilder && overlays.length > 0) {
-      // Augment system prompt with available overlay tags so the LLM can pick one
       const builderSystem = `${imagePromptBuilder}
 
 AVAILABLE OVERLAY IMAGES (pick one tag from this list for [OVERLAY_TAG]):
@@ -204,33 +231,17 @@ OUTPUT FORMAT — respond with EXACTLY these two blocks and nothing else:
       const builderUser = `CAPTION:\n${caption}\n\n[VISUAL DIRECTION]\n${visualDirection || "(none provided)"}\n\nASPECT RATIO: ${aspect_ratio || "1:1"}`;
 
       try {
-        const builderRes = await fetchWithTimeout(
-          "https://ai.gateway.lovable.dev/v1/chat/completions",
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${LOVABLE_API_KEY}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              model: "google/gemini-3-flash-preview",
-              max_tokens: 800,
-              messages: [
-                { role: "system", content: builderSystem },
-                { role: "user", content: builderUser },
-              ],
-            }),
-          },
-          30_000
-        );
+        const builderRes = await callClaude(ANTHROPIC_API_KEY, builderSystem, builderUser, 800, 30_000);
 
         if (!builderRes.ok) {
+          const errResp = handleClaudeError(builderRes.status);
+          if (errResp) return errResp;
           const errText = await builderRes.text();
           console.error("Image prompt builder failed:", builderRes.status, errText);
           llmBuilderError = `LLM error ${builderRes.status}`;
         } else {
           const builderData = await builderRes.json();
-          const raw = builderData.choices?.[0]?.message?.content || "";
+          const raw = parseClaudeText(builderData);
           const tagMatch = raw.match(/\[OVERLAY_TAG\]\s*([\s\S]*?)(?:\n\s*\[IMAGE_DESCRIPTION\]|$)/i);
           const descMatch = raw.match(/\[IMAGE_DESCRIPTION\]\s*([\s\S]*)$/i);
           overlayTag = tagMatch?.[1]?.trim() || "";
@@ -240,7 +251,6 @@ OUTPUT FORMAT — respond with EXACTLY these two blocks and nothing else:
             console.error("Image prompt builder returned invalid format:", raw);
             llmBuilderError = "Image description generation failed — retry";
           } else {
-            // Match overlay by title (case-insensitive contains both ways)
             const tagLower = overlayTag.toLowerCase();
             const matched =
               overlays.find((o: any) => o.title?.toLowerCase() === tagLower) ||
@@ -258,7 +268,6 @@ OUTPUT FORMAT — respond with EXACTLY these two blocks and nothing else:
           : "Image description generation failed — retry";
       }
     } else {
-      // Fallback: no builder entry → simple prompt + random overlay
       selectedPhoto = overlays.length
         ? overlays[Math.floor(Math.random() * overlays.length)].image_url
         : null;
@@ -289,7 +298,6 @@ OUTPUT FORMAT — respond with EXACTLY these two blocks and nothing else:
       const imageSize = sizeMap[aspect_ratio || "1:1"] || sizeMap["1:1"];
 
       try {
-        // Submit async
         const submitRes = await fetchWithTimeout(
           "https://queue.fal.run/fal-ai/nano-banana-2/edit",
           {
@@ -315,7 +323,6 @@ OUTPUT FORMAT — respond with EXACTLY these two blocks and nothing else:
           const statusUrl = submitData.status_url;
           const responseUrl = submitData.response_url;
 
-          // Poll for up to 60s
           const deadline = Date.now() + 60_000;
           while (Date.now() < deadline) {
             await new Promise((r) => setTimeout(r, 2000));

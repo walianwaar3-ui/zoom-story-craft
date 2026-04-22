@@ -7,6 +7,8 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const ANTHROPIC_MODEL = "claude-sonnet-4-5";
+
 async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
@@ -15,6 +17,52 @@ async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: nu
   } finally {
     clearTimeout(id);
   }
+}
+
+function handleClaudeError(status: number) {
+  if (status === 429) {
+    return new Response(JSON.stringify({ error: "Rate limited by Claude. Please try again in a moment." }), {
+      status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  if (status === 529) {
+    return new Response(JSON.stringify({ error: "Claude API is overloaded. Please retry shortly." }), {
+      status: 529, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  if (status === 401) {
+    return new Response(JSON.stringify({ error: "Invalid Anthropic API key. Update ANTHROPIC_API_KEY in Settings." }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  return null;
+}
+
+function parseClaudeText(data: any): string {
+  const blocks = data?.content;
+  if (!Array.isArray(blocks)) return "";
+  return blocks
+    .filter((b: any) => b?.type === "text" && typeof b.text === "string")
+    .map((b: any) => b.text)
+    .join("");
+}
+
+// Fetch an image URL and convert it to base64 + media type for Claude vision
+async function fetchImageAsBase64(url: string): Promise<{ data: string; mediaType: string }> {
+  const res = await fetchWithTimeout(url, {}, 15_000);
+  if (!res.ok) throw new Error(`Failed to fetch image (${res.status})`);
+  const contentType = res.headers.get("content-type") || "image/png";
+  const allowed = ["image/png", "image/jpeg", "image/gif", "image/webp"];
+  const mediaType = allowed.includes(contentType.toLowerCase()) ? contentType.toLowerCase() : "image/png";
+  const buf = new Uint8Array(await res.arrayBuffer());
+  // Base64-encode in chunks to avoid call-stack issues with large images
+  let binary = "";
+  const CHUNK = 0x8000;
+  for (let i = 0; i < buf.length; i += CHUNK) {
+    binary += String.fromCharCode(...buf.subarray(i, i + CHUNK));
+  }
+  const data = btoa(binary);
+  return { data, mediaType };
 }
 
 serve(async (req) => {
@@ -56,10 +104,10 @@ serve(async (req) => {
       );
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
     const FAL_KEY = Deno.env.get("FAL_KEY");
-    if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), {
+    if (!ANTHROPIC_API_KEY) {
+      return new Response(JSON.stringify({ error: "ANTHROPIC_API_KEY not configured" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -112,14 +160,30 @@ serve(async (req) => {
           .filter(Boolean)
           .join("\n") || "User did not specify — auto-analyze fully";
 
+    // Fetch the existing image and base64-encode it for Claude vision
+    let imgB64: { data: string; mediaType: string };
+    try {
+      imgB64 = await fetchImageAsBase64(post.image_url);
+    } catch (e) {
+      console.error("Image fetch failed:", e);
+      return new Response(
+        JSON.stringify({ error: "Could not load existing image for analysis — retry" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
     const diagnosticUserContent = [
+      {
+        type: "image",
+        source: {
+          type: "base64",
+          media_type: imgB64.mediaType,
+          data: imgB64.data,
+        },
+      },
       {
         type: "text",
         text: `CAPTION:\n${post.caption || "(none)"}\n\nPREVIOUS IMAGE PROMPT SENT TO IMAGE MODEL:\n${post.image_prompt || "(none)"}\n\nUSER COMPLAINTS:\n${userNotes}\n\nAnalyze the image and respond with EXACTLY these two blocks:\n[DIAGNOSTIC REPORT]\n<bullet list of concrete problems found in the image, or "NO CRITICAL ISSUES" if image is clean>\n\n[CORRECTIVE INSTRUCTIONS FOR IMAGE PROMPT BUILDER]\n<short, explicit instructions the prompt builder must apply on the next attempt — e.g. "spell PROFITABLE correctly", "ensure all text fits within frame", "remove generic stock icon, use construction blueprint instead">`,
-      },
-      {
-        type: "image_url",
-        image_url: { url: post.image_url },
       },
     ];
 
@@ -127,41 +191,29 @@ serve(async (req) => {
     let correctiveInstructions = "";
     try {
       const diagRes = await fetchWithTimeout(
-        "https://ai.gateway.lovable.dev/v1/chat/completions",
+        "https://api.anthropic.com/v1/messages",
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "x-api-key": ANTHROPIC_API_KEY,
+            "anthropic-version": "2023-06-01",
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "google/gemini-2.5-flash",
+            model: ANTHROPIC_MODEL,
             max_tokens: 600,
-            messages: [
-              { role: "system", content: diagnosticPrompt },
-              { role: "user", content: diagnosticUserContent },
-            ],
+            system: diagnosticPrompt,
+            messages: [{ role: "user", content: diagnosticUserContent }],
           }),
         },
-        30_000,
+        45_000,
       );
 
       if (!diagRes.ok) {
-        const status = diagRes.status;
-        if (status === 429) {
-          return new Response(JSON.stringify({ error: "Rate limited. Please try again later." }), {
-            status: 429,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
-        if (status === 402) {
-          return new Response(JSON.stringify({ error: "Credits exhausted. Please add funds." }), {
-            status: 402,
-            headers: { ...corsHeaders, "Content-Type": "application/json" },
-          });
-        }
+        const errResp = handleClaudeError(diagRes.status);
+        if (errResp) return errResp;
         const t = await diagRes.text();
-        console.error("Diagnostic error:", status, t);
+        console.error("Diagnostic error:", diagRes.status, t);
         return new Response(JSON.stringify({ error: "Diagnostic analysis failed — retry" }), {
           status: 500,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -169,7 +221,7 @@ serve(async (req) => {
       }
 
       const diagData = await diagRes.json();
-      const raw = diagData.choices?.[0]?.message?.content || "";
+      const raw = parseClaudeText(diagData);
       const reportMatch = raw.match(
         /\[DIAGNOSTIC REPORT\]\s*([\s\S]*?)(?:\n\s*\[CORRECTIVE INSTRUCTIONS[^\]]*\]|$)/i,
       );
@@ -246,31 +298,32 @@ ASPECT RATIO: ${post.aspect_ratio || "1:1"}`;
 
       try {
         const builderRes = await fetchWithTimeout(
-          "https://ai.gateway.lovable.dev/v1/chat/completions",
+          "https://api.anthropic.com/v1/messages",
           {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${LOVABLE_API_KEY}`,
+              "x-api-key": ANTHROPIC_API_KEY,
+              "anthropic-version": "2023-06-01",
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              model: "google/gemini-3-flash-preview",
+              model: ANTHROPIC_MODEL,
               max_tokens: 800,
-              messages: [
-                { role: "system", content: builderSystem },
-                { role: "user", content: builderUser },
-              ],
+              system: builderSystem,
+              messages: [{ role: "user", content: builderUser }],
             }),
           },
           30_000,
         );
 
         if (!builderRes.ok) {
+          const errResp = handleClaudeError(builderRes.status);
+          if (errResp) return errResp;
           console.error("Builder failed:", builderRes.status, await builderRes.text());
           llmBuilderError = `LLM error ${builderRes.status}`;
         } else {
           const builderData = await builderRes.json();
-          const raw = builderData.choices?.[0]?.message?.content || "";
+          const raw = parseClaudeText(builderData);
           const tagMatch = raw.match(/\[OVERLAY_TAG\]\s*([\s\S]*?)(?:\n\s*\[IMAGE_DESCRIPTION\]|$)/i);
           const descMatch = raw.match(/\[IMAGE_DESCRIPTION\]\s*([\s\S]*)$/i);
           overlayTag = tagMatch?.[1]?.trim() || "";

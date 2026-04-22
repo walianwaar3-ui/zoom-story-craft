@@ -7,6 +7,8 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const ANTHROPIC_MODEL = "claude-sonnet-4-5";
+
 async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
@@ -49,9 +51,9 @@ serve(async (req) => {
       });
     }
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
-      return new Response(JSON.stringify({ error: "LOVABLE_API_KEY not configured" }), {
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!ANTHROPIC_API_KEY) {
+      return new Response(JSON.stringify({ error: "ANTHROPIC_API_KEY not configured" }), {
         status: 500,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
@@ -127,20 +129,19 @@ Respond with the [POST] block and [VISUAL DIRECTION] block as specified.`;
     let captionRaw = "";
     try {
       const res = await fetchWithTimeout(
-        "https://ai.gateway.lovable.dev/v1/chat/completions",
+        "https://api.anthropic.com/v1/messages",
         {
           method: "POST",
           headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
+            "x-api-key": ANTHROPIC_API_KEY,
+            "anthropic-version": "2023-06-01",
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            model: "google/gemini-3-flash-preview",
+            model: ANTHROPIC_MODEL,
             max_tokens: 1500,
-            messages: [
-              { role: "system", content: systemPrompt },
-              { role: "user", content: userMessage },
-            ],
+            system: systemPrompt,
+            messages: [{ role: "user", content: userMessage }],
           }),
         },
         45_000,
@@ -149,14 +150,20 @@ Respond with the [POST] block and [VISUAL DIRECTION] block as specified.`;
       if (!res.ok) {
         const status = res.status;
         if (status === 429) {
-          return new Response(JSON.stringify({ error: "Rate limited. Please try again later." }), {
+          return new Response(JSON.stringify({ error: "Rate limited by Claude. Please try again in a moment." }), {
             status: 429,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
-        if (status === 402) {
-          return new Response(JSON.stringify({ error: "Credits exhausted. Please add funds." }), {
-            status: 402,
+        if (status === 529) {
+          return new Response(JSON.stringify({ error: "Claude API is overloaded. Please retry shortly." }), {
+            status: 529,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        if (status === 401) {
+          return new Response(JSON.stringify({ error: "Invalid Anthropic API key. Update ANTHROPIC_API_KEY in Settings." }), {
+            status: 401,
             headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
@@ -169,7 +176,13 @@ Respond with the [POST] block and [VISUAL DIRECTION] block as specified.`;
       }
 
       const data = await res.json();
-      captionRaw = data.choices?.[0]?.message?.content || "";
+      const blocks = data?.content;
+      captionRaw = Array.isArray(blocks)
+        ? blocks
+            .filter((b: any) => b?.type === "text" && typeof b.text === "string")
+            .map((b: any) => b.text)
+            .join("")
+        : "";
     } catch (e) {
       console.error("Caption exception:", e);
       return new Response(
