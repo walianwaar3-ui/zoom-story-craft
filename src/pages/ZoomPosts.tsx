@@ -95,25 +95,31 @@ const ZoomPosts = () => {
   const generateMutation = useMutation({
     mutationFn: async ({
       transcriptId,
-      customPrompt,
+      postCount,
       aspectRatio,
     }: {
       transcriptId: string;
-      customPrompt: string;
+      postCount: number;
       aspectRatio: string;
     }) => {
       const { data, error } = await supabase.functions.invoke("generate-zoom-post", {
         body: {
           transcript_id: transcriptId,
-          custom_prompt: customPrompt || undefined,
+          post_count: postCount,
           aspect_ratio: aspectRatio,
         },
       });
       if (error) throw error;
-      return data as GeneratedResult;
+      return data as GeneratedResult & { total_posts?: number; posts?: GeneratedResult[] };
     },
     onSuccess: (data) => {
-      if (data?.image_url) {
+      const total = (data as any)?.total_posts ?? 1;
+      if (total > 1) {
+        toast({
+          title: `${total} posts generated`,
+          description: "Your post series is ready in Generated Posts.",
+        });
+      } else if (data?.image_url) {
         toast({
           title: "Post Generated!",
           description: "Caption + image ready. You can now post it to GHL.",
@@ -126,14 +132,18 @@ const ZoomPosts = () => {
         });
       }
       setSelectedTranscript(null);
-      setCustomPrompt("");
+      setPostCount(1);
       queryClient.invalidateQueries({ queryKey: ["zoom-transcripts"] });
       queryClient.invalidateQueries({ queryKey: ["generated-content"] });
       queryClient.invalidateQueries({ queryKey: ["posts-count"] });
       queryClient.invalidateQueries({ queryKey: ["new-transcripts-count"] });
-      setGhlData(data);
-      setSelectedAccounts([]);
-      setScheduleDate("");
+
+      // Only open the GHL "post now" dialog for a single post — for batches, send the user to Generated Posts.
+      if (total === 1) {
+        setGhlData(data);
+        setSelectedAccounts([]);
+        setScheduleDate("");
+      }
     },
     onError: (error: any) => {
       toast({
