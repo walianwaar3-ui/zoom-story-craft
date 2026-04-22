@@ -80,7 +80,7 @@ serve(async (req) => {
   }
 
   try {
-    const { transcript_id, custom_prompt, aspect_ratio } = await req.json();
+    const { transcript_id, custom_prompt, aspect_ratio, post_count } = await req.json();
 
     if (!transcript_id) {
       return new Response(
@@ -88,6 +88,10 @@ serve(async (req) => {
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
+
+    // Clamp post count between 1 and 14
+    const requestedCount = Number.isFinite(Number(post_count)) ? Math.floor(Number(post_count)) : 1;
+    const totalPosts = Math.max(1, Math.min(14, requestedCount));
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
