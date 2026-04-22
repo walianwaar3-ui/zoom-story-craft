@@ -1,7 +1,8 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Video, FileText, Sparkles, TrendingUp } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Video, FileText, Sparkles, TrendingUp, ArrowUpRight } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Index = () => {
   const { data: transcripts } = useQuery({
@@ -41,91 +42,114 @@ const Index = () => {
       value: transcripts ?? 0,
       icon: Video,
       description: "Zoom calls received",
+      href: "/zoom-posts",
     },
     {
       title: "Ready to Generate",
       value: newTranscripts ?? 0,
       icon: Sparkles,
       description: "New transcripts waiting",
+      href: "/zoom-posts",
+      accent: true,
     },
     {
       title: "Posts Generated",
       value: posts ?? 0,
       icon: FileText,
       description: "Social posts created",
+      href: "/generated",
     },
     {
-      title: "Conversion Pipeline",
+      title: "Pipeline Status",
       value: "Active",
       icon: TrendingUp,
       description: "Post → Comment → DM → Workshop",
+      href: "/generate-post",
+    },
+  ];
+
+  const steps = [
+    {
+      n: "01",
+      title: "Capture the call",
+      body: "Zoom recordings flow in automatically via webhook the moment a call ends.",
+    },
+    {
+      n: "02",
+      title: "Generate with intent",
+      body: "Pick a transcript, choose your angle, and ship a caption + image in one click.",
+    },
+    {
+      n: "03",
+      title: "Publish & convert",
+      body: "Push to GoHighLevel. Watch the pipeline: Post → Comment → DM → Workshop.",
     },
   ];
 
   return (
-    <div className="space-y-8">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-          Dashboard
-        </h2>
-        <p className="text-muted-foreground mt-1">
-          Turn your Zoom call recordings into authority-building social posts.
-        </p>
-      </div>
+    <div className="space-y-10">
+      <header className="page-header">
+        <div>
+          <p className="eyebrow mb-3">Workspace overview</p>
+          <h1 className="page-title">Welcome back.</h1>
+          <p className="page-subtitle">
+            Turn the conversations you're already having into authority-building social posts —
+            without rewriting a single line.
+          </p>
+        </div>
+      </header>
 
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <section className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map((stat) => (
-          <Card key={stat.title}>
-            <CardHeader className="flex flex-row items-center justify-between pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">
-                {stat.title}
-              </CardTitle>
-              <stat.icon className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <p className="text-xs text-muted-foreground mt-1">{stat.description}</p>
-            </CardContent>
-          </Card>
+          <Link key={stat.title} to={stat.href} className="group">
+            <Card
+              className={`card-elevated h-full transition-all duration-200 group-hover:-translate-y-0.5 ${
+                stat.accent ? "ring-1 ring-primary/20 bg-accent/40" : ""
+              }`}
+            >
+              <CardContent className="p-5">
+                <div className="flex items-start justify-between mb-4">
+                  <div
+                    className={`flex h-9 w-9 items-center justify-center rounded-lg ${
+                      stat.accent ? "bg-gradient-brand text-primary-foreground shadow-glow" : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    <stat.icon className="h-4 w-4" strokeWidth={2.25} />
+                  </div>
+                  <ArrowUpRight className="h-4 w-4 text-muted-foreground/40 group-hover:text-foreground group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-all" />
+                </div>
+                <p className="text-xs uppercase tracking-wider text-muted-foreground font-medium mb-1.5">
+                  {stat.title}
+                </p>
+                <div className="font-display text-4xl text-foreground leading-none">{stat.value}</div>
+                <p className="text-xs text-muted-foreground mt-2">{stat.description}</p>
+              </CardContent>
+            </Card>
+          </Link>
         ))}
-      </div>
+      </section>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">How It Works</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="grid gap-6 md:grid-cols-3">
-            <div className="space-y-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <span className="text-lg font-bold">1</span>
-              </div>
-              <h3 className="font-semibold">Zapier Sends Transcript</h3>
-              <p className="text-sm text-muted-foreground">
-                Your Zoom recordings are automatically sent via Zapier webhook when a call ends.
-              </p>
-            </div>
-            <div className="space-y-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <span className="text-lg font-bold">2</span>
-              </div>
-              <h3 className="font-semibold">Review & Generate</h3>
-              <p className="text-sm text-muted-foreground">
-                Browse transcripts, add custom prompts, and generate caption + image posts.
-              </p>
-            </div>
-            <div className="space-y-2">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                <span className="text-lg font-bold">3</span>
-              </div>
-              <h3 className="font-semibold">Post & Convert</h3>
-              <p className="text-sm text-muted-foreground">
-                Copy your post to Facebook. Watch the pipeline: Post → Comment → DM → Workshop.
-              </p>
-            </div>
+      <section>
+        <div className="flex items-end justify-between mb-5">
+          <div>
+            <p className="eyebrow mb-2">The flow</p>
+            <h2 className="font-display text-2xl text-foreground">How it works</h2>
           </div>
-        </CardContent>
-      </Card>
+          <p className="text-xs text-muted-foreground hidden sm:block">Three steps. Zero friction.</p>
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-3">
+          {steps.map((step) => (
+            <Card key={step.n} className="card-elevated">
+              <CardContent className="p-6">
+                <div className="font-display text-3xl text-primary mb-4 leading-none">{step.n}</div>
+                <h3 className="font-semibold text-foreground mb-1.5">{step.title}</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">{step.body}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </section>
     </div>
   );
 };
