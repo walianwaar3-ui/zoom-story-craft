@@ -286,18 +286,23 @@ ${caption}`;
     const res = await callClaude(apiKey, sys, user, 1500, 30_000);
     if (!res.ok) {
       console.error("Audit rewrite call failed:", res.status);
-      return { caption, rewritten: false, banned };
+      return { caption, rewritten: false, banned, names, brands };
     }
     const data = await res.json();
     const rewrittenRaw = parseClaudeText(data);
     const { caption: cleaned } = extractCleanCaption(rewrittenRaw);
-    if (cleaned && findBannedWords(cleaned).length === 0) {
-      return { caption: cleaned, rewritten: true, banned };
+    if (
+      cleaned &&
+      findBannedWords(cleaned).length === 0 &&
+      findClientNameMentions(cleaned, clientName).length === 0 &&
+      findToolBrandMentions(cleaned).length === 0
+    ) {
+      return { caption: cleaned, rewritten: true, banned, names, brands };
     }
-    return { caption, rewritten: false, banned };
+    return { caption, rewritten: false, banned, names, brands };
   } catch (e) {
     console.error("Audit rewrite exception:", e);
-    return { caption, rewritten: false, banned };
+    return { caption, rewritten: false, banned, names, brands };
   }
 }
 
