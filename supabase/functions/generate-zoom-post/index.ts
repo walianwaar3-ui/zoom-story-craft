@@ -401,6 +401,10 @@ serve(async (req) => {
     }
     const captionSystemPrompt = baseCaptionPrompt + kbContext;
 
+    // Derive an anonymized archetype label so we never hand the real client name to Claude.
+    const archetype = deriveArchetype(transcript);
+    console.log(`Derived archetype for transcript ${transcript_id}: ${archetype}`);
+
     // ============================================================
     // STEP 1a: PLAN — for batches, generate N distinct angles upfront
     // ============================================================
@@ -433,12 +437,14 @@ Rules:
 
       const planUser = `TRANSCRIPT METADATA:
 Meeting: ${transcript.meeting_topic}
-Client: ${transcript.client_name || "N/A"}
+Client archetype: ${archetype}
 Summary: ${transcript.summary || "N/A"}
 Key Issues: ${transcript.issues_discussed || "N/A"}
 
 FULL TRANSCRIPT:
 ${(transcript.transcript || "").slice(0, 8000)}
+
+NOTE: The transcript may contain real names and specific tool brands. Do NOT carry those into the angles — refer to the subject as "${archetype}" or generically.
 
 Produce the JSON array of ${totalPosts} distinct angles now.`;
 
@@ -513,8 +519,8 @@ You MUST write this post about the assigned angle above and nothing else. Do NOT
         : "";
 
       const baseUser = custom_prompt
-        ? `${custom_prompt}\n\nMeeting: ${transcript.meeting_topic}\nClient: ${transcript.client_name || "N/A"}\nSummary: ${transcript.summary || "N/A"}\nIssues: ${transcript.issues_discussed || "N/A"}\nTranscript excerpt: ${(transcript.transcript || "").slice(0, 3000)}`
-        : `Meeting: ${transcript.meeting_topic}\nClient: ${transcript.client_name || "N/A"}\nSummary: ${transcript.summary || "N/A"}\nKey Issues: ${transcript.issues_discussed || "N/A"}\nTranscript: ${(transcript.transcript || "").slice(0, 3000)}`;
+        ? `${custom_prompt}\n\nMeeting: ${transcript.meeting_topic}\nClient archetype: ${archetype}\nSummary: ${transcript.summary || "N/A"}\nIssues: ${transcript.issues_discussed || "N/A"}\nTranscript excerpt: ${(transcript.transcript || "").slice(0, 3000)}`
+        : `Meeting: ${transcript.meeting_topic}\nClient archetype: ${archetype}\nSummary: ${transcript.summary || "N/A"}\nKey Issues: ${transcript.issues_discussed || "N/A"}\nTranscript: ${(transcript.transcript || "").slice(0, 3000)}`;
 
       const captionUserPrompt = baseUser + variationHint + OUTPUT_RULES_BLOCK;
 
@@ -534,12 +540,16 @@ You MUST write this post about the assigned angle above and nothing else. Do NOT
       const rawCaption = parseClaudeText(captionData);
       const { caption: extractedCaption, visualDirection } = extractCleanCaption(rawCaption);
 
-      // Banned-word audit + one-shot rewrite
-      const auditResult = await auditAndRewrite(extractedCaption, ANTHROPIC_API_KEY);
+      // Banned-word + name + brand audit (one-shot rewrite if any leaks)
+      const auditResult = await auditAndRewrite(extractedCaption, ANTHROPIC_API_KEY, transcript.client_name, archetype);
       const caption = auditResult.caption;
-      if (auditResult.banned.length > 0) {
+      if (auditResult.banned.length > 0 || auditResult.names.length > 0 || auditResult.brands.length > 0) {
+        const parts: string[] = [];
+        if (auditResult.banned.length) parts.push(`banned: ${auditResult.banned.join(", ")}`);
+        if (auditResult.names.length) parts.push(`names: ${auditResult.names.join(", ")}`);
+        if (auditResult.brands.length) parts.push(`brands: ${auditResult.brands.map((b) => b.brand).join(", ")}`);
         console.log(
-          `Post ${postIndex} audit: banned words ${auditResult.banned.join(", ")} — ${auditResult.rewritten ? "rewritten" : "rewrite failed, keeping original"}`,
+          `Post ${postIndex} audit issues — ${parts.join(" | ")} — ${auditResult.rewritten ? "rewritten" : "rewrite failed, keeping original"}`,
         );
       }
 
