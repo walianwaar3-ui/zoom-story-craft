@@ -329,7 +329,7 @@ const ZoomPosts = () => {
                     size="sm"
                     onClick={() => {
                       setSelectedTranscript(t);
-                      setCustomPrompt("");
+                      setPostCount(1);
                       setAspectRatio("1:1");
                     }}
                   >
@@ -395,28 +395,63 @@ const ZoomPosts = () => {
       <Dialog open={!!selectedTranscript} onOpenChange={() => setSelectedTranscript(null)}>
         <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Generate Social Post</DialogTitle>
+            <DialogTitle>Generate Social Posts</DialogTitle>
             <DialogDescription>
               From: {selectedTranscript?.meeting_topic}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
-            {selectedTranscript?.summary && (
-              <div className="bg-muted p-3 rounded-lg">
-                <p className="text-sm text-muted-foreground">{selectedTranscript.summary}</p>
+            {/* Small summary preview */}
+            {(selectedTranscript?.summary || selectedTranscript?.issues_discussed) && (
+              <div className="bg-muted p-3 rounded-lg space-y-2">
+                {selectedTranscript?.summary && (
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-0.5">
+                      Summary
+                    </p>
+                    <p className="text-sm text-foreground line-clamp-4">
+                      {selectedTranscript.summary}
+                    </p>
+                  </div>
+                )}
+                {selectedTranscript?.issues_discussed && (
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-0.5">
+                      Key Issues
+                    </p>
+                    <p className="text-sm text-foreground line-clamp-3">
+                      {selectedTranscript.issues_discussed}
+                    </p>
+                  </div>
+                )}
               </div>
             )}
+
+            {/* Number of posts to generate */}
             <div>
               <label className="text-sm font-medium mb-1.5 block">
-                Custom Prompt (optional)
+                Number of posts (1–14 days)
               </label>
-              <Textarea
-                placeholder="Override the default prompt... e.g., 'Focus on the pricing objection we discussed'"
-                value={customPrompt}
-                onChange={(e) => setCustomPrompt(e.target.value)}
-                rows={3}
-              />
+              <Select
+                value={String(postCount)}
+                onValueChange={(v) => setPostCount(Number(v))}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="max-h-72">
+                  {Array.from({ length: 14 }, (_, i) => i + 1).map((n) => (
+                    <SelectItem key={n} value={String(n)}>
+                      {n} {n === 1 ? "post" : `posts (${n} days)`}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-muted-foreground mt-1.5">
+                Each post explores a different angle from the same transcript.
+              </p>
             </div>
+
             <div>
               <label className="text-sm font-medium mb-1.5 block">
                 Image Aspect Ratio
@@ -439,7 +474,7 @@ const ZoomPosts = () => {
                 if (selectedTranscript) {
                   generateMutation.mutate({
                     transcriptId: selectedTranscript.id,
-                    customPrompt,
+                    postCount,
                     aspectRatio,
                   });
                 }
@@ -449,12 +484,14 @@ const ZoomPosts = () => {
               {generateMutation.isPending ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Analyzing caption → Generating image...
+                  {postCount > 1
+                    ? `Generating ${postCount} posts... this may take a few minutes`
+                    : "Analyzing caption → Generating image..."}
                 </>
               ) : (
                 <>
                   <Sparkles className="h-4 w-4 mr-2" />
-                  Generate Post
+                  {postCount > 1 ? `Generate ${postCount} Posts` : "Generate Post"}
                 </>
               )}
             </Button>
