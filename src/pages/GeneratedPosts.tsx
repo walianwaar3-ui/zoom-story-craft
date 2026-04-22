@@ -348,16 +348,16 @@ const GeneratedPosts = () => {
           {posts.map((post) => {
             const isThisRegenerating = regeneratingId === post.id;
             return (
-              <Card key={post.id} className="overflow-hidden">
+              <Card key={post.id} className="overflow-visible">
                 {post.image_url && (
-                  <div className="aspect-square bg-muted relative overflow-hidden">
+                  <div className="aspect-square bg-muted relative group/image rounded-t-lg [perspective:1000px]">
                     <img
                       src={post.image_url}
                       alt="Generated post visual"
-                      className="w-full h-full object-cover"
+                      className="absolute inset-0 w-full h-full object-cover rounded-t-lg transition-all duration-300 ease-out group-hover/image:scale-[1.6] group-hover/image:z-30 group-hover/image:shadow-2xl group-hover/image:rounded-lg group-hover/image:object-contain group-hover/image:bg-background cursor-zoom-in"
                     />
                     {isThisRegenerating && (
-                      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center gap-2 p-4 text-center">
+                      <div className="absolute inset-0 bg-background/80 backdrop-blur-sm flex flex-col items-center justify-center gap-2 p-4 text-center rounded-t-lg z-40">
                         <Loader2 className="h-8 w-8 animate-spin text-primary" />
                         <p className="text-sm font-medium">
                           {regenMode === "caption" ? CAPTION_LOADING_LABEL : SMART_IMAGE_LOADING_LABEL}
