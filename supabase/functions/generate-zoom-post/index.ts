@@ -169,13 +169,115 @@ serve(async (req) => {
     }
     const captionSystemPrompt = baseCaptionPrompt + kbContext;
 
+    // ============================================================
+    // STEP 1a: PLAN — for batches, generate N distinct angles upfront
+    // ============================================================
+    type Angle = { index: number; angle: string; hook: string; theme: string; quote: string };
+    let plannedAngles: Angle[] = [];
+
+    if (totalPosts > 1) {
+      const planSystem = `You are a content strategist planning a ${totalPosts}-post social series from a single sales/coaching call transcript.
+
+Your job: extract ${totalPosts} DISTINCT angles — each angle must focus on a different insight, story beat, objection, framework, quote, or lesson from the transcript. No two angles may overlap in core message or theme.
+
+OUTPUT FORMAT — respond with EXACTLY a valid JSON array, no prose, no markdown fences:
+[
+  {
+    "index": 1,
+    "angle": "<one-sentence description of what this post is about>",
+    "hook": "<a draft opening line, max 120 chars, distinct from all other hooks>",
+    "theme": "<2-4 word category, e.g. 'pricing objection', 'discovery question', 'mindset shift', 'closing technique'>",
+    "quote": "<a short verbatim or paraphrased line from the transcript that anchors this angle, or empty string if none>"
+  },
+  ...
+]
+
+Rules:
+- Exactly ${totalPosts} entries.
+- Every "theme" must be unique across the array.
+- Every "hook" must be unique and not paraphrase another.
+- If the transcript only contains M < ${totalPosts} genuinely distinct ideas, still produce ${totalPosts} entries by varying the FORMAT (story vs. list vs. contrarian take vs. question vs. quote breakdown vs. behind-the-scenes) of the same theme — but mark theme with a suffix like "pricing objection (story)" vs "pricing objection (list)" so downstream knows.
+- Order angles from strongest hook → supporting content.`;
+
+      const planUser = `TRANSCRIPT METADATA:
+Meeting: ${transcript.meeting_topic}
+Client: ${transcript.client_name || "N/A"}
+Summary: ${transcript.summary || "N/A"}
+Key Issues: ${transcript.issues_discussed || "N/A"}
+
+FULL TRANSCRIPT:
+${(transcript.transcript || "").slice(0, 8000)}
+
+Produce the JSON array of ${totalPosts} distinct angles now.`;
+
+      const planRes = await callClaude(ANTHROPIC_API_KEY, planSystem, planUser, 4000, 90_000);
+
+      if (!planRes.ok) {
+        const errResp = handleClaudeError(planRes.status);
+        if (errResp) return errResp;
+        const errText = await planRes.text();
+        console.error("Angle planning failed:", planRes.status, errText);
+        return new Response(
+          JSON.stringify({ error: "Failed to plan post angles. Try again or reduce post count." }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const planData = await planRes.json();
+      const planText = parseClaudeText(planData).trim();
+
+      // Strip markdown fences if Claude added them despite instructions
+      const cleaned = planText
+        .replace(/^```(?:json)?\s*/i, "")
+        .replace(/\s*```\s*$/i, "")
+        .trim();
+
+      try {
+        const parsed = JSON.parse(cleaned);
+        if (!Array.isArray(parsed) || parsed.length === 0) throw new Error("Not a non-empty array");
+        plannedAngles = parsed.slice(0, totalPosts).map((a: any, i: number) => ({
+          index: i + 1,
+          angle: String(a.angle || "").trim(),
+          hook: String(a.hook || "").trim(),
+          theme: String(a.theme || "").trim(),
+          quote: String(a.quote || "").trim(),
+        }));
+        // Pad if Claude returned fewer than requested (rare)
+        while (plannedAngles.length < totalPosts) {
+          plannedAngles.push({
+            index: plannedAngles.length + 1,
+            angle: `Additional insight from the call (post ${plannedAngles.length + 1})`,
+            hook: "",
+            theme: `extra-${plannedAngles.length + 1}`,
+            quote: "",
+          });
+        }
+        console.log(`Planned ${plannedAngles.length} angles:`, plannedAngles.map(a => `${a.index}. [${a.theme}] ${a.angle.slice(0, 60)}`).join(" | "));
+      } catch (e) {
+        console.error("Failed to parse planning JSON:", e, "raw:", planText.slice(0, 500));
+        return new Response(
+          JSON.stringify({ error: "Angle planner returned invalid JSON. Try again." }),
+          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+    }
+
     const results: Array<{ content_id: string; caption: string; image_url: string | null; warning: string | null }> = [];
     const errors: string[] = [];
     const previousHooks: string[] = [];
+    const previousThemes: string[] = [];
 
     for (let postIndex = 1; postIndex <= totalPosts; postIndex++) {
-      const variationHint = totalPosts > 1
-        ? `\n\nIMPORTANT — VARIATION: This is post ${postIndex} of ${totalPosts} from the SAME transcript. Each post must explore a DIFFERENT angle, hook, takeaway, or quote so the series feels fresh across ${totalPosts} days. Do not repeat hooks or core messages from earlier posts in this series. Pick a distinct insight, story beat, or objection to highlight for this one.${previousHooks.length ? `\n\nHOOKS ALREADY USED (do NOT repeat or paraphrase):\n${previousHooks.map((h, i) => `${i + 1}. ${h}`).join("\n")}` : ""}`
+      const assignedAngle = plannedAngles[postIndex - 1];
+
+      const variationHint = totalPosts > 1 && assignedAngle
+        ? `\n\n=== ASSIGNED ANGLE FOR THIS POST (${postIndex} of ${totalPosts}) ===
+Angle: ${assignedAngle.angle}
+Theme: ${assignedAngle.theme}
+${assignedAngle.hook ? `Suggested hook direction: ${assignedAngle.hook}` : ""}
+${assignedAngle.quote ? `Anchor quote/line from transcript: "${assignedAngle.quote}"` : ""}
+
+You MUST write this post about the assigned angle above and nothing else. Do NOT drift into other angles from this transcript — those are reserved for other posts in the series.${previousThemes.length ? `\n\nThemes already covered (do NOT repeat or overlap): ${previousThemes.join("; ")}` : ""}${previousHooks.length ? `\n\nHooks already used (do NOT paraphrase):\n${previousHooks.map((h, i) => `${i + 1}. ${h}`).join("\n")}` : ""}`
         : "";
 
       const baseUser = custom_prompt
@@ -203,9 +305,10 @@ serve(async (req) => {
       const caption = postMatch?.[1]?.trim() || rawCaption.trim();
       const visualDirection = visualDirectionMatch?.[1]?.trim() || "";
 
-      // Track first non-empty line as the "hook" so future posts in the series don't repeat it
+      // Track first non-empty line as the "hook" + assigned theme so future posts don't repeat
       const firstLine = caption.split("\n").find((l: string) => l.trim().length > 0)?.trim() || "";
       if (firstLine) previousHooks.push(firstLine.slice(0, 140));
+      if (assignedAngle?.theme) previousThemes.push(assignedAngle.theme);
 
       // ============================================================
       // STEP 2: Build the fal.ai prompt via LLM (Image Prompt Builder)
