@@ -182,19 +182,18 @@ const Knowledgebase = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <header className="page-header">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-            Knowledgebase
-          </h2>
-          <p className="text-muted-foreground mt-1">
-            Brand guidelines, prompts, overlay images, and content strategy rules.
+          <p className="eyebrow mb-3">Your brand brain</p>
+          <h1 className="page-title">Knowledgebase</h1>
+          <p className="page-subtitle">
+            Voice, prompts, overlays, and the rules that make every post unmistakably yours.
           </p>
         </div>
-        <Button onClick={openAdd}>
-          <Plus className="h-4 w-4 mr-1" /> Add Entry
+        <Button onClick={openAdd} className="bg-gradient-brand hover:opacity-95 shadow-glow shrink-0">
+          <Plus className="h-4 w-4 mr-1.5" /> Add Entry
         </Button>
-      </div>
+      </header>
 
       {/* Filters */}
       <div className="flex gap-3">

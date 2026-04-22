@@ -109,18 +109,16 @@ const Settings = () => {
   };
 
   return (
-    <div className="space-y-6 max-w-4xl">
-      <div>
-        <h2
-          className="text-2xl font-bold tracking-tight"
-          style={{ fontFamily: "'Space Grotesk', sans-serif" }}
-        >
-          Settings
-        </h2>
-        <p className="text-muted-foreground mt-1">
-          Manage integrations and webhook endpoints.
-        </p>
-      </div>
+    <div className="space-y-8 max-w-4xl">
+      <header className="page-header">
+        <div>
+          <p className="eyebrow mb-3">System</p>
+          <h1 className="page-title">Settings</h1>
+          <p className="page-subtitle">
+            Integrations, webhooks, and the wiring that keeps your studio humming.
+          </p>
+        </div>
+      </header>
 
       {/* AI Provider */}
       <Card>
