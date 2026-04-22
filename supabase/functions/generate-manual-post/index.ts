@@ -175,6 +175,56 @@ function handleClaudeError(status: number, corsHeaders: Record<string, string>) 
   return null;
 }
 
+function parseClaudeTextModule(data: any): string {
+  const blocks = data?.content;
+  if (!Array.isArray(blocks)) return "";
+  return blocks
+    .filter((b: any) => b?.type === "text" && typeof b.text === "string")
+    .map((b: any) => b.text)
+    .join("");
+}
+
+async function auditAndRewrite(
+  caption: string,
+  apiKey: string,
+): Promise<{ caption: string; rewritten: boolean; banned: string[] }> {
+  const banned = findBannedWords(caption);
+  if (banned.length === 0) return { caption, rewritten: false, banned: [] };
+
+  console.warn("Banned words detected, attempting one-shot rewrite:", banned.join(", "));
+  const replacementHints = BANNED_WORDS
+    .filter((b) => banned.some((w) => w.toLowerCase() === b.word.toLowerCase()))
+    .map((b) => `- "${b.word}" → "${b.replacement}"`)
+    .join("\n");
+
+  const sys = `You rewrite social media posts to remove banned words while preserving voice, structure, hook, CTA, and length. Output ONLY the rewritten post — no preamble, no labels, no markdown headings.`;
+  const user = `Rewrite the post below, replacing every occurrence of these banned words with the suggested alternatives. Keep everything else identical (tone, line breaks, emoji, CTA).
+
+Replacements:
+${replacementHints}
+
+POST:
+${caption}`;
+
+  try {
+    const res = await callClaude(apiKey, sys, user, 1500, 30_000);
+    if (!res.ok) {
+      console.error("Audit rewrite call failed:", res.status);
+      return { caption, rewritten: false, banned };
+    }
+    const data = await res.json();
+    const rewrittenRaw = parseClaudeTextModule(data);
+    const { caption: cleaned } = extractCleanCaption(rewrittenRaw);
+    if (cleaned && findBannedWords(cleaned).length === 0) {
+      return { caption: cleaned, rewritten: true, banned };
+    }
+    return { caption, rewritten: false, banned };
+  } catch (e) {
+    console.error("Audit rewrite exception:", e);
+    return { caption, rewritten: false, banned };
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
