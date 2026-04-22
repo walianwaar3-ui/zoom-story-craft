@@ -7,6 +7,8 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+const ANTHROPIC_MODEL = "claude-sonnet-4-5";
+
 async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
@@ -15,6 +17,55 @@ async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: nu
   } finally {
     clearTimeout(id);
   }
+}
+
+async function callClaude(
+  apiKey: string,
+  systemPrompt: string,
+  userPrompt: string,
+  maxTokens: number,
+  timeoutMs: number,
+) {
+  return await fetchWithTimeout(
+    "https://api.anthropic.com/v1/messages",
+    {
+      method: "POST",
+      headers: {
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: ANTHROPIC_MODEL,
+        max_tokens: maxTokens,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userPrompt }],
+      }),
+    },
+    timeoutMs,
+  );
+}
+
+function handleClaudeError(status: number, corsHeaders: Record<string, string>) {
+  if (status === 429) {
+    return new Response(JSON.stringify({ error: "Rate limited by Claude. Please try again in a moment." }), {
+      status: 429,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  if (status === 529) {
+    return new Response(JSON.stringify({ error: "Claude API is overloaded. Please retry shortly." }), {
+      status: 529,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  if (status === 401) {
+    return new Response(JSON.stringify({ error: "Invalid Anthropic API key. Update ANTHROPIC_API_KEY in Settings." }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  return null;
 }
 
 serve(async (req) => {
@@ -46,10 +97,10 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
     );
 
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) {
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!ANTHROPIC_API_KEY) {
       return new Response(
-        JSON.stringify({ error: "LOVABLE_API_KEY not configured" }),
+        JSON.stringify({ error: "ANTHROPIC_API_KEY not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -78,40 +129,13 @@ serve(async (req) => {
       return null;
     };
 
-    const callLLM = async (systemPrompt: string, userPrompt: string, maxTokens: number, timeoutMs: number) => {
-      return await fetchWithTimeout(
-        "https://ai.gateway.lovable.dev/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${LOVABLE_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: "google/gemini-3-flash-preview",
-            max_tokens: maxTokens,
-            messages: [
-              { role: "system", content: systemPrompt },
-              { role: "user", content: userPrompt },
-            ],
-          }),
-        },
-        timeoutMs
-      );
-    };
-
-    const handleLLMError = (status: number) => {
-      if (status === 429) {
-        return new Response(JSON.stringify({ error: "Rate limited. Please try again later." }), {
-          status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      if (status === 402) {
-        return new Response(JSON.stringify({ error: "Credits exhausted. Please add funds." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      return null;
+    const parseClaudeText = (data: any): string => {
+      const blocks = data?.content;
+      if (!Array.isArray(blocks)) return "";
+      return blocks
+        .filter((b: any) => b?.type === "text" && typeof b.text === "string")
+        .map((b: any) => b.text)
+        .join("");
     };
 
     // ============================================================
@@ -137,19 +161,18 @@ serve(async (req) => {
 
     let formattedBrief = "";
     try {
-      const formatterRes = await callLLM(formatterPrompt, formatterUser, 600, 20_000);
+      const formatterRes = await callClaude(ANTHROPIC_API_KEY, formatterPrompt, formatterUser, 600, 20_000);
       if (!formatterRes.ok) {
-        const errResp = handleLLMError(formatterRes.status);
+        const errResp = handleClaudeError(formatterRes.status, corsHeaders);
         if (errResp) return errResp;
         const t = await formatterRes.text();
-        console.error("Formatter LLM error:", formatterRes.status, t);
+        console.error("Formatter Claude error:", formatterRes.status, t);
         return new Response(JSON.stringify({ error: "Failed to format input" }), {
           status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
       const data = await formatterRes.json();
-      const raw = data.choices?.[0]?.message?.content || "";
-      // Look for [MANUAL POST BRIEF] block, otherwise use raw
+      const raw = parseClaudeText(data);
       const briefMatch = raw.match(/\[MANUAL POST BRIEF\]\s*([\s\S]*)$/i);
       formattedBrief = (briefMatch?.[1] || raw).trim();
 
@@ -195,18 +218,18 @@ serve(async (req) => {
 
     const captionSystemPrompt = baseCaptionPrompt + kbContext;
 
-    const captionRes = await callLLM(captionSystemPrompt, formattedBrief, 1500, 60_000);
+    const captionRes = await callClaude(ANTHROPIC_API_KEY, captionSystemPrompt, formattedBrief, 1500, 60_000);
     if (!captionRes.ok) {
-      const errResp = handleLLMError(captionRes.status);
+      const errResp = handleClaudeError(captionRes.status, corsHeaders);
       if (errResp) return errResp;
       const errText = await captionRes.text();
-      console.error("Caption LLM error:", captionRes.status, errText);
+      console.error("Caption Claude error:", captionRes.status, errText);
       return new Response(JSON.stringify({ error: "Failed to generate caption" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
     const captionData = await captionRes.json();
-    const rawCaption = captionData.choices?.[0]?.message?.content || "";
+    const rawCaption = parseClaudeText(captionData);
     const postMatch = rawCaption.match(/\[POST\]\s*([\s\S]*?)(?:\n\s*\[VISUAL DIRECTION\]|$)/i);
     const visualDirectionMatch = rawCaption.match(/\[VISUAL DIRECTION\]\s*([\s\S]*)$/i);
     const caption = postMatch?.[1]?.trim() || rawCaption.trim();
@@ -256,14 +279,16 @@ OUTPUT FORMAT — respond with EXACTLY these two blocks and nothing else:
       const builderUser = `CAPTION:\n${caption}\n\n[VISUAL DIRECTION]\n${visualDirection || "(none provided)"}${styleHint}\n\nASPECT RATIO: ${aspect_ratio || "1:1"}`;
 
       try {
-        const builderRes = await callLLM(builderSystem, builderUser, 800, 30_000);
+        const builderRes = await callClaude(ANTHROPIC_API_KEY, builderSystem, builderUser, 800, 30_000);
         if (!builderRes.ok) {
+          const errResp = handleClaudeError(builderRes.status, corsHeaders);
+          if (errResp) return errResp;
           const errText = await builderRes.text();
           console.error("Image prompt builder failed:", builderRes.status, errText);
           llmBuilderError = `LLM error ${builderRes.status}`;
         } else {
           const builderData = await builderRes.json();
-          const raw = builderData.choices?.[0]?.message?.content || "";
+          const raw = parseClaudeText(builderData);
           const tagMatch = raw.match(/\[OVERLAY_TAG\]\s*([\s\S]*?)(?:\n\s*\[IMAGE_DESCRIPTION\]|$)/i);
           const descMatch = raw.match(/\[IMAGE_DESCRIPTION\]\s*([\s\S]*)$/i);
           overlayTag = tagMatch?.[1]?.trim() || "";
