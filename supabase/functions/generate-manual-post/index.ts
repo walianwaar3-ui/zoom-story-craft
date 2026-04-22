@@ -9,6 +9,113 @@ const corsHeaders = {
 
 const ANTHROPIC_MODEL = "claude-sonnet-4-5";
 
+const BANNED_WORDS: Array<{ word: string; replacement: string }> = [
+  { word: "practitioner", replacement: "operator" },
+  { word: "practitioners", replacement: "operators" },
+  { word: "session", replacement: "delivery call" },
+  { word: "sessions", replacement: "delivery calls" },
+  { word: "modality", replacement: "offering" },
+  { word: "modalities", replacement: "offerings" },
+  { word: "intake", replacement: "onboarding" },
+  { word: "roster", replacement: "client base" },
+  { word: "healing", replacement: "transformation" },
+  { word: "therapy", replacement: "coaching" },
+  { word: "NLP", replacement: "method" },
+  { word: "contractor", replacement: "operator" },
+  { word: "construction", replacement: "industry" },
+];
+
+const OUTPUT_RULES_BLOCK = `
+
+CRITICAL OUTPUT RULES (override anything else):
+- Output ONLY two blocks, in this order: [POST] then [VISUAL DIRECTION]
+- Do NOT output [MEETING CLASSIFICATION], [MEETING TYPE], [UNIVERSAL PATTERN], [SUGGESTED MOMENT FOR POST], or any preamble headers
+- Do NOT use markdown headings (# or ##) anywhere in the output
+- The [POST] block must contain ONLY the publishable Facebook post — no labels, no commentary, no meta text
+- BANNED words (never appear in [POST]): practitioner, session, modality, intake, roster, healing, therapy, NLP, contractor, construction
+- Translate any client-specific nouns to: founder, operator, coach, consultant, service provider, delivery call, offering, client base`;
+
+function extractCleanCaption(rawText: string): { caption: string; visualDirection: string } {
+  if (!rawText) return { caption: "", visualDirection: "" };
+  let postBody = "";
+  let visualDirection = "";
+  const tagPostMatch = rawText.match(/\[POST\]\s*([\s\S]*?)(?:\n\s*\[VISUAL DIRECTION\]|$)/i);
+  const tagVisualMatch = rawText.match(/\[VISUAL DIRECTION\]\s*([\s\S]*)$/i);
+  if (tagPostMatch?.[1]?.trim()) {
+    postBody = tagPostMatch[1].trim();
+    visualDirection = tagVisualMatch?.[1]?.trim() || "";
+  } else {
+    const mdPostMatch = rawText.match(
+      /(?:^|\n)\s*(?:#{1,6}\s*POST|\*\*POST\*\*|POST:)\s*\n([\s\S]*?)(?=\n\s*(?:#{1,6}\s*VISUAL DIRECTION|\*\*VISUAL DIRECTION\*\*|VISUAL DIRECTION:|\[VISUAL DIRECTION\])|$)/i,
+    );
+    const mdVisualMatch = rawText.match(
+      /(?:^|\n)\s*(?:#{1,6}\s*VISUAL DIRECTION|\*\*VISUAL DIRECTION\*\*|VISUAL DIRECTION:|\[VISUAL DIRECTION\])\s*\n([\s\S]*)$/i,
+    );
+    if (mdPostMatch?.[1]?.trim()) {
+      postBody = mdPostMatch[1].trim();
+      visualDirection = mdVisualMatch?.[1]?.trim() || "";
+    } else {
+      postBody = rawText;
+    }
+  }
+
+  const headerPatterns = [
+    /^\s*\[?\s*MEETING CLASSIFICATION\s*\]?\s*:?\s*$/i,
+    /^\s*\[?\s*MEETING TYPE\s*\]?\s*:?.*$/i,
+    /^\s*\[?\s*UNIVERSAL PATTERN\s*\]?\s*:?.*$/i,
+    /^\s*\[?\s*SUGGESTED MOMENT FOR POST\s*\]?\s*:?\s*$/i,
+    /^\s*\[?\s*POST\s*\]?\s*:?\s*$/i,
+    /^\s*\[?\s*VISUAL DIRECTION\s*\]?\s*:?\s*$/i,
+    /^\s*\[?\s*OVERLAY_TAG\s*\]?\s*:?\s*$/i,
+    /^\s*\[?\s*IMAGE_DESCRIPTION\s*\]?\s*:?\s*$/i,
+    /^\s*#{1,6}\s*MEETING.*$/i,
+    /^\s*#{1,6}\s*POST\s*$/i,
+    /^\s*#{1,6}\s*VISUAL DIRECTION\s*$/i,
+    /^\s*\*\*\s*(?:POST|VISUAL DIRECTION|MEETING CLASSIFICATION|UNIVERSAL PATTERN|SUGGESTED MOMENT FOR POST)\s*\*\*\s*:?\s*$/i,
+    /^\s*(?:ARCHETYPE|SUBJECT OF IMAGE|SUPPORTING OBJECTS|HEADLINE FOR GRAPHIC|MOOD|IMAGE FROM LIBRARY|BACKGROUND STYLE)\s*:.*$/i,
+    /^\s*\*\*\s*(?:ARCHETYPE|SUBJECT OF IMAGE|SUPPORTING OBJECTS|HEADLINE FOR GRAPHIC|MOOD|IMAGE FROM LIBRARY|BACKGROUND STYLE)\s*\*\*\s*:.*$/i,
+    /^\s*-{3,}\s*$/,
+  ];
+
+  if (postBody === rawText) {
+    const cutMatch = postBody.match(
+      /(?:^|\n)\s*(?:\[VISUAL DIRECTION\]|#{1,6}\s*VISUAL DIRECTION|\*\*VISUAL DIRECTION\*\*|VISUAL DIRECTION:)/i,
+    );
+    if (cutMatch && typeof cutMatch.index === "number") {
+      visualDirection = postBody.slice(cutMatch.index).replace(/^[\s\S]*?\n/, "").trim();
+      postBody = postBody.slice(0, cutMatch.index);
+    }
+  }
+
+  const cleanedLines = postBody
+    .split("\n")
+    .filter((line) => !headerPatterns.some((re) => re.test(line)));
+  while (cleanedLines.length && cleanedLines[0].trim() === "") cleanedLines.shift();
+  while (cleanedLines.length && cleanedLines[cleanedLines.length - 1].trim() === "") cleanedLines.pop();
+
+  const collapsed: string[] = [];
+  let blankRun = 0;
+  for (const line of cleanedLines) {
+    if (line.trim() === "") {
+      blankRun++;
+      if (blankRun <= 2) collapsed.push(line);
+    } else {
+      blankRun = 0;
+      collapsed.push(line);
+    }
+  }
+  return { caption: collapsed.join("\n").trim(), visualDirection };
+}
+
+function findBannedWords(text: string): string[] {
+  const found: string[] = [];
+  for (const { word } of BANNED_WORDS) {
+    const re = new RegExp(`\\b${word}\\b`, "i");
+    if (re.test(text)) found.push(word);
+  }
+  return found;
+}
+
 async function fetchWithTimeout(url: string, options: RequestInit, timeoutMs: number) {
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeoutMs);
@@ -66,6 +173,56 @@ function handleClaudeError(status: number, corsHeaders: Record<string, string>) 
     });
   }
   return null;
+}
+
+function parseClaudeTextModule(data: any): string {
+  const blocks = data?.content;
+  if (!Array.isArray(blocks)) return "";
+  return blocks
+    .filter((b: any) => b?.type === "text" && typeof b.text === "string")
+    .map((b: any) => b.text)
+    .join("");
+}
+
+async function auditAndRewrite(
+  caption: string,
+  apiKey: string,
+): Promise<{ caption: string; rewritten: boolean; banned: string[] }> {
+  const banned = findBannedWords(caption);
+  if (banned.length === 0) return { caption, rewritten: false, banned: [] };
+
+  console.warn("Banned words detected, attempting one-shot rewrite:", banned.join(", "));
+  const replacementHints = BANNED_WORDS
+    .filter((b) => banned.some((w) => w.toLowerCase() === b.word.toLowerCase()))
+    .map((b) => `- "${b.word}" → "${b.replacement}"`)
+    .join("\n");
+
+  const sys = `You rewrite social media posts to remove banned words while preserving voice, structure, hook, CTA, and length. Output ONLY the rewritten post — no preamble, no labels, no markdown headings.`;
+  const user = `Rewrite the post below, replacing every occurrence of these banned words with the suggested alternatives. Keep everything else identical (tone, line breaks, emoji, CTA).
+
+Replacements:
+${replacementHints}
+
+POST:
+${caption}`;
+
+  try {
+    const res = await callClaude(apiKey, sys, user, 1500, 30_000);
+    if (!res.ok) {
+      console.error("Audit rewrite call failed:", res.status);
+      return { caption, rewritten: false, banned };
+    }
+    const data = await res.json();
+    const rewrittenRaw = parseClaudeTextModule(data);
+    const { caption: cleaned } = extractCleanCaption(rewrittenRaw);
+    if (cleaned && findBannedWords(cleaned).length === 0) {
+      return { caption: cleaned, rewritten: true, banned };
+    }
+    return { caption, rewritten: false, banned };
+  } catch (e) {
+    console.error("Audit rewrite exception:", e);
+    return { caption, rewritten: false, banned };
+  }
 }
 
 serve(async (req) => {
@@ -218,7 +375,8 @@ serve(async (req) => {
 
     const captionSystemPrompt = baseCaptionPrompt + kbContext;
 
-    const captionRes = await callClaude(ANTHROPIC_API_KEY, captionSystemPrompt, formattedBrief, 1500, 60_000);
+    const captionUserPrompt = formattedBrief + OUTPUT_RULES_BLOCK;
+    const captionRes = await callClaude(ANTHROPIC_API_KEY, captionSystemPrompt, captionUserPrompt, 1500, 60_000);
     if (!captionRes.ok) {
       const errResp = handleClaudeError(captionRes.status, corsHeaders);
       if (errResp) return errResp;
@@ -230,10 +388,14 @@ serve(async (req) => {
     }
     const captionData = await captionRes.json();
     const rawCaption = parseClaudeText(captionData);
-    const postMatch = rawCaption.match(/\[POST\]\s*([\s\S]*?)(?:\n\s*\[VISUAL DIRECTION\]|$)/i);
-    const visualDirectionMatch = rawCaption.match(/\[VISUAL DIRECTION\]\s*([\s\S]*)$/i);
-    const caption = postMatch?.[1]?.trim() || rawCaption.trim();
-    const visualDirection = visualDirectionMatch?.[1]?.trim() || "";
+    const { caption: extractedCaption, visualDirection } = extractCleanCaption(rawCaption);
+    const auditResult = await auditAndRewrite(extractedCaption, ANTHROPIC_API_KEY);
+    const caption = auditResult.caption;
+    if (auditResult.banned.length > 0) {
+      console.log(
+        `Audit: banned words ${auditResult.banned.join(", ")} — ${auditResult.rewritten ? "rewritten" : "rewrite failed, keeping original"}`,
+      );
+    }
 
     // ============================================================
     // STEP 3: Build image prompt via "Image Prompt Builder"
