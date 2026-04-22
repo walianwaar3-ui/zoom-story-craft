@@ -244,29 +244,28 @@ const ZoomPosts = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <header className="page-header">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-            Zoom Transcripts
-          </h2>
-          <p className="text-muted-foreground mt-1">
-            Review your call transcripts and generate social posts.
+          <p className="eyebrow mb-3">Source material</p>
+          <h1 className="page-title">Zoom Transcripts</h1>
+          <p className="page-subtitle">
+            Every call you've had, ready to become a week's worth of content.
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Badge variant="secondary" className="text-sm">
-            {transcripts?.length || 0} transcripts
+        <div className="flex items-center gap-2 shrink-0">
+          <Badge variant="secondary" className="text-xs font-medium">
+            {transcripts?.length || 0} {transcripts?.length === 1 ? "transcript" : "transcripts"}
           </Badge>
           <Button size="sm" variant="outline" onClick={() => setShowFathomImport(true)}>
-            <Download className="h-4 w-4 mr-1" />
+            <Download className="h-4 w-4 mr-1.5" />
             Import from Fathom
           </Button>
-          <Button size="sm" onClick={() => setShowUpload(true)}>
-            <Plus className="h-4 w-4 mr-1" />
+          <Button size="sm" onClick={() => setShowUpload(true)} className="bg-gradient-brand hover:opacity-95 shadow-glow">
+            <Plus className="h-4 w-4 mr-1.5" />
             Upload Transcript
           </Button>
         </div>
-      </div>
+      </header>
 
       {isLoading ? (
         <div className="flex items-center justify-center py-12">

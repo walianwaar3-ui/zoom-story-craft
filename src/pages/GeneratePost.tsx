@@ -158,14 +158,15 @@ const GeneratePost = () => {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-          Generate Post
-        </h2>
-        <p className="text-muted-foreground mt-1">
-          Create a social post manually — no transcript required.
-        </p>
-      </div>
+      <header className="page-header">
+        <div>
+          <p className="eyebrow mb-3">Manual mode</p>
+          <h1 className="page-title">Generate Post</h1>
+          <p className="page-subtitle">
+            No transcript? No problem. Drop in an idea and we'll handle the rest.
+          </p>
+        </div>
+      </header>
 
       <Card>
         <CardHeader>

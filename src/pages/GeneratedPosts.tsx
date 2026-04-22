@@ -316,19 +316,18 @@ const GeneratedPosts = () => {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <header className="page-header">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-            Generated Posts
-          </h2>
-          <p className="text-muted-foreground mt-1">
-            Your AI-generated social media posts ready to publish.
+          <p className="eyebrow mb-3">Your library</p>
+          <h1 className="page-title">Generated Posts</h1>
+          <p className="page-subtitle">
+            Review, refine, and publish — every post is ready to ship.
           </p>
         </div>
-        <Badge variant="secondary" className="text-sm">
-          {posts?.length || 0} posts
+        <Badge variant="secondary" className="text-xs font-medium shrink-0">
+          {posts?.length || 0} {posts?.length === 1 ? "post" : "posts"}
         </Badge>
-      </div>
+      </header>
 
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
