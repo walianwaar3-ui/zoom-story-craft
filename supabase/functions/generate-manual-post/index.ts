@@ -311,6 +311,7 @@ serve(async (req) => {
       cta_goal,
       image_style,
       aspect_ratio,
+      transcript_id,
     } = form || {};
 
     if (!post_date || !post_type || !hook || !String(hook).trim()) {
