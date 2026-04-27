@@ -175,6 +175,60 @@ const ZoomPosts = () => {
     },
   });
 
+  const fineTuneMutation = useMutation({
+    mutationFn: async () => {
+      if (!fineTuneTranscript) throw new Error("No transcript selected");
+      const { data, error } = await supabase.functions.invoke("generate-manual-post", {
+        body: {
+          transcript_id: fineTuneTranscript.id,
+          post_date: ftPostDate,
+          post_type: ftPostType,
+          hook: ftHook,
+          context: ftContext,
+          cta_goal: ftCtaGoal,
+          image_style: ftImageStyle,
+          aspect_ratio: ftAspectRatio,
+        },
+      });
+      if (error) {
+        const ctx: any = (error as any).context;
+        let msg = error.message || "Generation failed";
+        try {
+          const body = await ctx?.response?.json?.();
+          if (body?.error) msg = body.error;
+        } catch (_) { /* ignore */ }
+        throw new Error(msg);
+      }
+      return data as GeneratedResult;
+    },
+    onSuccess: (data) => {
+      if (data?.image_url) {
+        toast({ title: "Post Generated!", description: "Caption + image ready." });
+      } else {
+        toast({
+          title: "Caption Generated (no image)",
+          description: (data as any)?.warning || "Image generation failed — caption saved.",
+          variant: "destructive",
+        });
+      }
+      setFineTuneTranscript(null);
+      setFtHook("");
+      setFtContext("");
+      queryClient.invalidateQueries({ queryKey: ["generated-content"] });
+      queryClient.invalidateQueries({ queryKey: ["posts-count"] });
+      setGhlData(data);
+      setSelectedAccounts([]);
+      setScheduleDate("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Generation Failed",
+        description: error.message || "Something went wrong.",
+        variant: "destructive",
+      });
+    },
+  });
+
   const uploadMutation = useMutation({
     mutationFn: async (form: typeof uploadForm) => {
       const { error } = await supabase.from("zoom_transcripts").insert({
