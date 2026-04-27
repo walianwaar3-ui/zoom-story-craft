@@ -664,13 +664,13 @@ OUTPUT FORMAT — respond with EXACTLY these two blocks and nothing else:
     const { data: content, error: insertError } = await supabaseAdmin
       .from("generated_content")
       .insert({
-        transcript_id: null,
+        transcript_id: transcript_id || null,
         caption,
         image_url: imageUrl,
         image_prompt: imagePrompt,
         aspect_ratio: aspect_ratio || "1:1",
         status: imageUrl ? "complete" : "text_only",
-        source: "manual",
+        source: transcript_id ? "transcript" : "manual",
       })
       .select()
       .single();
