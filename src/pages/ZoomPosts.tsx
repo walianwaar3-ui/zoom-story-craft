@@ -21,7 +21,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Sparkles, Video, Calendar, User, Loader2, Eye, Send, Trash2, Plus, Download } from "lucide-react";
+import { Sparkles, Video, Calendar, User, Loader2, Eye, Send, Trash2, Plus, Download, SlidersHorizontal } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import ImportFathomDialog from "@/components/ImportFathomDialog";
 import { useToast } from "@/hooks/use-toast";
 
