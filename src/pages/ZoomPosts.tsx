@@ -408,7 +408,26 @@ const ZoomPosts = () => {
                     }}
                   >
                     <Sparkles className="h-4 w-4 mr-1" />
-                    Generate Post
+                    Quick Generate
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setFineTuneTranscript(t);
+                      setFtPostDate(todayISO());
+                      setFtPostType("evergreen");
+                      setFtHook("");
+                      setFtContext(
+                        [t.summary, t.issues_discussed].filter(Boolean).join("\n\n")
+                      );
+                      setFtCtaGoal("auto");
+                      setFtImageStyle("auto");
+                      setFtAspectRatio("1:1");
+                    }}
+                  >
+                    <SlidersHorizontal className="h-4 w-4 mr-1" />
+                    Fine-tune
                   </Button>
                   <Button
                     variant="ghost"
