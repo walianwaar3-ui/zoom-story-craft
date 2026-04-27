@@ -396,11 +396,15 @@ serve(async (req) => {
       );
     }
 
+    const mergedContext = [context || "", transcriptContext ? `SOURCE CALL NOTES (background only — do NOT name people or tools):\n${transcriptContext}` : ""]
+      .filter(Boolean)
+      .join("\n\n");
+
     const formatterUser = JSON.stringify({
       post_date,
       post_type,
       hook,
-      context: context || "",
+      context: mergedContext,
       cta_goal: cta_goal && cta_goal !== "auto" ? cta_goal : "auto-pick",
       image_style: image_style && image_style !== "auto" ? image_style : "auto",
       aspect_ratio: aspect_ratio || "1:1",
