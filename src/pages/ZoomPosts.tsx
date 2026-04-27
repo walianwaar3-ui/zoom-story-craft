@@ -745,11 +745,137 @@ const ZoomPosts = () => {
                   <><Send className="h-4 w-4 mr-2" /> Post Now</>
                 )}
               </Button>
-      <ImportFathomDialog open={showFathomImport} onOpenChange={setShowFathomImport} />
-    </div>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Fine-tune Generate Dialog */}
+      <Dialog open={!!fineTuneTranscript} onOpenChange={(o) => !o && setFineTuneTranscript(null)}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Fine-tune Post</DialogTitle>
+            <DialogDescription>
+              From: {fineTuneTranscript?.meeting_topic}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {(fineTuneTranscript?.summary || fineTuneTranscript?.issues_discussed) && (
+              <div className="bg-muted p-3 rounded-lg space-y-2 text-xs">
+                {fineTuneTranscript?.summary && (
+                  <div>
+                    <p className="font-semibold uppercase tracking-wide text-muted-foreground mb-0.5">Summary</p>
+                    <p className="text-foreground line-clamp-3">{fineTuneTranscript.summary}</p>
+                  </div>
+                )}
+                {fineTuneTranscript?.issues_discussed && (
+                  <div>
+                    <p className="font-semibold uppercase tracking-wide text-muted-foreground mb-0.5">Key Issues</p>
+                    <p className="text-foreground line-clamp-3">{fineTuneTranscript.issues_discussed}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Post Date *</label>
+                <Input type="date" value={ftPostDate} onChange={(e) => setFtPostDate(e.target.value)} />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Aspect Ratio *</label>
+                <Select value={ftAspectRatio} onValueChange={setFtAspectRatio}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1:1">Square (1:1)</SelectItem>
+                    <SelectItem value="9:16">Story (9:16)</SelectItem>
+                    <SelectItem value="16:9">Landscape (16:9)</SelectItem>
+                    <SelectItem value="4:5">Portrait (4:5)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Post Type *</label>
+              <RadioGroup value={ftPostType} onValueChange={setFtPostType} className="grid grid-cols-2 gap-2">
+                {POST_TYPES.map((pt) => (
+                  <Label
+                    key={pt.value}
+                    htmlFor={`ft-${pt.value}`}
+                    className="flex items-start gap-2 p-2.5 rounded-lg border hover:bg-muted/50 cursor-pointer"
+                  >
+                    <RadioGroupItem id={`ft-${pt.value}`} value={pt.value} className="mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium">{pt.label}</p>
+                      <p className="text-xs text-muted-foreground">{pt.desc}</p>
+                    </div>
+                  </Label>
+                ))}
+              </RadioGroup>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Hook / Core Insight *</label>
+              <Textarea
+                rows={3}
+                placeholder="What's the angle for THIS post? Write it in your own words."
+                value={ftHook}
+                onChange={(e) => setFtHook(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Context / Backstory</label>
+              <Textarea
+                rows={4}
+                placeholder="Pre-filled from transcript — edit or trim as needed."
+                value={ftContext}
+                onChange={(e) => setFtContext(e.target.value)}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">CTA Goal</label>
+                <Select value={ftCtaGoal} onValueChange={setFtCtaGoal}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {CTA_OPTIONS.map((o) => (
+                      <SelectItem key={o} value={o}>{o === "auto" ? "Auto-pick" : o}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Image Style</label>
+                <Select value={ftImageStyle} onValueChange={setFtImageStyle}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {STYLE_OPTIONS.map((o) => (
+                      <SelectItem key={o} value={o}>{o === "auto" ? "Auto" : o}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <Button
+              className="w-full"
+              disabled={!ftHook.trim() || fineTuneMutation.isPending}
+              onClick={() => fineTuneMutation.mutate()}
+            >
+              {fineTuneMutation.isPending ? (
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating fine-tuned post...</>
+              ) : (
+                <><Sparkles className="h-4 w-4 mr-2" /> Generate Fine-tuned Post</>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <ImportFathomDialog open={showFathomImport} onOpenChange={setShowFathomImport} />
     </div>
   );
 };
