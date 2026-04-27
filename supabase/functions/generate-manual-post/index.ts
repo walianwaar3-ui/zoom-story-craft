@@ -311,6 +311,7 @@ serve(async (req) => {
       cta_goal,
       image_style,
       aspect_ratio,
+      transcript_id,
     } = form || {};
 
     if (!post_date || !post_type || !hook || !String(hook).trim()) {
@@ -331,6 +332,24 @@ serve(async (req) => {
         JSON.stringify({ error: "ANTHROPIC_API_KEY not configured" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    // Optional: load source transcript for grounding context
+    let transcriptContext = "";
+    if (transcript_id) {
+      const { data: tx } = await supabaseAdmin
+        .from("zoom_transcripts")
+        .select("meeting_topic, summary, issues_discussed, transcript")
+        .eq("id", transcript_id)
+        .maybeSingle();
+      if (tx) {
+        const parts: string[] = [];
+        if (tx.meeting_topic) parts.push(`Meeting: ${tx.meeting_topic}`);
+        if (tx.summary) parts.push(`Summary: ${tx.summary}`);
+        if (tx.issues_discussed) parts.push(`Key issues: ${tx.issues_discussed}`);
+        if (tx.transcript) parts.push(`Transcript excerpt:\n${String(tx.transcript).slice(0, 4000)}`);
+        transcriptContext = parts.join("\n\n");
+      }
     }
 
     // Fetch all KB entries
@@ -377,11 +396,15 @@ serve(async (req) => {
       );
     }
 
+    const mergedContext = [context || "", transcriptContext ? `SOURCE CALL NOTES (background only — do NOT name people or tools):\n${transcriptContext}` : ""]
+      .filter(Boolean)
+      .join("\n\n");
+
     const formatterUser = JSON.stringify({
       post_date,
       post_type,
       hook,
-      context: context || "",
+      context: mergedContext,
       cta_goal: cta_goal && cta_goal !== "auto" ? cta_goal : "auto-pick",
       image_style: image_style && image_style !== "auto" ? image_style : "auto",
       aspect_ratio: aspect_ratio || "1:1",
@@ -641,13 +664,13 @@ OUTPUT FORMAT — respond with EXACTLY these two blocks and nothing else:
     const { data: content, error: insertError } = await supabaseAdmin
       .from("generated_content")
       .insert({
-        transcript_id: null,
+        transcript_id: transcript_id || null,
         caption,
         image_url: imageUrl,
         image_prompt: imagePrompt,
         aspect_ratio: aspect_ratio || "1:1",
         status: imageUrl ? "complete" : "text_only",
-        source: "manual",
+        source: transcript_id ? "transcript" : "manual",
       })
       .select()
       .single();

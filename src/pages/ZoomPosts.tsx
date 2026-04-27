@@ -21,7 +21,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Sparkles, Video, Calendar, User, Loader2, Eye, Send, Trash2, Plus, Download } from "lucide-react";
+import { Sparkles, Video, Calendar, User, Loader2, Eye, Send, Trash2, Plus, Download, SlidersHorizontal } from "lucide-react";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import ImportFathomDialog from "@/components/ImportFathomDialog";
 import { useToast } from "@/hooks/use-toast";
 
@@ -44,12 +46,31 @@ type GeneratedResult = {
   image_url: string | null;
 };
 
+const POST_TYPES = [
+  { value: "evergreen", label: "Evergreen", desc: "Authority, frameworks" },
+  { value: "promo", label: "Promo", desc: "Offer, product, CTA-driven" },
+  { value: "news_reaction", label: "News Reaction", desc: "Industry event" },
+  { value: "personal_story", label: "Personal Story", desc: "Relatable, mindset" },
+];
+const CTA_OPTIONS = ["auto", "System Map", "Funnel", "Blueprint", "Ladder", "Engine", "Structure", "Stack"];
+const STYLE_OPTIONS = ["auto", "Anchor Shot", "Operator Shot", "News Report", "Versus", "Relatable"];
+const todayISO = () => new Date().toISOString().slice(0, 10);
+
 const ZoomPosts = () => {
   const [selectedTranscript, setSelectedTranscript] = useState<Transcript | null>(null);
   const [viewTranscript, setViewTranscript] = useState<Transcript | null>(null);
   const [postCount, setPostCount] = useState<number>(1);
   const [aspectRatio, setAspectRatio] = useState("1:1");
   const [showFathomImport, setShowFathomImport] = useState(false);
+  // Fine-tune dialog state
+  const [fineTuneTranscript, setFineTuneTranscript] = useState<Transcript | null>(null);
+  const [ftPostDate, setFtPostDate] = useState(todayISO());
+  const [ftPostType, setFtPostType] = useState("evergreen");
+  const [ftHook, setFtHook] = useState("");
+  const [ftContext, setFtContext] = useState("");
+  const [ftCtaGoal, setFtCtaGoal] = useState("auto");
+  const [ftImageStyle, setFtImageStyle] = useState("auto");
+  const [ftAspectRatio, setFtAspectRatio] = useState("1:1");
   // GHL popup state
   const [ghlData, setGhlData] = useState<GeneratedResult | null>(null);
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
@@ -149,6 +170,60 @@ const ZoomPosts = () => {
       toast({
         title: "Generation Failed",
         description: error.message || "Something went wrong. Try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const fineTuneMutation = useMutation({
+    mutationFn: async () => {
+      if (!fineTuneTranscript) throw new Error("No transcript selected");
+      const { data, error } = await supabase.functions.invoke("generate-manual-post", {
+        body: {
+          transcript_id: fineTuneTranscript.id,
+          post_date: ftPostDate,
+          post_type: ftPostType,
+          hook: ftHook,
+          context: ftContext,
+          cta_goal: ftCtaGoal,
+          image_style: ftImageStyle,
+          aspect_ratio: ftAspectRatio,
+        },
+      });
+      if (error) {
+        const ctx: any = (error as any).context;
+        let msg = error.message || "Generation failed";
+        try {
+          const body = await ctx?.response?.json?.();
+          if (body?.error) msg = body.error;
+        } catch (_) { /* ignore */ }
+        throw new Error(msg);
+      }
+      return data as GeneratedResult;
+    },
+    onSuccess: (data) => {
+      if (data?.image_url) {
+        toast({ title: "Post Generated!", description: "Caption + image ready." });
+      } else {
+        toast({
+          title: "Caption Generated (no image)",
+          description: (data as any)?.warning || "Image generation failed — caption saved.",
+          variant: "destructive",
+        });
+      }
+      setFineTuneTranscript(null);
+      setFtHook("");
+      setFtContext("");
+      queryClient.invalidateQueries({ queryKey: ["generated-content"] });
+      queryClient.invalidateQueries({ queryKey: ["posts-count"] });
+      setGhlData(data);
+      setSelectedAccounts([]);
+      setScheduleDate("");
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Generation Failed",
+        description: error.message || "Something went wrong.",
         variant: "destructive",
       });
     },
@@ -333,7 +408,26 @@ const ZoomPosts = () => {
                     }}
                   >
                     <Sparkles className="h-4 w-4 mr-1" />
-                    Generate Post
+                    Quick Generate
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setFineTuneTranscript(t);
+                      setFtPostDate(todayISO());
+                      setFtPostType("evergreen");
+                      setFtHook("");
+                      setFtContext(
+                        [t.summary, t.issues_discussed].filter(Boolean).join("\n\n")
+                      );
+                      setFtCtaGoal("auto");
+                      setFtImageStyle("auto");
+                      setFtAspectRatio("1:1");
+                    }}
+                  >
+                    <SlidersHorizontal className="h-4 w-4 mr-1" />
+                    Fine-tune
                   </Button>
                   <Button
                     variant="ghost"
@@ -651,11 +745,137 @@ const ZoomPosts = () => {
                   <><Send className="h-4 w-4 mr-2" /> Post Now</>
                 )}
               </Button>
-      <ImportFathomDialog open={showFathomImport} onOpenChange={setShowFathomImport} />
-    </div>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Fine-tune Generate Dialog */}
+      <Dialog open={!!fineTuneTranscript} onOpenChange={(o) => !o && setFineTuneTranscript(null)}>
+        <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Fine-tune Post</DialogTitle>
+            <DialogDescription>
+              From: {fineTuneTranscript?.meeting_topic}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {(fineTuneTranscript?.summary || fineTuneTranscript?.issues_discussed) && (
+              <div className="bg-muted p-3 rounded-lg space-y-2 text-xs">
+                {fineTuneTranscript?.summary && (
+                  <div>
+                    <p className="font-semibold uppercase tracking-wide text-muted-foreground mb-0.5">Summary</p>
+                    <p className="text-foreground line-clamp-3">{fineTuneTranscript.summary}</p>
+                  </div>
+                )}
+                {fineTuneTranscript?.issues_discussed && (
+                  <div>
+                    <p className="font-semibold uppercase tracking-wide text-muted-foreground mb-0.5">Key Issues</p>
+                    <p className="text-foreground line-clamp-3">{fineTuneTranscript.issues_discussed}</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Post Date *</label>
+                <Input type="date" value={ftPostDate} onChange={(e) => setFtPostDate(e.target.value)} />
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Aspect Ratio *</label>
+                <Select value={ftAspectRatio} onValueChange={setFtAspectRatio}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1:1">Square (1:1)</SelectItem>
+                    <SelectItem value="9:16">Story (9:16)</SelectItem>
+                    <SelectItem value="16:9">Landscape (16:9)</SelectItem>
+                    <SelectItem value="4:5">Portrait (4:5)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Post Type *</label>
+              <RadioGroup value={ftPostType} onValueChange={setFtPostType} className="grid grid-cols-2 gap-2">
+                {POST_TYPES.map((pt) => (
+                  <Label
+                    key={pt.value}
+                    htmlFor={`ft-${pt.value}`}
+                    className="flex items-start gap-2 p-2.5 rounded-lg border hover:bg-muted/50 cursor-pointer"
+                  >
+                    <RadioGroupItem id={`ft-${pt.value}`} value={pt.value} className="mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium">{pt.label}</p>
+                      <p className="text-xs text-muted-foreground">{pt.desc}</p>
+                    </div>
+                  </Label>
+                ))}
+              </RadioGroup>
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Hook / Core Insight *</label>
+              <Textarea
+                rows={3}
+                placeholder="What's the angle for THIS post? Write it in your own words."
+                value={ftHook}
+                onChange={(e) => setFtHook(e.target.value)}
+              />
+            </div>
+
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">Context / Backstory</label>
+              <Textarea
+                rows={4}
+                placeholder="Pre-filled from transcript — edit or trim as needed."
+                value={ftContext}
+                onChange={(e) => setFtContext(e.target.value)}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">CTA Goal</label>
+                <Select value={ftCtaGoal} onValueChange={setFtCtaGoal}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {CTA_OPTIONS.map((o) => (
+                      <SelectItem key={o} value={o}>{o === "auto" ? "Auto-pick" : o}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Image Style</label>
+                <Select value={ftImageStyle} onValueChange={setFtImageStyle}>
+                  <SelectTrigger><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {STYLE_OPTIONS.map((o) => (
+                      <SelectItem key={o} value={o}>{o === "auto" ? "Auto" : o}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <Button
+              className="w-full"
+              disabled={!ftHook.trim() || fineTuneMutation.isPending}
+              onClick={() => fineTuneMutation.mutate()}
+            >
+              {fineTuneMutation.isPending ? (
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" /> Generating fine-tuned post...</>
+              ) : (
+                <><Sparkles className="h-4 w-4 mr-2" /> Generate Fine-tuned Post</>
+              )}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <ImportFathomDialog open={showFathomImport} onOpenChange={setShowFathomImport} />
     </div>
   );
 };
