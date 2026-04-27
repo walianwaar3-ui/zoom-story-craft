@@ -334,6 +334,24 @@ serve(async (req) => {
       );
     }
 
+    // Optional: load source transcript for grounding context
+    let transcriptContext = "";
+    if (transcript_id) {
+      const { data: tx } = await supabaseAdmin
+        .from("zoom_transcripts")
+        .select("meeting_topic, summary, issues_discussed, transcript")
+        .eq("id", transcript_id)
+        .maybeSingle();
+      if (tx) {
+        const parts: string[] = [];
+        if (tx.meeting_topic) parts.push(`Meeting: ${tx.meeting_topic}`);
+        if (tx.summary) parts.push(`Summary: ${tx.summary}`);
+        if (tx.issues_discussed) parts.push(`Key issues: ${tx.issues_discussed}`);
+        if (tx.transcript) parts.push(`Transcript excerpt:\n${String(tx.transcript).slice(0, 4000)}`);
+        transcriptContext = parts.join("\n\n");
+      }
+    }
+
     // Fetch all KB entries
     const { data: kbEntries } = await supabaseAdmin
       .from("knowledgebase")
