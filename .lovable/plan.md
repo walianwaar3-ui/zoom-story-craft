@@ -1,81 +1,60 @@
+# Plan: Fine-tune dialog for Zoom transcript posts
 
+## What you'll get
 
-# Plan: Stop real client names from leaking into posts
+On the **Zoom Transcripts** page, each transcript card will have **two buttons** instead of one:
 
-## What broke
+1. **Quick Generate** — same as today. One click → batch generation runs immediately (1–14 posts, default angles, default style).
+2. **Fine-tune** — opens a dialog (same fields as the manual *Generate Post* page) so you can steer exactly what gets produced from this transcript.
 
-Last post said *"I was on a call with **Bilal** yesterday and he said…"* and mentioned **GoHighLevel** by name. Both should have been generic ("a founder", "their CRM" or an archetype label like "high-level strategic operator").
+The Fine-tune dialog will pre-show the transcript's summary/key issues for context, but **you write the hook yourself** — the AI will not auto-pick it.
 
-## Root cause (instructional + plumbing, not AI)
+## Fine-tune dialog fields
 
-| # | Cause | Layer |
-|---|---|---|
-| 1 | Prompt sends `Client: Bilal` as a labeled field — Claude reads that as a name it's allowed to use | Code |
-| 2 | `OUTPUT_RULES_BLOCK` bans certain words but never bans real names or specific brand/tool names | Prompt |
-| 3 | Caption KB describes voice ("operator-to-operator") but never says "swap names for archetypes" | KB content (out of scope — fix in code) |
+Mirrors the manual Generate Post page:
 
-Same family of bug as the last fix: the model wasn't given a hard rule, and we handed it the raw name on a silver platter.
+- **Post Date** (defaults to today)
+- **Post Type** (Evergreen / Promo / News Reaction / Personal Story)
+- **Hook / Core Insight** *(required, you type it)*
+- **Context / Backstory** *(optional — pre-filled with transcript summary + issues, fully editable)*
+- **CTA Goal** (Auto / System Map / Funnel / Blueprint / Ladder / Engine / Structure / Stack)
+- **Image Style** (Auto / Anchor Shot / Operator Shot / News Report / Versus / Relatable)
+- **Aspect Ratio** (1:1 / 9:16 / 16:9 / 4:5)
 
-## The fix (3 layers — mirrors the last fix's pattern)
+Above the form: small read-only block showing the transcript's **Summary** and **Key Issues** so you can see what to draw from while writing your hook.
 
-### Layer 1 — Sanitize the client name before it ever reaches Claude
+Single-post output (no 1–14 batch in this mode — fine-tune is for one carefully-shaped post). After generation, the existing "Post to GHL" dialog opens, same as Quick Generate's single-post flow.
 
-In all three generation functions (`generate-zoom-post`, `generate-manual-post`, `regenerate-caption-only`):
+## Where each button lives
 
-- Stop sending `Client: <real name>` to the LLM.
-- Instead, derive an **archetype label** from the transcript metadata and send that:
-  - Build a small `deriveArchetype(transcript)` helper that picks a label based on `meeting_topic` / `issues_discussed` / `summary` keywords.
-  - Default labels: `high-level strategic operator`, `agency founder`, `coach scaling delivery`, `service provider`, `SaaS founder`, `consultant`. Falls back to `founder` if nothing matches.
-- The prompt now reads:  
-  `Client archetype: high-level strategic operator` instead of `Client: Bilal`.
-- Keep the real name only in DB metadata (for the user's own reference) — never in the LLM context.
-
-### Layer 2 — Add anonymization rules to `OUTPUT_RULES_BLOCK`
-
-Append two new rules to the existing block (already injected on every call):
-
-```
-- NEVER use real first or last names of clients, team members, or anyone
-  mentioned in the transcript. Refer to them as "a founder", "an operator",
-  "a coach", or use the archetype label provided.
-- NEVER name specific third-party tools/brands (GoHighLevel, ClickFunnels,
-  Kajabi, Zapier, etc.). Use generic terms: "their CRM", "their funnel
-  builder", "their automation stack".
-- The post must read as a universal lesson — anyone could be the subject.
+```text
+[ Transcript card ]
+  ...meeting topic, client, date, summary...
+  [ View ]  [ Quick Generate ▾ ]  [ Fine-tune ✎ ]  [ 🗑 ]
 ```
 
-### Layer 3 — Post-generation name & brand audit (mirrors the banned-word audit)
+`Quick Generate` keeps its current sub-dialog (post count 1–14 + aspect ratio).
+`Fine-tune` is the new dialog described above.
 
-Extend the existing `auditAndRewrite()` helper to also detect:
+## Technical notes
 
-- **Names**: scan for `transcript.client_name` and any capitalized two-word sequence in the caption that isn't a sentence start, brand asset (Wali, Wali Digital), or in an allowlist.
-- **Tool names**: maintain a small list (`GoHighLevel`, `ClickFunnels`, `Kajabi`, `HubSpot`, `Zapier`, `ActiveCampaign`, `Calendly`, `ManyChat`) and flag any match.
+**Frontend — `src/pages/ZoomPosts.tsx`**
+- Add `fineTuneTranscript` state + dialog component.
+- Reuse the field set from `src/pages/GeneratePost.tsx` (extract shared option arrays into a small local consts block, no new shared file needed).
+- On submit, call the existing `generate-manual-post` edge function and pass an extra `transcript_id` so the edge function can attach the generated row to the source transcript (and so the AI can use the transcript as additional grounding context).
 
-If any are found → one Claude rewrite call: *"Rewrite this post replacing [name] with 'a founder' / [tool] with 'their CRM'. Keep everything else identical."* Same one-shot bound, same logging pattern as the existing audit.
+**Backend — `supabase/functions/generate-manual-post/index.ts`**
+- Accept optional `transcript_id` in the request body.
+- If present:
+  - Load the transcript row (`zoom_transcripts`).
+  - Append its `summary` + `issues_discussed` + (truncated) `transcript` to the prompt context as "source call notes" — the user-supplied `hook` and `context` remain the primary signal.
+  - Set `generated_content.transcript_id` to the provided id and `source = 'transcript'` (instead of `'manual'`) so the post shows up linked to the transcript in Generated Posts.
+- All existing safeguards (no client names, no tool brands, archetype derivation, audit/rewrite layer) continue to apply unchanged.
 
-## Files changed
+**No DB migration needed** — `generated_content.transcript_id` already exists.
 
-| File | Change |
-|---|---|
-| `supabase/functions/generate-zoom-post/index.ts` | Add `deriveArchetype()`, swap `Client:` for `Client archetype:`, extend `OUTPUT_RULES_BLOCK`, extend `auditAndRewrite()` |
-| `supabase/functions/generate-manual-post/index.ts` | Same `OUTPUT_RULES_BLOCK` + audit changes (no `client_name` field, but still scrub names) |
-| `supabase/functions/regenerate-caption-only/index.ts` | Same — also strip name from the "previous caption" passed back in for context |
+## Out of scope
 
-**No DB changes. No frontend changes. No KB edits. Existing posts untouched** — fix applies only to future generations & regenerations.
-
-## How you'll verify
-
-Generate a fresh batch from the same Zoom transcript that produced the "Bilal" post. Each post should:
-- Refer to subject as "a founder" / "an operator" / "a high-level strategic operator" — never by real name
-- Replace any specific tool name with a generic equivalent ("their CRM", "their automation stack")
-- Still feel grounded in a real moment ("I was on a call this morning with a founder who…")
-
-If a name slips through, the audit layer rewrites it before save.
-
-## What this does NOT change
-
-- The 14-angle pre-planner (variation logic untouched)
-- Image generation / fal.ai pipeline
-- Any Caption / Brand Pillars / Owner Story KB entries
-- Existing posts in the library
-
+- The 14-angle batch planner (Quick Generate path is untouched).
+- Manual *Generate Post* page (already supports this flow standalone).
+- Any change to image generation (still fal.ai), name-scrubbing, or Generated Posts UI.
