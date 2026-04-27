@@ -46,12 +46,31 @@ type GeneratedResult = {
   image_url: string | null;
 };
 
+const POST_TYPES = [
+  { value: "evergreen", label: "Evergreen", desc: "Authority, frameworks" },
+  { value: "promo", label: "Promo", desc: "Offer, product, CTA-driven" },
+  { value: "news_reaction", label: "News Reaction", desc: "Industry event" },
+  { value: "personal_story", label: "Personal Story", desc: "Relatable, mindset" },
+];
+const CTA_OPTIONS = ["auto", "System Map", "Funnel", "Blueprint", "Ladder", "Engine", "Structure", "Stack"];
+const STYLE_OPTIONS = ["auto", "Anchor Shot", "Operator Shot", "News Report", "Versus", "Relatable"];
+const todayISO = () => new Date().toISOString().slice(0, 10);
+
 const ZoomPosts = () => {
   const [selectedTranscript, setSelectedTranscript] = useState<Transcript | null>(null);
   const [viewTranscript, setViewTranscript] = useState<Transcript | null>(null);
   const [postCount, setPostCount] = useState<number>(1);
   const [aspectRatio, setAspectRatio] = useState("1:1");
   const [showFathomImport, setShowFathomImport] = useState(false);
+  // Fine-tune dialog state
+  const [fineTuneTranscript, setFineTuneTranscript] = useState<Transcript | null>(null);
+  const [ftPostDate, setFtPostDate] = useState(todayISO());
+  const [ftPostType, setFtPostType] = useState("evergreen");
+  const [ftHook, setFtHook] = useState("");
+  const [ftContext, setFtContext] = useState("");
+  const [ftCtaGoal, setFtCtaGoal] = useState("auto");
+  const [ftImageStyle, setFtImageStyle] = useState("auto");
+  const [ftAspectRatio, setFtAspectRatio] = useState("1:1");
   // GHL popup state
   const [ghlData, setGhlData] = useState<GeneratedResult | null>(null);
   const [selectedAccounts, setSelectedAccounts] = useState<string[]>([]);
