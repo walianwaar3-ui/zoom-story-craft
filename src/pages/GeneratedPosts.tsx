@@ -67,6 +67,8 @@ const COMPLAINT_OPTIONS = [
 
 const SMART_IMAGE_LOADING_LABEL = "Analyzing image → Diagnosing issues → Regenerating with fixes...";
 const CAPTION_LOADING_LABEL = "Rewriting caption with fresh angle...";
+const IMAGE_POLL_ATTEMPTS = 120;
+const IMAGE_POLL_INTERVAL_MS = 3_000;
 
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -216,8 +218,8 @@ const GeneratedPosts = () => {
       if (data?.error) throw new Error(data.error);
 
       if (data?.status === "processing" && data.status_url && data.response_url) {
-        for (let attempt = 0; attempt < 45; attempt += 1) {
-          await sleep(2_000);
+        for (let attempt = 0; attempt < IMAGE_POLL_ATTEMPTS; attempt += 1) {
+          await sleep(IMAGE_POLL_INTERVAL_MS);
           const { data: pollData, error: pollError } = await supabase.functions.invoke("smart-regenerate-image", {
             body: {
               action: "poll",
@@ -233,16 +235,23 @@ const GeneratedPosts = () => {
           await queryClient.invalidateQueries({ queryKey: ["generated-content"] });
         }
 
-        throw new Error("Image is still processing. Please refresh in a moment.");
+        return { success: true, status: "processing", background: true };
       }
 
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (data?.background) {
+        toast({
+          title: "Image is still processing",
+          description: "It will appear on this post automatically when the image job finishes.",
+        });
+      } else {
       toast({
         title: "Image regenerated!",
         description: "New image saved. See 'What was fixed' below.",
       });
+      }
       queryClient.invalidateQueries({ queryKey: ["generated-content"] });
       setRegeneratingId(null);
       setRegenMode(null);
@@ -273,8 +282,8 @@ const GeneratedPosts = () => {
       if (data?.error) throw new Error(data.error);
 
       if (data?.status === "processing" && data.status_url && data.response_url) {
-        for (let attempt = 0; attempt < 45; attempt += 1) {
-          await sleep(2_000);
+        for (let attempt = 0; attempt < IMAGE_POLL_ATTEMPTS; attempt += 1) {
+          await sleep(IMAGE_POLL_INTERVAL_MS);
           const { data: pollData, error: pollError } = await supabase.functions.invoke("generate-image-for-post", {
             body: {
               action: "poll",
@@ -287,12 +296,16 @@ const GeneratedPosts = () => {
           if (pollData?.error) throw new Error(pollData.error);
           if (pollData?.status === "completed") return pollData;
         }
-        throw new Error("Image is still processing. Please refresh in a moment.");
+        return { success: true, status: "processing", background: true };
       }
       return data;
     },
-    onSuccess: () => {
-      toast({ title: "Image generated!", description: "Image added to your post." });
+    onSuccess: (data: any) => {
+      toast(
+        data?.background
+          ? { title: "Image is still processing", description: "It will appear on this post automatically when the image job finishes." }
+          : { title: "Image generated!", description: "Image added to your post." },
+      );
       queryClient.invalidateQueries({ queryKey: ["generated-content"] });
       setRegeneratingId(null);
       setRegenMode(null);

@@ -63,6 +63,29 @@ function isAllowedFalUrl(url: string) {
   }
 }
 
+async function createWebhookToken(contentId: string, mode: string, secret: string) {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const signature = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${contentId}:${mode}`));
+  return Array.from(new Uint8Array(signature)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function buildFalWebhookUrl(contentId: string, mode: "smart", falKey: string) {
+  const baseUrl = Deno.env.get("SUPABASE_URL");
+  if (!baseUrl) return null;
+  const token = await createWebhookToken(contentId, mode, falKey);
+  const url = new URL(`${baseUrl}/functions/v1/fal-image-webhook`);
+  url.searchParams.set("content_id", contentId);
+  url.searchParams.set("mode", mode);
+  url.searchParams.set("token", token);
+  return url.toString();
+}
+
 async function pollFalJob(FAL_KEY: string, statusUrl: string, responseUrl: string) {
   if (!isAllowedFalUrl(statusUrl) || !isAllowedFalUrl(responseUrl)) {
     throw new Error("Invalid fal.ai job URL");
@@ -453,8 +476,12 @@ ASPECT RATIO: ${post.aspect_ratio || "1:1"}`;
       const imageSize = sizeMap[post.aspect_ratio || "1:1"] || sizeMap["1:1"];
 
       try {
+        const webhookUrl = await buildFalWebhookUrl(content_id, "smart", FAL_KEY);
+        const falSubmitUrl = new URL("https://queue.fal.run/fal-ai/nano-banana-2/edit");
+        if (webhookUrl) falSubmitUrl.searchParams.set("fal_webhook", webhookUrl);
+
         const submitRes = await fetchWithTimeout(
-          "https://queue.fal.run/fal-ai/nano-banana-2/edit",
+          falSubmitUrl.toString(),
           {
             method: "POST",
             headers: {
