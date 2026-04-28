@@ -261,6 +261,53 @@ const GeneratedPosts = () => {
     },
   });
 
+  // Generate image for a text-only post (uses saved image_prompt)
+  const generateImageMutation = useMutation({
+    mutationFn: async (post: GeneratedPost) => {
+      setRegeneratingId(post.id);
+      setRegenMode("image");
+      const { data, error } = await supabase.functions.invoke("generate-image-for-post", {
+        body: { content_id: post.id },
+      });
+      if (error) throw new Error(await extractFunctionError(error));
+      if (data?.error) throw new Error(data.error);
+
+      if (data?.status === "processing" && data.status_url && data.response_url) {
+        for (let attempt = 0; attempt < 45; attempt += 1) {
+          await sleep(2_000);
+          const { data: pollData, error: pollError } = await supabase.functions.invoke("generate-image-for-post", {
+            body: {
+              action: "poll",
+              content_id: post.id,
+              status_url: data.status_url,
+              response_url: data.response_url,
+            },
+          });
+          if (pollError) throw new Error(await extractFunctionError(pollError));
+          if (pollData?.error) throw new Error(pollData.error);
+          if (pollData?.status === "completed") return pollData;
+        }
+        throw new Error("Image is still processing. Please refresh in a moment.");
+      }
+      return data;
+    },
+    onSuccess: () => {
+      toast({ title: "Image generated!", description: "Image added to your post." });
+      queryClient.invalidateQueries({ queryKey: ["generated-content"] });
+      setRegeneratingId(null);
+      setRegenMode(null);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Image Generation Failed",
+        description: error.message || "Something went wrong.",
+        variant: "destructive",
+      });
+      setRegeneratingId(null);
+      setRegenMode(null);
+    },
+  });
+
   // Caption-only regenerate — keeps image, rewrites caption
   const captionRegenerateMutation = useMutation({
     mutationFn: async ({ post, notes }: { post: GeneratedPost; notes: string }) => {
@@ -525,6 +572,21 @@ const GeneratedPosts = () => {
                       <Send className="h-4 w-4 mr-1" />
                       Post to GHL
                     </Button>
+
+                    {!post.image_url && post.image_prompt && (
+                      <Button
+                        size="sm"
+                        variant="default"
+                        disabled={isThisRegenerating}
+                        onClick={() => generateImageMutation.mutate(post)}
+                      >
+                        {isThisRegenerating ? (
+                          <><Loader2 className="h-4 w-4 mr-1 animate-spin" />Generating...</>
+                        ) : (
+                          <><ImageIcon className="h-4 w-4 mr-1" />Generate Image</>
+                        )}
+                      </Button>
+                    )}
 
                     {/* Split Smart Regenerate / Quick Regenerate */}
                     <div className="inline-flex">
