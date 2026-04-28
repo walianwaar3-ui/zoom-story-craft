@@ -72,8 +72,9 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const extractFunctionError = async (error: unknown) => {
   let serverMsg = "";
+  const maybeError = error as { context?: unknown; message?: string };
   try {
-    const ctx = (error as any)?.context;
+    const ctx = maybeError.context as { json?: () => Promise<{ error?: string; message?: string }>; text?: () => Promise<string> } | undefined;
     if (ctx && typeof ctx.json === "function") {
       const body = await ctx.json();
       serverMsg = body?.error || body?.message || "";
@@ -83,7 +84,7 @@ const extractFunctionError = async (error: unknown) => {
   } catch {
     /* keep original error */
   }
-  return serverMsg || (error as any)?.message || "Edge function error";
+  return serverMsg || maybeError.message || "Edge function error";
 };
 
 const GeneratedPosts = () => {
