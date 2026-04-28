@@ -240,11 +240,18 @@ const GeneratedPosts = () => {
 
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data: any) => {
+      if (data?.background) {
+        toast({
+          title: "Image is still processing",
+          description: "It will appear on this post automatically when the image job finishes.",
+        });
+      } else {
       toast({
         title: "Image regenerated!",
         description: "New image saved. See 'What was fixed' below.",
       });
+      }
       queryClient.invalidateQueries({ queryKey: ["generated-content"] });
       setRegeneratingId(null);
       setRegenMode(null);
@@ -293,8 +300,12 @@ const GeneratedPosts = () => {
       }
       return data;
     },
-    onSuccess: () => {
-      toast({ title: "Image generated!", description: "Image added to your post." });
+    onSuccess: (data: any) => {
+      toast(
+        data?.background
+          ? { title: "Image is still processing", description: "It will appear on this post automatically when the image job finishes." }
+          : { title: "Image generated!", description: "Image added to your post." },
+      );
       queryClient.invalidateQueries({ queryKey: ["generated-content"] });
       setRegeneratingId(null);
       setRegenMode(null);
