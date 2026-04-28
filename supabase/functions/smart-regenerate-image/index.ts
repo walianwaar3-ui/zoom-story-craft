@@ -117,20 +117,49 @@ serve(async (req) => {
   console.log("[smart-regenerate-image] invoked", req.method);
   try {
     const body = await req.json();
-    const { content_id, complaints, free_text, auto_analyze } = body;
+    const { content_id, complaints, free_text, auto_analyze, action, status_url, response_url } = body;
     console.log("[smart-regenerate-image] body", JSON.stringify({ content_id, complaints, free_text, auto_analyze }));
 
     if (!content_id) {
-      return new Response(JSON.stringify({ error: "content_id is required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return json({ error: "content_id is required" }, 400);
     }
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    const FAL_KEY = Deno.env.get("FAL_KEY");
+
+    if (action === "poll") {
+      if (!FAL_KEY) return json({ error: "FAL_KEY not configured" }, 500);
+      if (!status_url || !response_url) return json({ error: "status_url and response_url are required" }, 400);
+
+      const falJob = await pollFalJob(FAL_KEY, status_url, response_url);
+      if (falJob.status === "processing") return json({ status: "processing" }, 202);
+      if (falJob.status === "failed" || !falJob.imageUrl) {
+        await supabaseAdmin.from("generated_content").update({ status: "complete" }).eq("id", content_id);
+        return json({ error: falJob.error || "Image generation failed" }, 500);
+      }
+
+      const { data: currentPost } = await supabaseAdmin
+        .from("generated_content")
+        .select("regenerated_count")
+        .eq("id", content_id)
+        .single();
+
+      const { error: updateError } = await supabaseAdmin
+        .from("generated_content")
+        .update({
+          image_url: falJob.imageUrl,
+          regenerated_count: (currentPost?.regenerated_count || 0) + 1,
+          status: "complete",
+        })
+        .eq("id", content_id);
+
+      if (updateError) return json({ error: updateError.message }, 500);
+      return json({ success: true, status: "completed", content_id, image_url: falJob.imageUrl });
+    }
 
     // STEP 1: Load existing post
     const { data: post, error: postError } = await supabaseAdmin
@@ -154,7 +183,6 @@ serve(async (req) => {
     }
 
     const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
-    const FAL_KEY = Deno.env.get("FAL_KEY");
     if (!ANTHROPIC_API_KEY) {
       return new Response(JSON.stringify({ error: "ANTHROPIC_API_KEY not configured" }), {
         status: 500,
