@@ -442,8 +442,7 @@ ASPECT RATIO: ${post.aspect_ratio || "1:1"}`;
       });
     }
 
-    // STEP 4: Regenerate with fal.ai
-    let imageUrl: string | null = null;
+    // STEP 4: Regenerate with fal.ai — submit job and return quickly; client polls status
     if (FAL_KEY) {
       const sizeMap: Record<string, { width: number; height: number }> = {
         "1:1": { width: 1024, height: 1024 },
@@ -476,76 +475,32 @@ ASPECT RATIO: ${post.aspect_ratio || "1:1"}`;
           console.error("fal submit failed:", submitRes.status, await submitRes.text());
         } else {
           const submitData = await submitRes.json();
-          const statusUrl = submitData.status_url;
-          const responseUrl = submitData.response_url;
-          const deadline = Date.now() + 60_000;
-          while (Date.now() < deadline) {
-            await new Promise((r) => setTimeout(r, 2000));
-            const statusRes = await fetch(statusUrl, {
-              headers: { Authorization: `Key ${FAL_KEY}` },
-            });
-            if (!statusRes.ok) continue;
-            const statusData = await statusRes.json();
-            if (statusData.status === "COMPLETED") {
-              const finalRes = await fetch(responseUrl, {
-                headers: { Authorization: `Key ${FAL_KEY}` },
-              });
-              if (finalRes.ok) {
-                const finalData = await finalRes.json();
-                imageUrl = finalData.images?.[0]?.url || null;
-              }
-              break;
-            }
-            if (statusData.status === "FAILED" || statusData.status === "ERROR") {
-              console.error("fal failed:", statusData);
-              break;
-            }
-          }
+          const lastDiagnostic = `PROBLEMS FOUND:\n${diagnosticReport}\n\nCORRECTIONS APPLIED:\n${correctiveInstructions}`;
+
+          await supabaseAdmin
+            .from("generated_content")
+            .update({ image_prompt: imagePrompt, last_diagnostic: lastDiagnostic, status: "regenerating" })
+            .eq("id", content_id);
+
+          return json(
+            {
+              success: true,
+              status: "processing",
+              content_id,
+              status_url: submitData.status_url,
+              response_url: submitData.response_url,
+              diagnostic_report: diagnosticReport,
+              corrective_instructions: correctiveInstructions,
+            },
+            202,
+          );
         }
       } catch (falErr) {
         console.error("fal error:", falErr);
       }
     }
 
-    if (!imageUrl) {
-      return new Response(
-        JSON.stringify({ error: "Image generation timed out — please try again" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
-
-    // STEP 5: UPDATE existing record
-    const lastDiagnostic = `PROBLEMS FOUND:\n${diagnosticReport}\n\nCORRECTIONS APPLIED:\n${correctiveInstructions}`;
-
-    const { error: updateError } = await supabaseAdmin
-      .from("generated_content")
-      .update({
-        image_url: imageUrl,
-        image_prompt: imagePrompt,
-        regenerated_count: (post.regenerated_count || 0) + 1,
-        last_diagnostic: lastDiagnostic,
-        status: "complete",
-      })
-      .eq("id", content_id);
-
-    if (updateError) {
-      console.error("Update error:", updateError);
-      return new Response(JSON.stringify({ error: updateError.message }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        content_id,
-        image_url: imageUrl,
-        diagnostic_report: diagnosticReport,
-        corrective_instructions: correctiveInstructions,
-      }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    return json({ error: "Image generation could not be started — please try again" }, 500);
   } catch (e) {
     console.error("smart-regenerate error:", e);
     return new Response(
