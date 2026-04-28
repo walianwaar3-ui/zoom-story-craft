@@ -47,6 +47,52 @@ function parseClaudeText(data: any): string {
     .join("");
 }
 
+function json(data: Record<string, unknown>, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+function isAllowedFalUrl(url: string) {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "https:" && parsed.hostname === "queue.fal.run";
+  } catch {
+    return false;
+  }
+}
+
+async function pollFalJob(FAL_KEY: string, statusUrl: string, responseUrl: string) {
+  if (!isAllowedFalUrl(statusUrl) || !isAllowedFalUrl(responseUrl)) {
+    throw new Error("Invalid fal.ai job URL");
+  }
+
+  const statusRes = await fetchWithTimeout(statusUrl, {
+    headers: { Authorization: `Key ${FAL_KEY}` },
+  }, 15_000);
+
+  if (!statusRes.ok) {
+    throw new Error(`fal.ai status check failed (${statusRes.status})`);
+  }
+
+  const statusData = await statusRes.json();
+  if (statusData.status === "COMPLETED") {
+    const finalRes = await fetchWithTimeout(responseUrl, {
+      headers: { Authorization: `Key ${FAL_KEY}` },
+    }, 20_000);
+    if (!finalRes.ok) throw new Error(`fal.ai result fetch failed (${finalRes.status})`);
+    const finalData = await finalRes.json();
+    return { status: "completed", imageUrl: finalData.images?.[0]?.url || null };
+  }
+
+  if (statusData.status === "FAILED" || statusData.status === "ERROR") {
+    return { status: "failed", error: statusData.error || "fal.ai image generation failed" };
+  }
+
+  return { status: "processing" };
+}
+
 // Fetch an image URL and convert it to base64 + media type for Claude vision
 async function fetchImageAsBase64(url: string): Promise<{ data: string; mediaType: string }> {
   const res = await fetchWithTimeout(url, {}, 15_000);
