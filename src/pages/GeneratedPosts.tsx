@@ -68,6 +68,24 @@ const COMPLAINT_OPTIONS = [
 const SMART_IMAGE_LOADING_LABEL = "Analyzing image → Diagnosing issues → Regenerating with fixes...";
 const CAPTION_LOADING_LABEL = "Rewriting caption with fresh angle...";
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const extractFunctionError = async (error: unknown) => {
+  let serverMsg = "";
+  try {
+    const ctx = (error as any)?.context;
+    if (ctx && typeof ctx.json === "function") {
+      const body = await ctx.json();
+      serverMsg = body?.error || body?.message || "";
+    } else if (ctx && typeof ctx.text === "function") {
+      serverMsg = await ctx.text();
+    }
+  } catch {
+    /* keep original error */
+  }
+  return serverMsg || (error as any)?.message || "Edge function error";
+};
+
 const GeneratedPosts = () => {
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
