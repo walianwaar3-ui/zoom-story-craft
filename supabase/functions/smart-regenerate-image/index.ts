@@ -47,6 +47,52 @@ function parseClaudeText(data: any): string {
     .join("");
 }
 
+function json(data: Record<string, unknown>, status = 200) {
+  return new Response(JSON.stringify(data), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
+function isAllowedFalUrl(url: string) {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === "https:" && parsed.hostname === "queue.fal.run";
+  } catch {
+    return false;
+  }
+}
+
+async function pollFalJob(FAL_KEY: string, statusUrl: string, responseUrl: string) {
+  if (!isAllowedFalUrl(statusUrl) || !isAllowedFalUrl(responseUrl)) {
+    throw new Error("Invalid fal.ai job URL");
+  }
+
+  const statusRes = await fetchWithTimeout(statusUrl, {
+    headers: { Authorization: `Key ${FAL_KEY}` },
+  }, 15_000);
+
+  if (!statusRes.ok) {
+    throw new Error(`fal.ai status check failed (${statusRes.status})`);
+  }
+
+  const statusData = await statusRes.json();
+  if (statusData.status === "COMPLETED") {
+    const finalRes = await fetchWithTimeout(responseUrl, {
+      headers: { Authorization: `Key ${FAL_KEY}` },
+    }, 20_000);
+    if (!finalRes.ok) throw new Error(`fal.ai result fetch failed (${finalRes.status})`);
+    const finalData = await finalRes.json();
+    return { status: "completed", imageUrl: finalData.images?.[0]?.url || null };
+  }
+
+  if (statusData.status === "FAILED" || statusData.status === "ERROR") {
+    return { status: "failed", error: statusData.error || "fal.ai image generation failed" };
+  }
+
+  return { status: "processing" };
+}
+
 // Fetch an image URL and convert it to base64 + media type for Claude vision
 async function fetchImageAsBase64(url: string): Promise<{ data: string; mediaType: string }> {
   const res = await fetchWithTimeout(url, {}, 15_000);
@@ -71,20 +117,49 @@ serve(async (req) => {
   console.log("[smart-regenerate-image] invoked", req.method);
   try {
     const body = await req.json();
-    const { content_id, complaints, free_text, auto_analyze } = body;
+    const { content_id, complaints, free_text, auto_analyze, action, status_url, response_url } = body;
     console.log("[smart-regenerate-image] body", JSON.stringify({ content_id, complaints, free_text, auto_analyze }));
 
     if (!content_id) {
-      return new Response(JSON.stringify({ error: "content_id is required" }), {
-        status: 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return json({ error: "content_id is required" }, 400);
     }
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL")!,
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
     );
+
+    const FAL_KEY = Deno.env.get("FAL_KEY");
+
+    if (action === "poll") {
+      if (!FAL_KEY) return json({ error: "FAL_KEY not configured" }, 500);
+      if (!status_url || !response_url) return json({ error: "status_url and response_url are required" }, 400);
+
+      const falJob = await pollFalJob(FAL_KEY, status_url, response_url);
+      if (falJob.status === "processing") return json({ status: "processing" }, 202);
+      if (falJob.status === "failed" || !falJob.imageUrl) {
+        await supabaseAdmin.from("generated_content").update({ status: "complete" }).eq("id", content_id);
+        return json({ error: falJob.error || "Image generation failed" }, 500);
+      }
+
+      const { data: currentPost } = await supabaseAdmin
+        .from("generated_content")
+        .select("regenerated_count")
+        .eq("id", content_id)
+        .single();
+
+      const { error: updateError } = await supabaseAdmin
+        .from("generated_content")
+        .update({
+          image_url: falJob.imageUrl,
+          regenerated_count: (currentPost?.regenerated_count || 0) + 1,
+          status: "complete",
+        })
+        .eq("id", content_id);
+
+      if (updateError) return json({ error: updateError.message }, 500);
+      return json({ success: true, status: "completed", content_id, image_url: falJob.imageUrl });
+    }
 
     // STEP 1: Load existing post
     const { data: post, error: postError } = await supabaseAdmin
@@ -108,7 +183,6 @@ serve(async (req) => {
     }
 
     const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
-    const FAL_KEY = Deno.env.get("FAL_KEY");
     if (!ANTHROPIC_API_KEY) {
       return new Response(JSON.stringify({ error: "ANTHROPIC_API_KEY not configured" }), {
         status: 500,
@@ -368,8 +442,7 @@ ASPECT RATIO: ${post.aspect_ratio || "1:1"}`;
       });
     }
 
-    // STEP 4: Regenerate with fal.ai
-    let imageUrl: string | null = null;
+    // STEP 4: Regenerate with fal.ai — submit job and return quickly; client polls status
     if (FAL_KEY) {
       const sizeMap: Record<string, { width: number; height: number }> = {
         "1:1": { width: 1024, height: 1024 },
@@ -402,76 +475,37 @@ ASPECT RATIO: ${post.aspect_ratio || "1:1"}`;
           console.error("fal submit failed:", submitRes.status, await submitRes.text());
         } else {
           const submitData = await submitRes.json();
-          const statusUrl = submitData.status_url;
-          const responseUrl = submitData.response_url;
-          const deadline = Date.now() + 60_000;
-          while (Date.now() < deadline) {
-            await new Promise((r) => setTimeout(r, 2000));
-            const statusRes = await fetch(statusUrl, {
-              headers: { Authorization: `Key ${FAL_KEY}` },
-            });
-            if (!statusRes.ok) continue;
-            const statusData = await statusRes.json();
-            if (statusData.status === "COMPLETED") {
-              const finalRes = await fetch(responseUrl, {
-                headers: { Authorization: `Key ${FAL_KEY}` },
-              });
-              if (finalRes.ok) {
-                const finalData = await finalRes.json();
-                imageUrl = finalData.images?.[0]?.url || null;
-              }
-              break;
-            }
-            if (statusData.status === "FAILED" || statusData.status === "ERROR") {
-              console.error("fal failed:", statusData);
-              break;
-            }
+          if (!submitData.status_url || !submitData.response_url) {
+            console.error("fal submit missing polling URLs:", submitData);
+            return json({ error: "Image generation could not be tracked — please try again" }, 500);
           }
+
+          const lastDiagnostic = `PROBLEMS FOUND:\n${diagnosticReport}\n\nCORRECTIONS APPLIED:\n${correctiveInstructions}`;
+
+          await supabaseAdmin
+            .from("generated_content")
+            .update({ image_prompt: imagePrompt, last_diagnostic: lastDiagnostic, status: "regenerating" })
+            .eq("id", content_id);
+
+          return json(
+            {
+              success: true,
+              status: "processing",
+              content_id,
+              status_url: submitData.status_url,
+              response_url: submitData.response_url,
+              diagnostic_report: diagnosticReport,
+              corrective_instructions: correctiveInstructions,
+            },
+            202,
+          );
         }
       } catch (falErr) {
         console.error("fal error:", falErr);
       }
     }
 
-    if (!imageUrl) {
-      return new Response(
-        JSON.stringify({ error: "Image generation timed out — please try again" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-      );
-    }
-
-    // STEP 5: UPDATE existing record
-    const lastDiagnostic = `PROBLEMS FOUND:\n${diagnosticReport}\n\nCORRECTIONS APPLIED:\n${correctiveInstructions}`;
-
-    const { error: updateError } = await supabaseAdmin
-      .from("generated_content")
-      .update({
-        image_url: imageUrl,
-        image_prompt: imagePrompt,
-        regenerated_count: (post.regenerated_count || 0) + 1,
-        last_diagnostic: lastDiagnostic,
-        status: "complete",
-      })
-      .eq("id", content_id);
-
-    if (updateError) {
-      console.error("Update error:", updateError);
-      return new Response(JSON.stringify({ error: updateError.message }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
-
-    return new Response(
-      JSON.stringify({
-        success: true,
-        content_id,
-        image_url: imageUrl,
-        diagnostic_report: diagnosticReport,
-        corrective_instructions: correctiveInstructions,
-      }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-    );
+    return json({ error: "Image generation could not be started — please try again" }, 500);
   } catch (e) {
     console.error("smart-regenerate error:", e);
     return new Response(
