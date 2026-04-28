@@ -68,8 +68,11 @@ async function fetchImageAsBase64(url: string): Promise<{ data: string; mediaTyp
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
+  console.log("[smart-regenerate-image] invoked", req.method);
   try {
-    const { content_id, complaints, free_text, auto_analyze } = await req.json();
+    const body = await req.json();
+    const { content_id, complaints, free_text, auto_analyze } = body;
+    console.log("[smart-regenerate-image] body", JSON.stringify({ content_id, complaints, free_text, auto_analyze }));
 
     if (!content_id) {
       return new Response(JSON.stringify({ error: "content_id is required" }), {
