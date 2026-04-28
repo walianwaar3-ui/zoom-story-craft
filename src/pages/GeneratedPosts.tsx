@@ -191,7 +191,22 @@ const GeneratedPosts = () => {
           auto_analyze: autoAnalyze,
         },
       });
-      if (error) throw error;
+      if (error) {
+        // FunctionsHttpError hides body — try to extract the JSON message from the response
+        let serverMsg = "";
+        try {
+          const ctx = (error as any).context;
+          if (ctx && typeof ctx.json === "function") {
+            const body = await ctx.json();
+            serverMsg = body?.error || body?.message || "";
+          } else if (ctx && typeof ctx.text === "function") {
+            serverMsg = await ctx.text();
+          }
+        } catch {
+          /* swallow */
+        }
+        throw new Error(serverMsg || (error as any).message || "Edge function error");
+      }
       if (data?.error) throw new Error(data.error);
       return data;
     },
