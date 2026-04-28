@@ -475,6 +475,11 @@ ASPECT RATIO: ${post.aspect_ratio || "1:1"}`;
           console.error("fal submit failed:", submitRes.status, await submitRes.text());
         } else {
           const submitData = await submitRes.json();
+          if (!submitData.status_url || !submitData.response_url) {
+            console.error("fal submit missing polling URLs:", submitData);
+            return json({ error: "Image generation could not be tracked — please try again" }, 500);
+          }
+
           const lastDiagnostic = `PROBLEMS FOUND:\n${diagnosticReport}\n\nCORRECTIONS APPLIED:\n${correctiveInstructions}`;
 
           await supabaseAdmin
