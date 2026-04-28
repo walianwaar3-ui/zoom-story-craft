@@ -210,22 +210,31 @@ const GeneratedPosts = () => {
         },
       });
       if (error) {
-        // FunctionsHttpError hides body — try to extract the JSON message from the response
-        let serverMsg = "";
-        try {
-          const ctx = (error as any).context;
-          if (ctx && typeof ctx.json === "function") {
-            const body = await ctx.json();
-            serverMsg = body?.error || body?.message || "";
-          } else if (ctx && typeof ctx.text === "function") {
-            serverMsg = await ctx.text();
-          }
-        } catch {
-          /* swallow */
-        }
-        throw new Error(serverMsg || (error as any).message || "Edge function error");
+        throw new Error(await extractFunctionError(error));
       }
       if (data?.error) throw new Error(data.error);
+
+      if (data?.status === "processing" && data.status_url && data.response_url) {
+        for (let attempt = 0; attempt < 45; attempt += 1) {
+          await sleep(2_000);
+          const { data: pollData, error: pollError } = await supabase.functions.invoke("smart-regenerate-image", {
+            body: {
+              action: "poll",
+              content_id: post.id,
+              status_url: data.status_url,
+              response_url: data.response_url,
+            },
+          });
+
+          if (pollError) throw new Error(await extractFunctionError(pollError));
+          if (pollData?.error) throw new Error(pollData.error);
+          if (pollData?.status === "completed") return pollData;
+          await queryClient.invalidateQueries({ queryKey: ["generated-content"] });
+        }
+
+        throw new Error("Image is still processing. Please refresh in a moment.");
+      }
+
       return data;
     },
     onSuccess: () => {
