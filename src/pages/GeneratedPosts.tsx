@@ -573,6 +573,21 @@ const GeneratedPosts = () => {
                       Post to GHL
                     </Button>
 
+                    {!post.image_url && post.image_prompt && (
+                      <Button
+                        size="sm"
+                        variant="default"
+                        disabled={isThisRegenerating}
+                        onClick={() => generateImageMutation.mutate(post)}
+                      >
+                        {isThisRegenerating ? (
+                          <><Loader2 className="h-4 w-4 mr-1 animate-spin" />Generating...</>
+                        ) : (
+                          <><ImageIcon className="h-4 w-4 mr-1" />Generate Image</>
+                        )}
+                      </Button>
+                    )}
+
                     {/* Split Smart Regenerate / Quick Regenerate */}
                     <div className="inline-flex">
                       <Button
