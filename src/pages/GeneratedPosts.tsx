@@ -96,6 +96,8 @@ const GeneratedPosts = () => {
   const [smartRegenPost, setSmartRegenPost] = useState<GeneratedPost | null>(null);
   const [smartComplaints, setSmartComplaints] = useState<string[]>([]);
   const [smartFreeText, setSmartFreeText] = useState("");
+  const [smartReferenceUrl, setSmartReferenceUrl] = useState<string | null>(null);
+  const [smartReferenceUploading, setSmartReferenceUploading] = useState(false);
   const [captionRegenPost, setCaptionRegenPost] = useState<GeneratedPost | null>(null);
   const [captionNotes, setCaptionNotes] = useState("");
   const [postToGHL, setPostToGHL] = useState<GeneratedPost | null>(null);
