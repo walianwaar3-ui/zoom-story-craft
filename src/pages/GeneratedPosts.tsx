@@ -198,11 +198,13 @@ const GeneratedPosts = () => {
       complaints,
       freeText,
       autoAnalyze,
+      referenceImageUrl,
     }: {
       post: GeneratedPost;
       complaints: string[];
       freeText: string;
       autoAnalyze: boolean;
+      referenceImageUrl?: string | null;
     }) => {
       setRegeneratingId(post.id);
       setRegenMode("image");
@@ -212,6 +214,7 @@ const GeneratedPosts = () => {
           complaints,
           free_text: freeText,
           auto_analyze: autoAnalyze,
+          reference_image_url: referenceImageUrl || null,
         },
       });
       if (error) {
