@@ -110,14 +110,7 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="bg-gradient-sidebar border-t border-sidebar-border/60 px-4 py-3">
-        {!collapsed && (
-          <div className="text-[10px] text-sidebar-foreground/40 leading-relaxed">
-            Operator-grade content<br />
-            powered by AI.
-          </div>
-        )}
-      </SidebarFooter>
+      <SidebarFooter className="bg-gradient-sidebar border-t border-sidebar-border/60 px-4 py-3" />
     </Sidebar>
   );
 }

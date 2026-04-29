@@ -15,6 +15,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -38,6 +39,7 @@ import {
   Search,
   Image as ImageIcon,
   Type,
+  MoreHorizontal,
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
@@ -552,7 +554,7 @@ const GeneratedPosts = () => {
                       <CollapsibleTrigger asChild>
                         <Button variant="ghost" size="sm" className="w-full justify-start gap-2 text-xs">
                           <Search className="h-3.5 w-3.5" />
-                          🔍 What was fixed
+                          What was fixed
                           <ChevronDown className="h-3.5 w-3.5 ml-auto" />
                         </Button>
                       </CollapsibleTrigger>
@@ -566,7 +568,7 @@ const GeneratedPosts = () => {
                     </Collapsible>
                   )}
 
-                  <div className="flex items-center gap-2 flex-wrap">
+                  <div className="flex items-center gap-2">
                     {post.caption && (
                       <Button
                         variant="outline"
@@ -574,9 +576,9 @@ const GeneratedPosts = () => {
                         onClick={() => copyCaption(post.caption!, post.id)}
                       >
                         {copiedId === post.id ? (
-                          <><Check className="h-4 w-4 mr-1" />Copied!</>
+                          <><Check className="h-4 w-4 mr-1.5" />Copied!</>
                         ) : (
-                          <><Copy className="h-4 w-4 mr-1" />Copy</>
+                          <><Copy className="h-4 w-4 mr-1.5" />Copy</>
                         )}
                       </Button>
                     )}
@@ -588,99 +590,76 @@ const GeneratedPosts = () => {
                         setScheduleDate("");
                       }}
                     >
-                      <Send className="h-4 w-4 mr-1" />
+                      <Send className="h-4 w-4 mr-1.5" />
                       Post to GHL
                     </Button>
-
-                    {!post.image_url && post.image_prompt && (
-                      <Button
-                        size="sm"
-                        variant="default"
-                        disabled={isThisRegenerating}
-                        onClick={() => generateImageMutation.mutate(post)}
-                      >
-                        {isThisRegenerating ? (
-                          <><Loader2 className="h-4 w-4 mr-1 animate-spin" />Generating...</>
-                        ) : (
-                          <><ImageIcon className="h-4 w-4 mr-1" />Generate Image</>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                          disabled={isThisRegenerating}
+                          aria-label="More actions"
+                        >
+                          {isThisRegenerating ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <MoreHorizontal className="h-4 w-4" />
+                          )}
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setSmartRegenPost(post);
+                            setSmartComplaints([]);
+                            setSmartFreeText("");
+                          }}
+                          disabled={!post.image_url}
+                        >
+                          <Sparkles className="h-4 w-4 mr-2" />
+                          Smart Regenerate Image
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => {
+                            setCaptionRegenPost(post);
+                            setCaptionNotes("");
+                          }}
+                        >
+                          <Type className="h-4 w-4 mr-2" />
+                          Regenerate Caption Only
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => quickRegenerateMutation.mutate(post)}
+                          disabled={!post.transcript_id}
+                        >
+                          <RefreshCw className="h-4 w-4 mr-2" />
+                          Quick Regenerate (both)
+                        </DropdownMenuItem>
+                        {!post.image_url && post.image_prompt && (
+                          <>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              disabled={isThisRegenerating}
+                              onClick={() => generateImageMutation.mutate(post)}
+                            >
+                              <ImageIcon className="h-4 w-4 mr-2" />
+                              Generate Image
+                            </DropdownMenuItem>
+                          </>
                         )}
-                      </Button>
-                    )}
-
-                    {/* Split Smart Regenerate / Quick Regenerate */}
-                    <div className="inline-flex">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-r-none border-r-0"
-                        disabled={isThisRegenerating || !post.image_url}
-                        onClick={() => {
-                          setSmartRegenPost(post);
-                          setSmartComplaints([]);
-                          setSmartFreeText("");
-                        }}
-                      >
-                        {isThisRegenerating ? (
-                          <><Loader2 className="h-4 w-4 mr-1 animate-spin" />Working...</>
-                        ) : (
-                          <><Sparkles className="h-4 w-4 mr-1" />Smart Regenerate</>
-                        )}
-                      </Button>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="rounded-l-none px-2"
-                            disabled={isThisRegenerating}
-                            aria-label="Regenerate options"
-                          >
-                            <ChevronDown className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setSmartRegenPost(post);
-                              setSmartComplaints([]);
-                              setSmartFreeText("");
-                            }}
-                            disabled={!post.image_url}
-                          >
-                            <ImageIcon className="h-4 w-4 mr-2" />
-                            Regenerate Image Only
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => {
-                              setCaptionRegenPost(post);
-                              setCaptionNotes("");
-                            }}
-                          >
-                            <Type className="h-4 w-4 mr-2" />
-                            Regenerate Caption Only
-                          </DropdownMenuItem>
-                          <DropdownMenuItem
-                            onClick={() => quickRegenerateMutation.mutate(post)}
-                            disabled={!post.transcript_id}
-                          >
-                            <RefreshCw className="h-4 w-4 mr-2" />
-                            Quick Regenerate (both)
-                            {!post.transcript_id && (
-                              <span className="ml-2 text-xs text-muted-foreground">(no transcript)</span>
-                            )}
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => deleteMutation.mutate(post.id)}
-                      disabled={deleteMutation.isPending}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onClick={() => deleteMutation.mutate(post.id)}
+                          disabled={deleteMutation.isPending}
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </div>
                 </CardContent>
               </Card>
@@ -968,7 +947,7 @@ const GeneratedPosts = () => {
             </div>
 
             <div>
-              <label className="text-sm font-medium mb-1.5 block flex items-center gap-1">
+              <label className="flex items-center gap-1.5 text-sm font-medium mb-1.5">
                 <Calendar className="h-3.5 w-3.5" />
                 Schedule (optional)
               </label>

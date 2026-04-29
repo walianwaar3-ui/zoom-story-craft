@@ -163,7 +163,7 @@
   }
 
   .page-title {
-    @apply font-display text-4xl md:text-5xl text-foreground leading-[1.1] font-extrabold tracking-tight;
+    @apply font-display text-[1.75rem] md:text-4xl text-foreground leading-[1.1] font-extrabold tracking-tight;
   }
 
   .page-subtitle {

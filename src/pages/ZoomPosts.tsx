@@ -21,7 +21,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Sparkles, Video, Calendar, User, Loader2, Eye, Send, Trash2, Plus, Download, SlidersHorizontal } from "lucide-react";
+import { Sparkles, Video, Calendar, User, Loader2, Eye, Send, Trash2, Plus, Download, SlidersHorizontal, MoreHorizontal } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import ImportFathomDialog from "@/components/ImportFathomDialog";
@@ -390,26 +397,7 @@ const ZoomPosts = () => {
                     </p>
                   )}
                 </div>
-                <div className="flex items-center gap-2 ml-4">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setViewTranscript(t)}
-                  >
-                    <Eye className="h-4 w-4 mr-1" />
-                    View
-                  </Button>
-                  <Button
-                    size="sm"
-                    onClick={() => {
-                      setSelectedTranscript(t);
-                      setPostCount(1);
-                      setAspectRatio("1:1");
-                    }}
-                  >
-                    <Sparkles className="h-4 w-4 mr-1" />
-                    Quick Generate
-                  </Button>
+                <div className="flex items-center gap-2 ml-4 shrink-0">
                   <Button
                     size="sm"
                     variant="outline"
@@ -426,22 +414,47 @@ const ZoomPosts = () => {
                       setFtAspectRatio("1:1");
                     }}
                   >
-                    <SlidersHorizontal className="h-4 w-4 mr-1" />
+                    <SlidersHorizontal className="h-4 w-4 mr-1.5" />
                     Fine-tune
                   </Button>
                   <Button
-                    variant="ghost"
                     size="sm"
-                    className="text-destructive hover:text-destructive"
                     onClick={() => {
-                      if (confirm("Delete this transcript?")) {
-                        deleteMutation.mutate(t.id);
-                      }
+                      setSelectedTranscript(t);
+                      setPostCount(1);
+                      setAspectRatio("1:1");
                     }}
-                    disabled={deleteMutation.isPending}
                   >
-                    <Trash2 className="h-4 w-4" />
+                    <Sparkles className="h-4 w-4 mr-1.5" />
+                    Generate
                   </Button>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                        <MoreHorizontal className="h-4 w-4" />
+                        <span className="sr-only">More options</span>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => setViewTranscript(t)}>
+                        <Eye className="h-4 w-4 mr-2" />
+                        View Transcript
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem
+                        className="text-destructive focus:text-destructive"
+                        onClick={() => {
+                          if (confirm("Delete this transcript?")) {
+                            deleteMutation.mutate(t.id);
+                          }
+                        }}
+                        disabled={deleteMutation.isPending}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </CardContent>
             </Card>
