@@ -263,6 +263,7 @@ const GeneratedPosts = () => {
       setSmartRegenPost(null);
       setSmartComplaints([]);
       setSmartFreeText("");
+      setSmartReferenceUrl(null);
     },
     onError: (error: any) => {
       toast({
