@@ -588,88 +588,20 @@ OUTPUT FORMAT — respond with EXACTLY these two blocks and nothing else:
     }
 
     // ============================================================
-    // STEP 4: Generate image with fal.ai (60s polling)
+    // STEP 4: Save row first (image generated async via fal webhook)
     // ============================================================
-    let imageUrl: string | null = null;
     const FAL_KEY = Deno.env.get("FAL_KEY");
+    const willSubmitImage = !!(FAL_KEY && selectedPhoto && imagePrompt && !llmBuilderError);
 
-    if (FAL_KEY && selectedPhoto && imagePrompt && !llmBuilderError) {
-      const sizeMap: Record<string, { width: number; height: number }> = {
-        "1:1": { width: 1024, height: 1024 },
-        "9:16": { width: 768, height: 1344 },
-        "16:9": { width: 1344, height: 768 },
-        "4:5": { width: 896, height: 1120 },
-      };
-      const imageSize = sizeMap[aspect_ratio || "1:1"] || sizeMap["1:1"];
-
-      try {
-        const submitRes = await fetchWithTimeout(
-          "https://queue.fal.run/fal-ai/nano-banana-2/edit",
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Key ${FAL_KEY}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              prompt: imagePrompt,
-              image_urls: [selectedPhoto],
-              image_size: imageSize,
-              num_images: 1,
-            }),
-          },
-          15_000
-        );
-
-        if (!submitRes.ok) {
-          console.error("fal.ai submit failed:", submitRes.status, await submitRes.text());
-        } else {
-          const submitData = await submitRes.json();
-          const statusUrl = submitData.status_url;
-          const responseUrl = submitData.response_url;
-
-          const deadline = Date.now() + 60_000;
-          while (Date.now() < deadline) {
-            await new Promise((r) => setTimeout(r, 2000));
-            const statusRes = await fetch(statusUrl, {
-              headers: { Authorization: `Key ${FAL_KEY}` },
-            });
-            if (!statusRes.ok) continue;
-            const statusData = await statusRes.json();
-            if (statusData.status === "COMPLETED") {
-              const finalRes = await fetch(responseUrl, {
-                headers: { Authorization: `Key ${FAL_KEY}` },
-              });
-              if (finalRes.ok) {
-                const finalData = await finalRes.json();
-                imageUrl = finalData.images?.[0]?.url || null;
-              }
-              break;
-            }
-            if (statusData.status === "FAILED" || statusData.status === "ERROR") {
-              console.error("fal.ai generation failed:", statusData);
-              break;
-            }
-          }
-          if (!imageUrl) console.error("fal.ai polling timed out within 60s window");
-        }
-      } catch (falErr) {
-        console.error("fal.ai error:", falErr);
-      }
-    }
-
-    // ============================================================
-    // STEP 5: Save
-    // ============================================================
     const { data: content, error: insertError } = await supabaseAdmin
       .from("generated_content")
       .insert({
         transcript_id: transcript_id || null,
         caption,
-        image_url: imageUrl,
+        image_url: null,
         image_prompt: imagePrompt,
         aspect_ratio: aspect_ratio || "1:1",
-        status: imageUrl ? "complete" : "text_only",
+        status: willSubmitImage ? "regenerating" : "text_only",
         source: transcript_id ? "transcript" : "manual",
       })
       .select()
@@ -683,13 +615,86 @@ OUTPUT FORMAT — respond with EXACTLY these two blocks and nothing else:
       );
     }
 
+    // ============================================================
+    // STEP 5: Submit fal.ai job with webhook (no synchronous polling)
+    // ============================================================
+    if (willSubmitImage) {
+      const sizeMap: Record<string, { width: number; height: number }> = {
+        "1:1": { width: 1024, height: 1024 },
+        "9:16": { width: 768, height: 1344 },
+        "16:9": { width: 1344, height: 768 },
+        "4:5": { width: 896, height: 1120 },
+      };
+      const imageSize = sizeMap[aspect_ratio || "1:1"] || sizeMap["1:1"];
+
+      try {
+        const baseUrl = Deno.env.get("SUPABASE_URL")!;
+        const key = await crypto.subtle.importKey(
+          "raw",
+          new TextEncoder().encode(FAL_KEY!),
+          { name: "HMAC", hash: "SHA-256" },
+          false,
+          ["sign"],
+        );
+        const sig = await crypto.subtle.sign(
+          "HMAC",
+          key,
+          new TextEncoder().encode(`${content.id}:generate`),
+        );
+        const token = Array.from(new Uint8Array(sig))
+          .map((b) => b.toString(16).padStart(2, "0"))
+          .join("");
+
+        const webhookUrl = new URL(`${baseUrl}/functions/v1/fal-image-webhook`);
+        webhookUrl.searchParams.set("content_id", content.id);
+        webhookUrl.searchParams.set("mode", "generate");
+        webhookUrl.searchParams.set("token", token);
+
+        const falSubmitUrl = new URL("https://queue.fal.run/fal-ai/nano-banana-2/edit");
+        falSubmitUrl.searchParams.set("fal_webhook", webhookUrl.toString());
+
+        const submitRes = await fetchWithTimeout(
+          falSubmitUrl.toString(),
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Key ${FAL_KEY}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              prompt: imagePrompt,
+              image_urls: [selectedPhoto],
+              image_size: imageSize,
+              num_images: 1,
+            }),
+          },
+          15_000,
+        );
+
+        if (!submitRes.ok) {
+          const t = await submitRes.text();
+          console.error("fal.ai submit failed:", submitRes.status, t);
+          await supabaseAdmin
+            .from("generated_content")
+            .update({ status: "text_only" })
+            .eq("id", content.id);
+        }
+      } catch (falErr) {
+        console.error("fal.ai submit error:", falErr);
+        await supabaseAdmin
+          .from("generated_content")
+          .update({ status: "text_only" })
+          .eq("id", content.id);
+      }
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         content_id: content.id,
         caption,
-        image_url: imageUrl,
-        warning: llmBuilderError || (imageUrl ? null : "Image generation failed — caption saved only"),
+        image_url: null,
+        warning: llmBuilderError || (willSubmitImage ? "Image generating in background" : "Image generation skipped — caption saved only"),
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
