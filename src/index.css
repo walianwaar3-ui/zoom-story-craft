@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -130,22 +130,25 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-    font-feature-settings: 'cv11', 'ss01', 'ss03';
-    letter-spacing: -0.005em;
+    font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-weight: 500;
+    font-size: 15px;
+    line-height: 1.7;
+    letter-spacing: -0.01em;
   }
 
   h1, h2, h3, h4, h5, h6 {
-    font-family: 'Inter', sans-serif;
-    letter-spacing: -0.02em;
-    font-weight: 600;
+    font-family: 'Space Grotesk', sans-serif;
+    letter-spacing: -0.03em;
+    font-weight: 700;
+    line-height: 1.15;
   }
 
-  /* Editorial display class — for hero headlines & page titles */
+  /* Display class — bold hero headlines */
   .font-display {
-    font-family: 'Instrument Serif', Georgia, serif;
-    font-weight: 400;
-    letter-spacing: -0.015em;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 800;
+    letter-spacing: -0.04em;
   }
 
   .font-mono {
@@ -160,11 +163,11 @@
   }
 
   .page-title {
-    @apply font-display text-4xl md:text-5xl text-foreground leading-[1.05];
+    @apply font-display text-4xl md:text-5xl text-foreground leading-[1.1] font-extrabold tracking-tight;
   }
 
   .page-subtitle {
-    @apply text-sm text-muted-foreground mt-2 max-w-xl;
+    @apply text-base text-muted-foreground mt-2 max-w-xl leading-relaxed;
   }
 
   /* Section eyebrow — small uppercase label above titles */
