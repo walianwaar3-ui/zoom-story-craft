@@ -347,6 +347,13 @@ serve(async (req) => {
         "Generate a fresh variation with stronger composition, sharper typography, and clearer focal hierarchy.";
     }
 
+    // If user provided a reference image, prepend a strong instruction so the prompt builder mimics it
+    if (reference_image_url) {
+      correctiveInstructions =
+        `USER UPLOADED A REFERENCE IMAGE — the new image MUST closely mimic the reference's visual style, composition, color palette, lighting, mood, and subject framing. Treat the reference as the primary visual guide. The reference image will also be passed to the image model as an additional input.\n\n` +
+        correctiveInstructions;
+    }
+
     // STEP 3: Image Prompt Builder with corrective instructions prepended
     const imagePromptBuilder = getPrompt(
       "Image Prompt Builder",
