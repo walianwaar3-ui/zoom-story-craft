@@ -272,7 +272,21 @@ serve(async (req) => {
       );
     }
 
-    const diagnosticUserContent = [
+    // Optionally fetch reference image for vision analysis
+    let refB64: { data: string; mediaType: string } | null = null;
+    if (reference_image_url) {
+      try {
+        refB64 = await fetchImageAsBase64(reference_image_url);
+      } catch (e) {
+        console.error("Reference image fetch failed:", e);
+      }
+    }
+
+    const diagnosticUserContent: any[] = [
+      {
+        type: "text",
+        text: "CURRENT IMAGE (the one to fix):",
+      },
       {
         type: "image",
         source: {
@@ -281,11 +295,22 @@ serve(async (req) => {
           data: imgB64.data,
         },
       },
-      {
-        type: "text",
-        text: `CAPTION:\n${post.caption || "(none)"}\n\nPREVIOUS IMAGE PROMPT SENT TO IMAGE MODEL:\n${post.image_prompt || "(none)"}\n\nUSER COMPLAINTS:\n${userNotes}\n\nAnalyze the image and respond with EXACTLY these two blocks:\n[DIAGNOSTIC REPORT]\n<bullet list of concrete problems found in the image, or "NO CRITICAL ISSUES" if image is clean>\n\n[CORRECTIVE INSTRUCTIONS FOR IMAGE PROMPT BUILDER]\n<short, explicit instructions the prompt builder must apply on the next attempt — e.g. "spell PROFITABLE correctly", "ensure all text fits within frame", "remove generic stock icon, use construction blueprint instead">`,
-      },
     ];
+
+    if (refB64) {
+      diagnosticUserContent.push(
+        { type: "text", text: "USER-PROVIDED REFERENCE IMAGE (mimic its style, composition, mood, and subject framing):" },
+        {
+          type: "image",
+          source: { type: "base64", media_type: refB64.mediaType, data: refB64.data },
+        },
+      );
+    }
+
+    diagnosticUserContent.push({
+      type: "text",
+      text: `CAPTION:\n${post.caption || "(none)"}\n\nPREVIOUS IMAGE PROMPT SENT TO IMAGE MODEL:\n${post.image_prompt || "(none)"}\n\nUSER COMPLAINTS:\n${userNotes}\n\nAnalyze the current image${refB64 ? " against the reference image" : ""} and respond with EXACTLY these two blocks:\n[DIAGNOSTIC REPORT]\n<bullet list of concrete problems found in the current image, or "NO CRITICAL ISSUES" if image is clean>\n\n[CORRECTIVE INSTRUCTIONS FOR IMAGE PROMPT BUILDER]\n<short, explicit instructions the prompt builder must apply on the next attempt${refB64 ? " — including how to mimic the reference image's style, composition, color palette, lighting, mood, and subject framing" : ""}>`,
+    });
 
     let diagnosticReport = "";
     let correctiveInstructions = "";
