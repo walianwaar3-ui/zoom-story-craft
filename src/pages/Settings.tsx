@@ -16,6 +16,7 @@ import {
   Lock,
   Unlock,
   Sparkles,
+  Info,
 } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -356,8 +357,9 @@ const Settings = () => {
                 </div>
               </div>
 
-              <p className="text-xs text-muted-foreground bg-muted/30 rounded-md p-2.5 border">
-                💡 {wh.setupHint}
+              <p className="flex gap-2 text-xs text-muted-foreground bg-muted/30 rounded-md p-2.5 border">
+                <Info className="h-3.5 w-3.5 shrink-0 mt-0.5 text-primary/60" />
+                {wh.setupHint}
               </p>
             </div>
           ))}
