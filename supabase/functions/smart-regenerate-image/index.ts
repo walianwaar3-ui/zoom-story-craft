@@ -522,7 +522,7 @@ ASPECT RATIO: ${post.aspect_ratio || "1:1"}`;
             },
             body: JSON.stringify({
               prompt: imagePrompt,
-              image_urls: [selectedPhoto],
+              image_urls: reference_image_url ? [reference_image_url, selectedPhoto] : [selectedPhoto],
               image_size: imageSize,
               num_images: 1,
             }),
