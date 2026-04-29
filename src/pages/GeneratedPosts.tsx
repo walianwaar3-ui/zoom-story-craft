@@ -96,6 +96,8 @@ const GeneratedPosts = () => {
   const [smartRegenPost, setSmartRegenPost] = useState<GeneratedPost | null>(null);
   const [smartComplaints, setSmartComplaints] = useState<string[]>([]);
   const [smartFreeText, setSmartFreeText] = useState("");
+  const [smartReferenceUrl, setSmartReferenceUrl] = useState<string | null>(null);
+  const [smartReferenceUploading, setSmartReferenceUploading] = useState(false);
   const [captionRegenPost, setCaptionRegenPost] = useState<GeneratedPost | null>(null);
   const [captionNotes, setCaptionNotes] = useState("");
   const [postToGHL, setPostToGHL] = useState<GeneratedPost | null>(null);
@@ -196,11 +198,13 @@ const GeneratedPosts = () => {
       complaints,
       freeText,
       autoAnalyze,
+      referenceImageUrl,
     }: {
       post: GeneratedPost;
       complaints: string[];
       freeText: string;
       autoAnalyze: boolean;
+      referenceImageUrl?: string | null;
     }) => {
       setRegeneratingId(post.id);
       setRegenMode("image");
@@ -210,6 +214,7 @@ const GeneratedPosts = () => {
           complaints,
           free_text: freeText,
           auto_analyze: autoAnalyze,
+          reference_image_url: referenceImageUrl || null,
         },
       });
       if (error) {
@@ -258,6 +263,7 @@ const GeneratedPosts = () => {
       setSmartRegenPost(null);
       setSmartComplaints([]);
       setSmartFreeText("");
+      setSmartReferenceUrl(null);
     },
     onError: (error: any) => {
       toast({
@@ -691,6 +697,7 @@ const GeneratedPosts = () => {
             setSmartRegenPost(null);
             setSmartComplaints([]);
             setSmartFreeText("");
+            setSmartReferenceUrl(null);
           }
         }}
       >
@@ -729,11 +736,75 @@ const GeneratedPosts = () => {
               />
             </div>
 
+            <div>
+              <label className="text-sm font-medium mb-1.5 block">
+                Reference image (optional)
+              </label>
+              <p className="text-xs text-muted-foreground mb-2">
+                Upload an image you want the model to mimic — style, composition, or subject.
+              </p>
+              {smartReferenceUrl ? (
+                <div className="flex items-center gap-3 p-2 rounded-lg border">
+                  <img
+                    src={smartReferenceUrl}
+                    alt="Reference"
+                    className="h-16 w-16 object-cover rounded"
+                  />
+                  <div className="flex-1 text-xs text-muted-foreground truncate">
+                    Reference uploaded
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={smartRegenerateMutation.isPending}
+                    onClick={() => setSmartReferenceUrl(null)}
+                  >
+                    Remove
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    disabled={smartReferenceUploading || smartRegenerateMutation.isPending}
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      setSmartReferenceUploading(true);
+                      try {
+                        const fileName = `reference_${Date.now()}_${file.name.replace(/\s+/g, "_")}`;
+                        const { error: upErr } = await supabase.storage
+                          .from("carolyn-photos")
+                          .upload(fileName, file, { contentType: file.type });
+                        if (upErr) throw upErr;
+                        const { data: urlData } = supabase.storage
+                          .from("carolyn-photos")
+                          .getPublicUrl(fileName);
+                        setSmartReferenceUrl(urlData.publicUrl);
+                        toast({ title: "Reference image uploaded" });
+                      } catch (err: any) {
+                        toast({
+                          title: "Upload failed",
+                          description: err.message || "Could not upload image",
+                          variant: "destructive",
+                        });
+                      } finally {
+                        setSmartReferenceUploading(false);
+                        e.target.value = "";
+                      }
+                    }}
+                  />
+                  {smartReferenceUploading && <Loader2 className="h-4 w-4 animate-spin" />}
+                </div>
+              )}
+            </div>
+
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 className="flex-1"
-                disabled={smartRegenerateMutation.isPending}
+                disabled={smartRegenerateMutation.isPending || smartReferenceUploading}
                 onClick={() => {
                   if (!smartRegenPost) return;
                   smartRegenerateMutation.mutate({
@@ -741,6 +812,7 @@ const GeneratedPosts = () => {
                     complaints: [],
                     freeText: "",
                     autoAnalyze: true,
+                    referenceImageUrl: smartReferenceUrl,
                   });
                 }}
               >
@@ -753,7 +825,7 @@ const GeneratedPosts = () => {
               </Button>
               <Button
                 className="flex-1"
-                disabled={smartRegenerateMutation.isPending}
+                disabled={smartRegenerateMutation.isPending || smartReferenceUploading}
                 onClick={() => {
                   if (!smartRegenPost) return;
                   smartRegenerateMutation.mutate({
@@ -761,6 +833,7 @@ const GeneratedPosts = () => {
                     complaints: smartComplaints,
                     freeText: smartFreeText,
                     autoAnalyze: false,
+                    referenceImageUrl: smartReferenceUrl,
                   });
                 }}
               >

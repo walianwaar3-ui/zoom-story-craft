@@ -140,8 +140,8 @@ serve(async (req) => {
   console.log("[smart-regenerate-image] invoked", req.method);
   try {
     const body = await req.json();
-    const { content_id, complaints, free_text, auto_analyze, action, status_url, response_url } = body;
-    console.log("[smart-regenerate-image] body", JSON.stringify({ content_id, complaints, free_text, auto_analyze }));
+    const { content_id, complaints, free_text, auto_analyze, action, status_url, response_url, reference_image_url } = body;
+    console.log("[smart-regenerate-image] body", JSON.stringify({ content_id, complaints, free_text, auto_analyze, has_reference: !!reference_image_url }));
 
     if (!content_id) {
       return json({ error: "content_id is required" }, 400);
@@ -272,7 +272,21 @@ serve(async (req) => {
       );
     }
 
-    const diagnosticUserContent = [
+    // Optionally fetch reference image for vision analysis
+    let refB64: { data: string; mediaType: string } | null = null;
+    if (reference_image_url) {
+      try {
+        refB64 = await fetchImageAsBase64(reference_image_url);
+      } catch (e) {
+        console.error("Reference image fetch failed:", e);
+      }
+    }
+
+    const diagnosticUserContent: any[] = [
+      {
+        type: "text",
+        text: "CURRENT IMAGE (the one to fix):",
+      },
       {
         type: "image",
         source: {
@@ -281,11 +295,22 @@ serve(async (req) => {
           data: imgB64.data,
         },
       },
-      {
-        type: "text",
-        text: `CAPTION:\n${post.caption || "(none)"}\n\nPREVIOUS IMAGE PROMPT SENT TO IMAGE MODEL:\n${post.image_prompt || "(none)"}\n\nUSER COMPLAINTS:\n${userNotes}\n\nAnalyze the image and respond with EXACTLY these two blocks:\n[DIAGNOSTIC REPORT]\n<bullet list of concrete problems found in the image, or "NO CRITICAL ISSUES" if image is clean>\n\n[CORRECTIVE INSTRUCTIONS FOR IMAGE PROMPT BUILDER]\n<short, explicit instructions the prompt builder must apply on the next attempt — e.g. "spell PROFITABLE correctly", "ensure all text fits within frame", "remove generic stock icon, use construction blueprint instead">`,
-      },
     ];
+
+    if (refB64) {
+      diagnosticUserContent.push(
+        { type: "text", text: "USER-PROVIDED REFERENCE IMAGE (mimic its style, composition, mood, and subject framing):" },
+        {
+          type: "image",
+          source: { type: "base64", media_type: refB64.mediaType, data: refB64.data },
+        },
+      );
+    }
+
+    diagnosticUserContent.push({
+      type: "text",
+      text: `CAPTION:\n${post.caption || "(none)"}\n\nPREVIOUS IMAGE PROMPT SENT TO IMAGE MODEL:\n${post.image_prompt || "(none)"}\n\nUSER COMPLAINTS:\n${userNotes}\n\nAnalyze the current image${refB64 ? " against the reference image" : ""} and respond with EXACTLY these two blocks:\n[DIAGNOSTIC REPORT]\n<bullet list of concrete problems found in the current image, or "NO CRITICAL ISSUES" if image is clean>\n\n[CORRECTIVE INSTRUCTIONS FOR IMAGE PROMPT BUILDER]\n<short, explicit instructions the prompt builder must apply on the next attempt${refB64 ? " — including how to mimic the reference image's style, composition, color palette, lighting, mood, and subject framing" : ""}>`,
+    });
 
     let diagnosticReport = "";
     let correctiveInstructions = "";
@@ -345,6 +370,13 @@ serve(async (req) => {
     if (noIssues) {
       correctiveInstructions =
         "Generate a fresh variation with stronger composition, sharper typography, and clearer focal hierarchy.";
+    }
+
+    // If user provided a reference image, prepend a strong instruction so the prompt builder mimics it
+    if (reference_image_url) {
+      correctiveInstructions =
+        `USER UPLOADED A REFERENCE IMAGE — the new image MUST closely mimic the reference's visual style, composition, color palette, lighting, mood, and subject framing. Treat the reference as the primary visual guide. The reference image will also be passed to the image model as an additional input.\n\n` +
+        correctiveInstructions;
     }
 
     // STEP 3: Image Prompt Builder with corrective instructions prepended
@@ -490,7 +522,7 @@ ASPECT RATIO: ${post.aspect_ratio || "1:1"}`;
             },
             body: JSON.stringify({
               prompt: imagePrompt,
-              image_urls: [selectedPhoto],
+              image_urls: reference_image_url ? [reference_image_url, selectedPhoto] : [selectedPhoto],
               image_size: imageSize,
               num_images: 1,
             }),
