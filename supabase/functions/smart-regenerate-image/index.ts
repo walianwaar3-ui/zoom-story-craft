@@ -140,8 +140,8 @@ serve(async (req) => {
   console.log("[smart-regenerate-image] invoked", req.method);
   try {
     const body = await req.json();
-    const { content_id, complaints, free_text, auto_analyze, action, status_url, response_url } = body;
-    console.log("[smart-regenerate-image] body", JSON.stringify({ content_id, complaints, free_text, auto_analyze }));
+    const { content_id, complaints, free_text, auto_analyze, action, status_url, response_url, reference_image_url } = body;
+    console.log("[smart-regenerate-image] body", JSON.stringify({ content_id, complaints, free_text, auto_analyze, has_reference: !!reference_image_url }));
 
     if (!content_id) {
       return json({ error: "content_id is required" }, 400);
