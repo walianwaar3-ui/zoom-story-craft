@@ -33,6 +33,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import ImportFathomDialog from "@/components/ImportFathomDialog";
 import { useToast } from "@/hooks/use-toast";
+import { logActivity } from "@/lib/activityLog";
 
 type Transcript = {
   id: string;
@@ -130,6 +131,19 @@ const ZoomPosts = () => {
       postCount: number;
       aspectRatio: string;
     }) => {
+      const tx = transcripts?.find((t) => t.id === transcriptId);
+      await logActivity({
+        feature: "zoom_post",
+        label: tx?.meeting_topic ? `Zoom: ${tx.meeting_topic}` : `Zoom transcript`,
+        transcript_id: transcriptId,
+        inputs: {
+          transcript_id: transcriptId,
+          post_count: postCount,
+          aspect_ratio: aspectRatio,
+          client_name: tx?.client_name,
+          meeting_topic: tx?.meeting_topic,
+        },
+      });
       const { data, error } = await supabase.functions.invoke("generate-zoom-post", {
         body: {
           transcript_id: transcriptId,
@@ -185,6 +199,21 @@ const ZoomPosts = () => {
   const fineTuneMutation = useMutation({
     mutationFn: async () => {
       if (!fineTuneTranscript) throw new Error("No transcript selected");
+      await logActivity({
+        feature: "manual_post",
+        label: `Fine-tune: ${fineTuneTranscript.meeting_topic || "transcript"}`,
+        transcript_id: fineTuneTranscript.id,
+        inputs: {
+          transcript_id: fineTuneTranscript.id,
+          post_date: ftPostDate,
+          post_type: ftPostType,
+          hook: ftHook,
+          context: ftContext,
+          cta_goal: ftCtaGoal,
+          image_style: ftImageStyle,
+          aspect_ratio: ftAspectRatio,
+        },
+      });
       const { data, error } = await supabase.functions.invoke("generate-manual-post", {
         body: {
           transcript_id: fineTuneTranscript.id,
