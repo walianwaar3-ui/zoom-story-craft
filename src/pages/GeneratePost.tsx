@@ -25,6 +25,7 @@ import {
 } from "@/components/ui/dialog";
 import { Sparkles, Loader2, Send, Upload, X, Zap } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { logActivity } from "@/lib/activityLog";
 
 type GeneratedResult = {
   success: boolean;
@@ -71,6 +72,19 @@ const GeneratePost = () => {
 
   const generateMutation = useMutation({
     mutationFn: async () => {
+      await logActivity({
+        feature: "manual_post",
+        label: hook?.slice(0, 80) || "Manual post",
+        inputs: {
+          post_date: postDate,
+          post_type: postType,
+          hook,
+          context,
+          cta_goal: ctaGoal,
+          image_style: imageStyle,
+          aspect_ratio: aspectRatio,
+        },
+      });
       const { data, error } = await supabase.functions.invoke("generate-manual-post", {
         body: {
           post_date: postDate,
@@ -117,6 +131,16 @@ const GeneratePost = () => {
 
   const rawGenerateMutation = useMutation({
     mutationFn: async () => {
+      await logActivity({
+        feature: "raw_post",
+        label: rawCaption?.slice(0, 80) || "Raw post",
+        inputs: {
+          caption: rawCaption,
+          image_prompt: rawImagePrompt,
+          aspect_ratio: rawAspectRatio,
+          reference_image_url: rawReferenceUrl,
+        },
+      });
       const { data, error } = await supabase.functions.invoke("generate-raw-post", {
         body: {
           caption: rawCaption,

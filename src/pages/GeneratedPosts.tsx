@@ -45,6 +45,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
+import { logActivity } from "@/lib/activityLog";
 
 type GeneratedPost = {
   id: string;
@@ -171,6 +172,17 @@ const GeneratedPosts = () => {
     mutationFn: async (post: GeneratedPost) => {
       if (!post.transcript_id) throw new Error("No transcript linked to this post.");
       setRegeneratingId(post.id);
+      await logActivity({
+        feature: "zoom_post",
+        label: "Quick regenerate from transcript",
+        transcript_id: post.transcript_id,
+        content_id: post.id,
+        inputs: {
+          transcript_id: post.transcript_id,
+          aspect_ratio: post.aspect_ratio || "1:1",
+          previous_caption: post.caption,
+        },
+      });
       const { data, error } = await supabase.functions.invoke("generate-zoom-post", {
         body: {
           transcript_id: post.transcript_id,
@@ -210,6 +222,20 @@ const GeneratedPosts = () => {
     }) => {
       setRegeneratingId(post.id);
       setRegenMode("image");
+      await logActivity({
+        feature: "smart_regenerate_image",
+        label: freeText?.slice(0, 80) || (autoAnalyze ? "Auto-analyze image" : "Smart image regen"),
+        content_id: post.id,
+        transcript_id: post.transcript_id,
+        inputs: {
+          content_id: post.id,
+          complaints,
+          free_text: freeText,
+          auto_analyze: autoAnalyze,
+          reference_image_url: referenceImageUrl,
+          previous_image_prompt: post.image_prompt,
+        },
+      });
       const { data, error } = await supabase.functions.invoke("smart-regenerate-image", {
         body: {
           content_id: post.id,
@@ -283,6 +309,17 @@ const GeneratedPosts = () => {
     mutationFn: async (post: GeneratedPost) => {
       setRegeneratingId(post.id);
       setRegenMode("image");
+      await logActivity({
+        feature: "generate_image_for_post",
+        label: post.image_prompt?.slice(0, 80) || "Generate image for post",
+        content_id: post.id,
+        transcript_id: post.transcript_id,
+        inputs: {
+          content_id: post.id,
+          image_prompt: post.image_prompt,
+          aspect_ratio: post.aspect_ratio,
+        },
+      });
       const { data, error } = await supabase.functions.invoke("generate-image-for-post", {
         body: { content_id: post.id },
       });
@@ -334,6 +371,17 @@ const GeneratedPosts = () => {
     mutationFn: async ({ post, notes }: { post: GeneratedPost; notes: string }) => {
       setRegeneratingId(post.id);
       setRegenMode("caption");
+      await logActivity({
+        feature: "regenerate_caption",
+        label: notes?.slice(0, 80) || "Regenerate caption",
+        content_id: post.id,
+        transcript_id: post.transcript_id,
+        inputs: {
+          content_id: post.id,
+          notes,
+          previous_caption: post.caption,
+        },
+      });
       const { data, error } = await supabase.functions.invoke("regenerate-caption-only", {
         body: { content_id: post.id, notes },
       });

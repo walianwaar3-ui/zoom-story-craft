@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_log: {
+        Row: {
+          content_id: string | null
+          created_at: string
+          feature: string
+          id: string
+          inputs: Json
+          label: string | null
+          transcript_id: string | null
+        }
+        Insert: {
+          content_id?: string | null
+          created_at?: string
+          feature: string
+          id?: string
+          inputs?: Json
+          label?: string | null
+          transcript_id?: string | null
+        }
+        Update: {
+          content_id?: string | null
+          created_at?: string
+          feature?: string
+          id?: string
+          inputs?: Json
+          label?: string | null
+          transcript_id?: string | null
+        }
+        Relationships: []
+      }
       generated_content: {
         Row: {
           aspect_ratio: string | null
