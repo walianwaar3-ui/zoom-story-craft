@@ -505,6 +505,43 @@ Produce the JSON array of ${totalPosts} distinct angles now.`;
     const previousHooks: string[] = [];
     const previousThemes: string[] = [];
 
+    // ============================================================
+    // TRANSCRIPT ENGINE: Process raw transcript into structured output
+    // ============================================================
+    const transcriptEnginePrompt = getPrompt("Transcript Engine", "transcript engine");
+    if (!transcriptEnginePrompt) {
+      return new Response(
+        JSON.stringify({ error: "No 'Transcript Engine' entry found in knowledgebase. Add a 'Transcript Engine' entry to enable structured transcript processing." }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const transcriptEngineUser = `Meeting: ${transcript.meeting_topic}\nSummary: ${transcript.summary || "N/A"}\nKey Issues: ${transcript.issues_discussed || "N/A"}\nTranscript: ${(transcript.transcript || "").slice(0, 8000)}`;
+
+    const engineResponse = await callClaude(ANTHROPIC_API_KEY, transcriptEnginePrompt, transcriptEngineUser, 1500, 60_000);
+
+    if (!engineResponse.ok) {
+      const errResp = handleClaudeError(engineResponse.status);
+      if (errResp) return errResp;
+      const errText = await engineResponse.text();
+      console.error("Transcript Engine error:", engineResponse.status, errText);
+      return new Response(
+        JSON.stringify({ error: "Transcript Engine call failed." }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const engineData = await engineResponse.json();
+    const transcriptEngineOutput = parseClaudeText(engineData);
+    console.log("Transcript Engine output:", transcriptEngineOutput.slice(0, 500));
+
+    if (!transcriptEngineOutput || transcriptEngineOutput.trim().length === 0) {
+      return new Response(
+        JSON.stringify({ error: "Transcript Engine returned empty output. Check the Transcript Engine prompt in knowledgebase." }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     for (let postIndex = 1; postIndex <= totalPosts; postIndex++) {
       const assignedAngle = plannedAngles[postIndex - 1];
 
@@ -519,8 +556,8 @@ You MUST write this post about the assigned angle above and nothing else. Do NOT
         : "";
 
       const baseUser = custom_prompt
-        ? `${custom_prompt}\n\nMeeting: ${transcript.meeting_topic}\nClient archetype: ${archetype}\nSummary: ${transcript.summary || "N/A"}\nIssues: ${transcript.issues_discussed || "N/A"}\nTranscript excerpt: ${(transcript.transcript || "").slice(0, 3000)}`
-        : `Meeting: ${transcript.meeting_topic}\nClient archetype: ${archetype}\nSummary: ${transcript.summary || "N/A"}\nKey Issues: ${transcript.issues_discussed || "N/A"}\nTranscript: ${(transcript.transcript || "").slice(0, 3000)}`;
+        ? `${custom_prompt}\n\nClient archetype: ${archetype}\n\n${transcriptEngineOutput}`
+        : `Client archetype: ${archetype}\n\n${transcriptEngineOutput}`;
 
       const captionUserPrompt = baseUser + variationHint + OUTPUT_RULES_BLOCK;
 
