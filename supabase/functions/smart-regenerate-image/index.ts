@@ -525,6 +525,7 @@ ASPECT RATIO: ${post.aspect_ratio || "1:1"}`;
               image_urls: reference_image_url ? [reference_image_url, selectedPhoto] : [selectedPhoto],
               image_size: imageSize,
               num_images: 1,
+              quality: "high",
             }),
           },
           15_000,

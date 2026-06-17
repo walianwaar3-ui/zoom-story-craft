@@ -766,6 +766,7 @@ OUTPUT FORMAT — respond with EXACTLY these two blocks and nothing else:
                 image_urls: [selectedPhoto],
                 image_size: imageSize,
                 num_images: 1,
+                quality: "high",
               }),
             },
             15_000,

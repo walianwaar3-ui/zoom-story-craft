@@ -153,6 +153,7 @@ serve(async (req) => {
           image_urls: [selectedPhoto],
           image_size: imageSize,
           num_images: 1,
+          quality: "high",
         }),
       },
       15_000,

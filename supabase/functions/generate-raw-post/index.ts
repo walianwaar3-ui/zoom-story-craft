@@ -109,6 +109,7 @@ serve(async (req) => {
           prompt: String(image_prompt).trim(),
           image_size: imageSize,
           num_images: 1,
+          quality: "high",
         };
         if (hasRef) payload.image_urls = [reference_image_url];
 
