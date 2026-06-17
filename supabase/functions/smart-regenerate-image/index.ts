@@ -509,7 +509,7 @@ ASPECT RATIO: ${post.aspect_ratio || "1:1"}`;
 
       try {
         const webhookUrl = await buildFalWebhookUrl(content_id, "smart", FAL_KEY);
-        const falSubmitUrl = new URL("https://queue.fal.run/fal-ai/nano-banana-2/edit");
+        const falSubmitUrl = new URL("https://queue.fal.run/openai/gpt-image-2/edit");
         if (webhookUrl) falSubmitUrl.searchParams.set("fal_webhook", webhookUrl);
 
         const submitRes = await fetchWithTimeout(

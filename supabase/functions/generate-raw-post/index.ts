@@ -101,8 +101,8 @@ serve(async (req) => {
 
         const hasRef = !!(reference_image_url && String(reference_image_url).trim());
         const falSubmitUrl = hasRef
-          ? new URL("https://queue.fal.run/fal-ai/nano-banana-2/edit")
-          : new URL("https://queue.fal.run/fal-ai/nano-banana-2");
+          ? new URL("https://queue.fal.run/openai/gpt-image-2/edit")
+          : new URL("https://queue.fal.run/openai/gpt-image-2");
         falSubmitUrl.searchParams.set("fal_webhook", webhookUrl.toString());
 
         const payload: Record<string, unknown> = {

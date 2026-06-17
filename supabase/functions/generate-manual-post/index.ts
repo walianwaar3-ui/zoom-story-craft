@@ -650,7 +650,7 @@ OUTPUT FORMAT — respond with EXACTLY these two blocks and nothing else:
         webhookUrl.searchParams.set("mode", "generate");
         webhookUrl.searchParams.set("token", token);
 
-        const falSubmitUrl = new URL("https://queue.fal.run/fal-ai/nano-banana-2/edit");
+        const falSubmitUrl = new URL("https://queue.fal.run/openai/gpt-image-2/edit");
         falSubmitUrl.searchParams.set("fal_webhook", webhookUrl.toString());
 
         const submitRes = await fetchWithTimeout(
