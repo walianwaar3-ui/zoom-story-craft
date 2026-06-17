@@ -140,7 +140,7 @@ serve(async (req) => {
     const imageSize = sizeMap[post.aspect_ratio || "1:1"] || sizeMap["1:1"];
 
     const webhookUrl = await buildFalWebhookUrl(content_id, "generate", FAL_KEY);
-    const falSubmitUrl = new URL("https://queue.fal.run/fal-ai/nano-banana-2/edit");
+    const falSubmitUrl = new URL("https://queue.fal.run/openai/gpt-image-2/edit");
     if (webhookUrl) falSubmitUrl.searchParams.set("fal_webhook", webhookUrl);
 
     const submitRes = await fetchWithTimeout(
@@ -153,6 +153,7 @@ serve(async (req) => {
           image_urls: [selectedPhoto],
           image_size: imageSize,
           num_images: 1,
+          quality: "high",
         }),
       },
       15_000,
