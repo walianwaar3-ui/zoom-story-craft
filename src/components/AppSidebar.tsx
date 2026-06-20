@@ -1,4 +1,4 @@
-import { Video, FileText, LayoutDashboard, BookOpen, Sparkles, Settings as SettingsIcon, Activity } from "lucide-react";
+import { Video, FileText, LayoutDashboard, BookOpen, Sparkles, Settings as SettingsIcon, Activity, Wrench } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
