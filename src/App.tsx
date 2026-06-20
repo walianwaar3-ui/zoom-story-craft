@@ -11,6 +11,7 @@ import GeneratedPosts from "./pages/GeneratedPosts";
 import Knowledgebase from "./pages/Knowledgebase";
 import Activity from "./pages/Activity";
 import Settings from "./pages/Settings";
+import ToolStack from "./pages/ToolStack";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
