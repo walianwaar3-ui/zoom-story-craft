@@ -11,6 +11,7 @@ import GeneratedPosts from "./pages/GeneratedPosts";
 import Knowledgebase from "./pages/Knowledgebase";
 import Activity from "./pages/Activity";
 import Settings from "./pages/Settings";
+import ToolStack from "./pages/ToolStack";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +31,7 @@ const App = () => (
             <Route path="/knowledgebase" element={<Knowledgebase />} />
             <Route path="/activity" element={<Activity />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/tool-stack" element={<ToolStack />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AppLayout>

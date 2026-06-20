@@ -1,4 +1,4 @@
-import { Video, FileText, LayoutDashboard, BookOpen, Sparkles, Settings as SettingsIcon, Activity } from "lucide-react";
+import { Video, FileText, LayoutDashboard, BookOpen, Sparkles, Settings as SettingsIcon, Activity, Wrench } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
@@ -24,6 +24,7 @@ const primaryNav = [
 const secondaryNav = [
   { title: "Activity", url: "/activity", icon: Activity },
   { title: "Knowledgebase", url: "/knowledgebase", icon: BookOpen },
+  { title: "Tool Stack", url: "/tool-stack", icon: Wrench },
   { title: "Settings", url: "/settings", icon: SettingsIcon },
 ];
 
