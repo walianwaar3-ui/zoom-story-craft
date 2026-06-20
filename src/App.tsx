@@ -31,6 +31,7 @@ const App = () => (
             <Route path="/knowledgebase" element={<Knowledgebase />} />
             <Route path="/activity" element={<Activity />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/tool-stack" element={<ToolStack />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AppLayout>
