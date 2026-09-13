@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import ZoomPosts from "./pages/ZoomPosts";
 import GeneratePost from "./pages/GeneratePost";
 import GeneratedPosts from "./pages/GeneratedPosts";
+import MetaAds from "./pages/MetaAds";
 import Knowledgebase from "./pages/Knowledgebase";
 import Activity from "./pages/Activity";
 import Settings from "./pages/Settings";
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/zoom-posts" element={<ZoomPosts />} />
             <Route path="/generate-post" element={<GeneratePost />} />
             <Route path="/generated" element={<GeneratedPosts />} />
+            <Route path="/meta-ads" element={<MetaAds />} />
             <Route path="/knowledgebase" element={<Knowledgebase />} />
             <Route path="/activity" element={<Activity />} />
             <Route path="/settings" element={<Settings />} />

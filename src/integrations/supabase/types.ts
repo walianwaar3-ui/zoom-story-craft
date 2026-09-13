@@ -94,6 +94,96 @@ export type Database = {
           },
         ]
       }
+      meta_ad_drafts: {
+        Row: {
+          ad_account_id: string
+          ad_id: string | null
+          adset_id: string | null
+          campaign_id: string | null
+          created_at: string
+          currency: string | null
+          daily_budget: number
+          failure_reason: string | null
+          id: string
+          name: string
+          objective: string
+          review_url: string | null
+          status: string
+        }
+        Insert: {
+          ad_account_id: string
+          ad_id?: string | null
+          adset_id?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          currency?: string | null
+          daily_budget: number
+          failure_reason?: string | null
+          id?: string
+          name: string
+          objective: string
+          review_url?: string | null
+          status?: string
+        }
+        Update: {
+          ad_account_id?: string
+          ad_id?: string | null
+          adset_id?: string | null
+          campaign_id?: string | null
+          created_at?: string
+          currency?: string | null
+          daily_budget?: number
+          failure_reason?: string | null
+          id?: string
+          name?: string
+          objective?: string
+          review_url?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
+      meta_connections: {
+        Row: {
+          access_token: string
+          ad_account_id: string
+          ad_account_name: string | null
+          business_name: string | null
+          connected_at: string
+          currency: string | null
+          id: string
+          last_check_error: string | null
+          last_checked_at: string
+          page_id: string | null
+          page_name: string | null
+        }
+        Insert: {
+          access_token: string
+          ad_account_id: string
+          ad_account_name?: string | null
+          business_name?: string | null
+          connected_at?: string
+          currency?: string | null
+          id?: string
+          last_check_error?: string | null
+          last_checked_at?: string
+          page_id?: string | null
+          page_name?: string | null
+        }
+        Update: {
+          access_token?: string
+          ad_account_id?: string
+          ad_account_name?: string | null
+          business_name?: string | null
+          connected_at?: string
+          currency?: string | null
+          id?: string
+          last_check_error?: string | null
+          last_checked_at?: string
+          page_id?: string | null
+          page_name?: string | null
+        }
+        Relationships: []
+      }
       knowledgebase: {
         Row: {
           category: string
