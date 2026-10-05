@@ -19,14 +19,31 @@ export function adminDb(): SupabaseClient | null {
 
 const digest = (s: string) => createHash("sha256").update(s).digest();
 
+const bearer = (req: Request) => {
+  const header = req.headers.get("authorization") ?? "";
+  return header.startsWith("Bearer ") ? header.slice(7).trim() : "";
+};
+
 /** True when the request carries `Authorization: Bearer <HERMES_API_KEY>`. */
-function authorized(req: Request): boolean {
+export function authorized(req: Request): boolean {
   const expected = process.env.HERMES_API_KEY;
   if (!expected || expected.length < 32) return false;
-  const header = req.headers.get("authorization") ?? "";
-  const token = header.startsWith("Bearer ") ? header.slice(7).trim() : "";
+  const token = bearer(req);
   // Compare fixed-length digests so the check takes the same time for any input.
   return token.length > 0 && timingSafeEqual(digest(token), digest(expected));
+}
+
+/**
+ * True for Hermes (API key) or a signed-in Wali OS user (their Supabase access
+ * token as the bearer). Use for routes the app UI and Hermes both call.
+ */
+export async function hermesOrUser(req: Request): Promise<boolean> {
+  if (authorized(req)) return true;
+  const token = bearer(req);
+  const db = adminDb();
+  if (!token || !db) return false;
+  const { data, error } = await db.auth.getUser(token);
+  return !error && Boolean(data.user);
 }
 
 export class ApiError extends Error {

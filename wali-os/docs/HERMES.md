@@ -89,6 +89,13 @@ Dates are `YYYY-MM-DD`, timestamps ISO 8601, ids UUIDs.
 Responses are `{ "data": … }`; errors are `{ "error": "…" }` with `400` (bad field or value), `401`
 (key), `403` (read only), `404`, `409` (wrong state, e.g. approval already decided).
 
+### Agent chat (`/api/agents`)
+
+`GET /api/agents`, `GET /api/agents/:id` and `POST /api/agents/:id/chat` `{ "messages": [{ "role": "user", "content": "…" }] }`
+answer as the COO / Operator personas via OpenRouter (`OPENROUTER_API_KEY`, model `AGENT_MODEL`).
+They need the same `Authorization: Bearer $WALI_OS_API_KEY` (or a signed-in user's Supabase access
+token). Only `user` / `assistant` messages are accepted: the agent's instructions can't be replaced.
+
 ## 4. What the API won't let Hermes do
 
 - Delete anything.

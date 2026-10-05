@@ -1,7 +1,25 @@
 /**
  * Wali OS — Agent API (OpenRouter backend).
  * Route: /api/agents/[[...slug]]
+ *
+ * Every method requires the Hermes API key or a signed-in Wali OS user's
+ * Supabase access token as `Authorization: Bearer …`, so the OpenRouter key
+ * can't be used by anyone who finds the URL.
  */
+import { hermesOrUser } from "@/lib/hermes/server";
+
+const unauthorized = () => Response.json({ error: "Unauthorized" }, { status: 401 });
+
+/** Only plain user/assistant turns: callers can't replace the agent's system prompt. */
+function cleanMessages(input: unknown) {
+  if (!Array.isArray(input) || input.length === 0 || input.length > 50) return null;
+  const out: { role: "user" | "assistant"; content: string }[] = [];
+  for (const m of input) {
+    if (!m || (m.role !== "user" && m.role !== "assistant") || typeof m.content !== "string" || m.content.length > 20000) return null;
+    out.push({ role: m.role, content: m.content });
+  }
+  return out;
+}
 
 const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY;
 const MODEL = process.env.AGENT_MODEL || "deepseek/deepseek-v4-pro";
@@ -40,6 +58,7 @@ function parseSlug(request: Request) {
 // ── GET ──
 
 export async function GET(request: Request) {
+  if (!(await hermesOrUser(request))) return unauthorized();
   const { id } = parseSlug(request);
   if (!id) return Response.json({ agents: Object.values(agents) });
   const a = agents[id];
@@ -49,6 +68,7 @@ export async function GET(request: Request) {
 // ── POST ──
 
 export async function POST(request: Request) {
+  if (!(await hermesOrUser(request))) return unauthorized();
   const { id, action } = parseSlug(request);
 
   // Create agent
@@ -77,13 +97,11 @@ export async function POST(request: Request) {
     const agent = agents[id];
     if (!agent) return Response.json({ error: "Agent not found" }, { status: 404 });
 
-    const body = await request.json();
-    if (!body.messages?.length) return Response.json({ error: "messages required" }, { status: 400 });
+    const body = await request.json().catch(() => ({}));
+    const history = cleanMessages(body.messages);
+    if (!history) return Response.json({ error: "messages must be 1-50 {role: user|assistant, content: string} items" }, { status: 400 });
 
-    const messages = [
-      { role: "system", content: agent.instructions },
-      ...body.messages,
-    ];
+    const messages = [{ role: "system", content: agent.instructions }, ...history];
 
     try {
       const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -115,6 +133,7 @@ export async function POST(request: Request) {
 // ── PUT ──
 
 export async function PUT(request: Request) {
+  if (!(await hermesOrUser(request))) return unauthorized();
   const { id } = parseSlug(request);
   if (!id || !agents[id]) return Response.json({ error: "Not found" }, { status: 404 });
   const body = await request.json();
@@ -130,6 +149,7 @@ export async function PUT(request: Request) {
 // ── DELETE ──
 
 export async function DELETE(request: Request) {
+  if (!(await hermesOrUser(request))) return unauthorized();
   const { id } = parseSlug(request);
   if (!id || !agents[id]) return Response.json({ error: "Not found" }, { status: 404 });
   delete agents[id];
