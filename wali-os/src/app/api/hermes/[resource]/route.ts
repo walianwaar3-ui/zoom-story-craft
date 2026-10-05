@@ -1,5 +1,5 @@
 import { check, handler, json, readBody } from "@/lib/hermes/server";
-import { pick, resource, validateAgent } from "@/lib/hermes/resources";
+import { pick, resource, selectFor, validateAgent } from "@/lib/hermes/resources";
 
 type Ctx = { params: Promise<{ resource: string }> };
 
@@ -10,7 +10,7 @@ export const GET = handler<Ctx>(async (db, req, ctx) => {
   const url = new URL(req.url);
   const limit = Math.min(Math.max(Number(url.searchParams.get("limit")) || 100, 1), 500);
 
-  let q = db.from(r.table).select(name === "threads" ? "*, messages:email_messages(*)" : "*");
+  let q = db.from(r.table).select(selectFor(name));
   for (const f of r.filters) {
     const v = url.searchParams.get(f);
     if (v !== null) q = q.eq(f, v);

@@ -10,7 +10,7 @@ type Row = Record<string, unknown>;
  * and as live context for agent chat.
  */
 export async function buildContext(db: SupabaseClient) {
-  const [settings, clients, tasks, campaigns, approvals, threads, agents, team, activity] = await Promise.all([
+  const [settings, clients, tasks, campaigns, approvals, threads, agents, team, activity, runs] = await Promise.all([
     db.from("workspace_settings").select("*").eq("id", 1).maybeSingle(),
     db.from("clients").select("id, name, company, email, status, health, program, mrr, owner, next_action, last_contact"),
     db.from("tasks").select("*").neq("status", "done").order("due", { ascending: true, nullsFirst: false }),
@@ -24,6 +24,11 @@ export async function buildContext(db: SupabaseClient) {
     db.from("agents").select("id, name, role, instructions, scopes, status, requires_approval, avatar_url"),
     db.from("team_members").select("name, email, role"),
     db.from("activity_log").select("*").order("id", { ascending: false }).limit(25),
+    db
+      .from("agent_runs")
+      .select("id, agent_id, status, instruction, requested_by, created_at, started_at, agent:agents(name)")
+      .in("status", ["queued", "running"])
+      .order("created_at"),
   ]);
 
   const allClients = check(clients) as Row[];
@@ -48,9 +53,12 @@ export async function buildContext(db: SupabaseClient) {
       emails_needing_reply: threadRows.filter((t) => t.status === "needs-reply").length,
       tasks_open: openTasks.length,
       tasks_overdue: openTasks.filter((t) => t.due && String(t.due) < today).length,
+      agent_runs_queued: (check(runs) as Row[]).filter((r) => r.status === "queued").length,
     },
     // Waiting on you. Hermes must not act on these until they're approved.
     approvals_pending: approvalRows.filter((a) => a.status === "pending"),
+    // Runs Wali started from the Agents page: claim with /start, then /finish or /fail.
+    agent_runs_open: check(runs),
     // Approved by you and not yet carried out: Hermes's to-do list.
     approvals_to_carry_out: approvalRows.filter((a) => a.status === "approved"),
     email_threads_open: threadRows,

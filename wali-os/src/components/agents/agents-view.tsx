@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { AgentAvatar, AgentChatSheet } from "@/components/agents/agent-chat";
 import { AgentStatsBars, useAgentStats } from "@/components/agents/agent-stats";
+import { isRunOpen, RunDetailsDialog, RunDialog, RunStatusLine, useAgentRuns } from "@/components/agents/agent-runs";
 import { PageHeader } from "@/components/layout/page-header";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -30,7 +31,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { AGENT_SCOPES, type Agent, type AgentScope } from "@/lib/data/types";
 import { relativeTime } from "@/lib/format";
 import { newId, nowIso, useStore } from "@/lib/store";
-import { getSupabase } from "@/lib/supabase";
 
 function AgentFormDialog({ open, onOpenChange, agent }: { open: boolean; onOpenChange: (o: boolean) => void; agent?: Agent }) {
   const { add, update } = useStore();
@@ -131,7 +131,9 @@ export function AgentsView() {
   const [deleting, setDeleting] = React.useState<Agent | undefined>();
   const [chatting, setChatting] = React.useState<Agent | undefined>();
   const stats = useAgentStats();
-  const [running, setRunning] = React.useState<string | undefined>();
+  const { runs, queue, cancel } = useAgentRuns(agents);
+  const [runFor, setRunFor] = React.useState<Agent | undefined>();
+  const [runDetailsFor, setRunDetailsFor] = React.useState<Agent | undefined>();
   // Look up the live row so the chat reflects status/photo changes while open.
   const chatAgent = chatting ? (agents.find((a) => a.id === chatting.id) ?? chatting) : undefined;
 
@@ -141,30 +143,6 @@ export function AgentsView() {
   };
 
   const requestsBy = (name: string) => db.approvals.filter((a) => a.requestedBy === name);
-
-  const runAgent = async (agent: Agent) => {
-    if (running || agent.status !== "active") return;
-    setRunning(agent.id);
-    try {
-      const sb = getSupabase();
-      let token = "";
-      if (sb) {
-        const { data } = await sb.auth.getSession();
-        token = data.session?.access_token ?? "";
-      }
-      const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (token) headers.Authorization = `Bearer ${token}`;
-
-      const res = await fetch(`/api/agents/${agent.id}/run`, { method: "POST", headers });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.error || `Error ${res.status}`);
-      toast.success(`${agent.name} ran`, { description: (json.reply || "").slice(0, 200) });
-    } catch (e) {
-      toast.error(`Run failed`, { description: e instanceof Error ? e.message : String(e) });
-    } finally {
-      setRunning(undefined);
-    }
-  };
 
   return (
     <div className="mx-auto max-w-[1400px] space-y-6">
@@ -255,6 +233,7 @@ export function AgentsView() {
                       + Add instructions / playbook
                     </button>
                   )}
+                  {mode === "cloud" && <RunStatusLine run={runs[a.id]} onOpen={() => setRunDetailsFor(a)} />}
                   {mode === "cloud" && (
                     <div className="flex gap-2">
                       <Button variant="outline" size="sm" className="flex-1" onClick={() => setChatting(a)} disabled={a.status !== "active"}>
@@ -263,11 +242,12 @@ export function AgentsView() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => void runAgent(a)}
-                        disabled={a.status !== "active" || running === a.id}
+                        onClick={() => setRunFor(a)}
+                        disabled={a.status !== "active" || isRunOpen(runs[a.id])}
+                        title={isRunOpen(runs[a.id]) ? "A run is already queued or in progress" : `Have Hermes run ${a.name}`}
                       >
-                        <Play className={running === a.id ? "animate-pulse" : ""} />
-                        {running === a.id ? "Running…" : "Run"}
+                        <Play className={runs[a.id]?.status === "running" ? "animate-pulse" : ""} />
+                        {runs[a.id]?.status === "running" ? "Running…" : runs[a.id]?.status === "queued" ? "Queued" : "Run"}
                       </Button>
                     </div>
                   )}
@@ -305,6 +285,14 @@ export function AgentsView() {
       )}
 
       <AgentFormDialog open={formOpen} onOpenChange={setFormOpen} agent={editing} />
+      <RunDialog agent={runFor} open={!!runFor} onOpenChange={(o) => !o && setRunFor(undefined)} onQueue={queue} />
+      <RunDetailsDialog
+        agent={runDetailsFor}
+        run={runDetailsFor ? runs[runDetailsFor.id] : undefined}
+        open={!!runDetailsFor}
+        onOpenChange={(o) => !o && setRunDetailsFor(undefined)}
+        onCancel={(r) => void cancel(r)}
+      />
       <AgentChatSheet agent={chatAgent} open={!!chatting} onOpenChange={(o) => !o && setChatting(undefined)} />
       <ConfirmDialog
         open={!!deleting}

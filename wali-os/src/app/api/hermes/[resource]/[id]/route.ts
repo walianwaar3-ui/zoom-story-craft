@@ -1,5 +1,5 @@
 import { ApiError, check, handler, json, readBody, requireId } from "@/lib/hermes/server";
-import { pick, resource, validateAgent } from "@/lib/hermes/resources";
+import { pick, resource, selectFor, validateAgent } from "@/lib/hermes/resources";
 
 type Ctx = { params: Promise<{ resource: string; id: string }> };
 
@@ -7,7 +7,7 @@ type Ctx = { params: Promise<{ resource: string; id: string }> };
 export const GET = handler<Ctx>(async (db, _req, ctx) => {
   const { resource: name, id } = await ctx.params;
   const r = resource(name);
-  const select = name === "threads" ? "*, messages:email_messages(*)" : "*";
+  const select = selectFor(name);
   const row = check(await db.from(r.table).select(select).eq("id", requireId(id)).single());
   return json({ data: row });
 });
