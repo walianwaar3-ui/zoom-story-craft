@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Bot, Info, MessageSquare, MoreHorizontal, Plus, ShieldCheck } from "lucide-react";
+import { Bot, Info, MessageSquare, MoreHorizontal, Play, Plus, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
 import { AgentAvatar, AgentChatSheet } from "@/components/agents/agent-chat";
@@ -30,6 +30,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { AGENT_SCOPES, type Agent, type AgentScope } from "@/lib/data/types";
 import { relativeTime } from "@/lib/format";
 import { newId, nowIso, useStore } from "@/lib/store";
+import { getSupabase } from "@/lib/supabase";
 
 function AgentFormDialog({ open, onOpenChange, agent }: { open: boolean; onOpenChange: (o: boolean) => void; agent?: Agent }) {
   const { add, update } = useStore();
@@ -130,6 +131,7 @@ export function AgentsView() {
   const [deleting, setDeleting] = React.useState<Agent | undefined>();
   const [chatting, setChatting] = React.useState<Agent | undefined>();
   const stats = useAgentStats();
+  const [running, setRunning] = React.useState<string | undefined>();
   // Look up the live row so the chat reflects status/photo changes while open.
   const chatAgent = chatting ? (agents.find((a) => a.id === chatting.id) ?? chatting) : undefined;
 
@@ -139,6 +141,30 @@ export function AgentsView() {
   };
 
   const requestsBy = (name: string) => db.approvals.filter((a) => a.requestedBy === name);
+
+  const runAgent = async (agent: Agent) => {
+    if (running || agent.status !== "active") return;
+    setRunning(agent.id);
+    try {
+      const sb = getSupabase();
+      let token = "";
+      if (sb) {
+        const { data } = await sb.auth.getSession();
+        token = data.session?.access_token ?? "";
+      }
+      const headers: Record<string, string> = { "Content-Type": "application/json" };
+      if (token) headers.Authorization = `Bearer ${token}`;
+
+      const res = await fetch(`/api/agents/${agent.id}/run`, { method: "POST", headers });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || `Error ${res.status}`);
+      toast.success(`${agent.name} ran`, { description: (json.reply || "").slice(0, 200) });
+    } catch (e) {
+      toast.error(`Run failed`, { description: e instanceof Error ? e.message : String(e) });
+    } finally {
+      setRunning(undefined);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-[1400px] space-y-6">
@@ -230,9 +256,20 @@ export function AgentsView() {
                     </button>
                   )}
                   {mode === "cloud" && (
-                    <Button variant="outline" size="sm" className="w-full" onClick={() => setChatting(a)} disabled={a.status !== "active"}>
-                      <MessageSquare /> {a.status === "active" ? `Chat with ${a.name}` : `${a.name} is paused`}
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" className="flex-1" onClick={() => setChatting(a)} disabled={a.status !== "active"}>
+                        <MessageSquare /> {a.status === "active" ? `Chat` : "Paused"}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => void runAgent(a)}
+                        disabled={a.status !== "active" || running === a.id}
+                      >
+                        <Play className={running === a.id ? "animate-pulse" : ""} />
+                        {running === a.id ? "Running…" : "Run"}
+                      </Button>
+                    </div>
                   )}
                   <Separator />
                   <div className="space-y-3 text-sm">

@@ -1,10 +1,15 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { buildContext } from "@/lib/hermes/context";
 import { ApiError, check, handler, json, readBody, requireId, requireText } from "@/lib/hermes/server";
 
 type Ctx = { params: Promise<{ resource: string; id: string; action: string }> };
 type Body = Record<string, unknown>;
 type Thread = { id: string; contact_name: string; contact_email: string; subject: string; client_id: string | null; status: string; approval_id: string | null };
+type AgentRow = { id: string; name: string; role: string; instructions: string; scopes: string[]; status: string; requires_approval: boolean };
+
+const MODEL = process.env.AGENT_MODEL || "deepseek/deepseek-v4-pro";
+const CONTEXT_CHARS = 40_000;
 
 /**
  * Workflow actions. They follow the same rules as Wali OS (src/lib/workflows.ts):
@@ -13,7 +18,7 @@ type Thread = { id: string; contact_name: string; contact_email: string; subject
 const ACTIONS: Record<string, Record<string, (db: SupabaseClient, id: string, body: Body) => Promise<unknown>>> = {
   threads: { inbound, "submit-reply": submitReply, sent },
   approvals: { executed },
-  agents: { avatar },
+  agents: { avatar, run },
 };
 
 export const POST = handler<Ctx>(async (db, req, ctx) => {
@@ -148,4 +153,89 @@ async function avatar(db: SupabaseClient, id: string, body: Body) {
   if (up.error) throw new ApiError(400, `Upload failed: ${up.error.message}`);
   const url = db.storage.from("agent-avatars").getPublicUrl(path).data.publicUrl;
   return check(await db.from("agents").update({ avatar_url: url }).eq("id", id).select().single());
+}
+
+const systemPrompt = (agent: AgentRow, context: unknown) => {
+  let live = JSON.stringify(context);
+  if (live.length > CONTEXT_CHARS) live = live.slice(0, CONTEXT_CHARS) + "…(truncated)";
+  return [
+    agent.instructions || `You are ${agent.name}. ${agent.role}.`,
+    "",
+    `You are "${agent.name}" inside Wali OS. Your role: ${agent.role || "not set"}. You work on: ${agent.scopes.join(", ") || "not set"}.`,
+    "You are being asked to run your next task. Look at the live data below and do what's due for your role.",
+    "If you produce output that should go to a client or costs money, note that it needs approval.",
+    "",
+    `Live Wali OS data (${new Date().toISOString()}):`,
+    live,
+  ]
+    .filter((l) => l !== "")
+    .join("\n");
+};
+
+/**
+ * POST agents/:id/run — trigger the agent to do its next due task.
+ * Calls OpenRouter with the agent's instructions + live context, returns the response.
+ */
+async function run(db: SupabaseClient, id: string): Promise<unknown> {
+  const key = process.env.OPENROUTER_API_KEY;
+  if (!key) throw new ApiError(503, "OPENROUTER_API_KEY not set");
+
+  const agent = check(await db.from("agents").select("*").eq("id", id).single()) as AgentRow;
+  if (!agent) throw new ApiError(404, "Agent not found");
+  if (agent.status !== "active") throw new ApiError(409, `${agent.name} is paused`);
+
+  // Gather what's due for this agent
+  const [{ data: tasks }, context] = await Promise.all([
+    db
+      .from("tasks")
+      .select("*")
+      .neq("status", "done")
+      .ilike("assignee", `%${agent.name}%`)
+      .order("due", { ascending: true, nullsFirst: false })
+      .limit(10),
+    buildContext(db),
+  ]);
+
+  const dueSummary = {
+    tasks: (tasks ?? []).map((t) => ({ title: (t as Record<string, unknown>).title, status: (t as Record<string, unknown>).status, due: (t as Record<string, unknown>).due, priority: (t as Record<string, unknown>).priority })),
+    task_count: (tasks ?? []).length,
+  };
+
+  const messages = [
+    { role: "system", content: systemPrompt(agent, context) },
+    {
+      role: "user",
+      content: `Here's what's assigned to you right now:\n${JSON.stringify(dueSummary, null, 2)}\n\nRun your next due task. If there's nothing that needs doing, say so and suggest what you would work on next.`,
+    },
+  ];
+
+  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${key}`,
+      "HTTP-Referer": "https://wali-os.vercel.app",
+      "X-Title": "Wali OS",
+    },
+    body: JSON.stringify({ model: MODEL, messages, stream: false }),
+  });
+
+  if (!res.ok) {
+    const text = await res.text();
+    console.error("openrouter run", res.status, text);
+    throw new ApiError(502, `OpenRouter error (${res.status})`);
+  }
+
+  const data = await res.json();
+  const reply = data.choices?.[0]?.message?.content || "";
+
+  // Log the activity
+  check(
+    await db.from("activity_log").insert({
+      label: `${agent.name} ran — ${reply.slice(0, 120)}${reply.length > 120 ? "…" : ""}`,
+      at: new Date().toISOString(),
+    })
+  );
+
+  return { agent: { id: agent.id, name: agent.name }, reply, tasks_found: dueSummary.task_count };
 }

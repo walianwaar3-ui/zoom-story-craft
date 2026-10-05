@@ -112,17 +112,22 @@ export async function GET(request: Request) {
   }
 }
 
-// ── POST /api/agents/:agent/chat ──
+// ── POST /api/agents/:agent/chat  or  POST /api/agents/:agent/run ──
 
 export async function POST(request: Request) {
   const g = await guard(request);
   if (g.res) return g.res;
   const { key, action, extra } = parseSlug(request);
-  if (!key || action !== "chat" || extra)
+  if (!key || extra)
     return err("Not found. Create or edit agents with /api/hermes/agents; chat with POST /api/agents/:agent/chat", 404);
 
   const key_ = process.env.OPENROUTER_API_KEY;
   if (!key_) return err("OPENROUTER_API_KEY not set", 503);
+
+  if (action === "run") return handleRun(g.db, key, key_);
+
+  if (action !== "chat")
+    return err("Not found. Available actions: chat, run", 404);
 
   const body = await request.json().catch(() => ({}));
   const history = cleanMessages(body.messages);
@@ -152,6 +157,67 @@ export async function POST(request: Request) {
     return Response.json({ reply: data.choices?.[0]?.message?.content || "", agent: { id: agent.id, name: agent.name } });
   } catch (e) {
     console.error("agents chat", e);
+    return err("Internal error", 500);
+  }
+}
+
+async function handleRun(db: SupabaseClient, key: string, orKey: string) {
+  try {
+    const agent = await findAgent(db, key);
+    if (!agent) return err("Agent not found", 404);
+    if (agent.status !== "active") return err(`${agent.name} is paused. Switch it on in Wali OS → Agents.`, 409);
+
+    // Gather what's due for this agent
+    const { data: tasks } = await db
+      .from("tasks")
+      .select("*")
+      .neq("status", "done")
+      .ilike("assignee", `%${agent.name}%`)
+      .order("due", { ascending: true, nullsFirst: false })
+      .limit(10);
+
+    const dueSummary = {
+      tasks: (tasks ?? []).map((t: Record<string, unknown>) => ({ title: t.title, status: t.status, due: t.due, priority: t.priority })),
+      task_count: (tasks ?? []).length,
+    };
+
+    const context = await buildContext(db);
+    const messages = [
+      { role: "system" as const, content: systemPrompt(agent, context) },
+      {
+        role: "user" as const,
+        content: `Here's what's assigned to you right now:\n${JSON.stringify(dueSummary, null, 2)}\n\nRun your next due task. If there's nothing that needs doing, say so and suggest what you would work on next.`,
+      },
+    ];
+
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${orKey}`,
+        "HTTP-Referer": "https://wali-os.vercel.app",
+        "X-Title": "Wali OS",
+      },
+      body: JSON.stringify({ model: MODEL, messages, stream: false }),
+    });
+
+    if (!res.ok) {
+      console.error("openrouter run", res.status, await res.text());
+      return err(`The AI service returned an error (${res.status})`, 502);
+    }
+
+    const data = await res.json();
+    const reply: string = data.choices?.[0]?.message?.content || "";
+
+    // Log the activity
+    await db.from("activity_log").insert({
+      label: `${agent.name} ran — ${reply.slice(0, 120)}${reply.length > 120 ? "…" : ""}`,
+      at: new Date().toISOString(),
+    });
+
+    return Response.json({ reply, agent: { id: agent.id, name: agent.name }, tasks_found: dueSummary.task_count });
+  } catch (e) {
+    console.error("agents run", e);
     return err("Internal error", 500);
   }
 }
