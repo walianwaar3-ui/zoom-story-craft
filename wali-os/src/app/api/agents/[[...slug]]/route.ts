@@ -83,28 +83,42 @@ export async function POST(request: Request) {
     return Response.json({ agent: agents[agentId] }, { status: 201 });
   }
 
-  // Chat
+  // Chat — uses hermes CLI directly (no API key needed)
   if (action === "chat") {
-    const authError = auth();
-    if (authError) return authError;
-
     const agent = agents[id];
     if (!agent) return Response.json({ error: "Agent not found" }, { status: 404 });
 
     const body = await request.json();
     if (!body.messages?.length) return Response.json({ error: "messages required" }, { status: 400 });
 
+    const lastMsg = body.messages[body.messages.length - 1].content;
+
     try {
-      const res = await fetch(`${HERMES_URL}/v1/chat/completions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", "X-Api-Key": HERMES_KEY! },
-        body: JSON.stringify({ model: agent.profile, messages: body.messages, stream: false }),
-      });
-      if (!res.ok) return Response.json({ error: `Hermes: ${await res.text()}` }, { status: 502 });
-      const data = await res.json();
-      return Response.json({ reply: data.choices?.[0]?.message?.content || "" });
+      const { execSync } = await import("child_process");
+      const raw = execSync(
+        `hermes -p ${agent.profile} chat -q ${JSON.stringify(lastMsg)}`,
+        { timeout: 60000, maxBuffer: 1024 * 1024, env: { ...process.env, HOME: "/opt/data" } }
+      ).toString();
+
+      // Extract the agent's reply from CLI output
+      const reply = raw
+        .replace(/^Query:.*$/m, "")
+        .replace(/Initializing agent.*$/m, "")
+        .replace(/─+/g, "")
+        .replace(/Resume this session with:[\s\S]*$/m, "")
+        .replace(/Session:[\s\S]*$/m, "")
+        .replace(/Title:.*$/m, "")
+        .replace(/Duration:.*$/m, "")
+        .replace(/Messages:.*$/m, "")
+        .replace(/╭─.*$/m, "")
+        .replace(/╰─.*$/m, "")
+        .replace(/Reasoning[\s\S]*?──┘/s, "")
+        .replace(/☤ Hermes[\s\S]*?──╮/s, "")
+        .trim();
+
+      return Response.json({ reply: reply || raw.trim() });
     } catch (e) {
-      return Response.json({ error: `Unreachable: ${(e as Error).message}` }, { status: 502 });
+      return Response.json({ error: `Agent: ${(e as Error).message}` }, { status: 502 });
     }
   }
 
