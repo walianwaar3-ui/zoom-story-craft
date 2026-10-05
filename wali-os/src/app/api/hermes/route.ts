@@ -18,6 +18,10 @@ export const GET = handler(async () =>
       "POST /api/hermes/threads/:id/submit-reply {body}": "Queue a reply for approval.",
       "POST /api/hermes/threads/:id/sent": "Record that the approved reply was sent.",
       "POST /api/hermes/approvals/:id/executed": "Mark an approved request as carried out.",
+      "GET /api/hermes/runs?status=queued": "Runs Wali started from the Agents page (each includes its agent).",
+      "POST /api/hermes/runs/:id/start": "Claim a queued run before doing the work.",
+      "POST /api/hermes/runs/:id/finish {result}": "Report what you actually did.",
+      "POST /api/hermes/runs/:id/fail {error}": "Report why it couldn't be done.",
       "POST /api/hermes/agents/:id/avatar {image_base64, content_type}": "Upload an agent's photo (max 2 MB).",
       "POST /api/agents/:agent/chat {messages}": "Chat as an agent (uses its Wali OS instructions + live context).",
     },
@@ -29,6 +33,7 @@ export const GET = handler(async () =>
       "Only you approve or reject approvals, in Wali OS.",
       "Act only on approvals in approvals_to_carry_out, then call /executed.",
       "Only Wali switches agents on/off or changes 'requires approval'; skip paused agents.",
+      "Runs: claim with /start, do the real work, then /finish with what you actually did (or /fail). Never report work you didn't do.",
     ],
   })
 );

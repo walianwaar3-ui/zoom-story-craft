@@ -5,6 +5,8 @@
  *   GET  /api/agents               list agents (from Wali OS)
  *   GET  /api/agents/:agent        one agent (id, or name such as "coo")
  *   POST /api/agents/:agent/chat   {messages: [{role: "user"|"assistant", content}]} → {reply}
+ *   POST /api/agents/:agent/run    {instruction?} → queues a run; Hermes picks it up, does
+ *                                  the work with its real tools and reports back (agent_runs)
  *
  * Agents live in the `agents` table: Hermes creates and edits them through
  * /api/hermes/agents, you switch them on/off in Wali OS. Every call requires the
@@ -112,7 +114,7 @@ export async function GET(request: Request) {
   }
 }
 
-// ── POST /api/agents/:agent/chat  or  POST /api/agents/:agent/run ──
+// ── POST /api/agents/:agent/chat · POST /api/agents/:agent/run ──
 
 export async function POST(request: Request) {
   const g = await guard(request);
@@ -121,13 +123,11 @@ export async function POST(request: Request) {
   if (!key || extra)
     return err("Not found. Create or edit agents with /api/hermes/agents; chat with POST /api/agents/:agent/chat", 404);
 
+  if (action === "run") return queueRun(request, g.db, key);
+  if (action !== "chat") return err("Not found. Available actions: chat, run", 404);
+
   const key_ = process.env.OPENROUTER_API_KEY;
   if (!key_) return err("OPENROUTER_API_KEY not set", 503);
-
-  if (action === "run") return handleRun(g.db, key, key_);
-
-  if (action !== "chat")
-    return err("Not found. Available actions: chat, run", 404);
 
   const body = await request.json().catch(() => ({}));
   const history = cleanMessages(body.messages);
@@ -161,61 +161,28 @@ export async function POST(request: Request) {
   }
 }
 
-async function handleRun(db: SupabaseClient, key: string, orKey: string) {
+/**
+ * Queue a run for Hermes. Nothing is executed here: Hermes polls
+ * /api/hermes/runs?status=queued, does the work on the VPS with its real tools,
+ * and reports the outcome, which the Agents page shows live.
+ */
+async function queueRun(request: Request, db: SupabaseClient, key: string) {
+  const body = await request.json().catch(() => ({}));
+  const instruction = typeof body.instruction === "string" ? body.instruction.trim().slice(0, 4000) : "";
+  const requestedBy = typeof body.requested_by === "string" ? body.requested_by.trim().slice(0, 200) : "";
   try {
     const agent = await findAgent(db, key);
     if (!agent) return err("Agent not found", 404);
     if (agent.status !== "active") return err(`${agent.name} is paused. Switch it on in Wali OS → Agents.`, 409);
-
-    // Gather what's due for this agent
-    const { data: tasks } = await db
-      .from("tasks")
-      .select("*")
-      .neq("status", "done")
-      .ilike("assignee", `%${agent.name}%`)
-      .order("due", { ascending: true, nullsFirst: false })
-      .limit(10);
-
-    const dueSummary = {
-      tasks: (tasks ?? []).map((t: Record<string, unknown>) => ({ title: t.title, status: t.status, due: t.due, priority: t.priority })),
-      task_count: (tasks ?? []).length,
-    };
-
-    const context = await buildContext(db);
-    const messages = [
-      { role: "system" as const, content: systemPrompt(agent, context) },
-      {
-        role: "user" as const,
-        content: `Here's what's assigned to you right now:\n${JSON.stringify(dueSummary, null, 2)}\n\nRun your next due task. If there's nothing that needs doing, say so and suggest what you would work on next.`,
-      },
-    ];
-
-    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${orKey}`,
-        "HTTP-Referer": "https://wali-os.vercel.app",
-        "X-Title": "Wali OS",
-      },
-      body: JSON.stringify({ model: MODEL, messages, stream: false }),
-    });
-
-    if (!res.ok) {
-      console.error("openrouter run", res.status, await res.text());
-      return err(`The AI service returned an error (${res.status})`, 502);
-    }
-
-    const data = await res.json();
-    const reply: string = data.choices?.[0]?.message?.content || "";
-
-    // Log the activity
-    await db.from("activity_log").insert({
-      label: `${agent.name} ran — ${reply.slice(0, 120)}${reply.length > 120 ? "…" : ""}`,
-      at: new Date().toISOString(),
-    });
-
-    return Response.json({ reply, agent: { id: agent.id, name: agent.name }, tasks_found: dueSummary.task_count });
+    const { data, error } = await db
+      .from("agent_runs")
+      .insert({ agent_id: agent.id, instruction: instruction || "Do your next due task.", requested_by: requestedBy || "Wali" })
+      .select()
+      .single();
+    // One queued/running run per agent (unique index).
+    if (error?.code === "23505") return err(`${agent.name} already has a run queued or in progress`, 409);
+    if (error) throw new Error(error.message);
+    return Response.json({ run: data }, { status: 201 });
   } catch (e) {
     console.error("agents run", e);
     return err("Internal error", 500);

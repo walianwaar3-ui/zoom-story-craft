@@ -60,6 +60,8 @@ export const RESOURCES: Record<string, Resource> = {
     order: "created_at",
   },
   team: { table: "team_members", create: null, update: null, filters: [], order: "created_at" },
+  // Runs Wali queued from the Agents page. Read here; move them with runs/:id/start|finish|fail.
+  runs: { table: "agent_runs", create: null, update: null, filters: ["status", "agent_id"], order: "created_at" },
 };
 
 export function resource(name: string): Resource {
@@ -89,4 +91,11 @@ export function validateAgent(row: Record<string, unknown>) {
     if (typeof u !== "string" || (u !== "" && !/^https:\/\/\S+$/.test(u)))
       throw new ApiError(400, '"avatar_url" must be an https:// URL (or use POST /api/hermes/agents/:id/avatar to upload a file)');
   }
+}
+
+/** Columns returned for a resource: threads include messages, runs include their agent. */
+export function selectFor(name: string) {
+  if (name === "threads") return "*, messages:email_messages(*)";
+  if (name === "runs") return "*, agent:agents(id, name, role, instructions, scopes, status, requires_approval)";
+  return "*";
 }

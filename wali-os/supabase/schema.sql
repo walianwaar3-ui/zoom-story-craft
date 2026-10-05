@@ -237,3 +237,32 @@ alter table public.agents add column if not exists avatar_url text not null defa
 insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
 values ('agent-avatars', 'agent-avatars', true, 2097152, array['image/png', 'image/jpeg', 'image/webp', 'image/gif'])
 on conflict (id) do nothing;
+
+-- ── Agent runs: Wali presses Run, Hermes does the work and reports back ─────
+create table if not exists public.agent_runs (
+  id uuid primary key default gen_random_uuid(),
+  agent_id uuid not null references public.agents (id) on delete cascade,
+  status text not null default 'queued' check (status in ('queued', 'running', 'done', 'failed', 'cancelled')),
+  instruction text not null default '',
+  requested_by text not null default '',
+  result text not null default '',  -- what Hermes actually did
+  error text not null default '',   -- why it couldn't
+  created_at timestamptz not null default now(),
+  started_at timestamptz,
+  finished_at timestamptz
+);
+create index if not exists agent_runs_agent_idx on public.agent_runs (agent_id, created_at desc);
+create index if not exists agent_runs_status_idx on public.agent_runs (status);
+-- At most one queued or running run per agent.
+create unique index if not exists agent_runs_one_active on public.agent_runs (agent_id) where status in ('queued', 'running');
+alter table public.agent_runs enable row level security;
+drop policy if exists "signed-in users have full access" on public.agent_runs;
+create policy "signed-in users have full access" on public.agent_runs for all to authenticated using (true) with check (true);
+grant select, insert, update, delete on public.agent_runs to authenticated;
+revoke all on public.agent_runs from anon;
+do $$ begin
+  alter publication supabase_realtime add table public.agent_runs;
+exception when duplicate_object then null;
+end $$;
+create or replace trigger log_activity after insert or update or delete on public.agent_runs
+  for each row execute function public.log_activity();

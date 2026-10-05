@@ -71,6 +71,9 @@ update touched. Omit `since` to get the latest 100. Store `next_since` and pass 
 | `POST /api/hermes/threads/:id/submit-reply` `{ "body", "requested_by"? }` | Put a reply in the approval queue. |
 | `POST /api/hermes/threads/:id/sent` | After sending an **approved** reply: logs the approved text, marks the thread replied and the approval carried out. |
 | `POST /api/hermes/approvals/:id/executed` | Mark an approved request as carried out. |
+| `POST /api/hermes/runs/:id/start` | Claim a queued run (queued → running). `409` if someone else took it. |
+| `POST /api/hermes/runs/:id/finish` `{ "result" }` | Report what you **actually did** (running → done). Shown to Wali on the agent card. |
+| `POST /api/hermes/runs/:id/fail` `{ "error" }` | Report why it couldn't be done (running → failed). |
 | `POST /api/hermes/agents/:id/avatar` `{ "image_base64", "content_type" }` | Upload an agent's photo (PNG/JPEG/WebP/GIF, max 2 MB); sets `avatar_url`. |
 
 | Resource | Create / update | Filters |
@@ -82,6 +85,7 @@ update touched. Omit `since` to get the latest 100. Store `next_since` and pass 
 | `threads` | create: contact_name, contact_email, subject, client_id. Update: those + draft | status, client_id, contact_email |
 | `agents` | name, role, instructions, scopes (Email/Clients/Tasks/Campaigns/Approvals), avatar_url (https). New agents start **active** with **requires approval** on; only Wali changes those two. | status, name |
 | `team` | read only | |
+| `runs` | read only (move them with the run actions) | status, agent_id |
 
 Allowed values: client `status` lead/onboarding/active/paused/churned, `health` good/watch/at-risk;
 task `status` todo/in-progress/review/done, `priority` urgent/high/medium/low; campaign `channel`
@@ -104,6 +108,23 @@ Chat: `GET /api/agents`, `GET /api/agents/:agent` (id or name, e.g. `coo`) and
 via OpenRouter (`OPENROUTER_API_KEY`, model `AGENT_MODEL`), using its `instructions` from Wali OS plus the
 live context. Same `Authorization: Bearer $WALI_OS_API_KEY` (or a signed-in user's Supabase access
 token). Only `user`/`assistant` messages are accepted. Wali chats with them from the Agents page.
+
+### Runs: Wali presses Run, you do the work
+
+When Wali presses **Run** on an agent card (optionally with an instruction), a row is queued in
+`agent_runs`. Nothing is executed by Wali OS: **you** do the work, with your real tools, as that agent.
+
+1. Poll `GET /api/hermes/runs?status=queued` every 30–60 s (also listed in `context.agent_runs_open`).
+   Each run includes `agent` (name, role, instructions, scopes, status, requires_approval).
+2. `POST /api/hermes/runs/<id>/start` before working. Skip it if you get `409`.
+3. Do the work as that agent, following its `instructions` and the `instruction` on the run
+   ("Do your next due task." when Wali left it empty: take the agent's most urgent open task).
+   Anything client-facing or costing money → create an approval instead of doing it.
+4. `POST /api/hermes/runs/<id>/finish` `{"result": "…"}` with a short, factual account of what you
+   did (and any approvals you created), or `/fail` `{"error": "…"}`. Never report work you didn't do.
+
+Wali sees Queued → Running → Done/Failed live on the card, with your result. A queued run can be
+cancelled by Wali; `start` then returns `409`.
 
 ## 4. What the API won't let Hermes do
 
