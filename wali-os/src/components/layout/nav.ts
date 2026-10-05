@@ -3,39 +3,54 @@ import {
   CheckCheck,
   LayoutDashboard,
   ListTodo,
+  Mail,
   Megaphone,
-  MessageCircle,
   Settings,
   Users,
   type LucideIcon,
 } from "lucide-react";
 
-import { approvals, conversations, tasks } from "@/lib/data";
+import type { Db } from "@/lib/data/types";
 
 export interface NavItem {
   title: string;
   href: string;
   icon: LucideIcon;
-  badge?: number;
   description: string;
+  /** Counts that need attention; highlighted ones use the primary color. */
+  badge?: (db: Db) => { count: number; highlight?: boolean };
 }
-
-const unreadMessages = conversations.reduce((sum, c) => sum + c.unread, 0);
-const pendingApprovals = approvals.filter((a) => a.status === "pending").length;
-const openTasks = tasks.filter((t) => t.status !== "done").length;
 
 export const navMain: NavItem[] = [
   { title: "Dashboard", href: "/", icon: LayoutDashboard, description: "Business pulse at a glance" },
-  { title: "Clients", href: "/clients", icon: Users, description: "Accounts, health and revenue" },
-  { title: "WhatsApp Inbox", href: "/inbox", icon: MessageCircle, badge: unreadMessages, description: "Lead and client conversations" },
+  { title: "Clients", href: "/clients", icon: Users, description: "Accounts, leads and revenue" },
+  {
+    title: "Email Inbox",
+    href: "/inbox",
+    icon: Mail,
+    description: "Client and lead emails, replies via approval",
+    badge: (db) => ({ count: db.threads.filter((t) => t.status === "needs-reply" || t.status === "ready-to-send").length, highlight: true }),
+  },
   { title: "Campaigns", href: "/campaigns", icon: Megaphone, description: "Acquisition performance" },
-  { title: "Tasks", href: "/tasks", icon: ListTodo, badge: openTasks, description: "Delivery across the team" },
-  { title: "Approvals", href: "/approvals", icon: CheckCheck, badge: pendingApprovals, description: "Decisions waiting on you" },
-  { title: "Agents", href: "/agents", icon: Bot, description: "Your AI workforce" },
+  {
+    title: "Tasks",
+    href: "/tasks",
+    icon: ListTodo,
+    description: "Delivery across the team",
+    badge: (db) => ({ count: db.tasks.filter((t) => t.status !== "done").length }),
+  },
+  {
+    title: "Approvals",
+    href: "/approvals",
+    icon: CheckCheck,
+    description: "Decisions waiting on you",
+    badge: (db) => ({ count: db.approvals.filter((a) => a.status === "pending").length, highlight: true }),
+  },
+  { title: "Agents", href: "/agents", icon: Bot, description: "Roles, playbooks and guardrails" },
 ];
 
 export const navFooter: NavItem[] = [
-  { title: "Settings", href: "/settings", icon: Settings, description: "Workspace, integrations, team" },
+  { title: "Settings", href: "/settings", icon: Settings, description: "Workspace, team, backup" },
 ];
 
 export const allNav = [...navMain, ...navFooter];

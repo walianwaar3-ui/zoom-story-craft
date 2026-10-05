@@ -1,220 +1,337 @@
 "use client";
 
 import * as React from "react";
-import { Bell, Building2, Plug, Plus, Users } from "lucide-react";
+import { useSearchParams } from "next/navigation";
+import { Building2, Clock, Database, Download, Plus, Trash2, Upload, Users, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/layout/page-header";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
+import { Field } from "@/components/shared/field";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Separator } from "@/components/ui/separator";
-import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { team } from "@/lib/data";
-import { cn, initials } from "@/lib/utils";
+import { emptyDb, newId, normalizeDb, useStore } from "@/lib/store";
+import { initials } from "@/lib/utils";
 
-interface Integration {
-  id: string;
-  name: string;
-  description: string;
-  mark: string;
-  color: string;
-  connected: boolean;
-  detail?: string;
+const CURRENCIES = ["USD", "AED", "GBP", "EUR", "SAR", "PKR", "CAD", "AUD", "INR"];
+
+function timeZones(): string[] {
+  const intl = Intl as unknown as { supportedValuesOf?: (key: string) => string[] };
+  return intl.supportedValuesOf?.("timeZone") ?? ["UTC", "Asia/Dubai", "Asia/Karachi", "Europe/London", "America/New_York", "Australia/Sydney"];
 }
 
-const initialIntegrations: Integration[] = [
-  { id: "ghl", name: "GoHighLevel", description: "CRM, pipelines, calendars and automations", mark: "HL", color: "bg-[#155eef]", connected: true, detail: "3 sub-accounts synced" },
-  { id: "wa", name: "WhatsApp Business API", description: "Two-way messaging via Meta Cloud API", mark: "WA", color: "bg-[#25d366]", connected: true, detail: "+971 4 555 0100 · verified" },
-  { id: "meta", name: "Meta Ads", description: "Campaign performance, leads and creatives", mark: "M", color: "bg-[#0866ff]", connected: false, detail: "Token expired 4h ago" },
-  { id: "stripe", name: "Stripe", description: "Subscriptions, invoices and MRR", mark: "S", color: "bg-[#635bff]", connected: true, detail: "USD · GBP · AED" },
-  { id: "gcal", name: "Google Calendar", description: "Strategy calls and client sessions", mark: "G", color: "bg-[#1a73e8]", connected: true },
-  { id: "fathom", name: "Fathom", description: "Call recordings and transcripts for agents", mark: "F", color: "bg-[#7c3aed]", connected: true },
-  { id: "slack", name: "Slack", description: "Team alerts and agent escalations", mark: "#", color: "bg-[#4a154b]", connected: false },
-  { id: "anthropic", name: "Claude API", description: "Model provider for your agents", mark: "AI", color: "bg-[#d97757]", connected: true, detail: "Usage within budget" },
-];
+function isTimeZone(tz: string) {
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone: tz });
+    return true;
+  } catch {
+    return false;
+  }
+}
 
-const notificationPrefs = [
-  { id: "approvals", label: "New approval requests", description: "When an agent or teammate needs your decision", default: true },
-  { id: "hot-leads", label: "Hot leads", description: "Lead Qualifier scores a lead above 80", default: true },
-  { id: "at-risk", label: "At-risk clients", description: "Client health drops below 60", default: true },
-  { id: "agent-errors", label: "Agent errors", description: "An agent fails or loses a connection", default: true },
-  { id: "daily-brief", label: "Daily brief on WhatsApp", description: "08:00 summary of pipeline, tasks and approvals", default: false },
-];
+function WorkspaceTab() {
+  const { db, updateSettings } = useStore();
+  const s = db.settings;
+  const [form, setForm] = React.useState({ businessName: s.businessName, ownerName: s.ownerName, ownerEmail: s.ownerEmail, currency: s.currency });
+  const dirty = form.businessName !== s.businessName || form.ownerName !== s.ownerName || form.ownerEmail !== s.ownerEmail || form.currency !== s.currency;
 
-export function SettingsView() {
-  const [integrations, setIntegrations] = React.useState(initialIntegrations);
-  const [prefs, setPrefs] = React.useState<Record<string, boolean>>(() =>
-    Object.fromEntries(notificationPrefs.map((p) => [p.id, p.default]))
-  );
-
-  const toggleIntegration = (id: string) => {
-    setIntegrations((xs) => xs.map((i) => (i.id === id ? { ...i, connected: !i.connected, detail: !i.connected ? "Connected just now" : undefined } : i)));
-    const i = integrations.find((x) => x.id === id)!;
-    toast.success(i.connected ? `${i.name} disconnected` : `${i.name} connected`);
+  const [clock, setClock] = React.useState({ city: "", tz: "" });
+  const zones = React.useMemo(() => timeZones(), []);
+  const addClock = (e: React.FormEvent) => {
+    e.preventDefault();
+    const tz = clock.tz.trim();
+    if (!isTimeZone(tz)) {
+      toast.error("Pick a time zone from the list, e.g. Asia/Dubai");
+      return;
+    }
+    const city = clock.city.trim() || tz.split("/").at(-1)!.replace(/_/g, " ");
+    updateSettings({ clocks: [...s.clocks, { id: newId(), city, tz }] });
+    setClock({ city: "", tz: "" });
   };
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
-      <PageHeader title="Settings" description="Workspace, integrations, team and notifications." />
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Workspace</CardTitle>
+          <CardDescription>Your name is used as the default owner and approver.</CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-5 sm:grid-cols-2">
+          <Field label="Business name" htmlFor="s-biz">
+            <Input id="s-biz" value={form.businessName} onChange={(e) => setForm({ ...form, businessName: e.target.value })} />
+          </Field>
+          <Field label="Reporting currency">
+            <Select value={form.currency} onValueChange={(v) => setForm({ ...form, currency: v })}>
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {CURRENCIES.map((c) => (
+                  <SelectItem key={c} value={c}>
+                    {c}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </Field>
+          <Field label="Your name" htmlFor="s-name">
+            <Input id="s-name" value={form.ownerName} onChange={(e) => setForm({ ...form, ownerName: e.target.value })} />
+          </Field>
+          <Field label="Your email" htmlFor="s-email">
+            <Input id="s-email" type="email" value={form.ownerEmail} onChange={(e) => setForm({ ...form, ownerEmail: e.target.value })} />
+          </Field>
+        </CardContent>
+        <CardFooter className="justify-end gap-2 border-t">
+          <Button
+            variant="outline"
+            disabled={!dirty}
+            onClick={() => setForm({ businessName: s.businessName, ownerName: s.ownerName, ownerEmail: s.ownerEmail, currency: s.currency })}
+          >
+            Discard
+          </Button>
+          <Button
+            disabled={!dirty}
+            onClick={() => {
+              updateSettings({ ...form, businessName: form.businessName.trim(), ownerName: form.ownerName.trim(), ownerEmail: form.ownerEmail.trim() });
+              toast.success("Workspace saved");
+            }}
+          >
+            Save changes
+          </Button>
+        </CardFooter>
+      </Card>
 
-      <Tabs defaultValue="workspace" className="gap-6">
-        <TabsList className="max-w-full overflow-x-auto scrollbar-thin">
-          <TabsTrigger value="workspace" className="flex-none">
-            <Building2 /> Workspace
-          </TabsTrigger>
-          <TabsTrigger value="integrations" className="flex-none">
-            <Plug /> Integrations
-          </TabsTrigger>
-          <TabsTrigger value="team" className="flex-none">
-            <Users /> Team
-          </TabsTrigger>
-          <TabsTrigger value="notifications" className="flex-none">
-            <Bell /> Notifications
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="workspace">
-          <Card>
-            <CardHeader>
-              <CardTitle>Workspace</CardTitle>
-              <CardDescription>How Wali OS presents your business and reports numbers.</CardDescription>
-            </CardHeader>
-            <CardContent className="grid gap-5 sm:grid-cols-2">
-              <div className="grid gap-2">
-                <Label htmlFor="biz">Business name</Label>
-                <Input id="biz" defaultValue="Wali Growth Consulting" />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="domain">Custom domain</Label>
-                <Input id="domain" defaultValue="os.yourdomain.com" />
-              </div>
-              <div className="grid gap-2">
-                <Label>Home timezone</Label>
-                <Select defaultValue="Asia/Dubai">
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Asia/Dubai">Dubai (GMT+4)</SelectItem>
-                    <SelectItem value="Asia/Karachi">Karachi (GMT+5)</SelectItem>
-                    <SelectItem value="Europe/London">London (GMT+1)</SelectItem>
-                    <SelectItem value="America/New_York">New York (GMT-4)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label>Reporting currency</Label>
-                <Select defaultValue="USD">
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {["USD", "AED", "GBP", "EUR", "SAR", "CAD", "AUD"].map((c) => (
-                      <SelectItem key={c} value={c}>
-                        {c}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2 sm:col-span-2">
-                <Label htmlFor="hours">Working hours (used by agents for booking)</Label>
-                <Input id="hours" defaultValue="Mon–Fri, 09:00–18:00 client local time" />
-              </div>
-            </CardContent>
-            <CardFooter className="justify-end gap-2 border-t">
-              <Button variant="outline">Cancel</Button>
-              <Button onClick={() => toast.success("Workspace settings saved")}>Save changes</Button>
-            </CardFooter>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="integrations">
-          <div className="grid gap-4 sm:grid-cols-2">
-            {integrations.map((i) => (
-              <Card key={i.id} className="gap-4">
-                <CardContent className="flex items-start gap-4">
-                  <span className={cn("grid size-10 shrink-0 place-items-center rounded-lg text-sm font-bold text-white", i.color)}>{i.mark}</span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <p className="font-medium">{i.name}</p>
-                      {i.connected ? (
-                        <Badge variant="success" className="text-[10px]">Connected</Badge>
-                      ) : i.detail ? (
-                        <Badge variant="destructive" className="text-[10px]">Action needed</Badge>
-                      ) : (
-                        <Badge variant="muted" className="text-[10px]">Not connected</Badge>
-                      )}
-                    </div>
-                    <p className="mt-0.5 text-sm text-muted-foreground">{i.description}</p>
-                    {i.detail && <p className="mt-2 text-xs text-muted-foreground">{i.detail}</p>}
-                  </div>
-                  <Button variant={i.connected ? "outline" : "default"} size="sm" onClick={() => toggleIntegration(i.id)}>
-                    {i.connected ? "Manage" : i.detail ? "Reconnect" : "Connect"}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Clock className="size-4" /> Client time zones
+          </CardTitle>
+          <CardDescription>Shown as live clocks in the top bar, with a green dot during working hours (9:00–18:00).</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {s.clocks.length > 0 && (
+            <ul className="divide-y rounded-lg border">
+              {s.clocks.map((c) => (
+                <li key={c.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                  <span>
+                    <span className="font-medium">{c.city}</span> <span className="text-muted-foreground">· {c.tz}</span>
+                  </span>
+                  <Button variant="ghost" size="icon-sm" aria-label={`Remove ${c.city}`} onClick={() => updateSettings({ clocks: s.clocks.filter((x) => x.id !== c.id) })}>
+                    <X />
                   </Button>
-                </CardContent>
-              </Card>
+                </li>
+              ))}
+            </ul>
+          )}
+          <form onSubmit={addClock} className="flex flex-col gap-2 sm:flex-row">
+            <Input list="tz-list" value={clock.tz} onChange={(e) => setClock({ ...clock, tz: e.target.value })} placeholder="Time zone, e.g. Europe/London" className="sm:flex-1" />
+            <datalist id="tz-list">
+              {zones.map((z) => (
+                <option key={z} value={z} />
+              ))}
+            </datalist>
+            <Input value={clock.city} onChange={(e) => setClock({ ...clock, city: e.target.value })} placeholder="Label (optional)" className="sm:w-44" />
+            <Button type="submit" variant="outline" disabled={!clock.tz.trim()}>
+              <Plus /> Add
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function TeamTab() {
+  const { db, add, remove } = useStore();
+  const [form, setForm] = React.useState({ name: "", email: "", role: "" });
+
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name.trim()) return;
+    add("team", { id: newId(), name: form.name.trim(), email: form.email.trim(), role: form.role.trim() });
+    setForm({ name: "", email: "", role: "" });
+    toast.success("Teammate added");
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Team</CardTitle>
+        <CardDescription>People you can assign clients and tasks to. This is a list for your own records; they don&apos;t get a login.</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-5">
+        <div className="divide-y rounded-lg border">
+          <div className="flex items-center gap-3 px-3 py-3">
+            <Avatar className="size-9">
+              <AvatarFallback className="bg-primary/15 text-primary">{initials(db.settings.ownerName || "Me")}</AvatarFallback>
+            </Avatar>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium">{db.settings.ownerName || "You"}</p>
+              <p className="truncate text-xs text-muted-foreground">{db.settings.ownerEmail || "Set your name and email in Workspace"}</p>
+            </div>
+            <span className="text-xs text-muted-foreground">Owner</span>
+          </div>
+          {db.team.map((m) => (
+            <div key={m.id} className="flex items-center gap-3 px-3 py-3">
+              <Avatar className="size-9">
+                <AvatarFallback>{initials(m.name)}</AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-medium">{m.name}</p>
+                <p className="truncate text-xs text-muted-foreground">{[m.role, m.email].filter(Boolean).join(" · ") || "—"}</p>
+              </div>
+              <Button variant="ghost" size="icon-sm" aria-label={`Remove ${m.name}`} onClick={() => remove("team", m.id)}>
+                <Trash2 className="text-muted-foreground" />
+              </Button>
+            </div>
+          ))}
+        </div>
+        <form onSubmit={submit} className="grid gap-2 sm:grid-cols-[1fr_1fr_1fr_auto]">
+          <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="Name *" aria-label="Name" />
+          <Input value={form.email} onChange={(e) => setForm({ ...form, email: e.target.value })} placeholder="Email" type="email" aria-label="Email" />
+          <Input value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} placeholder="Role" aria-label="Role" />
+          <Button type="submit" variant="outline" disabled={!form.name.trim()}>
+            <Plus /> Add
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
+function DataTab() {
+  const { db, replaceAll } = useStore();
+  const fileRef = React.useRef<HTMLInputElement>(null);
+  const [resetOpen, setResetOpen] = React.useState(false);
+  const counts = [
+    ["Clients", db.clients.length],
+    ["Emails", db.threads.length],
+    ["Tasks", db.tasks.length],
+    ["Approvals", db.approvals.length],
+    ["Campaigns", db.campaigns.length],
+    ["Agents", db.agents.length],
+  ] as const;
+
+  const exportData = () => {
+    const blob = new Blob([JSON.stringify(db, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `wali-os-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Backup downloaded");
+  };
+
+  const importData = async (file: File) => {
+    try {
+      const parsed = JSON.parse(await file.text());
+      if (!parsed || typeof parsed !== "object" || !("settings" in parsed)) throw new Error("not a backup");
+      replaceAll(normalizeDb(parsed));
+      toast.success("Backup restored");
+    } catch {
+      toast.error("That file isn't a Wali OS backup");
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle>Where your data lives</CardTitle>
+          <CardDescription>
+            Everything is saved in this browser on this device, with no server or third party involved. Other people who open your link see an empty
+            workspace of their own. Download a backup regularly, and use it to move your data to another browser or computer.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-6">
+            {counts.map(([label, n]) => (
+              <div key={label} className="rounded-lg border p-3 text-center">
+                <p className="text-lg font-semibold tabular">{n}</p>
+                <p className="text-xs text-muted-foreground">{label}</p>
+              </div>
             ))}
           </div>
-        </TabsContent>
+        </CardContent>
+        <CardFooter className="flex-wrap gap-2 border-t">
+          <Button onClick={exportData}>
+            <Download /> Download backup
+          </Button>
+          <Button variant="outline" onClick={() => fileRef.current?.click()}>
+            <Upload /> Restore from backup
+          </Button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="application/json,.json"
+            className="hidden"
+            onChange={(e) => {
+              const f = e.target.files?.[0];
+              if (f) importData(f);
+              e.target.value = "";
+            }}
+          />
+        </CardFooter>
+      </Card>
 
+      <Card className="border-destructive/30">
+        <CardHeader>
+          <CardTitle>Erase everything</CardTitle>
+          <CardDescription>Deletes all clients, emails, tasks, approvals, campaigns, agents and settings from this browser. Download a backup first.</CardDescription>
+        </CardHeader>
+        <CardFooter className="border-t">
+          <Button variant="destructive" onClick={() => setResetOpen(true)}>
+            <Trash2 /> Erase all data
+          </Button>
+        </CardFooter>
+      </Card>
+
+      <ConfirmDialog
+        open={resetOpen}
+        onOpenChange={setResetOpen}
+        title="Erase all Wali OS data in this browser?"
+        description="This can't be undone unless you have a backup file."
+        confirmLabel="Erase everything"
+        onConfirm={() => {
+          replaceAll(emptyDb());
+          toast.success("All data erased");
+        }}
+      />
+    </div>
+  );
+}
+
+export function SettingsView() {
+  const params = useSearchParams();
+  const initial = params.get("tab");
+  return (
+    <div className="mx-auto max-w-4xl space-y-6">
+      <PageHeader title="Settings" description="Workspace, team and your data." />
+      <Tabs defaultValue={initial === "team" || initial === "data" ? initial : "workspace"} className="gap-6">
+        <TabsList>
+          <TabsTrigger value="workspace">
+            <Building2 /> Workspace
+          </TabsTrigger>
+          <TabsTrigger value="team">
+            <Users /> Team
+          </TabsTrigger>
+          <TabsTrigger value="data">
+            <Database /> Data & backup
+          </TabsTrigger>
+        </TabsList>
+        <TabsContent value="workspace">
+          <WorkspaceTab />
+        </TabsContent>
         <TabsContent value="team">
-          <Card>
-            <CardHeader>
-              <CardTitle>Team</CardTitle>
-              <CardDescription>{team.length} members across {new Set(team.map((t) => t.region)).size} cities</CardDescription>
-            </CardHeader>
-            <CardContent className="divide-y">
-              {team.map((m) => (
-                <div key={m.id} className="flex items-center gap-3 py-3 first:pt-0 last:pb-0">
-                  <Avatar className="size-9">
-                    <AvatarFallback>{initials(m.name)}</AvatarFallback>
-                  </Avatar>
-                  <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium">{m.name}</p>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {m.email} · {m.region}
-                    </p>
-                  </div>
-                  <Badge variant={m.role === "Owner" ? "info" : "outline"}>{m.role}</Badge>
-                </div>
-              ))}
-            </CardContent>
-            <CardFooter className="border-t">
-              <Button variant="outline" size="sm" onClick={() => toast("Invite link copied")}>
-                <Plus /> Invite teammate
-              </Button>
-            </CardFooter>
-          </Card>
+          <TeamTab />
         </TabsContent>
-
-        <TabsContent value="notifications">
-          <Card>
-            <CardHeader>
-              <CardTitle>Notifications</CardTitle>
-              <CardDescription>Choose what interrupts you. Everything else waits in Wali OS.</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {notificationPrefs.map((p, idx) => (
-                <React.Fragment key={p.id}>
-                  {idx > 0 && <Separator className="my-4" />}
-                  <label className="flex cursor-pointer items-center justify-between gap-4">
-                    <span>
-                      <span className="text-sm font-medium">{p.label}</span>
-                      <span className="block text-xs text-muted-foreground">{p.description}</span>
-                    </span>
-                    <Switch checked={prefs[p.id]} onCheckedChange={(v) => setPrefs((s) => ({ ...s, [p.id]: v }))} />
-                  </label>
-                </React.Fragment>
-              ))}
-            </CardContent>
-          </Card>
+        <TabsContent value="data">
+          <DataTab />
         </TabsContent>
       </Tabs>
     </div>
