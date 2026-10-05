@@ -101,6 +101,8 @@ export interface Approval {
   createdAt: string;
   decidedAt?: string;
   decisionNote?: string;
+  /** Set by an agent after it has carried out an approved request. */
+  executedAt?: string;
 }
 
 export type AgentStatus = "active" | "paused";

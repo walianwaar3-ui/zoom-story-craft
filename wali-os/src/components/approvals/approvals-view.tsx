@@ -174,7 +174,12 @@ function Detail({
             </div>
           </div>
         )}
-        {item.status === "approved" && thread?.status === "replied" && (
+        {item.executedAt && (
+          <p className="flex items-center gap-2 text-sm text-success">
+            <CheckCheck className="size-4" /> Carried out by {item.requestedBy} {relativeTime(item.executedAt)}
+          </p>
+        )}
+        {item.status === "approved" && thread?.status === "replied" && !item.executedAt && (
           <p className="flex items-center gap-2 text-sm text-success">
             <CheckCheck className="size-4" /> Sent
           </p>

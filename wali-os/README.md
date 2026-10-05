@@ -4,7 +4,9 @@ Internal operating dashboard for a global growth-consulting business: clients, e
 
 **Stack:** Next.js 16 (App Router) · React 19 · Tailwind CSS v4 · shadcn/ui (Radix) · TypeScript
 
-**No AI and no third-party services.** Everything runs in the browser. There is no backend, no database service, no email provider and no AI model.
+**Two ways to run:**
+- **Cloud (recommended):** Supabase stores the data, you sign in, everything syncs live across devices and with your **Hermes** backend agent. See [Connect Supabase](#connect-supabase) and [`docs/HERMES.md`](docs/HERMES.md).
+- **Browser-only:** with no Supabase settings, data stays in the browser you use. No accounts or services needed.
 
 ## Modules
 
@@ -26,15 +28,22 @@ Internal operating dashboard for a global growth-consulting business: clients, e
 3. **Approve** (optionally edit first) or **Reject**. A rejected reply goes back to the inbox as an editable draft.
 4. **Open in email app** fills in a reply (to, subject, body) in your own mail program. Send it there, then click **Mark as sent**.
 
+### Connect Supabase
+
+1. Create a project at [supabase.com](https://supabase.com).
+2. **SQL Editor → New query**: paste [`supabase/schema.sql`](supabase/schema.sql) and click **Run**. It creates the tables, row-level security (signed-in users only) and realtime. Safe to re-run.
+3. **Authentication → Sign In / Providers → Email**: turn **off** "Allow new users to sign up". Then **Authentication → Users → Add user** to create your login (tick auto-confirm).
+4. In Vercel (**Project → Settings → Environment Variables**) add:
+   - `NEXT_PUBLIC_SUPABASE_URL`: Supabase → Project Settings → API → Project URL
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: the **anon / publishable** key (never the service_role key)
+5. Redeploy. The app now asks you to sign in. If you used the browser-only version first, go to **Settings → Data & backup → Copy to cloud** to bring that data across.
+
+Hermes connects to the same database with the service_role key on its own server. Follow [`docs/HERMES.md`](docs/HERMES.md).
+
 ### Where the data lives
 
-All data is stored in the browser's `localStorage` on the device you use. That means:
-
-- Nothing leaves your device, and other visitors to the URL see their own empty workspace.
-- Clearing site data or switching browsers or devices starts empty. **Download a backup regularly** (Settings → Data & backup) and restore it to move between devices.
-- Multiple tabs in the same browser stay in sync.
-
-To move to shared, multi-device storage later, replace `src/lib/store.tsx` with a database-backed version. The pages only use the store's API.
+- **Cloud mode:** in your Supabase Postgres database. Only signed-in users can read or write it (row-level security). Changes from other devices or Hermes appear live.
+- **Browser-only mode:** in this browser's `localStorage`. Other visitors see their own empty workspace. Clearing site data loses it, so **download a backup regularly** (Settings → Data & backup).
 
 ## Run locally
 
@@ -61,7 +70,9 @@ src/
     <module>/             # one folder per module
   lib/
     data/types.ts         # the data model
-    store.tsx             # local persistence (localStorage), CRUD, backup format
+    store.tsx             # state, auth, local or cloud persistence
+    supabase.ts           # Supabase client (enabled by env vars)
+    sync/                 # row mappers + diff/realtime sync engine
     workflows.ts          # email ↔ approval lifecycle rules
     format.ts, utils.ts
 ```
@@ -92,10 +103,7 @@ HTTPS certificates are issued automatically. A subdomain like `os.` keeps the in
 
 ### 3. Access and privacy
 
-This is an internal tool. Search indexing is already disabled (`robots: noindex`). Anyone with the URL can open the app, but your data stays only in your browser, so they see an empty workspace. If you move data to a shared database later, add protection first:
-
-- **Fast:** turn on Vercel **Deployment Protection** (Settings → Deployment Protection).
-- **Proper:** add authentication (Clerk, Auth.js or Supabase Auth) with a Next.js `proxy.ts` (Next 16's replacement for `middleware.ts`) that redirects signed-out users and restricts sign-in to your team's emails.
+Search indexing is disabled (`robots: noindex`). With Supabase connected, the app requires sign-in and the database refuses anyone who isn't signed in (row-level security), so the public URL exposes no data. Keep public sign-ups **off** in Supabase so only users you create can log in. Never put the service_role key in Vercel or the browser. It belongs only on the Hermes server.
 
 ### Alternatives
 
@@ -117,7 +125,6 @@ Then import that new repo in Vercel and leave Root Directory empty.
 
 ## Roadmap
 
-1. **Now:** fully usable, single-user, browser-stored. No integrations.
-2. **Shared storage + login:** a database (e.g. Postgres) and sign-in so the team shares one workspace across devices.
-3. **Email connection:** pull incoming email and send approved replies directly, instead of copying them across by hand.
-4. **AI agents (optional):** the definitions on the Agents page become instructions, with every output still routed through Approvals.
+1. **Done:** fully usable app, Supabase storage with login and live sync, Hermes contract (`docs/HERMES.md`).
+2. **Hermes operating:** Hermes logs inbound email, proposes replies and actions through Approvals, executes approved items.
+3. **Email sending from Hermes:** approved replies sent automatically instead of through your email app.

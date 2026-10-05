@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronsUpDown, Download, PanelLeftClose, PanelLeftOpen, UserRound } from "lucide-react";
+import { ChevronsUpDown, Download, LogOut, PanelLeftClose, PanelLeftOpen, UserRound } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -76,9 +76,9 @@ function NavLink({ item, collapsed, onNavigate }: { item: NavItem; collapsed: bo
 
 function SidebarBody({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: () => void }) {
   const { toggle } = useSidebar();
-  const { db } = useStore();
+  const { db, mode, auth, signOut } = useStore();
   const name = db.settings.ownerName || "Set up your profile";
-  const email = db.settings.ownerEmail || "Settings → Workspace";
+  const email = (mode === "cloud" ? auth.email : db.settings.ownerEmail) || "Settings → Workspace";
 
   return (
     <div className="flex h-full flex-col">
@@ -145,6 +145,14 @@ function SidebarBody({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
                 <Download /> Back up data
               </Link>
             </DropdownMenuItem>
+            {mode === "cloud" && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => void signOut()}>
+                  <LogOut /> Sign out
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
 

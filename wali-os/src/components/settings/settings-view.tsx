@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useSearchParams } from "next/navigation";
-import { Building2, Clock, Database, Download, Plus, Trash2, Upload, Users, X } from "lucide-react";
+import { Building2, Clock, Cloud, Database, Download, HardDrive, Plus, Trash2, Upload, Users, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { PageHeader } from "@/components/layout/page-header";
@@ -14,7 +14,8 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { emptyDb, newId, normalizeDb, useStore } from "@/lib/store";
+import type { CollectionKey, Db } from "@/lib/data/types";
+import { emptyDb, newId, normalizeDb, readLocal, useStore } from "@/lib/store";
 import { initials } from "@/lib/utils";
 
 const CURRENCIES = ["USD", "AED", "GBP", "EUR", "SAR", "PKR", "CAD", "AUD", "INR"];
@@ -203,8 +204,55 @@ function TeamTab() {
   );
 }
 
+const COLLECTIONS: CollectionKey[] = ["clients", "threads", "tasks", "approvals", "campaigns", "agents", "team"];
+
+/** Adds records from `extra` that `base` doesn't have yet (matched by id). */
+function mergeDb(base: Db, extra: Db): Db {
+  const next = { ...base } as Db;
+  for (const k of COLLECTIONS) {
+    const have = new Set((base[k] as { id: string }[]).map((x) => x.id));
+    (next as unknown as Record<string, unknown>)[k] = [...(extra[k] as { id: string }[]).filter((x) => !have.has(x.id)), ...(base[k] as { id: string }[])];
+  }
+  if (!base.settings.ownerName && !base.settings.businessName) next.settings = extra.settings;
+  return next;
+}
+
+function CopyLocalToCloud() {
+  const { db, transact } = useStore();
+  const [local] = React.useState(readLocal);
+  const missing = COLLECTIONS.reduce(
+    (n, k) => n + (local[k] as { id: string }[]).filter((x) => !(db[k] as { id: string }[]).some((y) => y.id === x.id)).length,
+    0
+  );
+  if (missing === 0) return null;
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <HardDrive className="size-4" /> Data from before cloud sync
+        </CardTitle>
+        <CardDescription>
+          This browser still holds {missing} record{missing === 1 ? "" : "s"} you entered before Supabase was connected. Copy them into the cloud workspace so
+          they sync everywhere and Hermes can see them.
+        </CardDescription>
+      </CardHeader>
+      <CardFooter className="border-t">
+        <Button
+          onClick={() => {
+            transact((d) => mergeDb(d, local));
+            toast.success(`Copied ${missing} record${missing === 1 ? "" : "s"} to the cloud`);
+          }}
+        >
+          <Upload /> Copy to cloud
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+}
+
 function DataTab() {
-  const { db, replaceAll } = useStore();
+  const { db, replaceAll, mode, auth } = useStore();
+  const cloud = mode === "cloud";
   const fileRef = React.useRef<HTMLInputElement>(null);
   const [resetOpen, setResetOpen] = React.useState(false);
   const counts = [
@@ -240,12 +288,17 @@ function DataTab() {
 
   return (
     <div className="space-y-6">
+      {cloud && <CopyLocalToCloud />}
       <Card>
         <CardHeader>
-          <CardTitle>Where your data lives</CardTitle>
+          <CardTitle className="flex items-center gap-2">
+            {cloud ? <Cloud className="size-4 text-success" /> : <HardDrive className="size-4" />}
+            {cloud ? "Cloud workspace (Supabase)" : "Saved in this browser"}
+          </CardTitle>
           <CardDescription>
-            Everything is saved in this browser on this device, with no server or third party involved. Other people who open your link see an empty
-            workspace of their own. Download a backup regularly, and use it to move your data to another browser or computer.
+            {cloud
+              ? `Signed in as ${auth.email ?? "—"}. Everything is stored in your Supabase database, synced live across your devices and with Hermes. Backups are still a good habit.`
+              : "Everything is saved in this browser on this device. Other people who open your link see an empty workspace of their own. Download a backup regularly, and use it to move your data to another browser or computer. Connect Supabase to sync across devices and with Hermes."}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -282,7 +335,10 @@ function DataTab() {
       <Card className="border-destructive/30">
         <CardHeader>
           <CardTitle>Erase everything</CardTitle>
-          <CardDescription>Deletes all clients, emails, tasks, approvals, campaigns, agents and settings from this browser. Download a backup first.</CardDescription>
+          <CardDescription>
+            Deletes all clients, emails, tasks, approvals, campaigns, agents and settings {cloud ? "from the cloud database, for everyone including Hermes" : "from this browser"}.
+            Download a backup first.
+          </CardDescription>
         </CardHeader>
         <CardFooter className="border-t">
           <Button variant="destructive" onClick={() => setResetOpen(true)}>
@@ -294,7 +350,7 @@ function DataTab() {
       <ConfirmDialog
         open={resetOpen}
         onOpenChange={setResetOpen}
-        title="Erase all Wali OS data in this browser?"
+        title={cloud ? "Erase the entire cloud workspace?" : "Erase all Wali OS data in this browser?"}
         description="This can't be undone unless you have a backup file."
         confirmLabel="Erase everything"
         onConfirm={() => {
