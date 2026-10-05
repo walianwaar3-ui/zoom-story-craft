@@ -1,0 +1,120 @@
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+import { ApiError, check, handler, json, readBody, requireId, requireText } from "@/lib/hermes/server";
+
+type Ctx = { params: Promise<{ resource: string; id: string; action: string }> };
+type Body = Record<string, unknown>;
+type Thread = { id: string; contact_name: string; contact_email: string; subject: string; client_id: string | null; status: string; approval_id: string | null };
+
+/**
+ * Workflow actions. They follow the same rules as Wali OS (src/lib/workflows.ts):
+ *   needs-reply → submit-reply → awaiting-approval → (you approve) → ready-to-send → sent → replied
+ */
+const ACTIONS: Record<string, Record<string, (db: SupabaseClient, id: string, body: Body) => Promise<unknown>>> = {
+  threads: { inbound, "submit-reply": submitReply, sent },
+  approvals: { executed },
+};
+
+export const POST = handler<Ctx>(async (db, req, ctx) => {
+  const { resource, id, action } = await ctx.params;
+  const fn = Object.hasOwn(ACTIONS, resource) && Object.hasOwn(ACTIONS[resource], action) ? ACTIONS[resource][action] : undefined;
+  if (!fn) throw new ApiError(404, `Unknown action. Available: ${Object.entries(ACTIONS).flatMap(([r, a]) => Object.keys(a).map((x) => `${r}/:id/${x}`)).join(", ")}`);
+  const body = req.headers.get("content-length") === "0" ? {} : await readBody(req).catch(() => ({}));
+  return json({ data: await fn(db, requireId(id), body) });
+});
+
+const now = () => new Date().toISOString();
+
+async function getThread(db: SupabaseClient, id: string): Promise<Thread> {
+  return check(await db.from("email_threads").select("*").eq("id", id).single()) as Thread;
+}
+
+async function touchClient(db: SupabaseClient, t: Thread, at: string) {
+  if (t.client_id) check(await db.from("clients").update({ last_contact: at }).eq("id", t.client_id));
+  else if (t.contact_email)
+    // Case-insensitive exact match: escape LIKE wildcards in the address.
+    check(await db.from("clients").update({ last_contact: at }).ilike("email", t.contact_email.replace(/[\\%_]/g, "\\$&")));
+}
+
+/** POST threads/:id/inbound {body} — log an email the contact sent. */
+async function inbound(db: SupabaseClient, id: string, body: Body) {
+  const text = requireText(body, "body");
+  const t = await getThread(db, id);
+  const at = now();
+  const message = check(await db.from("email_messages").insert({ thread_id: id, direction: "in", body: text, at }).select().single());
+  const keep = t.status === "awaiting-approval" || t.status === "ready-to-send";
+  check(await db.from("email_threads").update({ status: keep ? t.status : "needs-reply", updated_at: at }).eq("id", id));
+  await touchClient(db, t, at);
+  return message;
+}
+
+/** POST threads/:id/submit-reply {body, requested_by?} — draft a reply and put it in your approval queue. */
+async function submitReply(db: SupabaseClient, id: string, body: Body) {
+  const text = requireText(body, "body");
+  const t = await getThread(db, id);
+  if (t.status === "awaiting-approval" || t.status === "ready-to-send")
+    throw new ApiError(409, `Thread already has a reply ${t.status === "ready-to-send" ? "approved and waiting to be sent" : "waiting for approval"}`);
+  const lastIn = check(
+    await db.from("email_messages").select("body").eq("thread_id", id).eq("direction", "in").order("at", { ascending: false }).limit(1)
+  ) as { body: string }[];
+  const approval = check(
+    await db
+      .from("approvals")
+      .insert({
+        type: "Email reply",
+        title: `Reply to ${t.contact_name || t.contact_email}: ${t.subject || "(no subject)"}`,
+        summary: lastIn[0]?.body.slice(0, 160) ?? "",
+        content: text,
+        requested_by: typeof body.requested_by === "string" && body.requested_by ? body.requested_by : "Hermes",
+        client_id: t.client_id,
+        thread_id: id,
+        risk: "low",
+        status: "pending",
+      })
+      .select()
+      .single()
+  ) as { id: string };
+  check(await db.from("email_threads").update({ status: "awaiting-approval", approval_id: approval.id, draft: "", updated_at: now() }).eq("id", id));
+  return approval;
+}
+
+/**
+ * POST threads/:id/sent — record that the approved reply was sent. The message
+ * stored is the approved text, so what's logged is exactly what you signed off.
+ */
+async function sent(db: SupabaseClient, id: string) {
+  const t = await getThread(db, id);
+  if (t.status !== "ready-to-send" || !t.approval_id) throw new ApiError(409, "Thread has no approved reply waiting to be sent");
+  const approval = check(await db.from("approvals").select("id, status, content").eq("id", t.approval_id).single()) as {
+    id: string;
+    status: string;
+    content: string;
+  };
+  if (approval.status !== "approved") throw new ApiError(409, "The reply's approval is not approved");
+
+  const at = now();
+  // Claim the thread first so a retried call can't log the reply twice.
+  const claimed = check(
+    await db
+      .from("email_threads")
+      .update({ status: "replied", approval_id: null, draft: "", updated_at: at })
+      .eq("id", id)
+      .eq("status", "ready-to-send")
+      .select("id")
+      .maybeSingle()
+  );
+  if (!claimed) throw new ApiError(409, "Thread was already marked sent");
+  const message = check(await db.from("email_messages").insert({ thread_id: id, direction: "out", body: approval.content, at }).select().single());
+  check(await db.from("approvals").update({ executed_at: at }).eq("id", approval.id).is("executed_at", null));
+  await touchClient(db, t, at);
+  return message;
+}
+
+/** POST approvals/:id/executed — mark an approved request as carried out. */
+async function executed(db: SupabaseClient, id: string) {
+  const row = check(
+    await db.from("approvals").update({ executed_at: now() }).eq("id", id).eq("status", "approved").is("executed_at", null).select().maybeSingle()
+  );
+  if (!row) throw new ApiError(409, "Approval isn't approved, was already carried out, or doesn't exist");
+  return row;
+}

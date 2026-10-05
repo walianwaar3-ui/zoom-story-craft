@@ -38,7 +38,7 @@ Internal operating dashboard for a global growth-consulting business: clients, e
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: the **anon / publishable** key (never the service_role key)
 5. Redeploy. The app now asks you to sign in. If you used the browser-only version first, go to **Settings → Data & backup → Copy to cloud** to bring that data across.
 
-Hermes connects to the same database with the service_role key on its own server. Follow [`docs/HERMES.md`](docs/HERMES.md).
+Hermes connects through the Wali OS API (`/api/hermes/*`) with its own key. It gets a live snapshot, an activity feed of every change, and can create and update records, while approvals stay with you. Follow [`docs/HERMES.md`](docs/HERMES.md).
 
 ### Where the data lives
 
@@ -103,7 +103,7 @@ HTTPS certificates are issued automatically. A subdomain like `os.` keeps the in
 
 ### 3. Access and privacy
 
-Search indexing is disabled (`robots: noindex`). With Supabase connected, the app requires sign-in and the database refuses anyone who isn't signed in (row-level security), so the public URL exposes no data. Keep public sign-ups **off** in Supabase so only users you create can log in. Never put the service_role key in Vercel or the browser. It belongs only on the Hermes server.
+Search indexing is disabled (`robots: noindex`). With Supabase connected, the app requires sign-in and the database refuses anyone who isn't signed in (row-level security), so the public URL exposes no data. Keep public sign-ups **off** in Supabase so only users you create can log in. The service_role key may only be a server-side Vercel variable (`SUPABASE_SERVICE_ROLE_KEY`, read by the Hermes API routes), never a `NEXT_PUBLIC_` one or browser code. The Hermes API refuses every request without the `HERMES_API_KEY` bearer token.
 
 ### Alternatives
 

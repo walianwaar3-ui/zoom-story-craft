@@ -172,3 +172,59 @@ begin
     end;
   end loop;
 end $$;
+
+-- ── Activity log: every change, by you or Hermes (read by /api/hermes/activity) ──
+create table if not exists public.activity_log (
+  id bigint generated always as identity primary key,
+  at timestamptz not null default now(),
+  actor text not null,            -- 'hermes' for service-role writes, else the signed-in user's email
+  table_name text not null,
+  action text not null check (action in ('insert', 'update', 'delete')),
+  row_id text,
+  label text not null default '', -- title / name / subject of the row
+  changed text[] not null default '{}' -- columns changed by an update
+);
+create index if not exists activity_log_at_idx on public.activity_log (at desc);
+alter table public.activity_log enable row level security;
+drop policy if exists "signed-in users can read activity" on public.activity_log;
+create policy "signed-in users can read activity" on public.activity_log for select to authenticated using (true);
+grant select on public.activity_log to authenticated;
+revoke all on public.activity_log from anon;
+
+create or replace function public.log_activity() returns trigger
+language plpgsql security definer set search_path = public, pg_temp as $$
+declare
+  n jsonb := case when tg_op = 'DELETE' then null else to_jsonb(new) end;
+  o jsonb := case when tg_op = 'INSERT' then null else to_jsonb(old) end;
+  r jsonb := coalesce(n, o);
+  diff text[] := '{}';
+begin
+  if tg_op = 'UPDATE' then
+    select coalesce(array_agg(k order by k), '{}') into diff
+    from jsonb_object_keys(n) k where n -> k is distinct from o -> k;
+    if cardinality(diff) = 0 then return null; end if; -- no-op save
+  end if;
+  insert into public.activity_log (actor, table_name, action, row_id, label, changed)
+  values (
+    case when coalesce(auth.role(), '') = 'service_role' then 'hermes'
+         else coalesce(auth.email(), auth.role(), current_user) end,
+    tg_table_name,
+    lower(tg_op),
+    r ->> 'id',
+    left(coalesce(r ->> 'title', r ->> 'name', r ->> 'subject', r ->> 'contact_email', r ->> 'business_name', left(r ->> 'body', 80), ''), 160),
+    diff
+  );
+  return null;
+end $$;
+revoke execute on function public.log_activity() from public, anon, authenticated;
+
+do $$
+declare t text;
+begin
+  foreach t in array array['workspace_settings', 'team_members', 'agents', 'clients', 'email_threads',
+                           'email_messages', 'tasks', 'campaigns', 'approvals']
+  loop
+    execute format(
+      'create or replace trigger log_activity after insert or update or delete on public.%I for each row execute function public.log_activity()', t);
+  end loop;
+end $$;
