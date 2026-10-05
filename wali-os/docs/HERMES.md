@@ -70,6 +70,7 @@ update touched. Omit `since` to get the latest 100. Store `next_since` and pass 
 | `POST /api/hermes/threads/:id/submit-reply` `{ "body", "requested_by"? }` | Put a reply in the approval queue. |
 | `POST /api/hermes/threads/:id/sent` | After sending an **approved** reply: logs the approved text, marks the thread replied and the approval carried out. |
 | `POST /api/hermes/approvals/:id/executed` | Mark an approved request as carried out. |
+| `POST /api/hermes/agents/:id/avatar` `{ "image_base64", "content_type" }` | Upload an agent's photo (PNG/JPEG/WebP/GIF, max 2 MB); sets `avatar_url`. |
 
 | Resource | Create / update | Filters |
 |---|---|---|
@@ -78,7 +79,8 @@ update touched. Omit `since` to get the latest 100. Store `next_since` and pass 
 | `campaigns` | name, channel, status, objective, market, budget, spend, leads, booked, revenue, start_date, end_date, notes | status, channel, market |
 | `approvals` | create: type, title, summary, content, requested_by, client_id, thread_id, value, risk (always created `pending`). Update (pending only): title, summary, content, value, risk | status, type, client_id, thread_id, requested_by |
 | `threads` | create: contact_name, contact_email, subject, client_id. Update: those + draft | status, client_id, contact_email |
-| `agents`, `team` | read only | status (agents) |
+| `agents` | name, role, instructions, scopes (Email/Clients/Tasks/Campaigns/Approvals), avatar_url (https). New agents start **active** with **requires approval** on; only Wali changes those two. | status, name |
+| `team` | read only | |
 
 Allowed values: client `status` lead/onboarding/active/paused/churned, `health` good/watch/at-risk;
 task `status` todo/in-progress/review/done, `priority` urgent/high/medium/low; campaign `channel`
@@ -89,19 +91,26 @@ Dates are `YYYY-MM-DD`, timestamps ISO 8601, ids UUIDs.
 Responses are `{ "data": … }`; errors are `{ "error": "…" }` with `400` (bad field or value), `401`
 (key), `403` (read only), `404`, `409` (wrong state, e.g. approval already decided).
 
-### Agent chat (`/api/agents`)
+### Agents: you run them, Wali OS shows them
 
-`GET /api/agents`, `GET /api/agents/:id` and `POST /api/agents/:id/chat` `{ "messages": [{ "role": "user", "content": "…" }] }`
-answer as the COO / Operator personas via OpenRouter (`OPENROUTER_API_KEY`, model `AGENT_MODEL`).
-They need the same `Authorization: Bearer $WALI_OS_API_KEY` (or a signed-in user's Supabase access
-token). Only `user` / `assistant` messages are accepted: the agent's instructions can't be replaced.
+Agents live in Wali OS (`agents` table) and show on the **Agents** page with their photo. You own their
+definitions: create them with `POST /api/hermes/agents`, keep `instructions` current with `PATCH`, and
+upload a photo with `/avatar`. Wali controls whether each one is **active** and whether its work
+**requires approval**. Check `context.agents` before acting as an agent: skip paused ones.
+
+Chat: `GET /api/agents`, `GET /api/agents/:agent` (id or name, e.g. `coo`) and
+`POST /api/agents/:agent/chat` `{ "messages": [{ "role": "user", "content": "…" }] }` answer as that agent
+via OpenRouter (`OPENROUTER_API_KEY`, model `AGENT_MODEL`), using its `instructions` from Wali OS plus the
+live context. Same `Authorization: Bearer $WALI_OS_API_KEY` (or a signed-in user's Supabase access
+token). Only `user`/`assistant` messages are accepted. Wali chats with them from the Agents page.
 
 ## 4. What the API won't let Hermes do
 
 - Delete anything.
 - Approve or reject an approval, or edit one that's already decided. Only the human does that, in Wali OS.
 - Mark an email reply as ready to send, or log a sent reply that wasn't approved.
-- Change agent playbooks, the team or workspace settings.
+- Switch an agent on/off or turn off its "requires approval" guardrail (Wali does that in Wali OS).
+- Change the team or workspace settings.
 
 ## 5. The rules Hermes must follow
 
@@ -138,6 +147,12 @@ curl -s "${H[@]}" -X POST "$WALI_OS_URL/api/hermes/approvals" \
 curl -s "${H[@]}" -X POST "$WALI_OS_URL/api/hermes/tasks" \
   -d '{"title":"Prepare onboarding pack","assignee":"Hermes","due":"2026-10-08","priority":"high"}'
 curl -s "${H[@]}" -X PATCH "$WALI_OS_URL/api/hermes/tasks/<task id>" -d '{"status":"done"}'
+
+# Create an agent and give it a photo
+curl -s "${H[@]}" -X POST "$WALI_OS_URL/api/hermes/agents" \
+  -d '{"name":"COO","role":"Strategic oversight, client context, knowledge base","instructions":"…","scopes":["Clients","Tasks","Campaigns","Approvals"]}'
+curl -s "${H[@]}" -X POST "$WALI_OS_URL/api/hermes/agents/<agent id>/avatar" \
+  -d "{\"content_type\":\"image/png\",\"image_base64\":\"$(base64 -w0 coo.png)\"}"
 
 # Update a client
 curl -s "${H[@]}" -X PATCH "$WALI_OS_URL/api/hermes/clients/<client id>" \

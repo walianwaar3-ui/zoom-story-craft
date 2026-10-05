@@ -249,6 +249,7 @@ const agentMapper: Mapper<Agent> = {
     scopes: arr(r.scopes) as Agent["scopes"],
     status: str(r.status) as Agent["status"],
     requiresApproval: Boolean(r.requires_approval),
+    avatarUrl: str(r.avatar_url),
     createdAt: tsReq(r.created_at),
   }),
   to: (a) => ({
@@ -259,6 +260,7 @@ const agentMapper: Mapper<Agent> = {
     scopes: a.scopes,
     status: a.status,
     requires_approval: a.requiresApproval,
+    avatar_url: a.avatarUrl ?? "",
     created_at: a.createdAt,
   }),
 };

@@ -1,5 +1,5 @@
 import { ApiError, check, handler, json, readBody, requireId } from "@/lib/hermes/server";
-import { pick, resource } from "@/lib/hermes/resources";
+import { pick, resource, validateAgent } from "@/lib/hermes/resources";
 
 type Ctx = { params: Promise<{ resource: string; id: string }> };
 
@@ -19,6 +19,7 @@ export const PATCH = handler<Ctx>(async (db, req, ctx) => {
   const changes = pick(await readBody(req), r.update, "update");
   requireId(id);
 
+  if (name === "agents") validateAgent(changes);
   if (name === "threads") changes.updated_at = new Date().toISOString();
 
   let q = db.from(r.table).update(changes).eq("id", id);

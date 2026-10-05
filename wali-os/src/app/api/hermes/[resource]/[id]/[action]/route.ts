@@ -13,6 +13,7 @@ type Thread = { id: string; contact_name: string; contact_email: string; subject
 const ACTIONS: Record<string, Record<string, (db: SupabaseClient, id: string, body: Body) => Promise<unknown>>> = {
   threads: { inbound, "submit-reply": submitReply, sent },
   approvals: { executed },
+  agents: { avatar },
 };
 
 export const POST = handler<Ctx>(async (db, req, ctx) => {
@@ -117,4 +118,34 @@ async function executed(db: SupabaseClient, id: string) {
   );
   if (!row) throw new ApiError(409, "Approval isn't approved, was already carried out, or doesn't exist");
   return row;
+}
+
+const IMAGE_TYPES: Record<string, string> = { "image/png": "png", "image/jpeg": "jpg", "image/webp": "webp", "image/gif": "gif" };
+
+/**
+ * POST agents/:id/avatar {image_base64, content_type} — upload the agent's photo
+ * (PNG/JPEG/WebP/GIF, max 2 MB) to public storage and set avatar_url. A
+ * `data:image/...;base64,` URL also works in image_base64.
+ */
+async function avatar(db: SupabaseClient, id: string, body: Body) {
+  let b64 = requireText(body, "image_base64").trim();
+  let type = typeof body.content_type === "string" ? body.content_type : "";
+  const dataUrl = /^data:([^;,]+);base64,/.exec(b64);
+  if (dataUrl) {
+    type ||= dataUrl[1];
+    b64 = b64.slice(dataUrl[0].length);
+  }
+  const ext = IMAGE_TYPES[type];
+  if (!ext) throw new ApiError(400, `"content_type" must be one of: ${Object.keys(IMAGE_TYPES).join(", ")}`);
+  const bytes = Buffer.from(b64, "base64");
+  if (!bytes.length) throw new ApiError(400, '"image_base64" is not valid base64');
+  if (bytes.length > 2 * 1024 * 1024) throw new ApiError(413, "Image is larger than 2 MB");
+
+  check(await db.from("agents").select("id").eq("id", id).single());
+  // A new file name each time, so browsers don't keep showing the old photo.
+  const path = `${id}/${Date.now()}.${ext}`;
+  const up = await db.storage.from("agent-avatars").upload(path, bytes, { contentType: type, upsert: false });
+  if (up.error) throw new ApiError(400, `Upload failed: ${up.error.message}`);
+  const url = db.storage.from("agent-avatars").getPublicUrl(path).data.publicUrl;
+  return check(await db.from("agents").update({ avatar_url: url }).eq("id", id).select().single());
 }

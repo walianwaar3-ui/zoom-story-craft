@@ -1,9 +1,10 @@
 "use client";
 
 import * as React from "react";
-import { Bot, Info, MoreHorizontal, Plus, ShieldCheck } from "lucide-react";
+import { Bot, Info, MessageSquare, MoreHorizontal, Plus, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
+import { AgentAvatar, AgentChatSheet } from "@/components/agents/agent-chat";
 import { PageHeader } from "@/components/layout/page-header";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -28,7 +29,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { AGENT_SCOPES, type Agent, type AgentScope } from "@/lib/data/types";
 import { relativeTime } from "@/lib/format";
 import { newId, nowIso, useStore } from "@/lib/store";
-import { cn } from "@/lib/utils";
 
 function AgentFormDialog({ open, onOpenChange, agent }: { open: boolean; onOpenChange: (o: boolean) => void; agent?: Agent }) {
   const { add, update } = useStore();
@@ -39,6 +39,7 @@ function AgentFormDialog({ open, onOpenChange, agent }: { open: boolean; onOpenC
       instructions: agent?.instructions ?? "",
       scopes: agent?.scopes ?? (["Email"] as AgentScope[]),
       requiresApproval: agent?.requiresApproval ?? true,
+      avatarUrl: agent?.avatarUrl ?? "",
     }),
     [agent]
   );
@@ -55,7 +56,7 @@ function AgentFormDialog({ open, onOpenChange, agent }: { open: boolean; onOpenC
   const save = (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name.trim()) return;
-    const data = { ...form, name: form.name.trim(), role: form.role.trim() };
+    const data = { ...form, name: form.name.trim(), role: form.role.trim(), avatarUrl: form.avatarUrl.trim() };
     if (agent) {
       update("agents", agent.id, data);
       toast.success("Agent updated");
@@ -80,6 +81,9 @@ function AgentFormDialog({ open, onOpenChange, agent }: { open: boolean; onOpenC
             </Field>
             <Field label="Role" htmlFor="ag-role">
               <Input id="ag-role" value={form.role} onChange={(e) => setForm({ ...form, role: e.target.value })} placeholder="e.g. Drafts replies to new leads" />
+            </Field>
+            <Field label="Photo URL" htmlFor="ag-photo" hint="Optional https:// image link. Hermes can also upload a photo for the agent." className="sm:col-span-2">
+              <Input id="ag-photo" type="url" value={form.avatarUrl} onChange={(e) => setForm({ ...form, avatarUrl: e.target.value })} placeholder="https://…" />
             </Field>
             <Field label="Instructions / playbook" htmlFor="ag-ins" hint="How it should work, tone of voice, what it must never do." className="sm:col-span-2">
               <Textarea id="ag-ins" value={form.instructions} onChange={(e) => setForm({ ...form, instructions: e.target.value })} className="min-h-32" />
@@ -118,11 +122,14 @@ function AgentFormDialog({ open, onOpenChange, agent }: { open: boolean; onOpenC
 }
 
 export function AgentsView() {
-  const { db, update, remove } = useStore();
+  const { db, update, remove, mode } = useStore();
   const agents = db.agents;
   const [formOpen, setFormOpen] = React.useState(false);
   const [editing, setEditing] = React.useState<Agent | undefined>();
   const [deleting, setDeleting] = React.useState<Agent | undefined>();
+  const [chatting, setChatting] = React.useState<Agent | undefined>();
+  // Look up the live row so the chat reflects status/photo changes while open.
+  const chatAgent = chatting ? (agents.find((a) => a.id === chatting.id) ?? chatting) : undefined;
 
   const openForm = (a?: Agent) => {
     setEditing(a);
@@ -135,7 +142,7 @@ export function AgentsView() {
     <div className="mx-auto max-w-[1400px] space-y-6">
       <PageHeader
         title="Agents"
-        description="Define each assistant role: what it does, its playbook, and whether its work needs your approval."
+        description="Your AI team. Hermes runs them behind the scenes; you set who's active and whose work needs your approval."
         actions={
           <Button size="sm" onClick={() => openForm()}>
             <Plus /> New agent
@@ -146,8 +153,9 @@ export function AgentsView() {
       <div className="flex items-start gap-3 rounded-lg border bg-muted/40 p-4 text-sm">
         <Info className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
         <p className="text-muted-foreground">
-          No AI is connected, so agents don&apos;t act on their own. Use them as role definitions and playbooks for you or a teammate to follow, and pick them as
-          the requester on approval requests. When you connect an AI model later, these definitions become the agents&apos; instructions.
+          {mode === "cloud"
+            ? "Hermes creates and updates these agents and does their work in the background. Anything that reaches a client or costs money comes to Approvals first. Chat with an agent to get a status, a plan or a draft based on your live data."
+            : "Connect Supabase (cloud mode) to let Hermes run these agents and to chat with them. Until then they are role definitions and playbooks."}
         </p>
       </div>
 
@@ -173,9 +181,7 @@ export function AgentsView() {
               <Card key={a.id} className="gap-4">
                 <CardHeader>
                   <div className="flex items-start gap-3">
-                    <span className={cn("grid size-10 shrink-0 place-items-center rounded-lg", a.status === "active" ? "bg-primary/12 text-primary" : "bg-muted text-muted-foreground")}>
-                      <Bot className="size-5" />
-                    </span>
+                    <AgentAvatar agent={{ ...a, avatarUrl: a.avatarUrl ?? "" }} />
                     <div className="min-w-0 flex-1">
                       <CardTitle className="truncate">{a.name}</CardTitle>
                       <CardDescription className="mt-1 line-clamp-2">{a.role || "No role description"}</CardDescription>
@@ -187,6 +193,7 @@ export function AgentsView() {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
+                        {mode === "cloud" && <DropdownMenuItem onClick={() => setChatting(a)}>Chat</DropdownMenuItem>}
                         <DropdownMenuItem onClick={() => openForm(a)}>Edit</DropdownMenuItem>
                         <DropdownMenuSeparator />
                         <DropdownMenuItem variant="destructive" onClick={() => setDeleting(a)}>
@@ -216,6 +223,11 @@ export function AgentsView() {
                     <button onClick={() => openForm(a)} className="w-full cursor-pointer rounded-md border border-dashed p-3 text-left text-xs text-muted-foreground hover:bg-muted/50">
                       + Add instructions / playbook
                     </button>
+                  )}
+                  {mode === "cloud" && (
+                    <Button variant="outline" size="sm" className="w-full" onClick={() => setChatting(a)} disabled={a.status !== "active"}>
+                      <MessageSquare /> {a.status === "active" ? `Chat with ${a.name}` : `${a.name} is paused`}
+                    </Button>
                   )}
                   <Separator />
                   <div className="space-y-3 text-sm">
@@ -251,6 +263,7 @@ export function AgentsView() {
       )}
 
       <AgentFormDialog open={formOpen} onOpenChange={setFormOpen} agent={editing} />
+      <AgentChatSheet agent={chatAgent} open={!!chatting} onOpenChange={(o) => !o && setChatting(undefined)} />
       <ConfirmDialog
         open={!!deleting}
         onOpenChange={(o) => !o && setDeleting(undefined)}
