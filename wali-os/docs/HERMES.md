@@ -3,123 +3,163 @@
 Wali OS is the face; Supabase is the shared memory; Hermes is the operator.
 
 ```
-Hermes (your server) ──service_role key──▶ Supabase ◀──signed-in user + live sync── Wali OS (browser)
+Hermes (your VPS) ──HTTPS + HERMES_API_KEY──▶ Wali OS API (Vercel) ──▶ Supabase ◀── Wali OS app (you, signed in)
 ```
 
-Hermes never talks to the Wali OS website and does **not** need to be exposed to the internet. Keep the Hermes API gateway bound to `127.0.0.1` (or behind a firewall / HTTPS proxy) — Wali OS doesn't call it.
+Hermes calls the Wali OS API. Nothing on your VPS is exposed: Hermes only makes outgoing requests.
+Everything Hermes writes appears in your open app within a second, and every change (yours or
+Hermes's) lands in the activity feed.
 
-## 1. Credentials for Hermes
+## 1. Setup
 
-Put these in Hermes's environment (e.g. `~/.hermes/.env`), **never** in Wali OS or any browser code:
+**Vercel (wali-os → Settings → Environment Variables), server-only, never `NEXT_PUBLIC_`:**
+
+| Variable | Value |
+|---|---|
+| `HERMES_API_KEY` | A random secret, 32+ characters (`openssl rand -hex 32`). The same value goes to Hermes. |
+| `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Project Settings → API Keys → `service_role` (secret). Only the API routes read it. |
+
+Redeploy after changing them. Until both are set, the API answers `401` or `503`.
+
+**Hermes (`~/.hermes/.env`, `chmod 600`):**
 
 ```
-SUPABASE_URL=https://<project-ref>.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=<Supabase → Project Settings → API → service_role / secret key>
+WALI_OS_URL=https://<your wali-os domain>
+WALI_OS_API_KEY=<same value as HERMES_API_KEY>
 ```
 
-The service role key bypasses Row Level Security — treat it like a root password. `chmod 600 ~/.hermes/.env`. If it ever leaks, rotate it in Supabase.
+Every request sends `Authorization: Bearer $WALI_OS_API_KEY`. To revoke Hermes's access, change
+`HERMES_API_KEY` in Vercel and redeploy.
 
-## 2. Talking to the database
+## 2. Staying in the loop
 
-Any HTTP client works (Supabase's REST API). Every request sends both headers:
-
-```
-apikey: $SUPABASE_SERVICE_ROLE_KEY
-Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY
-```
-
-Python (`pip install supabase`):
-
-```python
-import os
-from supabase import create_client
-sb = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_SERVICE_ROLE_KEY"])
-sb.table("approvals").select("*").eq("status", "approved").is_("executed_at", "null").execute()
-```
-
-curl:
+**Start every session with the snapshot:**
 
 ```bash
-curl "$SUPABASE_URL/rest/v1/approvals?status=eq.approved&executed_at=is.null" \
-  -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY"
+curl -s "$WALI_OS_URL/api/hermes/context" -H "Authorization: Bearer $WALI_OS_API_KEY"
 ```
 
-Anything Hermes writes appears in the open Wali OS app within a second (Supabase Realtime).
+It returns `summary` (counts, MRR, overdue tasks), `approvals_pending` (waiting on the human),
+`approvals_to_carry_out` (approved, not yet done: **your to-do list**), `email_threads_open` with the
+last message, `tasks_open` (with `overdue`), `clients_needing_attention`, `clients`, `campaigns`,
+`agents` (your playbooks), `team`, and `recent_activity`.
 
-## 3. Tables
+**Follow changes live by polling the activity feed** (every 30–60 s is plenty):
 
-| Table | What it holds | Key columns |
+```bash
+curl -s "$WALI_OS_URL/api/hermes/activity?since=$LAST_ID" -H "Authorization: Bearer $WALI_OS_API_KEY"
+# → { "data": [ { id, at, actor, table_name, action, row_id, label, changed[] } ], "next_since": 1234 }
+```
+
+`actor` is `hermes` for your own writes, otherwise the human's email. `changed` lists the columns an
+update touched. Omit `since` to get the latest 100. Store `next_since` and pass it next time.
+
+## 3. Endpoints
+
+`GET /api/hermes` lists all of this, including the exact fields each resource accepts.
+
+| Call | Does |
+|---|---|
+| `GET /api/hermes/context` | Snapshot of what's going on. |
+| `GET /api/hermes/activity?since=<id>&limit=100` | Changes after `since`, oldest first. |
+| `GET /api/hermes/:resource?<filter>=<value>&limit=100` | List, newest first. |
+| `GET /api/hermes/:resource/:id` | One record. Threads include `messages`. |
+| `POST /api/hermes/:resource` | Create. Body: JSON with allowed fields. |
+| `PATCH /api/hermes/:resource/:id` | Change allowed fields. |
+| `POST /api/hermes/threads/:id/inbound` `{ "body" }` | Log an email the contact sent. |
+| `POST /api/hermes/threads/:id/submit-reply` `{ "body", "requested_by"? }` | Put a reply in the approval queue. |
+| `POST /api/hermes/threads/:id/sent` | After sending an **approved** reply: logs the approved text, marks the thread replied and the approval carried out. |
+| `POST /api/hermes/approvals/:id/executed` | Mark an approved request as carried out. |
+
+| Resource | Create / update | Filters |
 |---|---|---|
-| `workspace_settings` | Single row (`id = 1`) | `business_name`, `owner_name`, `owner_email`, `currency`, `clocks` |
-| `clients` | Leads and clients | `name`, `email`, `status` (lead/onboarding/active/paused/churned), `health` (good/watch/at-risk), `mrr`, `next_action`, `notes`, `tags[]`, `last_contact` |
-| `email_threads` | One conversation | `contact_name`, `contact_email`, `subject`, `client_id`, `status` (needs-reply/awaiting-approval/ready-to-send/replied/closed), `draft`, `approval_id`, `updated_at` |
-| `email_messages` | Messages in a thread | `thread_id`, `direction` (in/out), `body`, `at` |
-| `approvals` | Decisions for the human | `type` (Email reply/Proposal/Discount/Refund/Content/Campaign/Other), `title`, `summary`, `content`, `requested_by`, `client_id`, `thread_id`, `value`, `risk` (low/medium/high), `status` (pending/approved/rejected), `decided_at`, `decision_note`, `executed_at` |
-| `tasks` | Work items | `title`, `description`, `status` (todo/in-progress/review/done), `priority` (urgent/high/medium/low), `assignee`, `client_id`, `due` (date), `tags[]` |
-| `campaigns` | Acquisition tracking | `name`, `channel`, `status` (planned/live/paused/completed), `budget`, `spend`, `leads`, `booked`, `revenue`, `start_date`, `end_date` |
-| `agents` | Agent roles & playbooks | `name`, `role`, `instructions`, `scopes[]`, `status` (active/paused), `requires_approval` |
-| `team_members` | People to assign work to | `name`, `email`, `role` |
+| `clients` | name, company, email, phone, country, status, health, program, mrr, owner, next_action, notes, tags, last_contact | status, health, owner, email |
+| `tasks` | title, description, status, priority, assignee, client_id, due, tags | status, priority, assignee, client_id |
+| `campaigns` | name, channel, status, objective, market, budget, spend, leads, booked, revenue, start_date, end_date, notes | status, channel, market |
+| `approvals` | create: type, title, summary, content, requested_by, client_id, thread_id, value, risk (always created `pending`). Update (pending only): title, summary, content, value, risk | status, type, client_id, thread_id, requested_by |
+| `threads` | create: contact_name, contact_email, subject, client_id. Update: those + draft | status, client_id, contact_email |
+| `agents`, `team` | read only | status (agents) |
 
-Ids are UUIDs and default to `gen_random_uuid()`, so Hermes can omit them on insert.
+Allowed values: client `status` lead/onboarding/active/paused/churned, `health` good/watch/at-risk;
+task `status` todo/in-progress/review/done, `priority` urgent/high/medium/low; campaign `channel`
+Email/LinkedIn/Meta Ads/Google Ads/Referral/Event/Content/Other, `status` planned/live/paused/completed;
+approval `type` Email reply/Proposal/Discount/Refund/Content/Campaign/Other, `risk` low/medium/high.
+Dates are `YYYY-MM-DD`, timestamps ISO 8601, ids UUIDs.
 
-## 4. The rules Hermes must follow
+Responses are `{ "data": … }`; errors are `{ "error": "…" }` with `400` (bad field or value), `401`
+(key), `403` (read only), `404`, `409` (wrong state, e.g. approval already decided).
 
-These keep you in control. Put them in Hermes's system prompt / skill.
+### Agent chat (`/api/agents`)
 
-1. **Read your playbook first.** Load your row from `agents` (by `name`). If `status = 'paused'`, do nothing. Follow `instructions`.
-2. **Never act externally on your own.** Sending an email, offering a discount, issuing a refund, publishing content — all of it goes through `approvals` first when `requires_approval` is true.
-3. **Propose by inserting an approval** with `status = 'pending'`, `requested_by = '<your agent name>'`, a clear `title`, a one-line `summary`, the exact `content` you intend to send or do, and an honest `risk`.
-4. **Only execute approvals with `status = 'approved'` and `executed_at IS NULL`.** Use the `content` as stored — the human may have edited it. After acting, set `executed_at = now()`. Never act on `pending` or `rejected`; read `decision_note` on rejections to learn.
-5. **Keep the record honest:** log what happened (messages, task status, client `last_contact`, `next_action`) in the same tables.
+`GET /api/agents`, `GET /api/agents/:id` and `POST /api/agents/:id/chat` `{ "messages": [{ "role": "user", "content": "…" }] }`
+answer as the COO / Operator personas via OpenRouter (`OPENROUTER_API_KEY`, model `AGENT_MODEL`).
+They need the same `Authorization: Bearer $WALI_OS_API_KEY` (or a signed-in user's Supabase access
+token). Only `user` / `assistant` messages are accepted: the agent's instructions can't be replaced.
 
-## 5. Recipes
+## 4. What the API won't let Hermes do
 
-**Log an incoming email**
+- Delete anything.
+- Approve or reject an approval, or edit one that's already decided. Only the human does that, in Wali OS.
+- Mark an email reply as ready to send, or log a sent reply that wasn't approved.
+- Change agent playbooks, the team or workspace settings.
 
-```sql
-insert into email_threads (contact_name, contact_email, subject, client_id, status)
-values ('Sarah Lee', 'sarah@acme.com', 'Pricing question',
-        (select id from clients where lower(email) = 'sarah@acme.com' limit 1), 'needs-reply')
-returning id;
+## 5. The rules Hermes must follow
 
-insert into email_messages (thread_id, direction, body) values ('<thread id>', 'in', '<email text>');
+Put these in Hermes's system prompt / skill.
+
+1. **Read your playbook first.** Find your entry in `context.agents` by `name`. If `status` is `paused`, do nothing. Follow `instructions`.
+2. **Never act externally on your own.** Sending email, offering a discount, issuing a refund, publishing content: propose it as an approval first when `requires_approval` is true.
+3. **Propose clearly:** a clear `title`, a one-line `summary`, the exact `content` you'll send or do, an honest `risk`, `value` when money is involved, and `requested_by` = your agent name.
+4. **Only carry out `approvals_to_carry_out`.** Use `content` exactly as stored (the human may have edited it), then call `/executed` (or `/sent` for email replies). Read `decision_note` on rejections to learn.
+5. **Keep the record honest:** log inbound email, update task status, client `next_action` and `last_contact` as things happen.
+
+## 6. Recipes
+
+```bash
+H=(-H "Authorization: Bearer $WALI_OS_API_KEY" -H "Content-Type: application/json")
+
+# New conversation from an incoming email
+curl -s "${H[@]}" -X POST "$WALI_OS_URL/api/hermes/threads" \
+  -d '{"contact_name":"Sarah Lee","contact_email":"sarah@acme.com","subject":"Pricing question"}'
+curl -s "${H[@]}" -X POST "$WALI_OS_URL/api/hermes/threads/<thread id>/inbound" -d '{"body":"<email text>"}'
+
+# Propose a reply (appears in Approvals; thread shows "awaiting approval")
+curl -s "${H[@]}" -X POST "$WALI_OS_URL/api/hermes/threads/<thread id>/submit-reply" \
+  -d '{"body":"<draft reply>","requested_by":"Operator"}'
+
+# After approval: send the approved content yourself, then
+curl -s "${H[@]}" -X POST "$WALI_OS_URL/api/hermes/threads/<thread id>/sent"
+
+# Propose anything else
+curl -s "${H[@]}" -X POST "$WALI_OS_URL/api/hermes/approvals" \
+  -d '{"type":"Discount","title":"10% off renewal for Acme","content":"…","value":300,"risk":"medium","requested_by":"COO"}'
+
+# Create / update a task
+curl -s "${H[@]}" -X POST "$WALI_OS_URL/api/hermes/tasks" \
+  -d '{"title":"Prepare onboarding pack","assignee":"Hermes","due":"2026-10-08","priority":"high"}'
+curl -s "${H[@]}" -X PATCH "$WALI_OS_URL/api/hermes/tasks/<task id>" -d '{"status":"done"}'
+
+# Update a client
+curl -s "${H[@]}" -X PATCH "$WALI_OS_URL/api/hermes/clients/<client id>" \
+  -d '{"health":"watch","next_action":"Call about missed payment"}'
 ```
 
-For a reply in an existing conversation, insert only the message and set the thread back to `needs-reply`, `updated_at = now()`.
+If Hermes can't send email itself, skip `/sent`: the thread shows **Approved · send** in Wali OS and
+the human sends it with one click.
 
-**Propose an email reply** (two writes)
+## 7. Database tables (for reference)
 
-```sql
-insert into approvals (type, title, summary, content, requested_by, client_id, thread_id, risk)
-values ('Email reply', 'Reply to Sarah Lee: Pricing question', '<their last message, short>',
-        '<your draft reply>', 'Hermes', '<client id or null>', '<thread id>', 'low')
-returning id;
+| Table | What it holds |
+|---|---|
+| `workspace_settings` | Single row: business name, owner, currency, clocks |
+| `clients` | Leads and clients |
+| `email_threads` / `email_messages` | Conversations and their messages |
+| `approvals` | Decisions for the human |
+| `tasks` | Work items |
+| `campaigns` | Acquisition tracking |
+| `agents` | Agent roles & playbooks |
+| `team_members` | People to assign work to |
+| `activity_log` | Every change, written by database triggers |
 
-update email_threads set status = 'awaiting-approval', approval_id = '<approval id>', draft = '', updated_at = now()
-where id = '<thread id>';
-```
-
-**After the human approves an email reply** — if Hermes can send email itself:
-
-```sql
--- after sending the approved content
-insert into email_messages (thread_id, direction, body) values ('<thread id>', 'out', '<approved content>');
-update email_threads set status = 'replied', approval_id = null, updated_at = now() where id = '<thread id>';
-update approvals set executed_at = now() where id = '<approval id>';
-update clients set last_contact = now() where id = '<client id>';
-```
-
-If Hermes can't send email, leave it: the thread shows **Approved · send** in Wali OS and the human sends it with one click.
-
-**Propose anything else** (proposal, discount, refund, content): insert into `approvals` with the matching `type` (and `value` if money is involved). After approval, do it, then set `executed_at`.
-
-**Create a task for the team**
-
-```sql
-insert into tasks (title, description, assignee, due, priority, client_id)
-values ('Prepare onboarding pack', 'From kickoff call notes', 'Hermes', current_date + 2, 'high', '<client id>');
-```
-
-## 6. Reacting instantly instead of polling (optional)
-
-Subscribe to Supabase Realtime on `approvals` and act when a row changes to `status = 'approved'`. Polling every minute with the query in section 2 is simpler and works just as well to start.
+Schema: [`supabase/schema.sql`](../supabase/schema.sql). Hermes doesn't need direct database access;
+if you ever give it, the service_role key bypasses all security, so treat it like a root password.
