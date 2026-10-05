@@ -57,10 +57,14 @@ export class ApiError extends Error {
 export const json = (data: unknown, status = 200) =>
   Response.json(data, { status, headers: { "Cache-Control": "no-store" } });
 
-/** Wraps a handler with the API key check, a configured database and uniform errors. */
-export function handler<C>(fn: (db: SupabaseClient, req: Request, ctx: C) => Promise<Response>) {
+/**
+ * Wraps a handler with the API key check, a configured database and uniform errors.
+ * `allowUser` also admits a signed-in Wali OS user (for read-only routes the app UI calls).
+ */
+export function handler<C>(fn: (db: SupabaseClient, req: Request, ctx: C) => Promise<Response>, opts: { allowUser?: boolean } = {}) {
   return async (req: Request, ctx: C) => {
-    if (!authorized(req)) return json({ error: "Unauthorized" }, 401);
+    const ok = opts.allowUser ? await hermesOrUser(req) : authorized(req);
+    if (!ok) return json({ error: "Unauthorized" }, 401);
     const db = adminDb();
     if (!db) return json({ error: "Server is missing SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_URL" }, 503);
     try {
