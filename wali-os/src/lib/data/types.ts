@@ -1,5 +1,5 @@
-export type ClientStatus = "active" | "onboarding" | "at-risk" | "paused" | "churned";
-export type Region = "UAE" | "Saudi Arabia" | "United Kingdom" | "United States" | "Canada" | "Australia" | "Pakistan" | "Germany";
+export type ClientStatus = "lead" | "onboarding" | "active" | "paused" | "churned";
+export type ClientHealth = "good" | "watch" | "at-risk";
 
 export interface Client {
   id: string;
@@ -7,47 +7,45 @@ export interface Client {
   company: string;
   email: string;
   phone: string;
-  region: Region;
-  timezone: string;
-  currency: string;
+  country: string;
   status: ClientStatus;
+  health: ClientHealth;
   program: string;
   mrr: number;
-  lifetimeValue: number;
-  health: number;
   owner: string;
-  startedAt: string;
-  lastContact: string;
   nextAction: string;
+  notes: string;
   tags: string[];
+  createdAt: string;
+  lastContact?: string;
 }
 
-export type MessageDirection = "in" | "out";
-export interface Message {
+export interface EmailMessage {
   id: string;
-  direction: MessageDirection;
+  direction: "in" | "out";
   body: string;
   at: string;
-  status?: "sent" | "delivered" | "read";
-  byAgent?: boolean;
 }
 
-export interface Conversation {
+export type ThreadStatus = "needs-reply" | "awaiting-approval" | "ready-to-send" | "replied" | "closed";
+
+export interface EmailThread {
   id: string;
   contactName: string;
-  phone: string;
+  contactEmail: string;
+  subject: string;
   clientId?: string;
-  region: Region;
-  stage: "New lead" | "Qualified" | "Booked call" | "Client" | "Follow-up";
-  unread: number;
-  assignedTo: string;
-  aiHandling: boolean;
-  lastMessageAt: string;
-  messages: Message[];
+  status: ThreadStatus;
+  messages: EmailMessage[];
+  draft: string;
+  /** Approval that holds the reply currently in review or approved. */
+  approvalId?: string;
+  updatedAt: string;
 }
 
-export type CampaignStatus = "live" | "scheduled" | "draft" | "paused" | "completed";
-export type Channel = "Meta Ads" | "WhatsApp Broadcast" | "Email" | "LinkedIn" | "Google Ads";
+export type CampaignStatus = "planned" | "live" | "paused" | "completed";
+export const CHANNELS = ["Email", "LinkedIn", "Meta Ads", "Google Ads", "Referral", "Event", "Content", "Other"] as const;
+export type Channel = (typeof CHANNELS)[number];
 
 export interface Campaign {
   id: string;
@@ -63,6 +61,8 @@ export interface Campaign {
   revenue: number;
   startDate: string;
   endDate: string;
+  notes: string;
+  createdAt: string;
 }
 
 export type TaskStatus = "todo" | "in-progress" | "review" | "done";
@@ -71,17 +71,20 @@ export type Priority = "urgent" | "high" | "medium" | "low";
 export interface Task {
   id: string;
   title: string;
-  description?: string;
+  description: string;
   status: TaskStatus;
   priority: Priority;
   assignee: string;
   clientId?: string;
   due: string;
   tags: string[];
+  createdAt: string;
 }
 
-export type ApprovalType = "WhatsApp reply" | "Ad creative" | "Proposal" | "Discount" | "Email sequence" | "Refund";
+export const APPROVAL_TYPES = ["Email reply", "Proposal", "Discount", "Refund", "Content", "Campaign", "Other"] as const;
+export type ApprovalType = (typeof APPROVAL_TYPES)[number];
 export type ApprovalStatus = "pending" | "approved" | "rejected";
+export type Risk = "low" | "medium" | "high";
 
 export interface Approval {
   id: string;
@@ -90,39 +93,31 @@ export interface Approval {
   summary: string;
   content: string;
   requestedBy: string;
-  requestedByAgent: boolean;
   clientId?: string;
+  threadId?: string;
   value?: number;
-  risk: "low" | "medium" | "high";
+  risk: Risk;
   status: ApprovalStatus;
   createdAt: string;
+  decidedAt?: string;
+  decisionNote?: string;
+  /** Set by an agent after it has carried out an approved request. */
+  executedAt?: string;
 }
 
-export type AgentStatus = "running" | "idle" | "paused" | "error";
+export type AgentStatus = "active" | "paused";
+export const AGENT_SCOPES = ["Email", "Clients", "Tasks", "Campaigns", "Approvals"] as const;
+export type AgentScope = (typeof AGENT_SCOPES)[number];
 
 export interface Agent {
   id: string;
   name: string;
   role: string;
-  description: string;
+  instructions: string;
+  scopes: AgentScope[];
   status: AgentStatus;
-  model: string;
-  channels: string[];
-  runsToday: number;
-  successRate: number;
-  avgHandleSeconds: number;
-  hoursSavedWeek: number;
-  needsApproval: boolean;
-  lastRun: string;
-}
-
-export interface AgentEvent {
-  id: string;
-  agentId: string;
-  action: string;
-  target: string;
-  at: string;
-  outcome: "success" | "escalated" | "failed";
+  requiresApproval: boolean;
+  createdAt: string;
 }
 
 export interface TeamMember {
@@ -130,5 +125,33 @@ export interface TeamMember {
   name: string;
   email: string;
   role: string;
-  region: string;
 }
+
+export interface Clock {
+  id: string;
+  city: string;
+  tz: string;
+}
+
+export interface Settings {
+  businessName: string;
+  ownerName: string;
+  ownerEmail: string;
+  currency: string;
+  clocks: Clock[];
+}
+
+export interface Db {
+  version: 1;
+  settings: Settings;
+  clients: Client[];
+  threads: EmailThread[];
+  campaigns: Campaign[];
+  tasks: Task[];
+  approvals: Approval[];
+  agents: Agent[];
+  team: TeamMember[];
+}
+
+export type CollectionKey = Exclude<keyof Db, "version" | "settings">;
+export type ItemOf<K extends CollectionKey> = Db[K][number];

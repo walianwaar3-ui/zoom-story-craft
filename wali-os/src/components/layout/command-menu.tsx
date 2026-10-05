@@ -2,10 +2,10 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { CornerDownLeft, Search, UserRound } from "lucide-react";
+import { CornerDownLeft, Mail, Search, UserRound } from "lucide-react";
 import { Dialog as DialogPrimitive } from "radix-ui";
 
-import { clients } from "@/lib/data";
+import { useStore } from "@/lib/store";
 import { cn } from "@/lib/utils";
 
 import { allNav } from "./nav";
@@ -16,31 +16,43 @@ interface Item {
   hint: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
-  group: "Pages" | "Clients";
+  group: "Pages" | "Clients" | "Emails";
 }
-
-const items: Item[] = [
-  ...allNav.map((n) => ({ id: n.href, label: n.title, hint: n.description, href: n.href, icon: n.icon, group: "Pages" as const })),
-  ...clients.map((c) => ({
-    id: c.id,
-    label: c.name,
-    hint: `${c.company} · ${c.region}`,
-    href: `/clients?client=${c.id}`,
-    icon: UserRound,
-    group: "Clients" as const,
-  })),
-];
 
 export function CommandMenu({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
   const router = useRouter();
+  const { db } = useStore();
   const [query, setQuery] = React.useState("");
   const [index, setIndex] = React.useState(0);
 
+  const items = React.useMemo<Item[]>(
+    () => [
+      ...allNav.map((n) => ({ id: n.href, label: n.title, hint: n.description, href: n.href, icon: n.icon, group: "Pages" as const })),
+      ...db.clients.map((c) => ({
+        id: c.id,
+        label: c.name,
+        hint: [c.company, c.country].filter(Boolean).join(" · "),
+        href: `/clients?client=${c.id}`,
+        icon: UserRound,
+        group: "Clients" as const,
+      })),
+      ...db.threads.map((t) => ({
+        id: t.id,
+        label: t.subject || "(no subject)",
+        hint: t.contactName || t.contactEmail,
+        href: `/inbox?t=${t.id}`,
+        icon: Mail,
+        group: "Emails" as const,
+      })),
+    ],
+    [db.clients, db.threads]
+  );
+
   const results = React.useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return items.slice(0, 12);
-    return items.filter((i) => `${i.label} ${i.hint}`.toLowerCase().includes(q)).slice(0, 12);
-  }, [query]);
+    if (!q) return items.filter((i) => i.group === "Pages");
+    return items.filter((i) => `${i.label} ${i.hint}`.toLowerCase().includes(q)).slice(0, 15);
+  }, [query, items]);
 
   const go = (item: Item) => {
     onOpenChange(false);
@@ -78,7 +90,7 @@ export function CommandMenu({ open, onOpenChange }: { open: boolean; onOpenChang
           onKeyDown={onKeyDown}
         >
           <DialogPrimitive.Title className="sr-only">Search Wali OS</DialogPrimitive.Title>
-          <DialogPrimitive.Description className="sr-only">Jump to a page or client</DialogPrimitive.Description>
+          <DialogPrimitive.Description className="sr-only">Jump to a page, client or email</DialogPrimitive.Description>
           <div className="flex items-center gap-2 border-b px-4">
             <Search className="size-4 text-muted-foreground" />
             <input
@@ -88,7 +100,7 @@ export function CommandMenu({ open, onOpenChange }: { open: boolean; onOpenChang
                 setQuery(e.target.value);
                 setIndex(0);
               }}
-              placeholder="Search pages and clients…"
+              placeholder="Search pages, clients and emails…"
               className="h-12 flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
             />
             <kbd className="rounded border px-1.5 text-[10px] text-muted-foreground">ESC</kbd>

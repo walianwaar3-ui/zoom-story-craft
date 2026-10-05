@@ -11,6 +11,7 @@ import { CommandMenu } from "./command-menu";
 import { allNav, isActive } from "./nav";
 import { Notifications } from "./notifications";
 import { useSidebar } from "./sidebar-context";
+import { SyncIndicator } from "./sync-indicator";
 import { ThemeToggle } from "./theme-toggle";
 import { WorldClock } from "./world-clock";
 
@@ -44,6 +45,7 @@ export function Topbar() {
       </div>
 
       <div className="ml-auto flex items-center gap-1.5">
+        <SyncIndicator />
         <WorldClock />
         <Button
           variant="outline"

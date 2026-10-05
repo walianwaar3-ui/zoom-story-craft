@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronsUpDown, LogOut, PanelLeftClose, PanelLeftOpen, Sparkles, UserRound } from "lucide-react";
+import { ChevronsUpDown, Download, LogOut, PanelLeftClose, PanelLeftOpen, UserRound } from "lucide-react";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { currentUser } from "@/lib/data";
+import { useStore } from "@/lib/store";
 import { cn, initials } from "@/lib/utils";
 
 import { Logo } from "./logo";
@@ -25,8 +25,10 @@ import { useSidebar } from "./sidebar-context";
 
 function NavLink({ item, collapsed, onNavigate }: { item: NavItem; collapsed: boolean; onNavigate?: () => void }) {
   const pathname = usePathname();
+  const { db } = useStore();
   const active = isActive(pathname, item.href);
   const Icon = item.icon;
+  const badge = item.badge?.(db);
 
   const link = (
     <Link
@@ -44,19 +46,17 @@ function NavLink({ item, collapsed, onNavigate }: { item: NavItem; collapsed: bo
       )}
       <Icon className={cn("size-4 shrink-0", active ? "text-sidebar-primary" : "text-muted-foreground group-hover:text-sidebar-accent-foreground")} />
       {!collapsed && <span className="truncate">{item.title}</span>}
-      {!collapsed && item.badge ? (
+      {!collapsed && badge?.count ? (
         <span
           className={cn(
             "ml-auto rounded-full px-1.5 py-px text-[11px] font-semibold tabular",
-            item.href === "/approvals" || item.href === "/inbox"
-              ? "bg-primary text-primary-foreground"
-              : "bg-muted text-muted-foreground"
+            badge.highlight ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
           )}
         >
-          {item.badge}
+          {badge.count}
         </span>
       ) : null}
-      {collapsed && item.badge ? (
+      {collapsed && badge?.count ? (
         <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-primary" aria-hidden />
       ) : null}
     </Link>
@@ -68,7 +68,7 @@ function NavLink({ item, collapsed, onNavigate }: { item: NavItem; collapsed: bo
       <TooltipTrigger asChild>{link}</TooltipTrigger>
       <TooltipContent side="right">
         {item.title}
-        {item.badge ? ` · ${item.badge}` : ""}
+        {badge?.count ? ` · ${badge.count}` : ""}
       </TooltipContent>
     </Tooltip>
   );
@@ -76,11 +76,14 @@ function NavLink({ item, collapsed, onNavigate }: { item: NavItem; collapsed: bo
 
 function SidebarBody({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: () => void }) {
   const { toggle } = useSidebar();
+  const { db, mode, auth, signOut } = useStore();
+  const name = db.settings.ownerName || "Set up your profile";
+  const email = (mode === "cloud" ? auth.email : db.settings.ownerEmail) || "Settings → Workspace";
 
   return (
     <div className="flex h-full flex-col">
       <div className={cn("flex h-14 items-center border-b border-sidebar-border px-3", collapsed && "justify-center px-0")}>
-        <Logo collapsed={collapsed} />
+        <Logo collapsed={collapsed} subtitle={db.settings.businessName || "Operating system"} />
       </div>
 
       <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-4 scrollbar-thin" aria-label="Main">
@@ -95,16 +98,6 @@ function SidebarBody({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
           ))}
         </div>
 
-        {!collapsed && (
-          <div className="rounded-lg border border-sidebar-border bg-background/60 p-3">
-            <div className="flex items-center gap-2 text-xs font-medium">
-              <Sparkles className="size-3.5 text-primary" />
-              Agents saved you
-            </div>
-            <p className="mt-1.5 text-2xl font-semibold tracking-tight tabular">62h</p>
-            <p className="text-xs text-muted-foreground">this week across 6 agents</p>
-          </div>
-        )}
       </nav>
 
       <div className="space-y-0.5 border-t border-sidebar-border px-3 py-3">
@@ -122,14 +115,14 @@ function SidebarBody({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
             >
               <Avatar className="size-7">
                 <AvatarFallback className="bg-primary/15 text-[11px] text-primary">
-                  {initials(currentUser.name)}
+                  {initials(db.settings.ownerName || "Wali OS")}
                 </AvatarFallback>
               </Avatar>
               {!collapsed && (
                 <>
                   <div className="min-w-0 flex-1 leading-tight">
-                    <p className="truncate text-sm font-medium">{currentUser.name}</p>
-                    <p className="truncate text-xs text-muted-foreground">{currentUser.email}</p>
+                    <p className="truncate text-sm font-medium">{name}</p>
+                    <p className="truncate text-xs text-muted-foreground">{email}</p>
                   </div>
                   <ChevronsUpDown className="size-3.5 text-muted-foreground" />
                 </>
@@ -138,8 +131,8 @@ function SidebarBody({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
           </DropdownMenuTrigger>
           <DropdownMenuContent side="top" align="start" className="w-56">
             <DropdownMenuLabel className="font-normal">
-              <p className="text-sm font-medium">{currentUser.name}</p>
-              <p className="text-xs text-muted-foreground">{currentUser.role}</p>
+              <p className="text-sm font-medium">{name}</p>
+              <p className="text-xs text-muted-foreground">{db.settings.businessName || "Wali OS"}</p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
@@ -147,10 +140,19 @@ function SidebarBody({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
                 <UserRound /> Profile & workspace
               </Link>
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
-              <LogOut /> Sign out
+            <DropdownMenuItem asChild>
+              <Link href="/settings?tab=data">
+                <Download /> Back up data
+              </Link>
             </DropdownMenuItem>
+            {mode === "cloud" && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => void signOut()}>
+                  <LogOut /> Sign out
+                </DropdownMenuItem>
+              </>
+            )}
           </DropdownMenuContent>
         </DropdownMenu>
 
