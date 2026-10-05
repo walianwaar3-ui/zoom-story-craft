@@ -1,78 +1,74 @@
 /**
  * GET /api/hermes/agent-stats
  *
- * Per-agent performance bars: tasks assigned, approvals created,
- * and when each agent was last active.
+ * Per-agent performance for the Agents page bars (and for Hermes):
+ *   { generated_at, stats: { [agentId]: { tasks: {todo, in_progress, review, done},
+ *     approvals_pending, approvals_last_24h, last_active } } }
+ *
+ * An agent owns a task when `assignee` names it, and an approval when
+ * `requested_by` names it, as a whole word, any case ("Operator", "operator",
+ * "Hermes (Operator)"). `in_progress` counts tasks in progress or in review
+ * (`review` is also given on its own). `last_active` is the latest change to
+ * any of its tasks or approvals, or its newest approval request.
+ *
+ * Auth: the Hermes key, or a signed-in Wali OS user (the Agents page).
  */
-import { handler, json } from "@/lib/hermes/server";
+import { check, handler, json } from "@/lib/hermes/server";
 
-const HOURS_24 = 24 * 60 * 60 * 1000;
+const DAY_MS = 24 * 60 * 60 * 1000;
 
-export const GET = handler(async (db) => {
-  const { data: agents, error } = await db.from("agents").select("id, name, role, status");
-  if (error) return json({ error: error.message }, 500);
+const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+/** True when `text` contains `name` as a whole word, ignoring case. */
+const names = (text: string | null | undefined, name: string) =>
+  Boolean(text) && new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRe(name.trim())}($|[^\\p{L}\\p{N}])`, "iu").test(text!);
 
-  const agentList = (agents ?? []) as { id: string; name: string; role: string; status: string }[];
+const later = (a: string | null, b: string | null | undefined) => (!b ? a : !a || b > a ? b : a);
 
-  // Fetch all relevant data in parallel
-  const [{ data: tasks }, { data: approvals }, { data: activity }] = await Promise.all([
-    db.from("tasks").select("assignee, status"),
-    db.from("approvals").select("requested_by, status, created_at"),
-    db.from("activity_log").select("label, at").order("at", { ascending: false }).limit(500),
-  ]);
+export const GET = handler(
+  async (db) => {
+    const [agentsRes, tasksRes, approvalsRes] = await Promise.all([
+      db.from("agents").select("id, name"),
+      db.from("tasks").select("id, assignee, status"),
+      db.from("approvals").select("id, requested_by, status, created_at"),
+    ]);
+    const agents = check(agentsRes) as { id: string; name: string }[];
+    const tasks = check(tasksRes) as { id: string; assignee: string; status: string }[];
+    const approvals = check(approvalsRes) as { id: string; requested_by: string; status: string; created_at: string }[];
 
-  const taskRows = (tasks ?? []) as { assignee?: string; status?: string }[];
-  const approvalRows = (approvals ?? []) as { requested_by?: string; status?: string; created_at?: string }[];
-  const activityRows = (activity ?? []) as { label?: string; at?: string }[];
+    const cutoff = new Date(Date.now() - DAY_MS).toISOString();
+    const owned = agents.map((agent) => ({
+      agent,
+      tasks: agent.name.trim() ? tasks.filter((t) => names(t.assignee, agent.name)) : [],
+      approvals: agent.name.trim() ? approvals.filter((a) => names(a.requested_by, agent.name)) : [],
+    }));
 
-  const cutoff = new Date(Date.now() - HOURS_24).toISOString();
-
-  const stats: Record<string, unknown> = {};
-
-  for (const agent of agentList) {
-    const name = agent.name.toLowerCase();
-
-    // Tasks: count by assignee matching agent name
-    const agentTasks = { todo: 0, in_progress: 0, done: 0 };
-    for (const t of taskRows) {
-      const a = (t.assignee || "").toLowerCase();
-      if (a && name.includes(a) || a.includes(name)) {
-        const s = t.status || "todo";
-        if (s in agentTasks) agentTasks[s as keyof typeof agentTasks]++;
-      }
+    // Latest change to each owned row, from the activity log (written by triggers).
+    const rowIds = [...new Set(owned.flatMap((o) => [...o.tasks, ...o.approvals].map((r) => r.id)))];
+    const lastChange = new Map<string, string>();
+    if (rowIds.length) {
+      const activity = check(
+        await db.from("activity_log").select("row_id, at").in("row_id", rowIds).order("at", { ascending: false }).limit(5000)
+      ) as { row_id: string; at: string }[];
+      for (const a of activity) if (!lastChange.has(a.row_id)) lastChange.set(a.row_id, a.at);
     }
 
-    // Approvals: count by requested_by containing agent name
-    let pending = 0;
-    let last24h = 0;
-    for (const a of approvalRows) {
-      const r = (a.requested_by || "").toLowerCase();
-      if (r.includes(name)) {
-        if (a.status === "pending") pending++;
-        if (a.created_at && a.created_at >= cutoff) last24h++;
-      }
+    const stats: Record<string, unknown> = {};
+    for (const o of owned) {
+      const count = (s: string) => o.tasks.filter((t) => t.status === s).length;
+      const review = count("review");
+      let lastActive: string | null = null;
+      for (const r of [...o.tasks, ...o.approvals]) lastActive = later(lastActive, lastChange.get(r.id));
+      for (const a of o.approvals) lastActive = later(lastActive, a.created_at);
+
+      stats[o.agent.id] = {
+        name: o.agent.name,
+        tasks: { todo: count("todo"), in_progress: count("in-progress") + review, review, done: count("done") },
+        approvals_pending: o.approvals.filter((a) => a.status === "pending").length,
+        approvals_last_24h: o.approvals.filter((a) => a.created_at >= cutoff).length,
+        last_active: lastActive ? new Date(lastActive).toISOString() : null,
+      };
     }
-
-    // Last active: most recent activity_log entry mentioning this agent
-    let lastActive: string | null = null;
-    for (const a of activityRows) {
-      const label = (a.label || "").toLowerCase();
-      if (label.includes(name) && a.at) {
-        lastActive = a.at;
-        break; // already sorted desc
-      }
-    }
-
-    stats[agent.id] = {
-      id: agent.id,
-      name: agent.name,
-      status: agent.status,
-      tasks: agentTasks,
-      approvals_pending: pending,
-      approvals_last_24h: last24h,
-      last_active: lastActive,
-    };
-  }
-
-  return json({ generated_at: new Date().toISOString(), stats });
-});
+    return json({ generated_at: new Date().toISOString(), stats });
+  },
+  { allowUser: true }
+);

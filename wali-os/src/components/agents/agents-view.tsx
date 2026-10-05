@@ -5,6 +5,7 @@ import { Bot, Info, MessageSquare, MoreHorizontal, Plus, ShieldCheck } from "luc
 import { toast } from "sonner";
 
 import { AgentAvatar, AgentChatSheet } from "@/components/agents/agent-chat";
+import { AgentStatsBars, useAgentStats } from "@/components/agents/agent-stats";
 import { PageHeader } from "@/components/layout/page-header";
 import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { EmptyState } from "@/components/shared/empty-state";
@@ -128,6 +129,7 @@ export function AgentsView() {
   const [editing, setEditing] = React.useState<Agent | undefined>();
   const [deleting, setDeleting] = React.useState<Agent | undefined>();
   const [chatting, setChatting] = React.useState<Agent | undefined>();
+  const stats = useAgentStats();
   // Look up the live row so the chat reflects status/photo changes while open.
   const chatAgent = chatting ? (agents.find((a) => a.id === chatting.id) ?? chatting) : undefined;
 
@@ -185,6 +187,9 @@ export function AgentsView() {
                     <div className="min-w-0 flex-1">
                       <CardTitle className="truncate">{a.name}</CardTitle>
                       <CardDescription className="mt-1 line-clamp-2">{a.role || "No role description"}</CardDescription>
+                      <div className="mt-3 empty:hidden">
+                        <AgentStatsBars stats={stats[a.id]} />
+                      </div>
                     </div>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

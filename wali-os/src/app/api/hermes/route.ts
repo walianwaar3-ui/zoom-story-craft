@@ -9,6 +9,7 @@ export const GET = handler(async () =>
     endpoints: {
       "GET /api/hermes/context": "Snapshot of what's going on now. Start here.",
       "GET /api/hermes/activity?since=<id>": "Every change, oldest first. Poll with next_since.",
+      "GET /api/hermes/agent-stats": "Per-agent tasks, approvals and last_active (assignee / requested_by = agent name).",
       "GET /api/hermes/:resource?<filter>=…&limit=…": "List records (newest first).",
       "GET /api/hermes/:resource/:id": "One record.",
       "POST /api/hermes/:resource": "Create (approvals are always created pending).",

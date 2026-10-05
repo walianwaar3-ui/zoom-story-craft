@@ -62,6 +62,7 @@ update touched. Omit `since` to get the latest 100. Store `next_since` and pass 
 |---|---|
 | `GET /api/hermes/context` | Snapshot of what's going on. |
 | `GET /api/hermes/activity?since=<id>&limit=100` | Changes after `since`, oldest first. |
+| `GET /api/hermes/agent-stats` | Per agent: tasks (todo / in_progress incl. review / done), approvals pending and last 24h, `last_active`. Tasks count when `assignee` names the agent, approvals when `requested_by` does (whole word, any case). |
 | `GET /api/hermes/:resource?<filter>=<value>&limit=100` | List, newest first. |
 | `GET /api/hermes/:resource/:id` | One record. Threads include `messages`. |
 | `POST /api/hermes/:resource` | Create. Body: JSON with allowed fields. |
