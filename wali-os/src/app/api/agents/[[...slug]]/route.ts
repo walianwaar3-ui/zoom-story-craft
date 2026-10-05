@@ -1,18 +1,10 @@
 /**
- * Hermes Agent API Bridge for Wali OS.
+ * Wali OS — Agent API (OpenRouter backend).
  * Route: /api/agents/[[...slug]]
- *
- * Endpoints:
- *   GET  /api/agents              → list agents
- *   POST /api/agents              → create agent (→ Hermes profile)
- *   GET  /api/agents/[id]         → get agent
- *   PUT  /api/agents/[id]         → update agent
- *   DELETE /api/agents/[id]       → delete agent
- *   POST /api/agents/[id]/chat    → send message, get reply
  */
 
-const HERMES_URL = process.env.HERMES_API_URL || "http://localhost:8642";
-const HERMES_KEY = process.env.HERMES_API_KEY;
+const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY;
+const MODEL = process.env.AGENT_MODEL || "deepseek/deepseek-v4-pro";
 
 interface AgentEntry {
   id: string;
@@ -28,21 +20,16 @@ const agents: Record<string, AgentEntry> = {
   coo: {
     id: "coo", profile: "default",
     name: "COO", role: "Strategic oversight, client context, knowledge base",
-    instructions: "You are the COO of Wali Digital Consulting. Diagnose before acting.",
+    instructions: "You are the COO of Wali Digital Consulting. Wali is the founder. You oversee strategy, client relationships, agent orchestration, and knowledge management. Diagnose before acting. Verify after executing. Be concise — no filler, no emoji, no em dashes. When Wali asks a question, answer directly.",
     scopes: ["Clients", "Tasks", "Campaigns", "Approvals"], requiresApproval: false,
   },
   operator: {
     id: "operator", profile: "operator",
     name: "Operator", role: "GHL/CRM, automations, integrations, pipeline fixes",
-    instructions: "You are the Operator. Diagnose first. Verify after executing.",
+    instructions: "You are the Operator for Wali Digital Consulting. Handle GHL CRM, automations, integrations, sub-accounts, and pipeline fixes. Core rule: diagnose first — clarify before acting, inspect live state, identify root cause, apply minimal fix, verify. Never assume. You do NOT handle Meta Ads, creative, campaign strategy, or client meetings. Be concise, no filler, no emoji.",
     scopes: ["Clients", "Tasks"], requiresApproval: true,
   },
 };
-
-function auth() {
-  if (!HERMES_KEY) return Response.json({ error: "HERMES_API_KEY not set" }, { status: 500 });
-  return null;
-}
 
 function parseSlug(request: Request) {
   const path = new URL(request.url).pathname.replace("/api/agents", "").replace(/^\/+/, "");
@@ -76,49 +63,49 @@ export async function POST(request: Request) {
 
     agents[agentId] = {
       id: agentId, profile: agentId, name, role,
-      instructions: body.instructions || body.playbook || "",
+      instructions: body.instructions || body.playbook || `You are ${name}. ${role}.`,
       scopes: body.scopes || body.tools || [],
       requiresApproval: body.requiresApproval ?? true,
     };
     return Response.json({ agent: agents[agentId] }, { status: 201 });
   }
 
-  // Chat — uses hermes CLI directly (no API key needed)
+  // Chat
   if (action === "chat") {
+    if (!OPENROUTER_KEY) return Response.json({ error: "OPENROUTER_API_KEY not set" }, { status: 500 });
+
     const agent = agents[id];
     if (!agent) return Response.json({ error: "Agent not found" }, { status: 404 });
 
     const body = await request.json();
     if (!body.messages?.length) return Response.json({ error: "messages required" }, { status: 400 });
 
-    const lastMsg = body.messages[body.messages.length - 1].content;
+    const messages = [
+      { role: "system", content: agent.instructions },
+      ...body.messages,
+    ];
 
     try {
-      const { execSync } = await import("child_process");
-      const raw = execSync(
-        `hermes -p ${agent.profile} chat -q ${JSON.stringify(lastMsg)}`,
-        { timeout: 60000, maxBuffer: 1024 * 1024, env: { ...process.env, HOME: "/opt/data" } }
-      ).toString();
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${OPENROUTER_KEY}`,
+          "HTTP-Referer": "https://wali-os.vercel.app",
+          "X-Title": "Wali OS",
+        },
+        body: JSON.stringify({ model: MODEL, messages, stream: false }),
+      });
 
-      // Extract the agent's reply from CLI output
-      const reply = raw
-        .replace(/^Query:.*$/m, "")
-        .replace(/Initializing agent.*$/m, "")
-        .replace(/─+/g, "")
-        .replace(/Resume this session with:[\s\S]*$/m, "")
-        .replace(/Session:[\s\S]*$/m, "")
-        .replace(/Title:.*$/m, "")
-        .replace(/Duration:.*$/m, "")
-        .replace(/Messages:.*$/m, "")
-        .replace(/╭─.*$/m, "")
-        .replace(/╰─.*$/m, "")
-        .replace(/Reasoning[\s\S]*?──┘/s, "")
-        .replace(/☤ Hermes[\s\S]*?──╮/s, "")
-        .trim();
+      if (!res.ok) {
+        return Response.json({ error: `OpenRouter: ${await res.text()}` }, { status: 502 });
+      }
 
-      return Response.json({ reply: reply || raw.trim() });
+      const data = await res.json();
+      const reply = data.choices?.[0]?.message?.content || "";
+      return Response.json({ reply });
     } catch (e) {
-      return Response.json({ error: `Agent: ${(e as Error).message}` }, { status: 502 });
+      return Response.json({ error: `API error: ${(e as Error).message}` }, { status: 502 });
     }
   }
 
