@@ -1,9 +1,10 @@
 /**
  * What the Hermes API exposes, and what Hermes may change.
  *
- * Hermes never deletes, never decides approvals, and never edits its own
- * agent definitions or the workspace settings. Email status changes go through
- * the action endpoints so the approval rule can't be skipped.
+ * Hermes never deletes, never decides approvals, and never changes an agent's
+ * on/off status or its "requires approval" guardrail (those stay with you), nor
+ * the workspace settings. Email status changes go through the action endpoints
+ * so the approval rule can't be skipped.
  */
 import { ApiError } from "./server";
 
@@ -28,6 +29,9 @@ const CAMPAIGN_COLS = [
   "booked", "revenue", "start_date", "end_date", "notes",
 ];
 
+const AGENT_COLS = ["name", "role", "instructions", "scopes", "avatar_url"];
+export const AGENT_SCOPES = ["Email", "Clients", "Tasks", "Campaigns", "Approvals"];
+
 export const RESOURCES: Record<string, Resource> = {
   clients: { table: "clients", create: CLIENT_COLS, update: CLIENT_COLS, filters: ["status", "health", "owner", "email"], order: "created_at" },
   tasks: { table: "tasks", create: TASK_COLS, update: TASK_COLS, filters: ["status", "priority", "assignee", "client_id"], order: "created_at" },
@@ -47,7 +51,14 @@ export const RESOURCES: Record<string, Resource> = {
     filters: ["status", "client_id", "contact_email"],
     order: "updated_at",
   },
-  agents: { table: "agents", create: null, update: null, filters: ["status"], order: "created_at" },
+  agents: {
+    table: "agents",
+    // New agents start active with "requires approval" on (database defaults).
+    create: AGENT_COLS,
+    update: AGENT_COLS,
+    filters: ["status", "name"],
+    order: "created_at",
+  },
   team: { table: "team_members", create: null, update: null, filters: [], order: "created_at" },
 };
 
@@ -64,4 +75,18 @@ export function pick(body: Record<string, unknown>, allowed: string[] | null, ve
   if (unknown.length) throw new ApiError(400, `Not allowed to set: ${unknown.join(", ")}. Allowed: ${allowed.join(", ")}`);
   if (!Object.keys(body).length) throw new ApiError(400, "Nothing to change");
   return body;
+}
+
+/** Extra checks for agent fields the database can't enforce. */
+export function validateAgent(row: Record<string, unknown>) {
+  if ("scopes" in row) {
+    const s = row.scopes;
+    if (!Array.isArray(s) || s.some((x) => !AGENT_SCOPES.includes(x as string)))
+      throw new ApiError(400, `"scopes" must be a list drawn from: ${AGENT_SCOPES.join(", ")}`);
+  }
+  if ("avatar_url" in row) {
+    const u = row.avatar_url;
+    if (typeof u !== "string" || (u !== "" && !/^https:\/\/\S+$/.test(u)))
+      throw new ApiError(400, '"avatar_url" must be an https:// URL (or use POST /api/hermes/agents/:id/avatar to upload a file)');
+  }
 }

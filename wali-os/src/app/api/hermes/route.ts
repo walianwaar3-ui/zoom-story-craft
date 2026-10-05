@@ -17,6 +17,8 @@ export const GET = handler(async () =>
       "POST /api/hermes/threads/:id/submit-reply {body}": "Queue a reply for approval.",
       "POST /api/hermes/threads/:id/sent": "Record that the approved reply was sent.",
       "POST /api/hermes/approvals/:id/executed": "Mark an approved request as carried out.",
+      "POST /api/hermes/agents/:id/avatar {image_base64, content_type}": "Upload an agent's photo (max 2 MB).",
+      "POST /api/agents/:agent/chat {messages}": "Chat as an agent (uses its Wali OS instructions + live context).",
     },
     resources: Object.fromEntries(
       Object.entries(RESOURCES).map(([k, r]) => [k, { create: r.create ?? "read only", update: r.update ?? "read only", filters: r.filters }])
@@ -25,6 +27,7 @@ export const GET = handler(async () =>
       "Nothing is deleted through this API.",
       "Only you approve or reject approvals, in Wali OS.",
       "Act only on approvals in approvals_to_carry_out, then call /executed.",
+      "Only Wali switches agents on/off or changes 'requires approval'; skip paused agents.",
     ],
   })
 );

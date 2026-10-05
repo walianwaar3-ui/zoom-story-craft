@@ -228,3 +228,12 @@ begin
       'create or replace trigger log_activity after insert or update or delete on public.%I for each row execute function public.log_activity()', t);
   end loop;
 end $$;
+
+-- ── Agent photos ────────────────────────────────────────────────────────────
+-- avatar_url is set by Hermes (POST /api/hermes/agents/:id/avatar uploads to the
+-- public "agent-avatars" bucket) or typed in Wali OS. Only the server (service
+-- role) can write to the bucket; anyone with the link can view a photo.
+alter table public.agents add column if not exists avatar_url text not null default '';
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('agent-avatars', 'agent-avatars', true, 2097152, array['image/png', 'image/jpeg', 'image/webp', 'image/gif'])
+on conflict (id) do nothing;

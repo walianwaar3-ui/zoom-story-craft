@@ -1,5 +1,5 @@
 import { check, handler, json, readBody } from "@/lib/hermes/server";
-import { pick, resource } from "@/lib/hermes/resources";
+import { pick, resource, validateAgent } from "@/lib/hermes/resources";
 
 type Ctx = { params: Promise<{ resource: string }> };
 
@@ -24,6 +24,7 @@ export const POST = handler<Ctx>(async (db, req, ctx) => {
   const name = (await ctx.params).resource;
   const r = resource(name);
   const row = pick(await readBody(req), r.create, "create");
+  if (name === "agents") validateAgent(row);
   if (name === "approvals") row.status = "pending";
   if (name === "approvals" && !row.requested_by) row.requested_by = "Hermes";
   const created = check(await db.from(r.table).insert(row).select().single());

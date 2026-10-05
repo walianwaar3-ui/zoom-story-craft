@@ -117,6 +117,8 @@ export interface Agent {
   scopes: AgentScope[];
   status: AgentStatus;
   requiresApproval: boolean;
+  /** Public image URL (set by Hermes or by hand). Empty = default icon. */
+  avatarUrl: string;
   createdAt: string;
 }
 

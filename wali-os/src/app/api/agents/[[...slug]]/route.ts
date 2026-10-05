@@ -1,14 +1,39 @@
 /**
- * Wali OS — Agent API (OpenRouter backend).
+ * Wali OS — Agent chat (OpenRouter backend).
  * Route: /api/agents/[[...slug]]
  *
- * Every method requires the Hermes API key or a signed-in Wali OS user's
- * Supabase access token as `Authorization: Bearer …`, so the OpenRouter key
- * can't be used by anyone who finds the URL.
+ *   GET  /api/agents               list agents (from Wali OS)
+ *   GET  /api/agents/:agent        one agent (id, or name such as "coo")
+ *   POST /api/agents/:agent/chat   {messages: [{role: "user"|"assistant", content}]} → {reply}
+ *
+ * Agents live in the `agents` table: Hermes creates and edits them through
+ * /api/hermes/agents, you switch them on/off in Wali OS. Every call requires the
+ * Hermes API key or a signed-in Wali OS user's Supabase access token as
+ * `Authorization: Bearer …`, so the OpenRouter key can't be used by anyone who
+ * finds the URL.
  */
-import { hermesOrUser } from "@/lib/hermes/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
-const unauthorized = () => Response.json({ error: "Unauthorized" }, { status: 401 });
+import { buildContext } from "@/lib/hermes/context";
+import { adminDb, hermesOrUser } from "@/lib/hermes/server";
+
+const MODEL = process.env.AGENT_MODEL || "deepseek/deepseek-v4-pro";
+/** Cap on the live context put in the prompt, to bound cost per message. */
+const CONTEXT_CHARS = 40_000;
+
+type AgentRow = {
+  id: string;
+  name: string;
+  role: string;
+  instructions: string;
+  scopes: string[];
+  status: string;
+  requires_approval: boolean;
+  avatar_url: string;
+};
+
+const err = (error: string, status: number) => Response.json({ error }, { status });
+const slugify = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
 /** Only plain user/assistant turns: callers can't replace the agent's system prompt. */
 function cleanMessages(input: unknown) {
@@ -21,137 +46,112 @@ function cleanMessages(input: unknown) {
   return out;
 }
 
-const OPENROUTER_KEY = process.env.OPENROUTER_API_KEY;
-const MODEL = process.env.AGENT_MODEL || "deepseek/deepseek-v4-pro";
-
-interface AgentEntry {
-  id: string;
-  profile: string;
-  name: string;
-  role: string;
-  instructions: string;
-  scopes: string[];
-  requiresApproval: boolean;
+function parseSlug(request: Request) {
+  const path = new URL(request.url).pathname.replace(/^\/api\/agents/, "").replace(/^\/+/, "");
+  const parts = path.split("/").filter(Boolean).map(decodeURIComponent);
+  return { key: parts[0], action: parts[1], extra: parts.length > 2 };
 }
 
-const agents: Record<string, AgentEntry> = {
-  coo: {
-    id: "coo", profile: "default",
-    name: "COO", role: "Strategic oversight, client context, knowledge base",
-    instructions: "You are the COO of Wali Digital Consulting. Wali is the founder. You oversee strategy, client relationships, agent orchestration, and knowledge management. Diagnose before acting. Verify after executing. Be concise — no filler, no emoji, no em dashes. When Wali asks a question, answer directly.",
-    scopes: ["Clients", "Tasks", "Campaigns", "Approvals"], requiresApproval: false,
-  },
-  operator: {
-    id: "operator", profile: "operator",
-    name: "Operator", role: "GHL/CRM, automations, integrations, pipeline fixes",
-    instructions: "You are the Operator for Wali Digital Consulting. Handle GHL CRM, automations, integrations, sub-accounts, and pipeline fixes. Core rule: diagnose first — clarify before acting, inspect live state, identify root cause, apply minimal fix, verify. Never assume. You do NOT handle Meta Ads, creative, campaign strategy, or client meetings. Be concise, no filler, no emoji.",
-    scopes: ["Clients", "Tasks"], requiresApproval: true,
-  },
-};
+async function listAgents(db: SupabaseClient): Promise<AgentRow[]> {
+  const { data, error } = await db
+    .from("agents")
+    .select("id, name, role, instructions, scopes, status, requires_approval, avatar_url")
+    .order("created_at");
+  if (error) throw new Error(error.message);
+  return (data ?? []) as AgentRow[];
+}
 
-function parseSlug(request: Request) {
-  const path = new URL(request.url).pathname.replace("/api/agents", "").replace(/^\/+/, "");
-  const parts = path.split("/").filter(Boolean);
-  return { id: parts[0], action: parts[1] };
+/** Find by id, or by name ("COO", "coo", "email-assistant"). */
+async function findAgent(db: SupabaseClient, key: string) {
+  const k = slugify(key);
+  return (await listAgents(db)).find((a) => a.id === key || slugify(a.name) === k);
+}
+
+async function guard(request: Request) {
+  if (!(await hermesOrUser(request))) return { res: err("Unauthorized", 401) };
+  const db = adminDb();
+  if (!db) return { res: err("Server is missing SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_URL", 503) };
+  return { db };
+}
+
+function systemPrompt(agent: AgentRow, context: unknown) {
+  let live = JSON.stringify(context);
+  if (live.length > CONTEXT_CHARS) live = live.slice(0, CONTEXT_CHARS) + "…(truncated)";
+  return [
+    agent.instructions || `You are ${agent.name}. ${agent.role}.`,
+    "",
+    `You are "${agent.name}" inside Wali OS, the operating system of Wali's consulting business.`,
+    `Your role: ${agent.role || "not set"}. You work on: ${agent.scopes.join(", ") || "not set"}.`,
+    "In this chat you advise and draft; you cannot change data or contact anyone yourself.",
+    agent.requires_approval
+      ? "Anything you'd send to a client or that costs money must go to Approvals first, for Wali to approve."
+      : "",
+    "Stay within your role. Base answers on the live data below; say so when something isn't in it.",
+    "",
+    `Live Wali OS data (${new Date().toISOString()}):`,
+    live,
+  ]
+    .filter((l) => l !== "")
+    .join("\n");
 }
 
 // ── GET ──
 
 export async function GET(request: Request) {
-  if (!(await hermesOrUser(request))) return unauthorized();
-  const { id } = parseSlug(request);
-  if (!id) return Response.json({ agents: Object.values(agents) });
-  const a = agents[id];
-  return a ? Response.json(a) : Response.json({ error: "Not found" }, { status: 404 });
+  const g = await guard(request);
+  if (g.res) return g.res;
+  const { key, action } = parseSlug(request);
+  if (action) return err("Not found", 404);
+  try {
+    if (!key) return Response.json({ agents: await listAgents(g.db) });
+    const a = await findAgent(g.db, key);
+    return a ? Response.json(a) : err("Agent not found", 404);
+  } catch (e) {
+    console.error("agents", e);
+    return err("Internal error", 500);
+  }
 }
 
-// ── POST ──
+// ── POST /api/agents/:agent/chat ──
 
 export async function POST(request: Request) {
-  if (!(await hermesOrUser(request))) return unauthorized();
-  const { id, action } = parseSlug(request);
+  const g = await guard(request);
+  if (g.res) return g.res;
+  const { key, action, extra } = parseSlug(request);
+  if (!key || action !== "chat" || extra)
+    return err("Not found. Create or edit agents with /api/hermes/agents; chat with POST /api/agents/:agent/chat", 404);
 
-  // Create agent
-  if (!id) {
-    const body = await request.json();
-    const name = body.name?.trim();
-    const role = body.role?.trim();
-    if (!name || !role) return Response.json({ error: "name and role required" }, { status: 400 });
+  const key_ = process.env.OPENROUTER_API_KEY;
+  if (!key_) return err("OPENROUTER_API_KEY not set", 503);
 
-    const agentId = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-    if (agents[agentId]) return Response.json({ error: "Already exists" }, { status: 409 });
+  const body = await request.json().catch(() => ({}));
+  const history = cleanMessages(body.messages);
+  if (!history) return err("messages must be 1-50 {role: user|assistant, content: string} items", 400);
 
-    agents[agentId] = {
-      id: agentId, profile: agentId, name, role,
-      instructions: body.instructions || body.playbook || `You are ${name}. ${role}.`,
-      scopes: body.scopes || body.tools || [],
-      requiresApproval: body.requiresApproval ?? true,
-    };
-    return Response.json({ agent: agents[agentId] }, { status: 201 });
-  }
+  try {
+    const agent = await findAgent(g.db, key);
+    if (!agent) return err("Agent not found", 404);
+    if (agent.status !== "active") return err(`${agent.name} is paused. Switch it on in Wali OS → Agents.`, 409);
 
-  // Chat
-  if (action === "chat") {
-    if (!OPENROUTER_KEY) return Response.json({ error: "OPENROUTER_API_KEY not set" }, { status: 500 });
-
-    const agent = agents[id];
-    if (!agent) return Response.json({ error: "Agent not found" }, { status: 404 });
-
-    const body = await request.json().catch(() => ({}));
-    const history = cleanMessages(body.messages);
-    if (!history) return Response.json({ error: "messages must be 1-50 {role: user|assistant, content: string} items" }, { status: 400 });
-
-    const messages = [{ role: "system", content: agent.instructions }, ...history];
-
-    try {
-      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${OPENROUTER_KEY}`,
-          "HTTP-Referer": "https://wali-os.vercel.app",
-          "X-Title": "Wali OS",
-        },
-        body: JSON.stringify({ model: MODEL, messages, stream: false }),
-      });
-
-      if (!res.ok) {
-        return Response.json({ error: `OpenRouter: ${await res.text()}` }, { status: 502 });
-      }
-
-      const data = await res.json();
-      const reply = data.choices?.[0]?.message?.content || "";
-      return Response.json({ reply });
-    } catch (e) {
-      return Response.json({ error: `API error: ${(e as Error).message}` }, { status: 502 });
+    const messages = [{ role: "system", content: systemPrompt(agent, await buildContext(g.db)) }, ...history];
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${key_}`,
+        "HTTP-Referer": "https://wali-os.vercel.app",
+        "X-Title": "Wali OS",
+      },
+      body: JSON.stringify({ model: MODEL, messages, stream: false }),
+    });
+    if (!res.ok) {
+      console.error("openrouter", res.status, await res.text());
+      return err(`The AI service returned an error (${res.status})`, 502);
     }
+    const data = await res.json();
+    return Response.json({ reply: data.choices?.[0]?.message?.content || "", agent: { id: agent.id, name: agent.name } });
+  } catch (e) {
+    console.error("agents chat", e);
+    return err("Internal error", 500);
   }
-
-  return Response.json({ error: "Not found" }, { status: 404 });
-}
-
-// ── PUT ──
-
-export async function PUT(request: Request) {
-  if (!(await hermesOrUser(request))) return unauthorized();
-  const { id } = parseSlug(request);
-  if (!id || !agents[id]) return Response.json({ error: "Not found" }, { status: 404 });
-  const body = await request.json();
-  const a = agents[id];
-  if (body.name) a.name = body.name;
-  if (body.role) a.role = body.role;
-  if (body.instructions !== undefined) a.instructions = body.instructions;
-  if (body.scopes) a.scopes = body.scopes;
-  if (body.requiresApproval !== undefined) a.requiresApproval = body.requiresApproval;
-  return Response.json({ agent: a });
-}
-
-// ── DELETE ──
-
-export async function DELETE(request: Request) {
-  if (!(await hermesOrUser(request))) return unauthorized();
-  const { id } = parseSlug(request);
-  if (!id || !agents[id]) return Response.json({ error: "Not found" }, { status: 404 });
-  delete agents[id];
-  return Response.json({ deleted: true });
 }
