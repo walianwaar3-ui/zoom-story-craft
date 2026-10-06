@@ -9,6 +9,7 @@ import type {
   Approval,
   Campaign,
   Client,
+  ClientService,
   CollectionKey,
   EmailMessage,
   EmailThread,
@@ -29,6 +30,7 @@ const opt = <T,>(v: T | undefined | null) => (v === undefined || v === null || v
 
 export const TABLES: Record<CollectionKey, string> = {
   clients: "clients",
+  services: "client_services",
   threads: "email_threads",
   campaigns: "campaigns",
   tasks: "tasks",
@@ -40,7 +42,7 @@ export const MESSAGES_TABLE = "email_messages";
 export const SETTINGS_TABLE = "workspace_settings";
 
 /** Write order respects foreign keys: referenced rows first. */
-export const WRITE_ORDER: CollectionKey[] = ["team", "agents", "clients", "campaigns", "threads", "tasks", "approvals"];
+export const WRITE_ORDER: CollectionKey[] = ["team", "agents", "clients", "services", "campaigns", "threads", "tasks", "approvals"];
 
 export const settingsMapper = {
   from: (r: Row): Settings => ({
@@ -109,6 +111,35 @@ const clientMapper: Mapper<Client> = {
     tags: c.tags,
     created_at: c.createdAt,
     last_contact: opt(c.lastContact),
+  }),
+};
+
+const serviceMapper: Mapper<ClientService> = {
+  from: (r) => ({
+    id: str(r.id),
+    clientId: str(r.client_id),
+    name: str(r.name),
+    kind: r.kind === "monthly" ? "monthly" : "one-time",
+    status: str(r.status) as ClientService["status"],
+    amount: num(r.amount),
+    startDate: str(r.start_date),
+    endDate: str(r.end_date),
+    paidDate: str(r.paid_date),
+    notes: str(r.notes),
+    createdAt: tsReq(r.created_at),
+  }),
+  to: (s) => ({
+    id: s.id,
+    client_id: s.clientId,
+    name: s.name,
+    kind: s.kind,
+    status: s.status,
+    amount: s.amount,
+    start_date: dateOrNull(s.startDate),
+    end_date: dateOrNull(s.endDate),
+    paid_date: dateOrNull(s.paidDate),
+    notes: s.notes,
+    created_at: s.createdAt,
   }),
 };
 
@@ -273,6 +304,7 @@ const teamMapper: Mapper<TeamMember> = {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any -- heterogeneous registry keyed by collection
 export const MAPPERS: Record<CollectionKey, Mapper<any>> = {
   clients: clientMapper,
+  services: serviceMapper,
   threads: threadMapper,
   campaigns: campaignMapper,
   tasks: taskMapper,

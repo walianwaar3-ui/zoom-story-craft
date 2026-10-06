@@ -134,7 +134,7 @@ export function ClientFormDialog({
                 </SelectContent>
               </Select>
             </Field>
-            <Field label={`Monthly revenue (${db.settings.currency})`} htmlFor="c-mrr">
+            <Field label={`Monthly revenue (${db.settings.currency})`} htmlFor="c-mrr" hint="Retainers only. Log one-time projects in the client's Services tab.">
               <Input id="c-mrr" type="number" min={0} inputMode="decimal" value={form.mrr} onChange={(e) => set("mrr", e.target.value)} placeholder="0" />
             </Field>
             <Field label="Owner">

@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { clientFile } from "@/lib/hermes/client-file";
 import { ApiError, check, handler, json, readBody, requireId, requireText } from "@/lib/hermes/server";
 
 type Ctx = { params: Promise<{ resource: string; id: string; action: string }> };
@@ -16,6 +17,24 @@ const ACTIONS: Record<string, Record<string, (db: SupabaseClient, id: string, bo
   agents: { avatar },
   runs: { start, finish, fail },
 };
+
+/** Read-only views: GET clients/:id/context is the client's file for AI work. */
+const VIEWS: Record<string, Record<string, (db: SupabaseClient, id: string, url: URL) => Promise<unknown>>> = {
+  clients: {
+    context: (db, id, url) =>
+      clientFile(db, id, { meetings: Number(url.searchParams.get("meetings")) || undefined, transcriptChars: Number(url.searchParams.get("transcript_chars")) || undefined }),
+  },
+};
+
+export const GET = handler<Ctx>(
+  async (db, req, ctx) => {
+    const { resource, id, action } = await ctx.params;
+    const fn = Object.hasOwn(VIEWS, resource) && Object.hasOwn(VIEWS[resource], action) ? VIEWS[resource][action] : undefined;
+    if (!fn) throw new ApiError(404, "Unknown view. Available: clients/:id/context");
+    return json({ data: await fn(db, requireId(id), new URL(req.url)) });
+  },
+  { allowUser: true }
+);
 
 export const POST = handler<Ctx>(async (db, req, ctx) => {
   const { resource, id, action } = await ctx.params;

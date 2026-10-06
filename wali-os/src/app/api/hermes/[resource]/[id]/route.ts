@@ -7,7 +7,8 @@ type Ctx = { params: Promise<{ resource: string; id: string }> };
 export const GET = handler<Ctx>(async (db, _req, ctx) => {
   const { resource: name, id } = await ctx.params;
   const r = resource(name);
-  const select = selectFor(name);
+  // One meeting comes with its transcript.
+  const select = selectFor(name, { transcript: true });
   const row = check(await db.from(r.table).select(select).eq("id", requireId(id)).single());
   return json({ data: row });
 });

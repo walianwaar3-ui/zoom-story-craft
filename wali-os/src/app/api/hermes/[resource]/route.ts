@@ -1,4 +1,5 @@
 import { check, handler, json, readBody } from "@/lib/hermes/server";
+import { saveMeeting } from "@/lib/hermes/client-file";
 import { pick, resource, selectFor, validateAgent } from "@/lib/hermes/resources";
 
 type Ctx = { params: Promise<{ resource: string }> };
@@ -10,7 +11,7 @@ export const GET = handler<Ctx>(async (db, req, ctx) => {
   const url = new URL(req.url);
   const limit = Math.min(Math.max(Number(url.searchParams.get("limit")) || 100, 1), 500);
 
-  let q = db.from(r.table).select(selectFor(name));
+  let q = db.from(r.table).select(selectFor(name, { transcript: url.searchParams.get("transcript") === "1" }));
   for (const f of r.filters) {
     const v = url.searchParams.get(f);
     if (v !== null) q = q.eq(f, v);
@@ -23,6 +24,8 @@ export const GET = handler<Ctx>(async (db, req, ctx) => {
 export const POST = handler<Ctx>(async (db, req, ctx) => {
   const name = (await ctx.params).resource;
   const r = resource(name);
+  // Meetings: upsert by external_id, client linked by client_id / client_email / attendee emails.
+  if (name === "meetings") return json({ data: await saveMeeting(db, await readBody(req)) }, 201);
   const row = pick(await readBody(req), r.create, "create");
   if (name === "agents") validateAgent(row);
   if (name === "approvals") row.status = "pending";

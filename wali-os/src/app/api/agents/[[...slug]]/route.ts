@@ -16,6 +16,7 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { clientFile, mentionedClients } from "@/lib/hermes/client-file";
 import { buildContext } from "@/lib/hermes/context";
 import { adminDb, hermesOrUser } from "@/lib/hermes/server";
 
@@ -76,9 +77,13 @@ async function guard(request: Request) {
   return { db };
 }
 
-function systemPrompt(agent: AgentRow, context: unknown) {
+function systemPrompt(agent: AgentRow, context: unknown, files: unknown[] = []) {
   let live = JSON.stringify(context);
   if (live.length > CONTEXT_CHARS) live = live.slice(0, CONTEXT_CHARS) + "…(truncated)";
+  const fileText = files.map((f) => {
+    const s = JSON.stringify(f);
+    return s.length > 30_000 ? s.slice(0, 30_000) + "…(truncated)" : s;
+  });
   return [
     agent.instructions || `You are ${agent.name}. ${agent.role}.`,
     "",
@@ -92,6 +97,9 @@ function systemPrompt(agent: AgentRow, context: unknown) {
     "",
     `Live Wali OS data (${new Date().toISOString()}):`,
     live,
+    ...(fileText.length
+      ? ["", "Client files for the clients in this conversation (services, meetings with the latest transcript, recent emails). Use them; cite the meeting or email you rely on.", ...fileText]
+      : []),
   ]
     .filter((l) => l !== "")
     .join("\n");
@@ -138,7 +146,11 @@ export async function POST(request: Request) {
     if (!agent) return err("Agent not found", 404);
     if (agent.status !== "active") return err(`${agent.name} is paused. Switch it on in Wali OS → Agents.`, 409);
 
-    const messages = [{ role: "system", content: systemPrompt(agent, await buildContext(g.db)) }, ...history];
+    // Clients named in the recent conversation get their full file attached.
+    const recentText = history.slice(-4).map((m) => m.content).join("\n");
+    const named = mentionedClients(((await g.db.from("clients").select("id, name, company")).data ?? []) as { id: string; name: string; company: string }[], recentText);
+    const files = await Promise.all(named.map((id) => clientFile(g.db, id).catch(() => null)));
+    const messages = [{ role: "system", content: systemPrompt(agent, await buildContext(g.db), files.filter(Boolean)) }, ...history];
     const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {

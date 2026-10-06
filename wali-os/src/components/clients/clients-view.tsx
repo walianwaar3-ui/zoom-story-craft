@@ -31,14 +31,14 @@ import { cn, formatCurrency, initials } from "@/lib/utils";
 import { ClientDetail } from "./client-detail";
 import { ClientFormDialog } from "./client-form";
 
-type SortKey = "mrr" | "name" | "createdAt";
+type SortKey = "mrr" | "name" | "createdAt" | "lifetime";
 const statuses = Object.keys(clientStatusMeta) as ClientStatus[];
 
 export function ClientsView() {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
-  const { db, remove } = useStore();
+  const { db, transact } = useStore();
   const currency = db.settings.currency;
   const clients = db.clients;
 
@@ -52,20 +52,28 @@ export function ClientsView() {
   const [editing, setEditing] = React.useState<Client | undefined>();
   const [deleting, setDeleting] = React.useState<Client | undefined>();
 
+  // Lifetime paid per client, from their services (projects and retainers).
+  const lifetime = React.useMemo(() => {
+    const m = new Map<string, number>();
+    for (const s of db.services) if (s.status === "paid") m.set(s.clientId, (m.get(s.clientId) ?? 0) + s.amount);
+    return m;
+  }, [db.services]);
+
   const filtered = React.useMemo(() => {
     const q = query.trim().toLowerCase();
     return clients
       .filter((c) => status === "all" || c.status === status)
       .filter((c) => !q || `${c.name} ${c.company} ${c.email} ${c.country} ${c.tags.join(" ")}`.toLowerCase().includes(q))
       .sort((a, b) => {
-        const av = a[sort.key];
-        const bv = b[sort.key];
+        const av = sort.key === "lifetime" ? (lifetime.get(a.id) ?? 0) : a[sort.key];
+        const bv = sort.key === "lifetime" ? (lifetime.get(b.id) ?? 0) : b[sort.key];
         return (typeof av === "number" ? av - (bv as number) : String(av).localeCompare(String(bv))) * sort.dir;
       });
-  }, [clients, query, status, sort]);
+  }, [clients, query, status, sort, lifetime]);
 
   const count = (s: "all" | ClientStatus) => (s === "all" ? clients.length : clients.filter((c) => c.status === s).length);
   const activeMrr = clients.filter((c) => c.status === "active" || c.status === "onboarding").reduce((s, c) => s + c.mrr, 0);
+  const lifetimeTotal = [...lifetime.values()].reduce((s, v) => s + v, 0);
 
   const setSelected = (id: string | null) => {
     const next = new URLSearchParams(params.toString());
@@ -89,7 +97,7 @@ export function ClientsView() {
         title="Clients"
         description={
           clients.length
-            ? `${count("active")} active · ${count("lead")} leads · ${formatCurrency(activeMrr, currency)} monthly revenue`
+            ? `${count("active")} active · ${count("lead")} leads · ${formatCurrency(activeMrr, currency)} monthly revenue · ${formatCurrency(lifetimeTotal, currency)} lifetime paid`
             : "Your leads and clients, in one place."
         }
         actions={
@@ -152,6 +160,11 @@ export function ClientsView() {
                       Monthly <ArrowUpDown className="size-3" />
                     </button>
                   </TableHead>
+                  <TableHead className="hidden text-right sm:table-cell">
+                    <button className="inline-flex cursor-pointer items-center gap-1 uppercase" onClick={() => toggleSort("lifetime")}>
+                      Lifetime <ArrowUpDown className="size-3" />
+                    </button>
+                  </TableHead>
                   <TableHead>Health</TableHead>
                   <TableHead className="hidden xl:table-cell">Next action</TableHead>
                   <TableHead className="w-10 pr-4" />
@@ -160,7 +173,7 @@ export function ClientsView() {
               <TableBody>
                 {filtered.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={8} className="py-14 text-center text-sm text-muted-foreground">
+                    <TableCell colSpan={9} className="py-14 text-center text-sm text-muted-foreground">
                       No clients match these filters.
                     </TableCell>
                   </TableRow>
@@ -185,6 +198,9 @@ export function ClientsView() {
                     <TableCell className="hidden text-muted-foreground lg:table-cell">{c.country || "—"}</TableCell>
                     <TableCell className={cn("text-right font-medium tabular", c.mrr === 0 && "text-muted-foreground")}>
                       {formatCurrency(c.mrr, currency)}
+                    </TableCell>
+                    <TableCell className={cn("hidden text-right tabular sm:table-cell", !lifetime.get(c.id) && "text-muted-foreground")}>
+                      {formatCurrency(lifetime.get(c.id) ?? 0, currency)}
                     </TableCell>
                     <TableCell>
                       <HealthBadge health={c.health} />
@@ -219,7 +235,7 @@ export function ClientsView() {
       )}
 
       <Sheet open={!!selected} onOpenChange={(o) => !o && setSelected(null)}>
-        <SheetContent className="p-0 sm:max-w-lg">
+        <SheetContent className="p-0 sm:max-w-xl">
           {selected && <ClientDetail client={selected} onEdit={() => openForm(selected)} onDelete={() => setDeleting(selected)} />}
         </SheetContent>
       </Sheet>
@@ -230,10 +246,12 @@ export function ClientsView() {
         open={!!deleting}
         onOpenChange={(o) => !o && setDeleting(undefined)}
         title={`Delete ${deleting?.name}?`}
-        description="This removes the client record. Linked emails and tasks are kept."
+        description="This removes the client record and its services. Linked emails, tasks and meetings are kept."
         onConfirm={() => {
           if (!deleting) return;
-          remove("clients", deleting.id);
+          // Their services go too (as in the database); emails, tasks and meetings are kept.
+          const gone = deleting.id;
+          transact((d) => ({ ...d, clients: d.clients.filter((c) => c.id !== gone), services: d.services.filter((s) => s.clientId !== gone) }));
           if (deleting.id === selectedId) setSelected(null);
           toast.success("Client deleted");
         }}
