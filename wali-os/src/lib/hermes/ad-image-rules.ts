@@ -65,3 +65,34 @@ export const REUSE_RULES = [
   '- Only call generate_ad_image when Wali explicitly asks for AI-generated images (e.g. "generate new images"). Otherwise it is refused.',
   "- To launch it, use create_ad with the winner as source_ad_id: Hermes reuses the exact same picture.",
 ].join("\n");
+
+/** Default image model: GPT Image 2 on Fal (same FAL_KEY). FAL_IMAGE_MODEL overrides it. */
+export const DEFAULT_IMAGE_MODEL = "openai/gpt-image-2";
+
+/**
+ * Exact pixel sizes per ad format for GPT Image 2: multiples of 16 and within
+ * its 655,360 to 8,294,400 pixel range (Fal's 9:16 preset falls below it).
+ * Portrait is Meta's 4:5 feed shape.
+ */
+const GPT_IMAGE_SIZES: Record<string, { width: number; height: number }> = {
+  square: { width: 1024, height: 1024 },
+  portrait: { width: 1024, height: 1280 },
+  story: { width: 1088, height: 1920 },
+  landscape: { width: 1920, height: 1088 },
+};
+const FLUX_SIZES: Record<string, string> = { square: "square_hd", portrait: "portrait_4_3", story: "portrait_16_9", landscape: "landscape_16_9" };
+
+/** Request body for Fal's image endpoint, shaped for the model in use. */
+export function falImageRequest(model: string, prompt: string, format: string, count: number, quality = "high") {
+  const num_images = Math.min(Math.max(Math.floor(count) || 1, 1), 4);
+  if (model.startsWith("openai/gpt-image")) {
+    return {
+      prompt,
+      image_size: GPT_IMAGE_SIZES[format] ?? GPT_IMAGE_SIZES.square,
+      quality: ["low", "medium", "high", "auto"].includes(quality) ? quality : "high",
+      num_images,
+      output_format: "jpeg",
+    };
+  }
+  return { prompt, image_size: FLUX_SIZES[format] ?? "square_hd", num_images };
+}

@@ -7,7 +7,7 @@
  *   - get_account_overview / get_breakdown / get_ad_details: read Meta Ads data and
  *     ad creatives (read-only)
  *   - reuse_ad_image: reuse a winning ad's real image (the default for new concepts)
- *   - generate_ad_image: create ad images with Fal.ai, only when Wali asks for AI images
+ *   - generate_ad_image: create ad images with GPT Image 2 (via Fal), only when Wali asks for AI images
  *   - create_ad: ONE finished ad per request (reused image + final copy), filed as a
  *     launch-ready approval
  *   - propose_change: put any other change to the ad account in Approvals.
@@ -31,13 +31,22 @@ import {
 } from "@/lib/hermes/meta";
 import { CTA_TYPES, EXECUTE_NUDGE, EXECUTE_RULES, adApprovalContent, adPreviewOf, asksForNewAd, type AdPreview, type AdSpec } from "@/lib/hermes/ad-launch";
 import { COPY_RULES, checkAdCopy } from "@/lib/hermes/ad-copy";
-import { IMAGE_RULES, ImageRuleError, REUSE_RULES, asksForAiImages, buildAdImagePrompt } from "@/lib/hermes/ad-image-rules";
+import {
+  DEFAULT_IMAGE_MODEL,
+  IMAGE_RULES,
+  ImageRuleError,
+  REUSE_RULES,
+  asksForAiImages,
+  buildAdImagePrompt,
+  falImageRequest,
+} from "@/lib/hermes/ad-image-rules";
 
 // 20 tool rounds can take a few minutes; the time budget below stops cleanly before this.
 export const maxDuration = 300;
 
 const MODEL = process.env.META_AGENT_MODEL || process.env.AGENT_MODEL || "deepseek/deepseek-v4-pro";
-const FAL_MODEL = process.env.FAL_IMAGE_MODEL || "fal-ai/flux/schnell";
+const FAL_MODEL = process.env.FAL_IMAGE_MODEL || DEFAULT_IMAGE_MODEL;
+const FAL_QUALITY = process.env.FAL_IMAGE_QUALITY || "high";
 const MAX_STEPS = 20;
 /** Stop starting new rounds after this, so a reply always comes back before maxDuration. */
 const TIME_BUDGET_MS = 240_000;
@@ -111,7 +120,7 @@ const TOOLS = [
     function: {
       name: "generate_ad_image",
       description:
-        "Only when Wali explicitly asks for AI-generated images; otherwise use reuse_ad_image. Generate ad creative images with Fal.ai. Every image must show real people (the coach/consultant and/or their clients) as the main subject. Empty desks, empty offices, laptops on tables and objects-only scenes are rejected. Keep text in the image short or absent; Meta penalises text-heavy images.",
+        "Only when Wali explicitly asks for AI-generated images; otherwise use reuse_ad_image. Generate photorealistic ad images with GPT Image 2. Every image must show real people (the coach/consultant and/or their clients) as the main subject. Empty desks, empty offices, laptops on tables and objects-only scenes are rejected. Keep text in the image short or absent; Meta penalises text-heavy images.",
       parameters: {
         type: "object",
         properties: {
@@ -120,7 +129,7 @@ const TOOLS = [
             description: "Who is in the shot and what they are doing, e.g. 'a confident female coach in her 40s leading a video call, smiling client visible on screen'",
           },
           prompt: { type: "string", description: "Setting, style, lighting, composition around those people. No empty scenes." },
-          format: { type: "string", enum: ["square", "portrait", "story", "landscape"], description: "square 1:1 feed, portrait 4:5-ish feed, story 9:16, landscape 16:9" },
+          format: { type: "string", enum: ["square", "portrait", "story", "landscape"], description: "square 1:1 feed, portrait 4:5 feed, story 9:16, landscape 16:9" },
           count: { type: "integer", minimum: 1, maximum: 4 },
         },
         required: ["people", "prompt"],
@@ -173,15 +182,13 @@ const TOOLS = [
   },
 ];
 
-const FAL_SIZES: Record<string, string> = { square: "square_hd", portrait: "portrait_4_3", story: "portrait_16_9", landscape: "landscape_16_9" };
-
 async function falImages(prompt: string, format: string, count: number) {
   const key = process.env.FAL_KEY;
   if (!key) throw new ApiError(503, "FAL_KEY not set");
   const res = await fetch(`https://fal.run/${FAL_MODEL}`, {
     method: "POST",
     headers: { Authorization: `Key ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ prompt, image_size: FAL_SIZES[format] ?? "square_hd", num_images: Math.min(Math.max(count, 1), 4) }),
+    body: JSON.stringify(falImageRequest(FAL_MODEL, prompt, format, count, FAL_QUALITY)),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
