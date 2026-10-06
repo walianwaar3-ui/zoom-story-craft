@@ -20,6 +20,41 @@ export interface Client {
   lastContact?: string;
 }
 
+export type ServiceKind = "one-time" | "monthly";
+export type ServiceStatus = "proposed" | "in-progress" | "delivered" | "paid" | "cancelled";
+
+/** Something a client buys: a one-time project or a monthly retainer. */
+export interface ClientService {
+  id: string;
+  clientId: string;
+  name: string;
+  kind: ServiceKind;
+  status: ServiceStatus;
+  amount: number;
+  startDate: string;
+  endDate: string;
+  paidDate: string;
+  notes: string;
+  createdAt: string;
+}
+
+/** A meeting in a client's file (Fathom via Hermes, or a manual note). Loaded per client, not synced. */
+export interface ClientMeeting {
+  id: string;
+  clientId?: string;
+  title: string;
+  occurredAt: string;
+  source: string;
+  url: string;
+  attendees: string[];
+  summary: string;
+  decisions: string;
+  actionItems: string;
+  risks: string;
+  /** Only filled when the full transcript is requested. */
+  transcript?: string;
+}
+
 export interface EmailMessage {
   id: string;
   direction: "in" | "out";
@@ -147,6 +182,7 @@ export interface Db {
   version: 1;
   settings: Settings;
   clients: Client[];
+  services: ClientService[];
   threads: EmailThread[];
   campaigns: Campaign[];
   tasks: Task[];

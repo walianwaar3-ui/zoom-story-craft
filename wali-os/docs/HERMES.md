@@ -129,6 +129,21 @@ When Wali presses **Run** on an agent card (optionally with an instruction), a r
 Wali sees Queued → Running → Done/Failed live on the card, with your result. A queued run can be
 cancelled by Wali; `start` then returns `409`.
 
+### Client file: services, meetings, emails
+
+Every client has a file: what they bought, what was said in meetings, and the latest emails. Keep it current so any AI working on a client has the full picture.
+
+| Call | What it does |
+| --- | --- |
+| `POST /api/hermes/meetings` | Save a meeting to a client's file. Body: `external_id` (the Fathom recording id: re-sending updates the same meeting, so the 30-minute poll is safe), `title`, `occurred_at` (ISO), `summary`, `decisions`, `action_items`, `risks`, `transcript`, `url`, `attendees` (names or emails), and `client_id` or `client_email`. Without those, the first attendee email that matches a client links it. Returns `linked: false` if no client matched; link it later with `PATCH /api/hermes/meetings/:id {client_id}`. Also bumps the client's `last_contact`. |
+| `GET /api/hermes/meetings?client_id=…` | A client's meetings, newest first, without transcripts (`&transcript=1` to include them). `GET /api/hermes/meetings/:id` returns one with its transcript. |
+| `GET /api/hermes/clients/:id/context` | **The client file for AI work**: the client, `value` (monthly, `lifetime_paid`, `open`, `proposed`, `engagements`, `returning`), services, the last 5 meetings (summaries, decisions, action items), the latest meeting's transcript (trimmed to 12,000 characters; `?transcript_chars=` and `?meetings=` to change), the last 5 email threads with their latest 8 messages, open tasks and pending approvals. Read this before drafting anything for a client. |
+| `GET/POST/PATCH /api/hermes/services` | A client's projects and retainers: `client_id`, `name`, `kind` (`one-time` or `monthly`), `status` (`proposed`, `in-progress`, `delivered`, `paid`, `cancelled`), `amount`, `start_date`, `end_date`, `paid_date`, `notes`. Log one-time projects here so returning clients keep one record and a lifetime value. |
+
+Email threads link to the client with the same email address automatically, in either order (thread first or client first). `GET /api/hermes/context` now includes each client's `lifetime_paid`, `engagements`, `open_services` and `last_meeting_at`, plus `recent_meetings`. Agent chats in Wali OS attach the full client file whenever a client is named.
+
+**Meeting analyser (Fathom, every 30 minutes):** for each new meeting, `POST /api/hermes/meetings` with `external_id` = the Fathom recording id, the transcript and your extracted summary, decisions, action items and risks, plus the attendee emails. Then create tasks and approvals as before, with the same `client_id` the meeting response returned.
+
 ## 4. What the API won't let Hermes do
 
 - Delete anything.

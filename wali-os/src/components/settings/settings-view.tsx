@@ -204,7 +204,7 @@ function TeamTab() {
   );
 }
 
-const COLLECTIONS: CollectionKey[] = ["clients", "threads", "tasks", "approvals", "campaigns", "agents", "team"];
+const COLLECTIONS: CollectionKey[] = ["clients", "services", "threads", "tasks", "approvals", "campaigns", "agents", "team"];
 
 /** Adds records from `extra` that `base` doesn't have yet (matched by id). */
 function mergeDb(base: Db, extra: Db): Db {

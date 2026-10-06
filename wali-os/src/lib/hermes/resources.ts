@@ -29,6 +29,11 @@ const CAMPAIGN_COLS = [
   "booked", "revenue", "start_date", "end_date", "notes",
 ];
 
+const SERVICE_COLS = ["client_id", "name", "kind", "status", "amount", "start_date", "end_date", "paid_date", "notes"];
+const MEETING_COLS = ["client_id", "title", "occurred_at", "source", "url", "attendees", "summary", "decisions", "action_items", "risks", "transcript"];
+/** Meeting list columns: everything but the transcript (ask with ?transcript=1). */
+export const MEETING_LIST = "id, client_id, title, occurred_at, source, external_id, url, attendees, summary, decisions, action_items, risks, created_at";
+
 const AGENT_COLS = ["name", "role", "instructions", "scopes", "avatar_url"];
 export const AGENT_SCOPES = ["Email", "Clients", "Tasks", "Campaigns", "Approvals"];
 
@@ -43,6 +48,16 @@ export const RESOURCES: Record<string, Resource> = {
     update: ["title", "summary", "content", "value", "risk"],
     filters: ["status", "type", "client_id", "thread_id", "requested_by"],
     order: "created_at",
+  },
+  // A client's projects and retainers (one-time or monthly).
+  services: { table: "client_services", create: SERVICE_COLS, update: SERVICE_COLS, filters: ["client_id", "status", "kind"], order: "created_at" },
+  // Meetings in a client's file. POST is an upsert by external_id and links the client by email (see client-file.ts).
+  meetings: {
+    table: "client_meetings",
+    create: [...MEETING_COLS, "external_id", "client_email"],
+    update: MEETING_COLS,
+    filters: ["client_id", "source", "external_id"],
+    order: "occurred_at",
   },
   threads: {
     table: "email_threads",
@@ -94,8 +109,9 @@ export function validateAgent(row: Record<string, unknown>) {
 }
 
 /** Columns returned for a resource: threads include messages, runs include their agent. */
-export function selectFor(name: string) {
+export function selectFor(name: string, opts: { transcript?: boolean } = {}) {
   if (name === "threads") return "*, messages:email_messages(*)";
+  if (name === "meetings" && !opts.transcript) return MEETING_LIST;
   if (name === "runs") return "*, agent:agents(id, name, role, instructions, scopes, status, requires_approval)";
   return "*";
 }

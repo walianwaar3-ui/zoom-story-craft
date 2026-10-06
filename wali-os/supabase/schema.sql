@@ -266,3 +266,93 @@ exception when duplicate_object then null;
 end $$;
 create or replace trigger log_activity after insert or update or delete on public.agent_runs
   for each row execute function public.log_activity();
+
+-- ── Client file: services/projects and meetings ─────────────────────────────
+-- Services are what a client buys: one-time projects or monthly retainers, so
+-- clients who come back for project after project keep one record and a
+-- lifetime value. Meetings hold Fathom summaries/transcripts posted by Hermes
+-- (deduped by external_id) or notes added by hand.
+create table if not exists public.client_services (
+  id uuid primary key default gen_random_uuid(),
+  client_id uuid not null references public.clients (id) on delete cascade,
+  name text not null,
+  kind text not null default 'one-time' check (kind in ('one-time', 'monthly')),
+  status text not null default 'in-progress'
+    check (status in ('proposed', 'in-progress', 'delivered', 'paid', 'cancelled')),
+  amount numeric not null default 0,
+  start_date date,
+  end_date date,
+  paid_date date,
+  notes text not null default '',
+  created_at timestamptz not null default now()
+);
+create index if not exists client_services_client_idx on public.client_services (client_id, created_at desc);
+
+create table if not exists public.client_meetings (
+  id uuid primary key default gen_random_uuid(),
+  client_id uuid references public.clients (id) on delete set null,
+  title text not null default '',
+  occurred_at timestamptz not null default now(),
+  source text not null default 'manual',
+  external_id text unique,
+  url text not null default '',
+  attendees text[] not null default '{}',
+  summary text not null default '',
+  decisions text not null default '',
+  action_items text not null default '',
+  risks text not null default '',
+  transcript text not null default '',
+  created_at timestamptz not null default now()
+);
+create index if not exists client_meetings_client_idx on public.client_meetings (client_id, occurred_at desc);
+
+do $$
+declare t text;
+begin
+  foreach t in array array['client_services', 'client_meetings']
+  loop
+    execute format('alter table public.%I enable row level security', t);
+    execute format('drop policy if exists "signed-in users have full access" on public.%I', t);
+    execute format(
+      'create policy "signed-in users have full access" on public.%I for all to authenticated using (true) with check (true)', t);
+    execute format('grant select, insert, update, delete on public.%I to authenticated', t);
+    execute format('revoke all on public.%I from anon', t);
+    execute format(
+      'create or replace trigger log_activity after insert or update or delete on public.%I for each row execute function public.log_activity()', t);
+  end loop;
+end $$;
+
+-- Services sync live into the app; meetings are loaded per client on demand.
+do $$ begin
+  alter publication supabase_realtime add table public.client_services;
+exception when duplicate_object then null;
+end $$;
+
+-- Email threads link themselves to the client with the same email address.
+create or replace function public.link_thread_client() returns trigger
+language plpgsql set search_path = public, pg_temp as $$
+begin
+  if new.client_id is null and coalesce(new.contact_email, '') <> '' then
+    select id into new.client_id from public.clients
+    where lower(email) = lower(new.contact_email) order by created_at limit 1;
+  end if;
+  return new;
+end $$;
+create or replace trigger link_thread_client before insert or update of contact_email, client_id on public.email_threads
+  for each row execute function public.link_thread_client();
+update public.email_threads t set client_id = c.id
+from public.clients c
+where t.client_id is null and t.contact_email <> '' and lower(c.email) = lower(t.contact_email);
+
+-- A client added (or given an email) after their emails arrived picks up those threads.
+create or replace function public.link_client_threads() returns trigger
+language plpgsql set search_path = public, pg_temp as $$
+begin
+  if coalesce(new.email, '') <> '' then
+    update public.email_threads set client_id = new.id
+    where client_id is null and lower(contact_email) = lower(new.email);
+  end if;
+  return null;
+end $$;
+create or replace trigger link_client_threads after insert or update of email on public.clients
+  for each row execute function public.link_client_threads();

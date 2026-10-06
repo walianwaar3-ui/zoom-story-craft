@@ -7,12 +7,16 @@ import { ClientStatusBadge, HealthBadge, PriorityLabel, ThreadStatusBadge } from
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
 import { SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { serviceTotals } from "@/lib/client-value";
 import type { Client } from "@/lib/data/types";
 import { dueLabel, formatDate, relativeTime } from "@/lib/format";
 import { useStore } from "@/lib/store";
 import { formatCurrency, initials } from "@/lib/utils";
+
+import { ClientMeetings } from "./client-meetings";
+import { ClientServices } from "./client-services";
 
 function Field({ icon: Icon, label, children }: { icon: React.ComponentType<{ className?: string }>; label: string; children: React.ReactNode }) {
   return (
@@ -29,7 +33,10 @@ function Field({ icon: Icon, label, children }: { icon: React.ComponentType<{ cl
 export function ClientDetail({ client, onEdit, onDelete }: { client: Client; onEdit: () => void; onDelete: () => void }) {
   const { db } = useStore();
   const clientTasks = db.tasks.filter((t) => t.clientId === client.id);
-  const threads = db.threads.filter((t) => t.clientId === client.id || (client.email && t.contactEmail.toLowerCase() === client.email.toLowerCase()));
+  const threads = db.threads
+    .filter((t) => t.clientId === client.id || (client.email && t.contactEmail.toLowerCase() === client.email.toLowerCase()))
+    .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  const totals = serviceTotals(db.services.filter((s) => s.clientId === client.id));
 
   return (
     <div className="flex h-full flex-col overflow-y-auto scrollbar-thin">
@@ -67,11 +74,23 @@ export function ClientDetail({ client, onEdit, onDelete }: { client: Client; onE
         </div>
       </SheetHeader>
 
-      <div className="space-y-6 p-5">
-        <div className="grid grid-cols-2 gap-3">
+      <Tabs defaultValue="overview" className="gap-0">
+        <TabsList className="mx-5 mt-4 w-auto self-start">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="services">Services</TabsTrigger>
+          <TabsTrigger value="meetings">Meetings</TabsTrigger>
+          <TabsTrigger value="emails">Emails{threads.length > 0 && ` (${threads.length})`}</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6 p-5">
+        <div className="grid grid-cols-3 gap-3">
           <div className="rounded-lg border p-3">
-            <p className="text-xs text-muted-foreground">Monthly revenue</p>
+            <p className="text-xs text-muted-foreground">Monthly</p>
             <p className="mt-1 font-semibold tabular">{formatCurrency(client.mrr, db.settings.currency)}</p>
+          </div>
+          <div className="rounded-lg border p-3">
+            <p className="text-xs text-muted-foreground">Lifetime paid</p>
+            <p className="mt-1 font-semibold tabular">{formatCurrency(totals.paid, db.settings.currency)}</p>
           </div>
           <div className="rounded-lg border p-3">
             <p className="text-xs text-muted-foreground">Health</p>
@@ -104,26 +123,6 @@ export function ClientDetail({ client, onEdit, onDelete }: { client: Client; onE
           </div>
         )}
 
-        <Separator />
-
-        <div>
-          <p className="mb-3 text-sm font-medium">Emails ({threads.length})</p>
-          {threads.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No emails logged yet.</p>
-          ) : (
-            <ul className="space-y-2">
-              {threads.map((t) => (
-                <li key={t.id}>
-                  <Link href={`/inbox?t=${t.id}`} className="flex items-center gap-3 rounded-md border px-3 py-2 hover:bg-muted/50">
-                    <span className="min-w-0 flex-1 truncate text-sm">{t.subject || "(no subject)"}</span>
-                    <ThreadStatusBadge status={t.status} />
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
-        </div>
-
         <div>
           <p className="mb-3 text-sm font-medium">Tasks ({clientTasks.filter((t) => t.status !== "done").length} open)</p>
           {clientTasks.length === 0 ? (
@@ -145,7 +144,43 @@ export function ClientDetail({ client, onEdit, onDelete }: { client: Client; onE
             </ul>
           )}
         </div>
-      </div>
+        </TabsContent>
+
+        <TabsContent value="services" className="p-5">
+          <ClientServices client={client} />
+        </TabsContent>
+
+        <TabsContent value="meetings" className="p-5">
+          <ClientMeetings client={client} />
+        </TabsContent>
+
+        <TabsContent value="emails" className="p-5">
+          {threads.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No emails yet. Threads from {client.email || "this client's address"} link here automatically.</p>
+          ) : (
+            <ul className="space-y-2">
+              {threads.map((t) => {
+                const last = t.messages.at(-1);
+                return (
+                  <li key={t.id}>
+                    <Link href={`/inbox?t=${t.id}`} className="block rounded-md border px-3 py-2 hover:bg-muted/50">
+                      <div className="flex items-center gap-3">
+                        <span className="min-w-0 flex-1 truncate text-sm font-medium">{t.subject || "(no subject)"}</span>
+                        <ThreadStatusBadge status={t.status} />
+                      </div>
+                      {last && (
+                        <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+                          <span className="font-medium text-foreground">{last.direction === "in" ? client.name.split(" ")[0] || "Them" : "You"}</span> · {relativeTime(last.at)}: {last.body}
+                        </p>
+                      )}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

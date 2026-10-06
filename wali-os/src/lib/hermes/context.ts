@@ -10,7 +10,7 @@ type Row = Record<string, unknown>;
  * and as live context for agent chat.
  */
 export async function buildContext(db: SupabaseClient) {
-  const [settings, clients, tasks, campaigns, approvals, threads, agents, team, activity, runs] = await Promise.all([
+  const [settings, clients, tasks, campaigns, approvals, threads, agents, team, activity, runs, services, meetings] = await Promise.all([
     db.from("workspace_settings").select("*").eq("id", 1).maybeSingle(),
     db.from("clients").select("id, name, company, email, status, health, program, mrr, owner, next_action, last_contact"),
     db.from("tasks").select("*").neq("status", "done").order("due", { ascending: true, nullsFirst: false }),
@@ -29,9 +29,27 @@ export async function buildContext(db: SupabaseClient) {
       .select("id, agent_id, status, instruction, requested_by, created_at, started_at, agent:agents(name)")
       .in("status", ["queued", "running"])
       .order("created_at"),
+    db.from("client_services").select("client_id, name, kind, status, amount, start_date, paid_date"),
+    db
+      .from("client_meetings")
+      .select("id, client_id, title, occurred_at, source, summary, action_items")
+      .order("occurred_at", { ascending: false })
+      .limit(10),
   ]);
 
-  const allClients = check(clients) as Row[];
+  const serviceRows = check(services) as Row[];
+  const meetingRows = check(meetings) as Row[];
+  // Per client: lifetime paid, engagements and the last meeting, so returning project clients show their real value.
+  const allClients = (check(clients) as Row[]).map((c): Row => {
+    const mine = serviceRows.filter((s) => s.client_id === c.id && s.status !== "cancelled");
+    return {
+      ...c,
+      lifetime_paid: mine.filter((s) => s.status === "paid").reduce((n, s) => n + Number(s.amount ?? 0), 0),
+      engagements: mine.filter((s) => s.status !== "proposed").length,
+      open_services: mine.filter((s) => s.status === "in-progress" || s.status === "delivered").map((s) => s.name),
+      last_meeting_at: meetingRows.find((m) => m.client_id === c.id)?.occurred_at ?? null,
+    };
+  });
   const openTasks = check(tasks) as Row[];
   const today = new Date().toISOString().slice(0, 10);
   const approvalRows = check(approvals) as Row[];
@@ -65,6 +83,9 @@ export async function buildContext(db: SupabaseClient) {
     tasks_open: openTasks.map((t) => ({ ...t, overdue: Boolean(t.due && String(t.due) < today) })),
     clients_needing_attention: allClients.filter((c) => c.health !== "good" && c.status !== "churned"),
     clients: allClients,
+    // Latest meetings across clients (no transcripts). Full history per client: GET /api/hermes/clients/:id/context
+    recent_meetings: meetingRows,
+    client_file: "GET /api/hermes/clients/:id/context returns one client's services, meetings (latest transcript), emails, tasks and approvals",
     campaigns: check(campaigns),
     agents: check(agents),
     team: check(team),
