@@ -83,6 +83,7 @@ export function CampaignsView() {
           <EmptyState
             icon={Megaphone}
             title="No campaigns yet"
+            highlight
             description="Add an outreach sequence, ad campaign, event or referral push, then update its numbers as results come in."
             action={
               <Button onClick={() => openForm()}>

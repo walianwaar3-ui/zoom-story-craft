@@ -145,6 +145,7 @@
   --brand-body: color-mix(in srgb, var(--white) 70%, #9fb6cc);
   --brand-ink: var(--white);
   --brand-tag: var(--chart-5);
+  --brand-hero: linear-gradient(160deg, var(--brand-tint) 0%, var(--brand-deep) 60%, var(--brand-deep-2) 100%);
   --card-shadow: 0 6px 22px rgb(0 0 0 / 0.25);
   --card-shadow-inner: 0 4px 14px rgb(0 0 0 / 0.2);
   /* Status text, lightened from the same pair so it reads on navy */
@@ -184,7 +185,7 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    @apply border-border;
   }
   body {
     @apply bg-background font-sans text-[color:var(--brand-body)];
@@ -206,10 +207,6 @@
   }
   ::selection {
     background: color-mix(in srgb, var(--brand-action) 22%, transparent);
-  }
-  :focus-visible {
-    outline: 3px solid var(--brand-highlight);
-    outline-offset: 2px;
   }
   input::placeholder,
   textarea::placeholder {
@@ -249,4 +246,24 @@
   .bg-hero {
     background: var(--brand-hero);
   }
+  .swoosh {
+    position: relative;
+    display: inline-block;
+    white-space: nowrap;
+  }
+  .swoosh svg {
+    position: absolute;
+    left: -1%;
+    bottom: -0.3em;
+    width: 102%;
+    height: 0.36em;
+    overflow: visible;
+    pointer-events: none;
+  }
+}
+
+/* Gold focus ring for keyboard users. Unlayered so no component style can hide it. */
+:focus-visible {
+  outline: 3px solid var(--brand-highlight);
+  outline-offset: 2px;
 }

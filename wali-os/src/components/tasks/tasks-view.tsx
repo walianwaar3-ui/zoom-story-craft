@@ -145,6 +145,7 @@ export function TasksView() {
           <EmptyState
             icon={ListTodo}
             title="No tasks yet"
+            highlight
             description="Create tasks for client delivery and your own operations. Drag them across the board as work moves."
             action={
               <Button onClick={openNew}>

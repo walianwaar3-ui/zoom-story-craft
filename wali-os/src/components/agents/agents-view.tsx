@@ -170,6 +170,7 @@ export function AgentsView() {
           <EmptyState
             icon={Bot}
             title="No agents defined"
+            highlight
             description="Start with one role you repeat every week, such as replying to new enquiries, following up after calls, or writing the weekly client report."
             action={
               <Button onClick={() => openForm()}>
