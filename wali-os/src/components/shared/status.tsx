@@ -35,7 +35,7 @@ export function ClientStatusBadge({ status }: { status: ClientStatus }) {
 
 export const healthMeta: Record<ClientHealth, { label: string; className: string }> = {
   good: { label: "Good", className: "bg-success" },
-  watch: { label: "Watch", className: "bg-warning" },
+  watch: { label: "Watch", className: "bg-brand-highlight" },
   "at-risk": { label: "At risk", className: "bg-destructive" },
 };
 
@@ -106,9 +106,9 @@ export function ThreadStatusBadge({ status, className }: { status: ThreadStatus;
 }
 
 const priorityMap: Record<Priority, { label: string; className: string }> = {
-  urgent: { label: "Urgent", className: "text-destructive" },
-  high: { label: "High", className: "text-warning" },
-  medium: { label: "Medium", className: "text-primary" },
+  urgent: { label: "Urgent", className: "text-danger" },
+  high: { label: "High", className: "text-warning [&>span>span]:bg-brand-highlight" },
+  medium: { label: "Medium", className: "text-primary dark:text-brand-tag" },
   low: { label: "Low", className: "text-muted-foreground" },
 };
 

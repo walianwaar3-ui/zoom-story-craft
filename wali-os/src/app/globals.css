@@ -162,8 +162,9 @@
   --card-foreground: var(--white);
   --popover: var(--brand-deep);
   --popover-foreground: var(--white);
-  --primary: var(--brand-action-text);
-  --primary-foreground: var(--white);
+  /* On navy, the light brand blue keeps buttons and blue text above 4.5:1 */
+  --primary: var(--chart-5);
+  --primary-foreground: var(--brand-deep-2);
   --secondary: var(--brand-tint);
   --secondary-foreground: var(--white);
   --muted: var(--brand-tint);

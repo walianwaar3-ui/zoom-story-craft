@@ -33,7 +33,7 @@ export function Topbar() {
   }, []);
 
   return (
-    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b bg-background/80 px-4 backdrop-blur-md supports-[backdrop-filter]:bg-background/70 lg:px-6">
+    <header className="sticky top-0 z-30 flex h-14 shrink-0 items-center gap-3 border-b bg-card/90 px-4 backdrop-blur-md lg:px-6">
       <Button variant="ghost" size="icon" className="-ml-2 lg:hidden" onClick={() => setMobileOpen(true)} aria-label="Open navigation">
         <Menu />
       </Button>
@@ -49,7 +49,7 @@ export function Topbar() {
         <WorldClock />
         <Button
           variant="outline"
-          className="hidden h-8 w-56 justify-start gap-2 px-2.5 text-muted-foreground md:flex"
+          className="hidden h-8 w-56 justify-start gap-2 bg-background px-2.5 font-sans font-normal text-muted-foreground shadow-none md:flex"
           onClick={() => setSearchOpen(true)}
         >
           <Search className="size-3.5" />

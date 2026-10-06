@@ -29,13 +29,13 @@ export function StatCard({
   return (
     <Card className="gap-3 py-4">
       <div className="flex items-start justify-between gap-2 px-4 sm:px-5">
-        <span className="text-xs leading-snug text-muted-foreground sm:text-sm">{label}</span>
-        <span className="hidden size-8 shrink-0 place-items-center rounded-md bg-muted text-muted-foreground sm:grid">
+        <span className="text-xs leading-snug font-medium text-muted-foreground sm:text-[13px]">{label}</span>
+        <span className="hidden size-8 shrink-0 place-items-center rounded-lg bg-brand-tint text-brand-action sm:grid">
           <Icon className="size-4" />
         </span>
       </div>
       <div className="px-4 sm:px-5">
-        <p className="text-xl sm:text-2xl font-semibold tracking-tight tabular">{value}</p>
+        <p className="font-heading text-2xl font-extrabold tracking-tight text-foreground tabular sm:text-[28px]">{value}</p>
         {change !== undefined ? (
           <p className="mt-1 flex items-center gap-1 text-xs">
             <span className={cn("inline-flex items-center gap-0.5 font-medium", positive ? "text-success" : "text-destructive")}>
