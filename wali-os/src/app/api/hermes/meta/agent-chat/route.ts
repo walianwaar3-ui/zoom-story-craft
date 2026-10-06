@@ -1,6 +1,6 @@
 /**
  * POST /api/hermes/meta/agent-chat {message, history?}
- * → {reply, images: [{url, prompt}], approvals: [{id, title}], tools_used: [...]}
+ * → {reply, images: [{url, prompt}], approvals: [{id, title, ad?}], tools_used: [...]}
  *
  * Chat with the "Ads Planner" agent (its instructions come from Wali OS → Agents).
  * It can use tools:
@@ -19,7 +19,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { ApiError, check, handler, json, readBody } from "@/lib/hermes/server";
 import { DATE_PRESETS, datePreset, metaAds, metaBreakdown, metaSnapshot } from "@/lib/hermes/meta";
-import { CTA_TYPES, EXECUTE_NUDGE, EXECUTE_RULES, adApprovalContent, asksForNewAd, type AdSpec } from "@/lib/hermes/ad-launch";
+import { CTA_TYPES, EXECUTE_NUDGE, EXECUTE_RULES, adApprovalContent, adPreviewOf, asksForNewAd, type AdPreview, type AdSpec } from "@/lib/hermes/ad-launch";
 import { IMAGE_RULES, ImageRuleError, REUSE_RULES, asksForAiImages, buildAdImagePrompt } from "@/lib/hermes/ad-image-rules";
 
 // 20 tool rounds can take a few minutes; the time budget below stops cleanly before this.
@@ -210,7 +210,7 @@ export const POST = handler(
     const agent = await findAdsAgent(db);
 
     const images: { url: string; prompt: string }[] = [];
-    const approvals: { id: string; title: string }[] = [];
+    const approvals: { id: string; title: string; ad?: AdPreview }[] = [];
     const toolsUsed: string[] = [];
     const generated = new Set<string>();
     let adCreated = false;
@@ -330,8 +330,8 @@ export const POST = handler(
               .single()
           ) as { id: string; title: string };
           adCreated = true;
-          approvals.push(row);
-          if (!images.some((i) => i.url === imageUrl) && images.length < 8) images.push({ url: imageUrl, prompt: `New ad: ${headline}` });
+          // The chat shows this as an ad preview card with Approve / Reject, so no separate image.
+          approvals.push({ ...row, ad: adPreviewOf(spec) });
           return { approval_id: row.id, status: "pending", ad: spec.copy, launch_status: status, note: "Filed. Wali taps Approve in Approvals and Hermes launches it." };
         }
         case "propose_change": {

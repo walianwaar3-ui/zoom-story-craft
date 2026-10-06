@@ -8,17 +8,26 @@ import { Markdown } from "@/components/shared/markdown";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
+import type { AdPreview } from "@/lib/hermes/ad-launch";
 import { getSupabase } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
+
+import { AdPreviewCard } from "./ad-preview-card";
 
 type Turn = {
   role: "user" | "assistant";
   content: string;
   images?: { url: string; prompt: string }[];
-  approvals?: { id: string; title: string }[];
+  approvals?: { id: string; title: string; ad?: AdPreview }[];
 };
 
 const STARTERS = ["Which ad is driving most of the leads?", "Show me the creative of my best ad", "Plan next week's budget for the October campaign", "Make a new ad from my winning ad"];
+
+/** Images not already shown inside one of the turn's ad preview cards. */
+function looseImages(t: Turn) {
+  const inCards = new Set((t.approvals ?? []).map((a) => a.ad?.image_url));
+  return (t.images ?? []).filter((img) => !inCards.has(img.url));
+}
 
 /** Chat with the Ads Planner agent: reads Meta data, generates images, proposes changes for approval. */
 export function AdsPlannerChat() {
@@ -82,9 +91,9 @@ export function AdsPlannerChat() {
             <div key={i} className={cn("flex", t.role === "user" ? "justify-end" : "justify-start")}>
               <div className={cn("max-w-[90%] rounded-lg px-3 py-2", t.role === "user" ? "bg-primary text-sm text-primary-foreground" : "bg-muted/60")}>
                 {t.role === "user" ? <p className="whitespace-pre-wrap">{t.content}</p> : <Markdown source={t.content} />}
-                {t.images && t.images.length > 0 && (
+                {looseImages(t).length > 0 && (
                   <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    {t.images.map((img) => (
+                    {looseImages(t).map((img) => (
                       <a key={img.url} href={img.url} target="_blank" rel="noopener noreferrer" className="group block overflow-hidden rounded-md border bg-background">
                         {/* eslint-disable-next-line @next/next/no-img-element -- external Fal URLs, shown as-is */}
                         <img src={img.url} alt={img.prompt} title={img.prompt} loading="lazy" className="aspect-square w-full object-cover transition group-hover:opacity-90" />
@@ -94,18 +103,22 @@ export function AdsPlannerChat() {
                 )}
                 {t.approvals && t.approvals.length > 0 && (
                   <div className="mt-3 space-y-1.5">
-                    {t.approvals.map((a) => (
-                      <Link
-                        key={a.id}
-                        href="/approvals"
-                        className="flex items-center gap-2 rounded-md border bg-background px-2.5 py-1.5 text-xs hover:bg-muted"
-                      >
-                        <ShieldCheck className="size-3.5 shrink-0 text-primary" />
-                        <span className="truncate">
-                          Waiting for your approval: <span className="font-medium">{a.title}</span>
-                        </span>
-                      </Link>
-                    ))}
+                    {t.approvals.map((a) =>
+                      a.ad ? (
+                        <AdPreviewCard key={a.id} approvalId={a.id} ad={a.ad} />
+                      ) : (
+                        <Link
+                          key={a.id}
+                          href="/approvals"
+                          className="flex items-center gap-2 rounded-md border bg-background px-2.5 py-1.5 text-xs hover:bg-muted"
+                        >
+                          <ShieldCheck className="size-3.5 shrink-0 text-primary" />
+                          <span className="truncate">
+                            Waiting for your approval: <span className="font-medium">{a.title}</span>
+                          </span>
+                        </Link>
+                      )
+                    )}
                   </div>
                 )}
               </div>
