@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Coins, DollarSign, Eye, FileText, Loader2, MousePointerClick, Percent, RefreshCw, Target, UserPlus } from "lucide-react";
 
+import { AdsPlannerChat } from "@/components/campaigns/ads-planner-chat";
 import { Markdown } from "@/components/shared/markdown";
 import { StatCard } from "@/components/shared/stat-card";
 import { Button } from "@/components/ui/button";
@@ -153,6 +154,8 @@ export function MetaAdsPanel() {
           <StatCard label="Cost per lead" value={k ? money(k.cost_per_lead) : "…"} icon={Target} footnote={k && !k.leads ? "No leads tracked" : undefined} />
         </div>
       )}
+
+      <AdsPlannerChat />
 
       <Card>
         <CardHeader className="flex-row items-start justify-between gap-3">

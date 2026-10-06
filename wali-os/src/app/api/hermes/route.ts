@@ -11,6 +11,7 @@ export const GET = handler(async () =>
       "GET /api/hermes/activity?since=<id>": "Every change, oldest first. Poll with next_since.",
       "GET /api/hermes/meta/kpis?date_preset=last_7d": "Meta Ads KPIs + active campaigns (cached 5 min, &fresh=1 to refresh).",
       "GET /api/hermes/meta/report?date_preset=last_7d": "AI-written Markdown report on the Meta Ads data.",
+      "POST /api/hermes/meta/agent-chat {message, history}": "Ads Planner chat: reads Meta data, makes images (Fal), proposes ad changes as approvals.",
       "GET /api/hermes/agent-stats": "Per-agent tasks, approvals and last_active (assignee / requested_by = agent name).",
       "GET /api/hermes/:resource?<filter>=…&limit=…": "List records (newest first).",
       "GET /api/hermes/:resource/:id": "One record.",
