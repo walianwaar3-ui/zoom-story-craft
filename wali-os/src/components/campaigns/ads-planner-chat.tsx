@@ -18,7 +18,7 @@ type Turn = {
   approvals?: { id: string; title: string }[];
 };
 
-const STARTERS = ["Which ad is driving most of the leads?", "Show me the creative of my best ad", "Plan next week's budget for the October campaign", "Make 2 new image concepts for the winning ad"];
+const STARTERS = ["Which ad is driving most of the leads?", "Show me the creative of my best ad", "Plan next week's budget for the October campaign", "Write 3 new angles for my winning ad"];
 
 /** Chat with the Ads Planner agent: reads Meta data, generates images, proposes changes for approval. */
 export function AdsPlannerChat() {
@@ -63,7 +63,7 @@ export function AdsPlannerChat() {
       <CardHeader>
         <CardTitle>Ads Planner</CardTitle>
         <CardDescription>
-          Asks Meta for live numbers, generates ad images, and proposes changes. Changes to the ad account go to Approvals first; nothing changes until
+          Asks Meta for live numbers, reuses your winning ad images for new angles (AI images only when you say &ldquo;generate&rdquo;), and proposes changes. Changes to the ad account go to Approvals first; nothing changes until
           you approve.
         </CardDescription>
       </CardHeader>

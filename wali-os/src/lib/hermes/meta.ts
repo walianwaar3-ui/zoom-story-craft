@@ -113,11 +113,20 @@ type RawCreative = {
   call_to_action_type?: string;
   thumbnail_url?: string;
   image_url?: string;
+  image_hash?: string;
   video_id?: string;
   instagram_permalink_url?: string;
   object_story_spec?: {
-    link_data?: { message?: string; name?: string; description?: string; link?: string; picture?: string; call_to_action?: { type?: string } };
-    video_data?: { message?: string; title?: string; link_description?: string; image_url?: string; video_id?: string; call_to_action?: { type?: string; value?: { link?: string } } };
+    link_data?: { message?: string; name?: string; description?: string; link?: string; picture?: string; image_hash?: string; call_to_action?: { type?: string } };
+    video_data?: {
+      message?: string;
+      title?: string;
+      link_description?: string;
+      image_url?: string;
+      image_hash?: string;
+      video_id?: string;
+      call_to_action?: { type?: string; value?: { link?: string } };
+    };
   };
   asset_feed_spec?: {
     bodies?: { text: string }[];
@@ -138,7 +147,7 @@ type RawAd = {
 
 const AD_FIELDS =
   "id,name,effective_status,campaign{id,name},adset{id,name}," +
-  "creative{id,name,title,body,call_to_action_type,thumbnail_url,image_url,video_id,instagram_permalink_url,object_story_spec,asset_feed_spec}";
+  "creative{id,name,title,body,call_to_action_type,thumbnail_url,image_url,image_hash,video_id,instagram_permalink_url,object_story_spec,asset_feed_spec}";
 
 /** Copy, CTA, link and images of an ad's creative, flattened across the formats Meta uses. */
 function creativeOf(c: RawCreative = {}) {
@@ -158,6 +167,8 @@ function creativeOf(c: RawCreative = {}) {
     call_to_action: c.call_to_action_type ?? link?.call_to_action?.type ?? video?.call_to_action?.type ?? feed?.call_to_action_types?.[0] ?? null,
     link: link?.link ?? video?.call_to_action?.value?.link ?? feed?.link_urls?.[0]?.website_url ?? null,
     image_url: c.image_url ?? link?.picture ?? video?.image_url ?? c.thumbnail_url ?? null,
+    // Meta's id for the uploaded image: lets a new ad reuse the exact same picture.
+    image_hash: c.image_hash ?? link?.image_hash ?? video?.image_hash ?? null,
     instagram_permalink: c.instagram_permalink_url ?? null,
   };
 }
