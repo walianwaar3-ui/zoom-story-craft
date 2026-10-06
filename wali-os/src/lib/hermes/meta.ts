@@ -80,6 +80,31 @@ async function graph<T>(path: string, params: Record<string, string>, token: str
   return data as T;
 }
 
+/** Insights per campaign, ad set or ad (read-only), for the Ads Planner chat. */
+export async function metaBreakdown(level: "campaign" | "adset" | "ad", preset: DatePreset, campaignId?: string) {
+  const { token, account } = config();
+  if (campaignId && !/^\d+$/.test(campaignId)) throw new ApiError(400, "campaign_id must be numeric");
+  const res = await graph<{ data: (RawInsights & Record<string, string>)[] }>(
+    `${campaignId ?? account}/insights`,
+    {
+      level,
+      date_preset: preset,
+      fields: "campaign_name,adset_name,ad_name,ad_id,adset_id,spend,impressions,reach,clicks,ctr,cpc,actions,frequency",
+      limit: "50",
+    },
+    token
+  );
+  return (res.data ?? []).map((r) => ({
+    campaign: r.campaign_name,
+    adset: r.adset_name,
+    ad: r.ad_name,
+    ad_id: r.ad_id,
+    adset_id: r.adset_id,
+    frequency: r.frequency ? Number(r.frequency) : null,
+    ...kpis(r),
+  }));
+}
+
 export interface MetaSnapshot {
   account: { id: string; name: string; currency: string; timezone: string };
   date_preset: DatePreset;
