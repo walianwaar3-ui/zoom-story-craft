@@ -1,0 +1,154 @@
+/**
+ * Server-only Meta Marketing API helpers for /api/hermes/meta/*. Reads
+ * META_ACCESS_TOKEN and META_AD_ACCOUNT_ID; never import from client code.
+ */
+import { ApiError } from "./server";
+
+const GRAPH = `https://graph.facebook.com/${process.env.META_GRAPH_VERSION || "v23.0"}`;
+
+export const DATE_PRESETS = ["today", "yesterday", "last_7d", "last_14d", "last_30d", "this_month", "last_month"] as const;
+export type DatePreset = (typeof DATE_PRESETS)[number];
+
+export function datePreset(v: string | null): DatePreset {
+  if (!v) return "last_7d";
+  if (!(DATE_PRESETS as readonly string[]).includes(v)) throw new ApiError(400, `"date_preset" must be one of: ${DATE_PRESETS.join(", ")}`);
+  return v as DatePreset;
+}
+
+/** Lead actions in order of preference; Meta reports leads under several types. */
+const LEAD_TYPES = ["lead", "onsite_conversion.lead_grouped", "offsite_conversion.fb_pixel_lead", "onsite_web_lead"];
+
+type Action = { action_type: string; value: string };
+type RawInsights = { spend?: string; impressions?: string; clicks?: string; ctr?: string; cpc?: string; reach?: string; actions?: Action[] };
+
+export interface Kpis {
+  spend: number;
+  impressions: number;
+  reach: number;
+  clicks: number;
+  ctr: number; // percent
+  cpc: number | null;
+  leads: number;
+  cost_per_lead: number | null;
+}
+
+function leadsFrom(actions: Action[] = []) {
+  for (const t of LEAD_TYPES) {
+    const a = actions.find((x) => x.action_type === t);
+    if (a) return Number(a.value) || 0;
+  }
+  return 0;
+}
+
+function kpis(raw: RawInsights | undefined): Kpis {
+  const spend = Number(raw?.spend ?? 0);
+  const impressions = Number(raw?.impressions ?? 0);
+  const clicks = Number(raw?.clicks ?? 0);
+  const leads = leadsFrom(raw?.actions);
+  return {
+    spend,
+    impressions,
+    reach: Number(raw?.reach ?? 0),
+    clicks,
+    ctr: raw?.ctr ? Number(raw.ctr) : impressions ? (clicks / impressions) * 100 : 0,
+    cpc: raw?.cpc ? Number(raw.cpc) : clicks ? spend / clicks : null,
+    leads,
+    cost_per_lead: leads ? spend / leads : null,
+  };
+}
+
+function config() {
+  const token = process.env.META_ACCESS_TOKEN;
+  const account = (process.env.META_AD_ACCOUNT_ID || "").replace(/^act_/, "").trim();
+  if (!token || !account) throw new ApiError(503, "Meta isn't connected: set META_ACCESS_TOKEN and META_AD_ACCOUNT_ID in Vercel");
+  return { token, account: `act_${account}` };
+}
+
+async function graph<T>(path: string, params: Record<string, string>, token: string): Promise<T> {
+  const url = new URL(`${GRAPH}/${path}`);
+  for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
+  // Token in the header, not the URL, so it never lands in logs.
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` }, cache: "no-store" });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.error) {
+    const e = data.error ?? {};
+    if (e.code === 190) throw new ApiError(502, "Meta token is expired or invalid: update META_ACCESS_TOKEN in Vercel");
+    if (e.code === 4 || e.code === 17 || e.code === 613) throw new ApiError(429, "Meta rate limit reached, try again in a few minutes");
+    console.error("meta graph", res.status, e.code, e.message);
+    throw new ApiError(502, `Meta API error: ${e.message ?? res.status}`);
+  }
+  return data as T;
+}
+
+export interface MetaSnapshot {
+  account: { id: string; name: string; currency: string; timezone: string };
+  date_preset: DatePreset;
+  kpis: Kpis;
+  campaigns: {
+    id: string;
+    name: string;
+    objective: string;
+    status: string;
+    daily_budget: number | null;
+    lifetime_budget: number | null;
+    kpis: Kpis;
+  }[];
+  generated_at: string;
+}
+
+// Short in-memory cache per warm server instance, to stay well under Meta's rate limits.
+const cache = new Map<DatePreset, { at: number; data: MetaSnapshot }>();
+const TTL_MS = 5 * 60 * 1000;
+
+export async function metaSnapshot(preset: DatePreset, fresh = false): Promise<MetaSnapshot> {
+  const hit = cache.get(preset);
+  if (!fresh && hit && Date.now() - hit.at < TTL_MS) return hit.data;
+
+  const { token, account } = config();
+  const insightFields = "spend,impressions,reach,clicks,ctr,cpc,actions";
+  const [acct, insights, campaigns] = await Promise.all([
+    graph<{ id: string; name: string; currency: string; timezone_name: string }>(account, { fields: "name,currency,timezone_name" }, token),
+    graph<{ data: RawInsights[] }>(`${account}/insights`, { date_preset: preset, fields: insightFields, level: "account" }, token),
+    graph<{
+      data: {
+        id: string;
+        name: string;
+        objective?: string;
+        effective_status?: string;
+        daily_budget?: string;
+        lifetime_budget?: string;
+        insights?: { data: RawInsights[] };
+      }[];
+    }>(
+      `${account}/campaigns`,
+      {
+        fields: `id,name,objective,effective_status,daily_budget,lifetime_budget,insights.date_preset(${preset}){${insightFields}}`,
+        effective_status: JSON.stringify(["ACTIVE"]),
+        limit: "100",
+      },
+      token
+    ),
+  ]);
+
+  // Budgets come in the currency's minor unit (cents).
+  const money = (v?: string) => (v ? Number(v) / 100 : null);
+  const data: MetaSnapshot = {
+    account: { id: acct.id, name: acct.name, currency: acct.currency, timezone: acct.timezone_name },
+    date_preset: preset,
+    kpis: kpis(insights.data?.[0]),
+    campaigns: (campaigns.data ?? [])
+      .map((c) => ({
+        id: c.id,
+        name: c.name,
+        objective: c.objective ?? "",
+        status: c.effective_status ?? "",
+        daily_budget: money(c.daily_budget),
+        lifetime_budget: money(c.lifetime_budget),
+        kpis: kpis(c.insights?.data?.[0]),
+      }))
+      .sort((a, b) => b.kpis.spend - a.kpis.spend),
+    generated_at: new Date().toISOString(),
+  };
+  cache.set(preset, { at: Date.now(), data });
+  return data;
+}
