@@ -30,7 +30,7 @@ export const EXECUTE_NUDGE =
   "You replied without creating the ad. Wali asked for an ad: execute now. Find the winner, reuse_ad_image, then create_ad with final copy. No questions, no options.";
 
 export interface AdSpec {
-  source: { ad_id: string; name: string; adset_id: string; campaign_id: string | null; creative_id: string | null; page_id: string | null; instagram_user_id: string | null };
+  source: { ad_id: string; name: string; adset_id: string; campaign_id: string | null; creative_id: string | null; page_id: string; instagram_user_id: string | null };
   image: { image_hash: string | null; image_url: string };
   copy: { hook: string; primary_text: string; headline: string; description: string | null; call_to_action: string; link: string };
   name: string;
@@ -50,7 +50,7 @@ export function adApprovalContent(spec: AdSpec) {
     c.description ? `**Description:** ${c.description}` : null,
     `**CTA:** ${c.call_to_action} → ${c.link}`,
     "",
-    "Hermes: if image_hash is null, upload image_url to /adimages first. Create an ad creative (object_story_spec.link_data with the image_hash, page_id, message, name, description, call_to_action, link), then an ad in adset_id with that creative and status. Then call /executed.",
+    "Hermes: if image_hash is null, upload image_url to /adimages first. Create an ad creative with object_story_spec.page_id = source.page_id exactly (never 0 or a placeholder), instagram_user_id if set, and link_data (image_hash, message, name, description, call_to_action, link). Then create an ad in adset_id with that creative and status, and call /executed.",
     "```json",
     JSON.stringify(spec, null, 2),
     "```",
