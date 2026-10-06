@@ -28,6 +28,7 @@ import { useStore } from "@/lib/store";
 import { cn, formatCurrency, formatNumber } from "@/lib/utils";
 
 import { CampaignFormDialog } from "./campaign-form";
+import { MetaAdsPanel } from "./meta-ads-panel";
 
 export function CampaignsView() {
   const { db, remove } = useStore();
@@ -74,6 +75,8 @@ export function CampaignsView() {
           </Button>
         }
       />
+
+      <MetaAdsPanel />
 
       {campaigns.length === 0 ? (
         <Card>
