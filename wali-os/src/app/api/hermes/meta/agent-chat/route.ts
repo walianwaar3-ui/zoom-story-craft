@@ -30,6 +30,7 @@ import {
   metaSnapshot,
 } from "@/lib/hermes/meta";
 import { CTA_TYPES, EXECUTE_NUDGE, EXECUTE_RULES, adApprovalContent, adPreviewOf, asksForNewAd, type AdPreview, type AdSpec } from "@/lib/hermes/ad-launch";
+import { COPY_RULES, checkAdCopy } from "@/lib/hermes/ad-copy";
 import { IMAGE_RULES, ImageRuleError, REUSE_RULES, asksForAiImages, buildAdImagePrompt } from "@/lib/hermes/ad-image-rules";
 
 // 20 tool rounds can take a few minutes; the time budget below stops cleanly before this.
@@ -143,10 +144,11 @@ const TOOLS = [
           call_to_action: { type: "string", enum: CTA_TYPES, description: "Default: same as the winner" },
           link: { type: "string", description: "Default: the winner's link" },
           image_url: { type: "string", description: "Only if Wali asked for AI images: a generated image_url from this message" },
+          tension: { type: "string", description: "The belief the reader holds that this ad breaks, in one line" },
           why: { type: "string", description: "One line: why this should beat the winner" },
           status: { type: "string", enum: ["PAUSED", "ACTIVE"], description: "Default PAUSED. ACTIVE only if Wali said to run it live." },
         },
-        required: ["source_ad_id", "hook", "body", "headline", "why"],
+        required: ["source_ad_id", "hook", "body", "headline", "tension", "why"],
       },
     },
   },
@@ -296,7 +298,12 @@ export const POST = handler(
           const hook = text(args.hook, 300);
           const body = text(args.body, 2500);
           const headline = text(args.headline, 120);
+          const tension = text(args.tension, 300);
           if (!hook || !body || !headline) return { error: "hook, body and headline are required" };
+          if (!tension) return { error: "tension is required: the belief the reader holds that this ad breaks" };
+          // Server-side copy check: AI-sounding copy goes back for a rewrite, never to Wali.
+          const problems = checkAdCopy({ hook, body, headline, description: text(args.description, 300) || null });
+          if (problems.length) return { error: "Copy needs a rewrite before it can go to Wali. Fix all of these, then call create_ad again.", problems };
           const [src] = await metaAds({ adId: text(args.source_ad_id, 40) });
           if (!src?.adset_id) return { error: `Ad ${args.source_ad_id} not found or has no ad set` };
           const aiImage = text(args.image_url, 1000);
@@ -341,7 +348,7 @@ export const POST = handler(
               .insert({
                 type: "Campaign",
                 title: `Launch ad: ${headline}`.slice(0, 200),
-                summary: `New ad from "${src.name}" (${status}). ${text(args.why, 400)}`.slice(0, 1000),
+                summary: `New ad from "${src.name}" (${status}). Breaks the belief: ${tension}. ${text(args.why, 400)}`.slice(0, 1000),
                 content: adApprovalContent(spec),
                 requested_by: agent.name,
                 value: null,
@@ -392,6 +399,8 @@ export const POST = handler(
       "Generated images and ad creatives you look up appear below your reply automatically; refer to them briefly, don't paste URLs.",
       "",
       EXECUTE_RULES,
+      "",
+      COPY_RULES,
       "",
       REUSE_RULES,
       "",
