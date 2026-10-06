@@ -117,6 +117,9 @@ type RawCreative = {
   video_id?: string;
   instagram_permalink_url?: string;
   object_story_spec?: {
+    page_id?: string;
+    instagram_user_id?: string;
+    instagram_actor_id?: string;
     link_data?: { message?: string; name?: string; description?: string; link?: string; picture?: string; image_hash?: string; call_to_action?: { type?: string } };
     video_data?: {
       message?: string;
@@ -160,6 +163,9 @@ function creativeOf(c: RawCreative = {}) {
   const descriptions = [link?.description, video?.link_description, ...texts(feed?.descriptions)].filter(Boolean) as string[];
   return {
     creative_id: c.id ?? null,
+    // Needed to launch a new ad from this one (Facebook page and Instagram account it runs as).
+    page_id: c.object_story_spec?.page_id ?? null,
+    instagram_user_id: c.object_story_spec?.instagram_user_id ?? c.object_story_spec?.instagram_actor_id ?? null,
     format: video || c.video_id ? "video" : feed ? "dynamic (multiple text/assets)" : "image/link",
     primary_text: [...new Set(primary)],
     headlines: [...new Set(headlines)],
@@ -186,7 +192,9 @@ export async function metaAds(opts: { adId?: string; parentId?: string; activeOn
     name: a.name ?? "",
     status: a.effective_status ?? "",
     campaign: a.campaign?.name ?? null,
+    campaign_id: a.campaign?.id ?? null,
     adset: a.adset?.name ?? null,
+    adset_id: a.adset?.id ?? null,
     ...creativeOf(a.creative),
   });
   if (opts.adId) return [shape(await graph<RawAd>(id, { fields: AD_FIELDS }, token))];
