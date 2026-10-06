@@ -124,7 +124,15 @@ type RawCreative = {
     page_id?: string;
     instagram_user_id?: string;
     instagram_actor_id?: string;
-    link_data?: { message?: string; name?: string; description?: string; link?: string; picture?: string; image_hash?: string; call_to_action?: { type?: string } };
+    link_data?: {
+      message?: string;
+      name?: string;
+      description?: string;
+      link?: string;
+      picture?: string;
+      image_hash?: string;
+      call_to_action?: { type?: string; value?: { lead_gen_form_id?: string; link?: string } };
+    };
     video_data?: {
       message?: string;
       title?: string;
@@ -132,7 +140,7 @@ type RawCreative = {
       image_url?: string;
       image_hash?: string;
       video_id?: string;
-      call_to_action?: { type?: string; value?: { link?: string } };
+      call_to_action?: { type?: string; value?: { link?: string; lead_gen_form_id?: string } };
     };
   };
   asset_feed_spec?: {
@@ -188,6 +196,8 @@ function creativeOf(c: RawCreative = {}) {
     creative_id: c.id ?? null,
     // Needed to launch a new ad from this one (Facebook page and Instagram account it runs as).
     page_id: pageIdOf(c),
+    // Instant Form (lead ad) the CTA opens, if any.
+    lead_form_id: realId(link?.call_to_action?.value?.lead_gen_form_id ?? video?.call_to_action?.value?.lead_gen_form_id),
     instagram_user_id: realId(c.object_story_spec?.instagram_user_id ?? c.instagram_user_id ?? c.object_story_spec?.instagram_actor_id),
     format: video || c.video_id ? "video" : feed ? "dynamic (multiple text/assets)" : "image/link",
     primary_text: [...new Set(primary)],
@@ -227,6 +237,19 @@ export async function metaAds(opts: { adId?: string; parentId?: string; activeOn
   return (res.data ?? []).map(shape);
 }
 
+/** The Page / Instant Form Wali set in Vercel (META_PAGE_ID, META_LEAD_FORM_ID), if valid. */
+export const configuredPageId = () => realId(process.env.META_PAGE_ID?.trim());
+export const configuredLeadFormId = () => realId(process.env.META_LEAD_FORM_ID?.trim());
+
+/** Whether an ad set collects leads with Instant Forms (only those can take a lead form CTA). */
+export async function adsetUsesLeadForms(adsetId: string) {
+  const { token } = config();
+  const a = await graph<{ optimization_goal?: string; destination_type?: string }>(adsetId, { fields: "optimization_goal,destination_type" }, token).catch(
+    () => ({}) as { optimization_goal?: string; destination_type?: string }
+  );
+  return a.destination_type === "ON_AD" || a.optimization_goal === "LEAD_GENERATION" || a.optimization_goal === "QUALITY_LEAD";
+}
+
 let defaultPage: { at: number; id: string | null } | null = null;
 
 /**
@@ -234,7 +257,7 @@ let defaultPage: { at: number; id: string | null } | null = null;
  * if set, else the first Page the ad account can promote. Never "0".
  */
 export async function metaDefaultPageId(): Promise<string | null> {
-  const env = realId(process.env.META_PAGE_ID?.trim());
+  const env = configuredPageId();
   if (env) return env;
   if (defaultPage && Date.now() - defaultPage.at < TTL_MS) return defaultPage.id;
   const { token, account } = config();

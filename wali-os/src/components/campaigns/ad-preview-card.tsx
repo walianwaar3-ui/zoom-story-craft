@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
-import { Check, Globe, Loader2, Undo2, X } from "lucide-react";
+import { Check, ClipboardList, Globe, Loader2, Undo2, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +34,7 @@ export function AdPreviewCard({ approvalId, ad: fromChat }: { approvalId: string
 
   const body = ad.primary_text.startsWith(ad.hook) ? ad.primary_text.slice(ad.hook.length).trim() : ad.primary_text;
   const status = approval?.status;
+  const ctaLabel = CTA_LABELS[ad.call_to_action] ?? ad.call_to_action.replace(/_/g, " ").toLowerCase();
 
   const decide = (next: "approved" | "rejected") => {
     if (!approval) return;
@@ -75,24 +76,37 @@ export function AdPreviewCard({ approvalId, ad: fromChat }: { approvalId: string
       {/* Link bar: domain, headline, description, CTA */}
       <div className="flex items-center gap-3 bg-muted/60 px-3 py-2.5">
         <div className="min-w-0 flex-1">
-          {domainOf(ad.link) && (
+          {ad.lead_form_id ? (
             <p className="flex items-center gap-1 truncate text-[11px] text-muted-foreground">
-              <Globe className="size-3 shrink-0" aria-hidden />
-              {domainOf(ad.link)}
+              <ClipboardList className="size-3 shrink-0" aria-hidden />
+              INSTANT FORM
             </p>
+          ) : (
+            domainOf(ad.link) && (
+              <p className="flex items-center gap-1 truncate text-[11px] text-muted-foreground">
+                <Globe className="size-3 shrink-0" aria-hidden />
+                {domainOf(ad.link)}
+              </p>
+            )
           )}
           <p className="truncate text-sm font-semibold">{ad.headline}</p>
           {ad.description && <p className="truncate text-xs text-muted-foreground">{ad.description}</p>}
         </div>
-        <a
-          href={ad.link}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="shrink-0 rounded-md bg-secondary px-3 py-1.5 text-xs font-semibold text-secondary-foreground hover:bg-secondary/80"
-          title={`Opens ${ad.link}`}
-        >
-          {CTA_LABELS[ad.call_to_action] ?? ad.call_to_action.replace(/_/g, " ").toLowerCase()}
-        </a>
+        {ad.lead_form_id ? (
+          <span className="shrink-0 rounded-md bg-secondary px-3 py-1.5 text-xs font-semibold text-secondary-foreground" title={`Opens Instant Form ${ad.lead_form_id}`}>
+            {ctaLabel}
+          </span>
+        ) : (
+          <a
+            href={ad.link}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="shrink-0 rounded-md bg-secondary px-3 py-1.5 text-xs font-semibold text-secondary-foreground hover:bg-secondary/80"
+            title={`Opens ${ad.link}`}
+          >
+            {ctaLabel}
+          </a>
+        )}
       </div>
 
       {/* Decision */}

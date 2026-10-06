@@ -32,7 +32,7 @@ export const EXECUTE_NUDGE =
 export interface AdSpec {
   source: { ad_id: string; name: string; adset_id: string; campaign_id: string | null; creative_id: string | null; page_id: string; instagram_user_id: string | null };
   image: { image_hash: string | null; image_url: string };
-  copy: { hook: string; primary_text: string; headline: string; description: string | null; call_to_action: string; link: string };
+  copy: { hook: string; primary_text: string; headline: string; description: string | null; call_to_action: string; link: string; lead_form_id: string | null };
   name: string;
   status: "PAUSED" | "ACTIVE";
 }
@@ -48,9 +48,9 @@ export function adApprovalContent(spec: AdSpec) {
     "",
     `**Headline:** ${c.headline}`,
     c.description ? `**Description:** ${c.description}` : null,
-    `**CTA:** ${c.call_to_action} → ${c.link}`,
+    c.lead_form_id ? `**CTA:** ${c.call_to_action} → Instant Form ${c.lead_form_id}` : `**CTA:** ${c.call_to_action} → ${c.link}`,
     "",
-    "Hermes: if image_hash is null, upload image_url to /adimages first. Create an ad creative with object_story_spec.page_id = source.page_id exactly (never 0 or a placeholder), instagram_user_id if set, and link_data (image_hash, message, name, description, call_to_action, link). Then create an ad in adset_id with that creative and status, and call /executed.",
+    "Hermes: if image_hash is null, upload image_url to /adimages first. Create an ad creative with object_story_spec.page_id = source.page_id exactly (never 0 or a placeholder), instagram_user_id if set, and link_data (image_hash, message, name, description, link, call_to_action). If copy.lead_form_id is set, call_to_action = {type, value: {lead_gen_form_id: copy.lead_form_id}} (a lead ad). Then create an ad in adset_id with that creative and status, and call /executed.",
     "```json",
     JSON.stringify(spec, null, 2),
     "```",
@@ -68,6 +68,8 @@ export interface AdPreview {
   description: string | null;
   call_to_action: string;
   link: string;
+  /** Set when the CTA opens an Instant Form instead of a website. */
+  lead_form_id: string | null;
   status: "PAUSED" | "ACTIVE";
   source_name: string;
 }
@@ -81,6 +83,7 @@ export function adPreviewOf(spec: AdSpec): AdPreview {
     description: spec.copy.description,
     call_to_action: spec.copy.call_to_action,
     link: spec.copy.link,
+    lead_form_id: spec.copy.lead_form_id ?? null,
     status: spec.status,
     source_name: spec.source.name,
   };
