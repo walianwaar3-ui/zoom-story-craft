@@ -18,7 +18,17 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { ApiError, check, handler, json, readBody } from "@/lib/hermes/server";
-import { DATE_PRESETS, datePreset, metaAds, metaBreakdown, metaDefaultPageId, metaSnapshot } from "@/lib/hermes/meta";
+import {
+  DATE_PRESETS,
+  adsetUsesLeadForms,
+  configuredLeadFormId,
+  configuredPageId,
+  datePreset,
+  metaAds,
+  metaBreakdown,
+  metaDefaultPageId,
+  metaSnapshot,
+} from "@/lib/hermes/meta";
 import { CTA_TYPES, EXECUTE_NUDGE, EXECUTE_RULES, adApprovalContent, adPreviewOf, asksForNewAd, type AdPreview, type AdSpec } from "@/lib/hermes/ad-launch";
 import { IMAGE_RULES, ImageRuleError, REUSE_RULES, asksForAiImages, buildAdImagePrompt } from "@/lib/hermes/ad-image-rules";
 
@@ -293,17 +303,23 @@ export const POST = handler(
           if (aiImage && !generated.has(aiImage)) return { error: "image_url must be an image generated in this message; leave it out to reuse the winner's image" };
           const imageUrl = aiImage || src.image_url;
           if (!imageUrl) return { error: `Ad ${src.ad_id} has no reusable image (format: ${src.format}). Pick a winning image ad.` };
-          const link = text(args.link, 1000) || src.link || "";
-          if (!/^https:\/\//.test(link)) return { error: "No https link: pass link (the landing page or form URL)" };
-          const cta = text(args.call_to_action, 40) || src.call_to_action || "LEARN_MORE";
+          // Lead ads: the CTA opens an Instant Form. Only when the winner already uses one or its ad
+          // set collects leads, since Meta rejects a form on a traffic / conversions ad set.
+          const isLeadAdset = Boolean(src.lead_form_id) || (await adsetUsesLeadForms(src.adset_id));
+          const leadFormId = isLeadAdset ? (configuredLeadFormId() ?? src.lead_form_id) : null;
+          let cta = text(args.call_to_action, 40) || src.call_to_action || "LEARN_MORE";
+          if (leadFormId && cta === "SEND_MESSAGE") cta = "SIGN_UP"; // Messenger CTA can't open a form
           if (!(CTA_TYPES as readonly string[]).includes(cta) && cta !== src.call_to_action) return { error: `call_to_action must be one of ${CTA_TYPES.join(", ")}` };
           const status = args.status === "ACTIVE" ? "ACTIVE" : "PAUSED";
-          // Meta needs the Facebook Page the ad runs as. Never send a placeholder like "0".
-          const pageId = src.page_id ?? (await metaDefaultPageId());
+          // Meta needs the Facebook Page the ad runs as: Wali's META_PAGE_ID first. Never a placeholder like "0".
+          const pageId = configuredPageId() ?? src.page_id ?? (await metaDefaultPageId());
           if (!pageId)
             return {
               error: "Couldn't find the Facebook Page for this ad. Tell Wali to set META_PAGE_ID in Vercel (Page settings → Page ID). Don't create the ad without it.",
             };
+          // A lead ad still needs a link in link_data; the Page works when there's no website.
+          const link = text(args.link, 1000) || src.link || (leadFormId ? `https://www.facebook.com/${pageId}` : "");
+          if (!/^https:\/\//.test(link)) return { error: "No https link: pass link (the landing page URL)" };
           const spec: AdSpec = {
             source: {
               ad_id: src.ad_id,
@@ -315,7 +331,7 @@ export const POST = handler(
               instagram_user_id: src.instagram_user_id,
             },
             image: { image_hash: aiImage ? null : src.image_hash, image_url: imageUrl },
-            copy: { hook, primary_text: `${hook}\n\n${body}`, headline, description: text(args.description, 300) || null, call_to_action: cta, link },
+            copy: { hook, primary_text: `${hook}\n\n${body}`, headline, description: text(args.description, 300) || null, call_to_action: cta, link, lead_form_id: leadFormId },
             name: `${src.name} | ${headline}`.slice(0, 200),
             status,
           };
