@@ -6,7 +6,8 @@
  * It can use tools:
  *   - get_account_overview / get_breakdown / get_ad_details: read Meta Ads data and
  *     ad creatives (read-only)
- *   - generate_ad_image: create ad images with Fal.ai
+ *   - reuse_ad_image: reuse a winning ad's real image (the default for new concepts)
+ *   - generate_ad_image: create ad images with Fal.ai, only when Wali asks for AI images
  *   - propose_change: put a change to the ad account in Approvals.
  * It never changes the ad account itself; approved changes are carried out by Hermes.
  *
@@ -16,7 +17,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { ApiError, check, handler, json, readBody } from "@/lib/hermes/server";
 import { DATE_PRESETS, datePreset, metaAds, metaBreakdown, metaSnapshot } from "@/lib/hermes/meta";
-import { IMAGE_RULES, ImageRuleError, buildAdImagePrompt } from "@/lib/hermes/ad-image-rules";
+import { IMAGE_RULES, ImageRuleError, REUSE_RULES, asksForAiImages, buildAdImagePrompt } from "@/lib/hermes/ad-image-rules";
 
 export const maxDuration = 120;
 
@@ -78,9 +79,22 @@ const TOOLS = [
   {
     type: "function",
     function: {
+      name: "reuse_ad_image",
+      description:
+        "Reuse an existing ad's real image (usually the winner from get_breakdown) for new concepts and variations. Returns its image_url and image_hash and shows the image to Wali. This is the default for creatives.",
+      parameters: {
+        type: "object",
+        properties: { ad_id: { type: "string", description: "The ad whose image to reuse" } },
+        required: ["ad_id"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "generate_ad_image",
       description:
-        "Generate ad creative images with Fal.ai. Every image must show real people (the coach/consultant and/or their clients) as the main subject. Empty desks, empty offices, laptops on tables and objects-only scenes are rejected. Keep text in the image short or absent; Meta penalises text-heavy images.",
+        "Only when Wali explicitly asks for AI-generated images; otherwise use reuse_ad_image. Generate ad creative images with Fal.ai. Every image must show real people (the coach/consultant and/or their clients) as the main subject. Empty desks, empty offices, laptops on tables and objects-only scenes are rejected. Keep text in the image short or absent; Meta penalises text-heavy images.",
       parameters: {
         type: "object",
         properties: {
@@ -101,7 +115,7 @@ const TOOLS = [
     function: {
       name: "propose_change",
       description:
-        "Propose a change to the Meta ad account (pause/resume, budget change, new campaign, ad set or ad, creative swap). Creates an Approval for Wali; nothing changes until Wali approves and Hermes carries it out. Be exact: ids, names, amounts.",
+        "Propose a change to the Meta ad account (pause/resume, budget change, new campaign, ad set or ad, creative swap). For a variation of a winning ad, include the reused image_hash so Hermes uses the exact same image. Creates an Approval for Wali; nothing changes until Wali approves and Hermes carries it out. Be exact: ids, names, amounts.",
       parameters: {
         type: "object",
         properties: {
@@ -193,7 +207,31 @@ export const POST = handler(
           }
           return { ads, note: "Creative images are shown to Wali below your reply." };
         }
+        case "reuse_ad_image": {
+          const adId = typeof args.ad_id === "string" ? args.ad_id : "";
+          const [ad] = await metaAds({ adId });
+          if (!ad?.image_url || !/^https:\/\//.test(ad.image_url))
+            return { error: `Ad ${adId} has no reusable image (format: ${ad?.format ?? "unknown"}). Pick another winning image ad.` };
+          if (!images.some((i) => i.url === ad.image_url)) {
+            if (images.length >= 8) return { error: "Image limit for this message reached (8)" };
+            images.push({ url: ad.image_url, prompt: `Reused from: ${ad.name}` });
+          }
+          return {
+            ad_id: ad.ad_id,
+            name: ad.name,
+            image_url: ad.image_url,
+            image_hash: ad.image_hash,
+            current_copy: { primary_text: ad.primary_text, headlines: ad.headlines, call_to_action: ad.call_to_action, link: ad.link },
+            note: "Shown to Wali below your reply. Write the new angles around this image; put image_hash in propose_change to launch one.",
+          };
+        }
         case "generate_ad_image": {
+          // Server-side, so the model can't fall back to AI people on its own.
+          if (!asksForAiImages(message))
+            return {
+              error:
+                "Refused: Wali didn't ask for AI-generated images. Reuse the winning ad's real image with reuse_ad_image and write new angles. Wali can say \"generate new images\" to allow AI images.",
+            };
           if (!String(args.prompt ?? "").trim()) return { error: "prompt is required" };
           if (images.length >= 8) return { error: "Image limit for this message reached (8)" };
           let prompt: string;
@@ -242,6 +280,9 @@ export const POST = handler(
       "You cannot change the ad account. To change anything (pause, resume, budgets, new campaigns/ads, creatives), use propose_change: it goes to Approvals and Hermes carries it out after Wali approves. Say clearly that it is proposed, not done.",
       "Generated images and ad creatives you look up appear below your reply automatically; refer to them briefly, don't paste URLs.",
       "",
+      REUSE_RULES,
+      "",
+      "When Wali does ask for AI images:",
       IMAGE_RULES,
       "",
       "Reply in concise Markdown. No filler, no emoji, no em dashes.",

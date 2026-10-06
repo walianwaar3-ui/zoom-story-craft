@@ -42,3 +42,26 @@ export function buildAdImagePrompt(people: string, prompt: string) {
     "Photorealistic, natural light, authentic candid moment. Not an empty desk, not an empty office, not an objects-only scene. Minimal or no text.",
   ].join(" ");
 }
+
+/**
+ * Real photos of Wali and real clients beat AI people, so new concepts reuse
+ * the winning ad's image by default. AI images only when Wali's message asks
+ * for them in so many words ("generate images", "AI photos", ...).
+ */
+const ASKS_FOR_AI = [
+  /\bgenerat\w*\b[^.?!\n]{0,40}\b(images?|photos?|pictures?|creatives?|visuals?)\b/i,
+  /\b(images?|photos?|pictures?|creatives?|visuals?)\b[^.?!\n]{0,20}\bgenerat\w*/i,
+  /\bai[- ]?(generated[- ])?(images?|photos?|pictures?|creatives?|visuals?)\b/i,
+];
+
+export function asksForAiImages(message: string) {
+  return ASKS_FOR_AI.some((re) => re.test(message));
+}
+
+export const REUSE_RULES = [
+  "Creatives (strict):",
+  "- Default: reuse the winning ad's real image (reuse_ad_image). Real photos of Wali and real clients convert better than AI people.",
+  "- New concepts or variations = same image, new angle: new hook, primary text, headline and CTA. Say which image you reused.",
+  '- Only call generate_ad_image when Wali explicitly asks for AI-generated images (e.g. "generate new images"). Otherwise it is refused.',
+  "- To launch a variation, use propose_change with the reused image_hash so Hermes uses the exact same picture.",
+].join("\n");
