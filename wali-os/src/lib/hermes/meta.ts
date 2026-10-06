@@ -105,6 +105,86 @@ export async function metaBreakdown(level: "campaign" | "adset" | "ad", preset: 
   }));
 }
 
+type RawCreative = {
+  id?: string;
+  name?: string;
+  title?: string;
+  body?: string;
+  call_to_action_type?: string;
+  thumbnail_url?: string;
+  image_url?: string;
+  video_id?: string;
+  instagram_permalink_url?: string;
+  object_story_spec?: {
+    link_data?: { message?: string; name?: string; description?: string; link?: string; picture?: string; call_to_action?: { type?: string } };
+    video_data?: { message?: string; title?: string; link_description?: string; image_url?: string; video_id?: string; call_to_action?: { type?: string; value?: { link?: string } } };
+  };
+  asset_feed_spec?: {
+    bodies?: { text: string }[];
+    titles?: { text: string }[];
+    descriptions?: { text: string }[];
+    link_urls?: { website_url?: string }[];
+    call_to_action_types?: string[];
+  };
+};
+type RawAd = {
+  id: string;
+  name?: string;
+  effective_status?: string;
+  campaign?: { id: string; name: string };
+  adset?: { id: string; name: string };
+  creative?: RawCreative;
+};
+
+const AD_FIELDS =
+  "id,name,effective_status,campaign{id,name},adset{id,name}," +
+  "creative{id,name,title,body,call_to_action_type,thumbnail_url,image_url,video_id,instagram_permalink_url,object_story_spec,asset_feed_spec}";
+
+/** Copy, CTA, link and images of an ad's creative, flattened across the formats Meta uses. */
+function creativeOf(c: RawCreative = {}) {
+  const link = c.object_story_spec?.link_data;
+  const video = c.object_story_spec?.video_data;
+  const feed = c.asset_feed_spec;
+  const texts = (xs?: { text: string }[]) => (xs ?? []).map((x) => x.text).filter(Boolean);
+  const primary = [c.body, link?.message, video?.message, ...texts(feed?.bodies)].filter(Boolean) as string[];
+  const headlines = [c.title, link?.name, video?.title, ...texts(feed?.titles)].filter(Boolean) as string[];
+  const descriptions = [link?.description, video?.link_description, ...texts(feed?.descriptions)].filter(Boolean) as string[];
+  return {
+    creative_id: c.id ?? null,
+    format: video || c.video_id ? "video" : feed ? "dynamic (multiple text/assets)" : "image/link",
+    primary_text: [...new Set(primary)],
+    headlines: [...new Set(headlines)],
+    descriptions: [...new Set(descriptions)],
+    call_to_action: c.call_to_action_type ?? link?.call_to_action?.type ?? video?.call_to_action?.type ?? feed?.call_to_action_types?.[0] ?? null,
+    link: link?.link ?? video?.call_to_action?.value?.link ?? feed?.link_urls?.[0]?.website_url ?? null,
+    image_url: c.image_url ?? link?.picture ?? video?.image_url ?? c.thumbnail_url ?? null,
+    instagram_permalink: c.instagram_permalink_url ?? null,
+  };
+}
+
+/**
+ * Ads with their creative (copy, CTA, link, image). Read-only. One ad by id, or
+ * the ads inside a campaign or ad set.
+ */
+export async function metaAds(opts: { adId?: string; parentId?: string; activeOnly?: boolean }) {
+  const { token } = config();
+  const id = opts.adId ?? opts.parentId;
+  if (!id || !/^\d+$/.test(id)) throw new ApiError(400, "Give a numeric ad_id, or a campaign_id / adset_id");
+  const shape = (a: RawAd) => ({
+    ad_id: a.id,
+    name: a.name ?? "",
+    status: a.effective_status ?? "",
+    campaign: a.campaign?.name ?? null,
+    adset: a.adset?.name ?? null,
+    ...creativeOf(a.creative),
+  });
+  if (opts.adId) return [shape(await graph<RawAd>(id, { fields: AD_FIELDS }, token))];
+  const params: Record<string, string> = { fields: AD_FIELDS, limit: "25" };
+  if (opts.activeOnly !== false) params.effective_status = JSON.stringify(["ACTIVE"]);
+  const res = await graph<{ data: RawAd[] }>(`${id}/ads`, params, token);
+  return (res.data ?? []).map(shape);
+}
+
 export interface MetaSnapshot {
   account: { id: string; name: string; currency: string; timezone: string };
   date_preset: DatePreset;

@@ -4,7 +4,8 @@
  *
  * Chat with the "Ads Planner" agent (its instructions come from Wali OS → Agents).
  * It can use tools:
- *   - get_account_overview / get_breakdown: read Meta Ads data (read-only)
+ *   - get_account_overview / get_breakdown / get_ad_details: read Meta Ads data and
+ *     ad creatives (read-only)
  *   - generate_ad_image: create ad images with Fal.ai
  *   - propose_change: put a change to the ad account in Approvals.
  * It never changes the ad account itself; approved changes are carried out by Hermes.
@@ -14,7 +15,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { ApiError, check, handler, json, readBody } from "@/lib/hermes/server";
-import { DATE_PRESETS, datePreset, metaBreakdown, metaSnapshot } from "@/lib/hermes/meta";
+import { DATE_PRESETS, datePreset, metaAds, metaBreakdown, metaSnapshot } from "@/lib/hermes/meta";
 
 export const maxDuration = 120;
 
@@ -53,6 +54,23 @@ const TOOLS = [
           campaign_id: { type: "string", description: "Optional campaign id to look inside" },
         },
         required: ["level"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "get_ad_details",
+      description:
+        "See ad creatives: primary text, headlines, descriptions, call to action, link and image of one ad (ad_id), or of the ads in a campaign or ad set. Use get_breakdown first to find ids and winners.",
+      parameters: {
+        type: "object",
+        properties: {
+          ad_id: { type: "string", description: "One ad" },
+          campaign_id: { type: "string", description: "List ads in this campaign" },
+          adset_id: { type: "string", description: "List ads in this ad set" },
+          include_inactive: { type: "boolean", description: "Also paused/archived ads (default false)" },
+        },
       },
     },
   },
@@ -155,6 +173,20 @@ export const POST = handler(
           const campaign = typeof args.campaign_id === "string" && args.campaign_id ? args.campaign_id : undefined;
           return metaBreakdown(level, datePreset(typeof args.date_preset === "string" ? args.date_preset : null), campaign);
         }
+        case "get_ad_details": {
+          const str = (v: unknown) => (typeof v === "string" && v ? v : undefined);
+          const ads = await metaAds({
+            adId: str(args.ad_id),
+            parentId: str(args.adset_id) ?? str(args.campaign_id),
+            activeOnly: args.include_inactive !== true,
+          });
+          // Show the current creatives to Wali under the reply (max 8 images per message).
+          for (const ad of ads) {
+            if (ad.image_url && /^https:\/\//.test(ad.image_url) && images.length < 8 && !images.some((i) => i.url === ad.image_url))
+              images.push({ url: ad.image_url, prompt: `Current ad: ${ad.name}` });
+          }
+          return { ads, note: "Creative images are shown to Wali below your reply." };
+        }
         case "generate_ad_image": {
           const prompt = String(args.prompt ?? "").slice(0, 2000);
           if (!prompt) return { error: "prompt is required" };
@@ -196,7 +228,7 @@ export const POST = handler(
       `You are "${agent.name}" inside Wali OS, chatting with Wali on the Campaigns page.`,
       "Use the tools to look at real Meta Ads data before answering; never invent numbers.",
       "You cannot change the ad account. To change anything (pause, resume, budgets, new campaigns/ads, creatives), use propose_change: it goes to Approvals and Hermes carries it out after Wali approves. Say clearly that it is proposed, not done.",
-      "Generated images appear below your reply automatically; describe them briefly, don't paste URLs.",
+      "Generated images and ad creatives you look up appear below your reply automatically; refer to them briefly, don't paste URLs.",
       "Reply in concise Markdown. No filler, no emoji, no em dashes.",
     ].join("\n");
 
