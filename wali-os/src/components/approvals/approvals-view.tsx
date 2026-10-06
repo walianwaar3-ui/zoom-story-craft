@@ -287,6 +287,7 @@ export function ApprovalsView() {
             <EmptyState
               icon={tab === "pending" ? Check : CheckCheck}
               title={tab === "pending" ? "Nothing waiting on you" : `No ${tab} items`}
+            highlight
               description={
                 tab === "pending"
                   ? "Email replies you submit from the inbox, and requests you create here, will appear for review."

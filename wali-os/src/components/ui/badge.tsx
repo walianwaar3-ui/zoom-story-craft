@@ -5,17 +5,17 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const badgeVariants = cva(
-  "inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden whitespace-nowrap rounded-md border px-2 py-0.5 text-xs font-medium transition-[color,box-shadow] [&>svg]:pointer-events-none [&>svg]:size-3",
+  "inline-flex w-fit shrink-0 items-center justify-center gap-1 overflow-hidden whitespace-nowrap rounded-full border px-2.5 py-0.5 text-[12.5px] font-semibold transition-[color,box-shadow] [&>svg]:pointer-events-none [&>svg]:size-3",
   {
     variants: {
       variant: {
         default: "border-transparent bg-primary text-primary-foreground",
-        secondary: "border-transparent bg-secondary text-secondary-foreground",
-        destructive: "border-transparent bg-destructive/12 text-destructive",
-        outline: "text-foreground",
-        success: "border-transparent bg-success/12 text-success",
-        warning: "border-transparent bg-warning/15 text-[color-mix(in_oklab,var(--warning)_70%,var(--foreground))]",
-        info: "border-transparent bg-primary/12 text-primary",
+        secondary: "border-transparent bg-brand-tint text-secondary-foreground",
+        destructive: "border-transparent bg-danger-bg text-danger",
+        outline: "border-border text-foreground",
+        success: "border-transparent bg-success-bg text-success",
+        warning: "border-warning-border bg-warning-bg text-warning",
+        info: "border-transparent bg-brand-tint text-foreground",
         muted: "border-transparent bg-muted text-muted-foreground",
       },
     },

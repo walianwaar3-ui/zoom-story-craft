@@ -175,6 +175,7 @@ export function InboxView() {
               <EmptyState
                 icon={Inbox}
                 title="No emails yet"
+            highlight
                 description="Log an email you received, draft your reply, and send it for approval before it goes out."
                 action={
                   <Button size="sm" onClick={() => setLogOpen(true)}>

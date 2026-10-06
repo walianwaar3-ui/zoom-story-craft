@@ -15,13 +15,13 @@ export function SyncIndicator() {
       : sync.status === "saving"
         ? { icon: Loader2, label: "Saving…", tip: "Saving changes to the cloud", tone: "text-muted-foreground", spin: true }
         : sync.status === "error"
-          ? { icon: CloudOff, label: "Not saved", tip: `Couldn't save to the cloud. Retrying automatically. ${sync.error ?? ""}`, tone: "text-destructive" }
-          : { icon: Cloud, label: "Synced", tip: "All changes saved to the cloud and live-synced", tone: "text-success" };
+          ? { icon: CloudOff, label: "Not saved", tip: `Couldn't save to the cloud. Retrying automatically. ${sync.error ?? ""}`, tone: "bg-danger-bg text-danger" }
+          : { icon: Cloud, label: "Synced", tip: "All changes saved to the cloud and live-synced", tone: "bg-success-bg text-success" };
 
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span className={cn("hidden items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium sm:inline-flex", state.tone)} role="status">
+        <span className={cn("hidden items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold sm:inline-flex", state.tone)} role="status">
           <state.icon className={cn("size-3.5", "spin" in state && state.spin && "animate-spin")} />
           {state.label}
         </span>

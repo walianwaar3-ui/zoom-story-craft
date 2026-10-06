@@ -104,6 +104,7 @@ export function ClientsView() {
           <EmptyState
             icon={Users}
             title="No clients yet"
+            highlight
             description="Add your first lead or client. You can track status, revenue, next action and every email and task linked to them."
             action={
               <Button onClick={() => openForm()}>

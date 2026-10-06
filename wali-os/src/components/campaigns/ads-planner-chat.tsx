@@ -18,7 +18,7 @@ type Turn = {
   approvals?: { id: string; title: string }[];
 };
 
-const STARTERS = ["Which ad is driving most of the leads?", "Plan next week's budget for the October campaign", "Make 2 new image concepts for the winning ad"];
+const STARTERS = ["Which ad is driving most of the leads?", "Show me the creative of my best ad", "Plan next week's budget for the October campaign", "Make 2 new image concepts for the winning ad"];
 
 /** Chat with the Ads Planner agent: reads Meta data, generates images, proposes changes for approval. */
 export function AdsPlannerChat() {

@@ -122,8 +122,8 @@ export function useAgentRuns(agents: Agent[]) {
 
 const STATUS: Record<RunStatus, { label: string; icon: React.ElementType; className: string }> = {
   queued: { label: "Queued for Hermes", icon: Clock, className: "text-muted-foreground" },
-  running: { label: "Running", icon: Loader2, className: "text-blue-600 dark:text-blue-400" },
-  done: { label: "Done", icon: CheckCircle2, className: "text-emerald-700 dark:text-emerald-400" },
+  running: { label: "Running", icon: Loader2, className: "text-primary" },
+  done: { label: "Done", icon: CheckCircle2, className: "text-success" },
   failed: { label: "Failed", icon: XCircle, className: "text-destructive" },
   cancelled: { label: "Cancelled", icon: XCircle, className: "text-muted-foreground" },
 };

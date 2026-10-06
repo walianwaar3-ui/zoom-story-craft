@@ -62,11 +62,10 @@ export function useAgentStats() {
 
 type Segment = { label: string; value: number; className: string };
 
-// Validated (dataviz validator): light amber-500/blue-500/emerald-500,
-// dark amber-600/blue-500/emerald-600 for the dark surface's lightness band.
-const AMBER = "bg-amber-500 dark:bg-amber-600";
-const BLUE = "bg-blue-500";
-const GREEN = "bg-emerald-500 dark:bg-emerald-600";
+// Brand tokens: to do = gold, in progress = action blue, done = success green.
+const AMBER = "bg-brand-highlight";
+const BLUE = "bg-brand-action";
+const GREEN = "bg-success";
 
 function StatBar({ label, segments, detail }: { label: string; segments: Segment[]; detail?: React.ReactNode }) {
   const total = segments.reduce((s, x) => s + x.value, 0);

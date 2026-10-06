@@ -6,6 +6,7 @@ import { ArrowRight, CheckCheck, CheckCircle2, Circle, DollarSign, Mail, Plus, U
 import { PageHeader } from "@/components/layout/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { StatCard } from "@/components/shared/stat-card";
+import { Swoosh } from "@/components/shared/swoosh";
 import { HealthBadge, PriorityLabel, ThreadStatusBadge, clientStatusMeta } from "@/components/shared/status";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -63,19 +64,35 @@ export function DashboardView() {
 
   return (
     <div className="mx-auto max-w-[1400px] space-y-6">
-      <PageHeader
-        title={`${greeting()}${name ? `, ${name}` : ""}`}
-        description={`${formatDate(new Date().toISOString(), { weekday: "long", month: "long", day: "numeric" })} · ${
-          summary.length ? `Waiting on you: ${summary.join(", ")}.` : "Nothing urgent waiting on you."
-        }`}
-        actions={
-          <Button size="sm" asChild>
-            <Link href="/inbox?new=1">
-              <Plus /> Log email
-            </Link>
-          </Button>
-        }
-      />
+      {/* Hero band: soft brand gradient behind the greeting, wave into the canvas. */}
+      <div className="relative isolate -mx-4 -mt-6 px-4 pt-6 pb-10 lg:-mx-8 lg:-mt-8 lg:px-8 lg:pt-8">
+        <div className="bg-hero absolute inset-0 -z-10 opacity-60" aria-hidden />
+        <svg className="absolute inset-x-0 bottom-0 -z-10 h-8 w-full text-background" viewBox="0 0 1200 40" preserveAspectRatio="none" aria-hidden="true">
+          <path d="M0 22 C 200 4, 420 38, 640 22 S 1020 6, 1200 20 V40 H0 Z" fill="currentColor" />
+        </svg>
+        <PageHeader
+          title={
+            <>
+              {greeting()}
+              {name ? (
+                <>
+                  , <Swoosh>{name}</Swoosh>
+                </>
+              ) : null}
+            </>
+          }
+          description={`${formatDate(new Date().toISOString(), { weekday: "long", month: "long", day: "numeric" })} · ${
+            summary.length ? `Waiting on you: ${summary.join(", ")}.` : "Nothing urgent waiting on you."
+          }`}
+          actions={
+            <Button asChild>
+              <Link href="/inbox?new=1">
+                <Plus /> Log email
+              </Link>
+            </Button>
+          }
+        />
+      </div>
 
       {!setupDone && (
         <Card className="border-primary/30">
@@ -92,7 +109,7 @@ export function DashboardView() {
                 href={s.href}
                 className={cn("flex items-center gap-3 rounded-lg border p-3 text-sm transition-colors hover:bg-muted/50", s.done && "text-muted-foreground")}
               >
-                {s.done ? <CheckCircle2 className="size-4 shrink-0 text-success" /> : <Circle className="size-4 shrink-0 text-muted-foreground" />}
+                {s.done ? <CheckCircle2 className="size-4 shrink-0 text-success" /> : <Circle className="size-4 shrink-0 text-brand-border" />}
                 <span className={cn(s.done && "line-through")}>{s.label}</span>
               </Link>
             ))}
@@ -101,7 +118,7 @@ export function DashboardView() {
       )}
 
       <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-        <StatCard label="Monthly revenue" value={formatCurrency(mrr, cur)} icon={DollarSign} footnote={`From ${revenueClients.length} active & onboarding`} />
+        <StatCard accent label="Monthly revenue" value={formatCurrency(mrr, cur)} icon={DollarSign} footnote={`From ${revenueClients.length} active & onboarding`} />
         <StatCard
           label="Clients"
           value={String(db.clients.filter((c) => c.status === "active").length)}

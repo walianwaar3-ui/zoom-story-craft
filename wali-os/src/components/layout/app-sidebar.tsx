@@ -36,28 +36,28 @@ function NavLink({ item, collapsed, onNavigate }: { item: NavItem; collapsed: bo
       onClick={onNavigate}
       aria-current={active ? "page" : undefined}
       className={cn(
-        "group relative flex h-9 items-center gap-3 rounded-md px-2.5 text-sm font-medium text-sidebar-foreground outline-none transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 focus-visible:ring-sidebar-ring",
-        active && "bg-sidebar-accent text-sidebar-accent-foreground",
+        "group relative flex h-9 items-center gap-3 rounded-lg px-2.5 text-sm font-medium text-sidebar-foreground transition-colors hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+        active && "bg-sidebar-accent font-semibold text-sidebar-accent-foreground",
         collapsed && "justify-center px-0"
       )}
     >
       {active && (
-        <span className="absolute top-1.5 bottom-1.5 left-0 w-0.5 rounded-full bg-sidebar-primary" aria-hidden />
+        <span className="absolute top-1.5 bottom-1.5 left-0 w-[3px] rounded-full bg-brand-action" aria-hidden />
       )}
-      <Icon className={cn("size-4 shrink-0", active ? "text-sidebar-primary" : "text-muted-foreground group-hover:text-sidebar-accent-foreground")} />
+      <Icon className={cn("size-4 shrink-0", active ? "text-brand-action" : "text-muted-foreground group-hover:text-sidebar-accent-foreground")} />
       {!collapsed && <span className="truncate">{item.title}</span>}
       {!collapsed && badge?.count ? (
         <span
           className={cn(
-            "ml-auto rounded-full px-1.5 py-px text-[11px] font-semibold tabular",
-            badge.highlight ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"
+            "ml-auto rounded-full px-2 py-px text-[11px] font-semibold tabular",
+            badge.highlight ? "bg-primary text-primary-foreground" : "bg-brand-tint text-foreground"
           )}
         >
           {badge.count}
         </span>
       ) : null}
       {collapsed && badge?.count ? (
-        <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-primary" aria-hidden />
+        <span className="absolute top-1.5 right-1.5 size-1.5 rounded-full bg-brand-highlight" aria-hidden />
       ) : null}
     </Link>
   );
@@ -89,7 +89,7 @@ function SidebarBody({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
       <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-4 scrollbar-thin" aria-label="Main">
         <div className="space-y-0.5">
           {!collapsed && (
-            <p className="px-2.5 pb-2 text-[11px] font-medium tracking-wider text-muted-foreground uppercase">
+            <p className="eyebrow px-2.5 pb-2">
               Operate
             </p>
           )}
