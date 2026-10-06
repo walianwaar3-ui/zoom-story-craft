@@ -22,7 +22,7 @@ export const EXECUTE_RULES = [
   "- Steps: get_breakdown (level ad, last_14d) to find the winner (most leads at the lowest cost per lead), reuse_ad_image on it, then create_ad with final copy.",
   "- If Wali named a campaign or ad, use that one instead of the overall winner.",
   "- One ad per request. A second create_ad is refused; Wali asks again for the next one.",
-  "- After create_ad, reply with the ad as it will run (hook, primary text, headline, CTA), one line on why it should beat the winner, and that it is waiting for Approve.",
+  "- After create_ad, Wali sees the ad as a preview card with Approve / Reject under your reply. Don't repeat the copy: in 2-3 lines say which winner you built on and why this angle should beat it.",
 ].join("\n");
 
 /** Exact fix-up message when the model answered without creating the ad. */
@@ -58,3 +58,56 @@ export function adApprovalContent(spec: AdSpec) {
     .filter((l) => l !== null)
     .join("\n");
 }
+
+/** What the chat's ad preview card shows. Safe to import in client code. */
+export interface AdPreview {
+  image_url: string;
+  hook: string;
+  primary_text: string;
+  headline: string;
+  description: string | null;
+  call_to_action: string;
+  link: string;
+  status: "PAUSED" | "ACTIVE";
+  source_name: string;
+}
+
+export function adPreviewOf(spec: AdSpec): AdPreview {
+  return {
+    image_url: spec.image.image_url,
+    hook: spec.copy.hook,
+    primary_text: spec.copy.primary_text,
+    headline: spec.copy.headline,
+    description: spec.copy.description,
+    call_to_action: spec.copy.call_to_action,
+    link: spec.copy.link,
+    status: spec.status,
+    source_name: spec.source.name,
+  };
+}
+
+/** Read the preview back from an approval's content (the JSON spec at the end). */
+export function parseAdPreview(content: string): AdPreview | null {
+  const m = content.match(/```json\s*([\s\S]*?)```\s*$/);
+  if (!m) return null;
+  try {
+    const spec = JSON.parse(m[1]) as AdSpec;
+    if (!spec?.copy?.headline || !spec?.image?.image_url) return null;
+    return adPreviewOf(spec);
+  } catch {
+    return null;
+  }
+}
+
+export const CTA_LABELS: Record<string, string> = {
+  LEARN_MORE: "Learn more",
+  SIGN_UP: "Sign up",
+  BOOK_NOW: "Book now",
+  APPLY_NOW: "Apply now",
+  CONTACT_US: "Contact us",
+  GET_QUOTE: "Get quote",
+  SUBSCRIBE: "Subscribe",
+  DOWNLOAD: "Download",
+  GET_OFFER: "Get offer",
+  SEND_MESSAGE: "Send message",
+};

@@ -1,6 +1,6 @@
 /**
  * POST /api/hermes/meta/agent-chat {message, history?}
- * → {reply, images: [{url, prompt}], approvals: [{id, title}], tools_used: [...]}
+ * → {reply, images: [{url, prompt}], approvals: [{id, title, ad?}], tools_used: [...]}
  *
  * Chat with the "Ads Planner" agent (its instructions come from Wali OS → Agents).
  * It can use tools:
@@ -19,14 +19,17 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { ApiError, check, handler, json, readBody } from "@/lib/hermes/server";
 import { DATE_PRESETS, datePreset, metaAds, metaBreakdown, metaSnapshot } from "@/lib/hermes/meta";
-import { CTA_TYPES, EXECUTE_NUDGE, EXECUTE_RULES, adApprovalContent, asksForNewAd, type AdSpec } from "@/lib/hermes/ad-launch";
+import { CTA_TYPES, EXECUTE_NUDGE, EXECUTE_RULES, adApprovalContent, adPreviewOf, asksForNewAd, type AdPreview, type AdSpec } from "@/lib/hermes/ad-launch";
 import { IMAGE_RULES, ImageRuleError, REUSE_RULES, asksForAiImages, buildAdImagePrompt } from "@/lib/hermes/ad-image-rules";
 
-export const maxDuration = 120;
+// 20 tool rounds can take a few minutes; the time budget below stops cleanly before this.
+export const maxDuration = 300;
 
 const MODEL = process.env.META_AGENT_MODEL || process.env.AGENT_MODEL || "deepseek/deepseek-v4-pro";
 const FAL_MODEL = process.env.FAL_IMAGE_MODEL || "fal-ai/flux/schnell";
-const MAX_STEPS = 8;
+const MAX_STEPS = 20;
+/** Stop starting new rounds after this, so a reply always comes back before maxDuration. */
+const TIME_BUDGET_MS = 240_000;
 
 type Msg =
   | { role: "system" | "user"; content: string }
@@ -207,7 +210,7 @@ export const POST = handler(
     const agent = await findAdsAgent(db);
 
     const images: { url: string; prompt: string }[] = [];
-    const approvals: { id: string; title: string }[] = [];
+    const approvals: { id: string; title: string; ad?: AdPreview }[] = [];
     const toolsUsed: string[] = [];
     const generated = new Set<string>();
     let adCreated = false;
@@ -327,8 +330,8 @@ export const POST = handler(
               .single()
           ) as { id: string; title: string };
           adCreated = true;
-          approvals.push(row);
-          if (!images.some((i) => i.url === imageUrl) && images.length < 8) images.push({ url: imageUrl, prompt: `New ad: ${headline}` });
+          // The chat shows this as an ad preview card with Approve / Reject, so no separate image.
+          approvals.push({ ...row, ad: adPreviewOf(spec) });
           return { approval_id: row.id, status: "pending", ad: spec.copy, launch_status: status, note: "Filed. Wali taps Approve in Approvals and Hermes launches it." };
         }
         case "propose_change": {
@@ -381,7 +384,12 @@ export const POST = handler(
     // Server-side "execute": if Wali asked for an ad and the model only talked, send it back once.
     let nudged = !asksForNewAd(message);
 
+    const started = Date.now();
     for (let step = 0; step < MAX_STEPS; step++) {
+      if (Date.now() - started > TIME_BUDGET_MS) {
+        reply = "This took too long, so I stopped here. Ask me to continue and I'll pick up from this point.";
+        break;
+      }
       const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
         method: "POST",
         headers: {
