@@ -63,6 +63,7 @@ export const REUSE_RULES = [
   "- Default: reuse the winning ad's real image (reuse_ad_image). Real photos of Wali and real clients convert better than AI people.",
   "- A new ad = same image, new angle: new hook, primary text, headline and CTA. Say which image you reused.",
   '- Only call generate_ad_image when Wali explicitly asks for AI-generated images (e.g. "generate new images"). Otherwise it is refused.',
+  "- AI images are built on the winning ad's photo as a visual reference (same person and style, new scene). Pass the winner as reference_ad_id; if you don't, the server uses the ad with the lowest cost per lead.",
   "- To launch it, use create_ad with the winner as source_ad_id: Hermes reuses the exact same picture.",
 ].join("\n");
 
@@ -82,17 +83,42 @@ const GPT_IMAGE_SIZES: Record<string, { width: number; height: number }> = {
 };
 const FLUX_SIZES: Record<string, string> = { square: "square_hd", portrait: "portrait_4_3", story: "portrait_16_9", landscape: "landscape_16_9" };
 
-/** Request body for Fal's image endpoint, shaped for the model in use. */
-export function falImageRequest(model: string, prompt: string, format: string, count: number, quality = "high") {
+/**
+ * Fal endpoint and request body for the model in use. With reference images
+ * (GPT Image models only) it calls the model's /edit endpoint, which takes
+ * image_urls as visual references; other models ignore references.
+ */
+export function falImageRequest(model: string, prompt: string, format: string, count: number, quality = "high", referenceUrls: string[] = []) {
   const num_images = Math.min(Math.max(Math.floor(count) || 1, 1), 4);
   if (model.startsWith("openai/gpt-image")) {
-    return {
+    const refs = referenceUrls.filter((u) => /^https:\/\//.test(u)).slice(0, 4);
+    const body = {
       prompt,
       image_size: GPT_IMAGE_SIZES[format] ?? GPT_IMAGE_SIZES.square,
       quality: ["low", "medium", "high", "auto"].includes(quality) ? quality : "high",
       num_images,
       output_format: "jpeg",
     };
+    return refs.length ? { endpoint: `${model}/edit`, body: { ...body, image_urls: refs } } : { endpoint: model, body };
   }
-  return { prompt, image_size: FLUX_SIZES[format] ?? "square_hd", num_images };
+  return { endpoint: model, body: { prompt, image_size: FLUX_SIZES[format] ?? "square_hd", num_images } };
+}
+
+/**
+ * Prompt for a new image built on the winning ad's photo: same person, look and
+ * photographic style, new scene. Keeps what already converts, varies the angle.
+ */
+export function referencePrompt(scenePrompt: string) {
+  return [
+    "Use the reference image (our best-performing ad) as the visual guide.",
+    "Keep the same person: same face, hair, skin tone, age and style of clothing. Keep its lighting, colour palette and photographic style.",
+    `New scene: ${scenePrompt}`,
+  ].join(" ");
+}
+
+/** The winning ad: most leads at the lowest cost per lead, among ads with leads. */
+export function pickWinner<T extends { ad_id?: string; leads: number; cost_per_lead: number | null; spend: number }>(rows: T[]): T | null {
+  const withLeads = rows.filter((r) => r.ad_id && r.leads > 0 && r.cost_per_lead !== null);
+  withLeads.sort((a, b) => (a.cost_per_lead as number) - (b.cost_per_lead as number) || b.leads - a.leads);
+  return withLeads[0] ?? null;
 }

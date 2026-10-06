@@ -39,6 +39,8 @@ import {
   asksForAiImages,
   buildAdImagePrompt,
   falImageRequest,
+  pickWinner,
+  referencePrompt,
 } from "@/lib/hermes/ad-image-rules";
 
 // 20 tool rounds can take a few minutes; the time budget below stops cleanly before this.
@@ -131,6 +133,10 @@ const TOOLS = [
           prompt: { type: "string", description: "Setting, style, lighting, composition around those people. No empty scenes." },
           format: { type: "string", enum: ["square", "portrait", "story", "landscape"], description: "square 1:1 feed, portrait 4:5 feed, story 9:16, landscape 16:9" },
           count: { type: "integer", minimum: 1, maximum: 4 },
+          reference_ad_id: {
+            type: "string",
+            description: "The winning ad whose photo is the visual reference (same person and style, new scene). Default: the ad with the lowest cost per lead.",
+          },
         },
         required: ["people", "prompt"],
       },
@@ -182,13 +188,14 @@ const TOOLS = [
   },
 ];
 
-async function falImages(prompt: string, format: string, count: number) {
+async function falImages(prompt: string, format: string, count: number, referenceUrls: string[] = []) {
   const key = process.env.FAL_KEY;
   if (!key) throw new ApiError(503, "FAL_KEY not set");
-  const res = await fetch(`https://fal.run/${FAL_MODEL}`, {
+  const { endpoint, body } = falImageRequest(FAL_MODEL, prompt, format, count, FAL_QUALITY, referenceUrls);
+  const res = await fetch(`https://fal.run/${endpoint}`, {
     method: "POST",
     headers: { Authorization: `Key ${key}`, "Content-Type": "application/json" },
-    body: JSON.stringify(falImageRequest(FAL_MODEL, prompt, format, count, FAL_QUALITY)),
+    body: JSON.stringify(body),
   });
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
@@ -292,12 +299,22 @@ export const POST = handler(
             if (e instanceof ImageRuleError) return { error: e.message, rules: IMAGE_RULES };
             throw e;
           }
-          const urls = await falImages(prompt, String(args.format ?? "square"), Number(args.count ?? 1) || 1);
+          // Build on the winning ad's photo: the agent's pick, else the lowest cost per lead (last 14 days).
+          let refId = typeof args.reference_ad_id === "string" && /^\d+$/.test(args.reference_ad_id) ? args.reference_ad_id : "";
+          if (!refId) refId = pickWinner(await metaBreakdown("ad", "last_14d").catch(() => []))?.ad_id ?? "";
+          const ref = refId ? (await metaAds({ adId: refId }).catch(() => []))[0] : undefined;
+          const refUrl = ref?.image_url && /^https:\/\//.test(ref.image_url) ? ref.image_url : null;
+          if (refUrl) prompt = referencePrompt(prompt);
+          const urls = await falImages(prompt, String(args.format ?? "square"), Number(args.count ?? 1) || 1, refUrl ? [refUrl] : []);
           urls.forEach((url) => {
             images.push({ url, prompt });
             generated.add(url);
           });
-          return { images: urls, note: "Shown to Wali below your reply." };
+          return {
+            images: urls,
+            reference: refUrl ? { ad_id: ref?.ad_id, name: ref?.name } : null,
+            note: refUrl ? `Built on the photo of "${ref?.name}". Shown to Wali below your reply.` : "No winning ad image found to reference; generated from the prompt. Shown to Wali below your reply.",
+          };
         }
         case "create_ad": {
           if (adCreated) return { error: "One ad per request: this message already created one. Wali asks again for the next." };
