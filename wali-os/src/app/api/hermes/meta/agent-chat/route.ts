@@ -18,7 +18,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { ApiError, check, handler, json, readBody } from "@/lib/hermes/server";
-import { DATE_PRESETS, datePreset, metaAds, metaBreakdown, metaSnapshot } from "@/lib/hermes/meta";
+import { DATE_PRESETS, datePreset, metaAds, metaBreakdown, metaDefaultPageId, metaSnapshot } from "@/lib/hermes/meta";
 import { CTA_TYPES, EXECUTE_NUDGE, EXECUTE_RULES, adApprovalContent, adPreviewOf, asksForNewAd, type AdPreview, type AdSpec } from "@/lib/hermes/ad-launch";
 import { IMAGE_RULES, ImageRuleError, REUSE_RULES, asksForAiImages, buildAdImagePrompt } from "@/lib/hermes/ad-image-rules";
 
@@ -298,6 +298,12 @@ export const POST = handler(
           const cta = text(args.call_to_action, 40) || src.call_to_action || "LEARN_MORE";
           if (!(CTA_TYPES as readonly string[]).includes(cta) && cta !== src.call_to_action) return { error: `call_to_action must be one of ${CTA_TYPES.join(", ")}` };
           const status = args.status === "ACTIVE" ? "ACTIVE" : "PAUSED";
+          // Meta needs the Facebook Page the ad runs as. Never send a placeholder like "0".
+          const pageId = src.page_id ?? (await metaDefaultPageId());
+          if (!pageId)
+            return {
+              error: "Couldn't find the Facebook Page for this ad. Tell Wali to set META_PAGE_ID in Vercel (Page settings → Page ID). Don't create the ad without it.",
+            };
           const spec: AdSpec = {
             source: {
               ad_id: src.ad_id,
@@ -305,7 +311,7 @@ export const POST = handler(
               adset_id: src.adset_id,
               campaign_id: src.campaign_id,
               creative_id: src.creative_id,
-              page_id: src.page_id,
+              page_id: pageId,
               instagram_user_id: src.instagram_user_id,
             },
             image: { image_hash: aiImage ? null : src.image_hash, image_url: imageUrl },

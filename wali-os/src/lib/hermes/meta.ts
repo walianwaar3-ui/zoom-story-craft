@@ -116,6 +116,10 @@ type RawCreative = {
   image_hash?: string;
   video_id?: string;
   instagram_permalink_url?: string;
+  actor_id?: string;
+  object_story_id?: string;
+  effective_object_story_id?: string;
+  instagram_user_id?: string;
   object_story_spec?: {
     page_id?: string;
     instagram_user_id?: string;
@@ -150,7 +154,26 @@ type RawAd = {
 
 const AD_FIELDS =
   "id,name,effective_status,campaign{id,name},adset{id,name}," +
-  "creative{id,name,title,body,call_to_action_type,thumbnail_url,image_url,image_hash,video_id,instagram_permalink_url,object_story_spec,asset_feed_spec}";
+  "creative{id,name,title,body,call_to_action_type,thumbnail_url,image_url,image_hash,video_id,instagram_permalink_url,object_story_spec,asset_feed_spec," +
+  "actor_id,object_story_id,effective_object_story_id,instagram_user_id}";
+
+/** A real Facebook Page / Instagram id: numeric and never "0" (Meta's placeholder for "none"). */
+const realId = (v?: string | null) => (v && /^\d+$/.test(v) && !/^0+$/.test(v) ? v : null);
+
+/**
+ * The Facebook Page an ad runs as. Meta stores it in different places depending
+ * on how the ad was made: object_story_spec.page_id for ads built in Ads
+ * Manager, actor_id, or the "<page>_<post>" story id for ads from existing posts.
+ */
+export function pageIdOf(c: RawCreative = {}) {
+  const fromStory = (id?: string) => (id?.includes("_") ? id.split("_")[0] : undefined);
+  return (
+    realId(c.object_story_spec?.page_id) ??
+    realId(c.actor_id) ??
+    realId(fromStory(c.effective_object_story_id)) ??
+    realId(fromStory(c.object_story_id))
+  );
+}
 
 /** Copy, CTA, link and images of an ad's creative, flattened across the formats Meta uses. */
 function creativeOf(c: RawCreative = {}) {
@@ -164,8 +187,8 @@ function creativeOf(c: RawCreative = {}) {
   return {
     creative_id: c.id ?? null,
     // Needed to launch a new ad from this one (Facebook page and Instagram account it runs as).
-    page_id: c.object_story_spec?.page_id ?? null,
-    instagram_user_id: c.object_story_spec?.instagram_user_id ?? c.object_story_spec?.instagram_actor_id ?? null,
+    page_id: pageIdOf(c),
+    instagram_user_id: realId(c.object_story_spec?.instagram_user_id ?? c.instagram_user_id ?? c.object_story_spec?.instagram_actor_id),
     format: video || c.video_id ? "video" : feed ? "dynamic (multiple text/assets)" : "image/link",
     primary_text: [...new Set(primary)],
     headlines: [...new Set(headlines)],
@@ -202,6 +225,23 @@ export async function metaAds(opts: { adId?: string; parentId?: string; activeOn
   if (opts.activeOnly !== false) params.effective_status = JSON.stringify(["ACTIVE"]);
   const res = await graph<{ data: RawAd[] }>(`${id}/ads`, params, token);
   return (res.data ?? []).map(shape);
+}
+
+let defaultPage: { at: number; id: string | null } | null = null;
+
+/**
+ * Fallback Facebook Page for new ads when the source ad doesn't say: META_PAGE_ID
+ * if set, else the first Page the ad account can promote. Never "0".
+ */
+export async function metaDefaultPageId(): Promise<string | null> {
+  const env = realId(process.env.META_PAGE_ID?.trim());
+  if (env) return env;
+  if (defaultPage && Date.now() - defaultPage.at < TTL_MS) return defaultPage.id;
+  const { token, account } = config();
+  const res = await graph<{ data?: { id: string }[] }>(`${account}/promote_pages`, { fields: "id,name", limit: "5" }, token).catch(() => ({ data: [] }));
+  const id = realId(res.data?.[0]?.id);
+  defaultPage = { at: Date.now(), id };
+  return id;
 }
 
 export interface MetaSnapshot {
