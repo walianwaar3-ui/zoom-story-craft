@@ -8,7 +8,9 @@
  *     ad creatives (read-only)
  *   - reuse_ad_image: reuse a winning ad's real image (the default for new concepts)
  *   - generate_ad_image: create ad images with Fal.ai, only when Wali asks for AI images
- *   - propose_change: put a change to the ad account in Approvals.
+ *   - create_ad: ONE finished ad per request (reused image + final copy), filed as a
+ *     launch-ready approval
+ *   - propose_change: put any other change to the ad account in Approvals.
  * It never changes the ad account itself; approved changes are carried out by Hermes.
  *
  * Auth: the Hermes key, or a signed-in Wali OS user.
@@ -17,13 +19,14 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { ApiError, check, handler, json, readBody } from "@/lib/hermes/server";
 import { DATE_PRESETS, datePreset, metaAds, metaBreakdown, metaSnapshot } from "@/lib/hermes/meta";
+import { CTA_TYPES, EXECUTE_NUDGE, EXECUTE_RULES, adApprovalContent, asksForNewAd, type AdSpec } from "@/lib/hermes/ad-launch";
 import { IMAGE_RULES, ImageRuleError, REUSE_RULES, asksForAiImages, buildAdImagePrompt } from "@/lib/hermes/ad-image-rules";
 
 export const maxDuration = 120;
 
 const MODEL = process.env.META_AGENT_MODEL || process.env.AGENT_MODEL || "deepseek/deepseek-v4-pro";
 const FAL_MODEL = process.env.FAL_IMAGE_MODEL || "fal-ai/flux/schnell";
-const MAX_STEPS = 6;
+const MAX_STEPS = 8;
 
 type Msg =
   | { role: "system" | "user"; content: string }
@@ -113,9 +116,33 @@ const TOOLS = [
   {
     type: "function",
     function: {
+      name: "create_ad",
+      description:
+        "Create ONE finished new ad from a winning ad: reuses its image and ad set, with your final copy. Files it as a launch-ready approval; Wali taps Approve and Hermes launches it. One per request.",
+      parameters: {
+        type: "object",
+        properties: {
+          source_ad_id: { type: "string", description: "The winning ad to build on (its image and ad set are reused)" },
+          hook: { type: "string", description: "First line of the primary text: the scroll-stopper" },
+          body: { type: "string", description: "Rest of the primary text, after the hook" },
+          headline: { type: "string", description: "Short headline under the image (max ~40 characters)" },
+          description: { type: "string", description: "Optional link description" },
+          call_to_action: { type: "string", enum: CTA_TYPES, description: "Default: same as the winner" },
+          link: { type: "string", description: "Default: the winner's link" },
+          image_url: { type: "string", description: "Only if Wali asked for AI images: a generated image_url from this message" },
+          why: { type: "string", description: "One line: why this should beat the winner" },
+          status: { type: "string", enum: ["PAUSED", "ACTIVE"], description: "Default PAUSED. ACTIVE only if Wali said to run it live." },
+        },
+        required: ["source_ad_id", "hook", "body", "headline", "why"],
+      },
+    },
+  },
+  {
+    type: "function",
+    function: {
       name: "propose_change",
       description:
-        "Propose a change to the Meta ad account (pause/resume, budget change, new campaign, ad set or ad, creative swap). For a variation of a winning ad, include the reused image_hash so Hermes uses the exact same image. Creates an Approval for Wali; nothing changes until Wali approves and Hermes carries it out. Be exact: ids, names, amounts.",
+        "Propose a change to the Meta ad account other than a new ad (pause/resume, budget change, new campaign or ad set, creative swap). For new ads use create_ad. Creates an Approval for Wali; nothing changes until Wali approves and Hermes carries it out. Be exact: ids, names, amounts.",
       parameters: {
         type: "object",
         properties: {
@@ -182,6 +209,8 @@ export const POST = handler(
     const images: { url: string; prompt: string }[] = [];
     const approvals: { id: string; title: string }[] = [];
     const toolsUsed: string[] = [];
+    const generated = new Set<string>();
+    let adCreated = false;
 
     const run = async (name: string, args: Record<string, unknown>): Promise<unknown> => {
       toolsUsed.push(name);
@@ -222,7 +251,7 @@ export const POST = handler(
             image_url: ad.image_url,
             image_hash: ad.image_hash,
             current_copy: { primary_text: ad.primary_text, headlines: ad.headlines, call_to_action: ad.call_to_action, link: ad.link },
-            note: "Shown to Wali below your reply. Write the new angles around this image; put image_hash in propose_change to launch one.",
+            note: "Shown to Wali below your reply. Now call create_ad with this ad as source_ad_id and your final copy.",
           };
         }
         case "generate_ad_image": {
@@ -242,8 +271,65 @@ export const POST = handler(
             throw e;
           }
           const urls = await falImages(prompt, String(args.format ?? "square"), Number(args.count ?? 1) || 1);
-          urls.forEach((url) => images.push({ url, prompt }));
+          urls.forEach((url) => {
+            images.push({ url, prompt });
+            generated.add(url);
+          });
           return { images: urls, note: "Shown to Wali below your reply." };
+        }
+        case "create_ad": {
+          if (adCreated) return { error: "One ad per request: this message already created one. Wali asks again for the next." };
+          const text = (v: unknown, max: number) => (typeof v === "string" ? v.trim().slice(0, max) : "");
+          const hook = text(args.hook, 300);
+          const body = text(args.body, 2500);
+          const headline = text(args.headline, 120);
+          if (!hook || !body || !headline) return { error: "hook, body and headline are required" };
+          const [src] = await metaAds({ adId: text(args.source_ad_id, 40) });
+          if (!src?.adset_id) return { error: `Ad ${args.source_ad_id} not found or has no ad set` };
+          const aiImage = text(args.image_url, 1000);
+          if (aiImage && !generated.has(aiImage)) return { error: "image_url must be an image generated in this message; leave it out to reuse the winner's image" };
+          const imageUrl = aiImage || src.image_url;
+          if (!imageUrl) return { error: `Ad ${src.ad_id} has no reusable image (format: ${src.format}). Pick a winning image ad.` };
+          const link = text(args.link, 1000) || src.link || "";
+          if (!/^https:\/\//.test(link)) return { error: "No https link: pass link (the landing page or form URL)" };
+          const cta = text(args.call_to_action, 40) || src.call_to_action || "LEARN_MORE";
+          if (!(CTA_TYPES as readonly string[]).includes(cta) && cta !== src.call_to_action) return { error: `call_to_action must be one of ${CTA_TYPES.join(", ")}` };
+          const status = args.status === "ACTIVE" ? "ACTIVE" : "PAUSED";
+          const spec: AdSpec = {
+            source: {
+              ad_id: src.ad_id,
+              name: src.name,
+              adset_id: src.adset_id,
+              campaign_id: src.campaign_id,
+              creative_id: src.creative_id,
+              page_id: src.page_id,
+              instagram_user_id: src.instagram_user_id,
+            },
+            image: { image_hash: aiImage ? null : src.image_hash, image_url: imageUrl },
+            copy: { hook, primary_text: `${hook}\n\n${body}`, headline, description: text(args.description, 300) || null, call_to_action: cta, link },
+            name: `${src.name} | ${headline}`.slice(0, 200),
+            status,
+          };
+          const row = check(
+            await db
+              .from("approvals")
+              .insert({
+                type: "Campaign",
+                title: `Launch ad: ${headline}`.slice(0, 200),
+                summary: `New ad from "${src.name}" (${status}). ${text(args.why, 400)}`.slice(0, 1000),
+                content: adApprovalContent(spec),
+                requested_by: agent.name,
+                value: null,
+                risk: status === "ACTIVE" ? "medium" : "low",
+                status: "pending",
+              })
+              .select("id, title")
+              .single()
+          ) as { id: string; title: string };
+          adCreated = true;
+          approvals.push(row);
+          if (!images.some((i) => i.url === imageUrl) && images.length < 8) images.push({ url: imageUrl, prompt: `New ad: ${headline}` });
+          return { approval_id: row.id, status: "pending", ad: spec.copy, launch_status: status, note: "Filed. Wali taps Approve in Approvals and Hermes launches it." };
         }
         case "propose_change": {
           const risk = ["low", "medium", "high"].includes(String(args.risk)) ? String(args.risk) : "medium";
@@ -277,8 +363,10 @@ export const POST = handler(
       "",
       `You are "${agent.name}" inside Wali OS, chatting with Wali on the Campaigns page.`,
       "Use the tools to look at real Meta Ads data before answering; never invent numbers.",
-      "You cannot change the ad account. To change anything (pause, resume, budgets, new campaigns/ads, creatives), use propose_change: it goes to Approvals and Hermes carries it out after Wali approves. Say clearly that it is proposed, not done.",
+      "You cannot change the ad account yourself. New ads: create_ad (files a launch-ready approval). Anything else (pause, resume, budgets, new campaigns): propose_change. Both go to Approvals and Hermes carries them out after Wali approves.",
       "Generated images and ad creatives you look up appear below your reply automatically; refer to them briefly, don't paste URLs.",
+      "",
+      EXECUTE_RULES,
       "",
       REUSE_RULES,
       "",
@@ -290,6 +378,8 @@ export const POST = handler(
 
     const messages: Msg[] = [{ role: "system", content: system }, ...history, { role: "user", content: message }];
     let reply = "";
+    // Server-side "execute": if Wali asked for an ad and the model only talked, send it back once.
+    let nudged = !asksForNewAd(message);
 
     for (let step = 0; step < MAX_STEPS; step++) {
       const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
@@ -313,6 +403,11 @@ export const POST = handler(
       const msg = data.choices?.[0]?.message ?? {};
       const calls = (msg.tool_calls ?? []) as ToolCall[];
       if (!calls.length) {
+        if (!nudged && !adCreated && step < MAX_STEPS - 2) {
+          nudged = true;
+          messages.push({ role: "assistant", content: msg.content || "(no ad created)" }, { role: "user", content: EXECUTE_NUDGE });
+          continue;
+        }
         reply = String(msg.content ?? "").trim();
         break;
       }

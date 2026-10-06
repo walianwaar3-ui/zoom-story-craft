@@ -61,7 +61,7 @@ export function asksForAiImages(message: string) {
 export const REUSE_RULES = [
   "Creatives (strict):",
   "- Default: reuse the winning ad's real image (reuse_ad_image). Real photos of Wali and real clients convert better than AI people.",
-  "- New concepts or variations = same image, new angle: new hook, primary text, headline and CTA. Say which image you reused.",
+  "- A new ad = same image, new angle: new hook, primary text, headline and CTA. Say which image you reused.",
   '- Only call generate_ad_image when Wali explicitly asks for AI-generated images (e.g. "generate new images"). Otherwise it is refused.',
-  "- To launch a variation, use propose_change with the reused image_hash so Hermes uses the exact same picture.",
+  "- To launch it, use create_ad with the winner as source_ad_id: Hermes reuses the exact same picture.",
 ].join("\n");
