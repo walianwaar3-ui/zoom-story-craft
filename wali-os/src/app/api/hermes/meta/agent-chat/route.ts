@@ -16,6 +16,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { ApiError, check, handler, json, readBody } from "@/lib/hermes/server";
 import { DATE_PRESETS, datePreset, metaAds, metaBreakdown, metaSnapshot } from "@/lib/hermes/meta";
+import { IMAGE_RULES, ImageRuleError, buildAdImagePrompt } from "@/lib/hermes/ad-image-rules";
 
 export const maxDuration = 120;
 
@@ -78,15 +79,20 @@ const TOOLS = [
     type: "function",
     function: {
       name: "generate_ad_image",
-      description: "Generate ad creative images with Fal.ai from a detailed visual prompt. Keep text in the image short or absent; Meta penalises text-heavy images.",
+      description:
+        "Generate ad creative images with Fal.ai. Every image must show real people (the coach/consultant and/or their clients) as the main subject. Empty desks, empty offices, laptops on tables and objects-only scenes are rejected. Keep text in the image short or absent; Meta penalises text-heavy images.",
       parameters: {
         type: "object",
         properties: {
-          prompt: { type: "string", description: "Detailed visual description: subject, setting, style, lighting, composition" },
+          people: {
+            type: "string",
+            description: "Who is in the shot and what they are doing, e.g. 'a confident female coach in her 40s leading a video call, smiling client visible on screen'",
+          },
+          prompt: { type: "string", description: "Setting, style, lighting, composition around those people. No empty scenes." },
           format: { type: "string", enum: ["square", "portrait", "story", "landscape"], description: "square 1:1 feed, portrait 4:5-ish feed, story 9:16, landscape 16:9" },
           count: { type: "integer", minimum: 1, maximum: 4 },
         },
-        required: ["prompt"],
+        required: ["people", "prompt"],
       },
     },
   },
@@ -188,9 +194,15 @@ export const POST = handler(
           return { ads, note: "Creative images are shown to Wali below your reply." };
         }
         case "generate_ad_image": {
-          const prompt = String(args.prompt ?? "").slice(0, 2000);
-          if (!prompt) return { error: "prompt is required" };
+          if (!String(args.prompt ?? "").trim()) return { error: "prompt is required" };
           if (images.length >= 8) return { error: "Image limit for this message reached (8)" };
+          let prompt: string;
+          try {
+            prompt = buildAdImagePrompt(String(args.people ?? "").slice(0, 500), String(args.prompt ?? "").slice(0, 1500));
+          } catch (e) {
+            if (e instanceof ImageRuleError) return { error: e.message, rules: IMAGE_RULES };
+            throw e;
+          }
           const urls = await falImages(prompt, String(args.format ?? "square"), Number(args.count ?? 1) || 1);
           urls.forEach((url) => images.push({ url, prompt }));
           return { images: urls, note: "Shown to Wali below your reply." };
@@ -229,6 +241,9 @@ export const POST = handler(
       "Use the tools to look at real Meta Ads data before answering; never invent numbers.",
       "You cannot change the ad account. To change anything (pause, resume, budgets, new campaigns/ads, creatives), use propose_change: it goes to Approvals and Hermes carries it out after Wali approves. Say clearly that it is proposed, not done.",
       "Generated images and ad creatives you look up appear below your reply automatically; refer to them briefly, don't paste URLs.",
+      "",
+      IMAGE_RULES,
+      "",
       "Reply in concise Markdown. No filler, no emoji, no em dashes.",
     ].join("\n");
 
