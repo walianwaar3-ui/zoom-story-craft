@@ -10,7 +10,7 @@ type Row = Record<string, unknown>;
  * and as live context for agent chat.
  */
 export async function buildContext(db: SupabaseClient) {
-  const [settings, clients, tasks, campaigns, approvals, threads, agents, team, activity, runs, services, meetings] = await Promise.all([
+  const [settings, clients, tasks, campaigns, approvals, threads, agents, team, activity, runs, services, meetings, outbox] = await Promise.all([
     db.from("workspace_settings").select("*").eq("id", 1).maybeSingle(),
     db.from("clients").select("id, name, company, email, status, health, program, mrr, owner, next_action, last_contact"),
     db.from("tasks").select("*").neq("status", "done").order("due", { ascending: true, nullsFirst: false }),
@@ -35,6 +35,7 @@ export async function buildContext(db: SupabaseClient) {
       .select("id, client_id, title, occurred_at, source, summary, action_items")
       .order("occurred_at", { ascending: false })
       .limit(10),
+    db.from("email_outbox").select("id, thread_id, to_email, subject, status, error, created_at").in("status", ["queued", "sending", "failed"]),
   ]);
 
   const serviceRows = check(services) as Row[];
@@ -69,6 +70,8 @@ export async function buildContext(db: SupabaseClient) {
       approvals_pending: approvalRows.filter((a) => a.status === "pending").length,
       approvals_to_carry_out: approvalRows.filter((a) => a.status === "approved").length,
       emails_needing_reply: threadRows.filter((t) => t.status === "needs-reply").length,
+      // Replies waiting for Hermes to send from Gmail: GET /api/hermes/gmail/send
+      emails_to_send: (check(outbox) as Row[]).filter((o) => o.status === "queued").length,
       tasks_open: openTasks.length,
       tasks_overdue: openTasks.filter((t) => t.due && String(t.due) < today).length,
       agent_runs_queued: (check(runs) as Row[]).filter((r) => r.status === "queued").length,
@@ -80,6 +83,8 @@ export async function buildContext(db: SupabaseClient) {
     // Approved by you and not yet carried out: Hermes's to-do list.
     approvals_to_carry_out: approvalRows.filter((a) => a.status === "approved"),
     email_threads_open: threadRows,
+    // Gmail outbox: queued/sending/failed replies. Claim before sending (POST /api/hermes/gmail/send/:id/claim).
+    email_outbox: check(outbox),
     tasks_open: openTasks.map((t) => ({ ...t, overdue: Boolean(t.due && String(t.due) < today) })),
     clients_needing_attention: allClients.filter((c) => c.health !== "good" && c.status !== "churned"),
     clients: allClients,

@@ -356,3 +356,42 @@ begin
 end $$;
 create or replace trigger link_client_threads after insert or update of email on public.clients
   for each row execute function public.link_client_threads();
+
+-- ── Gmail sync through Hermes ───────────────────────────────────────────────
+-- Hermes pushes Gmail messages in (POST /api/hermes/gmail/inbox), keyed by
+-- Gmail ids so a re-sync never duplicates. Replies Wali sends from Wali OS go to
+-- the outbox; Hermes claims each one, sends it from Gmail and reports back.
+alter table public.email_threads add column if not exists gmail_thread_id text unique;
+alter table public.email_messages add column if not exists gmail_message_id text unique;
+alter table public.email_messages add column if not exists from_email text not null default '';
+
+create table if not exists public.email_outbox (
+  id uuid primary key default gen_random_uuid(),
+  thread_id uuid not null references public.email_threads (id) on delete cascade,
+  to_email text not null,
+  subject text not null default '',
+  body text not null,
+  status text not null default 'queued' check (status in ('queued', 'sending', 'sent', 'failed', 'cancelled')),
+  error text not null default '',
+  approval_id uuid,
+  requested_by text not null default '',
+  gmail_message_id text,
+  created_at timestamptz not null default now(),
+  claimed_at timestamptz,
+  sent_at timestamptz
+);
+create index if not exists email_outbox_status_idx on public.email_outbox (status, created_at);
+
+do $$ begin
+  alter table public.email_outbox enable row level security;
+  create policy "signed-in users have full access" on public.email_outbox for all to authenticated using (true) with check (true);
+exception when duplicate_object then null;
+end $$;
+grant select, insert, update, delete on public.email_outbox to authenticated;
+revoke all on public.email_outbox from anon;
+create or replace trigger log_activity after insert or update or delete on public.email_outbox
+  for each row execute function public.log_activity();
+do $$ begin
+  alter publication supabase_realtime add table public.email_outbox;
+exception when duplicate_object then null;
+end $$;
