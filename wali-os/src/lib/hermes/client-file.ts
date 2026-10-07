@@ -5,6 +5,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 import { serviceTotals } from "@/lib/client-value";
+import { cleanEmailBody } from "@/lib/email-clean";
 import type { ClientService } from "@/lib/data/types";
 
 import { ApiError, check } from "./server";
@@ -149,7 +150,8 @@ export async function clientFile(db: SupabaseClient, id: string, opts: { meeting
       messages: [...messages]
         .sort((a, b) => String(a.at).localeCompare(String(b.at)))
         .slice(-8)
-        .map((m) => ({ ...m, body: String(m.body ?? "").slice(0, 2000) })),
+        // What was written in each message, without quoted history and signatures.
+        .map((m) => ({ ...m, body: cleanEmailBody(String(m.body ?? "")).text.slice(0, 2000) })),
     })),
     tasks_open: check(tasks),
     approvals_pending: check(approvals),

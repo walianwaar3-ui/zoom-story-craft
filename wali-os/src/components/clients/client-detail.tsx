@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { serviceTotals } from "@/lib/client-value";
+import { emailPreview } from "@/lib/email-clean";
 import type { Client } from "@/lib/data/types";
 import { dueLabel, formatDate, relativeTime } from "@/lib/format";
 import { useStore } from "@/lib/store";
@@ -170,7 +171,7 @@ export function ClientDetail({ client, onEdit, onDelete }: { client: Client; onE
                       </div>
                       {last && (
                         <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
-                          <span className="font-medium text-foreground">{last.direction === "in" ? client.name.split(" ")[0] || "Them" : "You"}</span> · {relativeTime(last.at)}: {last.body}
+                          <span className="font-medium text-foreground">{last.direction === "in" ? client.name.split(" ")[0] || "Them" : "You"}</span> · {relativeTime(last.at)}: {emailPreview(last.body)}
                         </p>
                       )}
                     </Link>
