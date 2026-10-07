@@ -13,6 +13,7 @@ import type {
   CollectionKey,
   EmailMessage,
   EmailThread,
+  OutboxItem,
   Settings,
   Task,
   TeamMember,
@@ -32,6 +33,7 @@ export const TABLES: Record<CollectionKey, string> = {
   clients: "clients",
   services: "client_services",
   threads: "email_threads",
+  outbox: "email_outbox",
   campaigns: "campaigns",
   tasks: "tasks",
   approvals: "approvals",
@@ -42,7 +44,7 @@ export const MESSAGES_TABLE = "email_messages";
 export const SETTINGS_TABLE = "workspace_settings";
 
 /** Write order respects foreign keys: referenced rows first. */
-export const WRITE_ORDER: CollectionKey[] = ["team", "agents", "clients", "services", "campaigns", "threads", "tasks", "approvals"];
+export const WRITE_ORDER: CollectionKey[] = ["team", "agents", "clients", "services", "campaigns", "threads", "outbox", "tasks", "approvals"];
 
 export const settingsMapper = {
   from: (r: Row): Settings => ({
@@ -140,6 +142,37 @@ const serviceMapper: Mapper<ClientService> = {
     paid_date: dateOrNull(s.paidDate),
     notes: s.notes,
     created_at: s.createdAt,
+  }),
+};
+
+const outboxMapper: Mapper<OutboxItem> = {
+  from: (r) => ({
+    id: str(r.id),
+    threadId: str(r.thread_id),
+    toEmail: str(r.to_email),
+    subject: str(r.subject),
+    body: str(r.body),
+    status: str(r.status) as OutboxItem["status"],
+    error: str(r.error),
+    approvalId: (r.approval_id as string) ?? undefined,
+    requestedBy: str(r.requested_by),
+    createdAt: tsReq(r.created_at),
+    claimedAt: ts(r.claimed_at),
+    sentAt: ts(r.sent_at),
+  }),
+  to: (o) => ({
+    id: o.id,
+    thread_id: o.threadId,
+    to_email: o.toEmail,
+    subject: o.subject,
+    body: o.body,
+    status: o.status,
+    error: o.error,
+    approval_id: opt(o.approvalId),
+    requested_by: o.requestedBy,
+    created_at: o.createdAt,
+    claimed_at: opt(o.claimedAt),
+    sent_at: opt(o.sentAt),
   }),
 };
 
@@ -306,6 +339,7 @@ export const MAPPERS: Record<CollectionKey, Mapper<any>> = {
   clients: clientMapper,
   services: serviceMapper,
   threads: threadMapper,
+  outbox: outboxMapper,
   campaigns: campaignMapper,
   tasks: taskMapper,
   approvals: approvalMapper,

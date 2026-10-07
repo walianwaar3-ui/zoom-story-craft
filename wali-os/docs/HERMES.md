@@ -144,6 +144,43 @@ Email threads link to the client with the same email address automatically, in e
 
 **Meeting analyser (Fathom, every 30 minutes):** for each new meeting, `POST /api/hermes/meetings` with `external_id` = the Fathom recording id, the transcript and your extracted summary, decisions, action items and risks, plus the attendee emails. Then create tasks and approvals as before, with the same `client_id` the meeting response returned.
 
+### Gmail: inbox in, replies out
+
+Hermes runs Gmail; Wali OS is the record. Your Gmail credentials never leave the VPS.
+
+**Inbox.** `POST /api/hermes/gmail/inbox` with up to 100 messages per call:
+
+```json
+{ "messages": [{
+  "gmail_message_id": "18c2f…",          // Gmail message id (required)
+  "gmail_thread_id": "18c2e…",           // Gmail thread id (required)
+  "from_email": "James Nolan <jn@jknolan.com>",
+  "to": ["walianwaar3@gmail.com"],
+  "subject": "Re: James + Wali",
+  "body": "the FULL plain-text body (not Gmail's 200-character snippet)",
+  "sent_at": "2026-10-07T00:14:00Z",
+  "direction": "in"                      // optional: "out" for mail Wali sent; inferred from his address
+}] }
+```
+
+- Safe to re-send: one Gmail thread is one Wali OS thread, and one Gmail message is stored once. A stored snippet is upgraded to the full body.
+- Threads logged before Gmail ids existed are adopted by contact and subject, and their duplicates are closed.
+- The contact is linked to the client with the same email address automatically.
+- The response lists `thread_id` and `client_id` for each Gmail thread.
+- Include Wali's own sent replies (`direction: "out"`) so conversations are complete.
+- **Don't** also call `threads/:id/inbound` for Gmail mail, and **don't** write email text into `clients.next_action`.
+
+`GET /api/hermes/gmail/inbox?client_id=…` returns threads with full messages.
+
+**Sending.** Replies Wali sends from Wali OS (or approves) wait in the outbox.
+
+1. `GET /api/hermes/gmail/send`: queued replies, each with `to_email`, `subject`, `body`, `gmail_thread_id` and `in_reply_to_gmail_message_id`. Use those as `threadId` and `In-Reply-To`/`References`, so the reply lands in the same Gmail conversation.
+2. `POST /api/hermes/gmail/send/:id/claim` **before** sending. Only one caller wins; a `409` means another loop has it, so skip it. A claim older than 10 minutes can be retaken.
+3. Send it from Gmail exactly as written.
+4. Report back with `POST …/:id/sent {"gmail_message_id": "…", "gmail_thread_id": "…"}`, or `POST …/:id/failed {"error": "…"}`. On `sent`, the message appears in the thread, the thread becomes `replied`, and any approval is marked executed.
+
+**Never** send email that isn't in this outbox. Replies drafted by agents go through Approvals first; once Wali approves, they arrive here.
+
 ## 4. What the API won't let Hermes do
 
 - Delete anything.

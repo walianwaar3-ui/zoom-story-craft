@@ -118,3 +118,54 @@ export function logInbound(db: Db, threadId: string, body: string): Db {
 export function approvedReplyFor(db: Db, thread: EmailThread) {
   return thread.approvalId ? db.approvals.find((a) => a.id === thread.approvalId) : undefined;
 }
+
+/** Re: subject for a reply, without stacking "Re: Re:". */
+export function replySubject(subject: string) {
+  const s = subject.trim();
+  return /^re:/i.test(s) ? s : `Re: ${s || "(no subject)"}`;
+}
+
+/**
+ * Queue a reply for Hermes to send from Gmail. The thread shows it as sending
+ * until Hermes reports it sent (then it becomes a message) or failed.
+ */
+export function queueReply(db: Db, threadId: string, body: string, requestedBy: string, approvalId?: string): Db {
+  const thread = db.threads.find((t) => t.id === threadId);
+  if (!thread || !body.trim()) return db;
+  const item = {
+    id: newId(),
+    threadId,
+    toEmail: thread.contactEmail,
+    subject: replySubject(thread.subject),
+    body: body.trim(),
+    status: "queued" as const,
+    error: "",
+    approvalId,
+    requestedBy,
+    createdAt: nowIso(),
+  };
+  const next = { ...db, outbox: [item, ...db.outbox] };
+  return patchThread(next, threadId, (t) => ({ ...t, status: "ready-to-send", draft: "", updatedAt: nowIso() }));
+}
+
+/** Pull a queued reply back before Hermes sends it; its text returns to the draft. */
+export function cancelQueuedReply(db: Db, outboxId: string): Db {
+  const item = db.outbox.find((o) => o.id === outboxId);
+  if (!item || (item.status !== "queued" && item.status !== "failed")) return db;
+  const next = { ...db, outbox: db.outbox.map((o) => (o.id === outboxId ? { ...o, status: "cancelled" as const } : o)) };
+  return patchThread(next, item.threadId, (t) => ({
+    ...t,
+    status: item.approvalId && t.approvalId === item.approvalId ? "ready-to-send" : "needs-reply",
+    draft: item.approvalId ? t.draft : item.body,
+    updatedAt: nowIso(),
+  }));
+}
+
+export function retryQueuedReply(db: Db, outboxId: string): Db {
+  return { ...db, outbox: db.outbox.map((o) => (o.id === outboxId && o.status === "failed" ? { ...o, status: "queued" as const, error: "", claimedAt: undefined } : o)) };
+}
+
+/** The reply in flight for a thread (queued, sending or failed), if any. */
+export function pendingReplyFor(db: Db, threadId: string) {
+  return db.outbox.find((o) => o.threadId === threadId && (o.status === "queued" || o.status === "sending" || o.status === "failed"));
+}

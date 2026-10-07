@@ -78,6 +78,24 @@ export interface EmailThread {
   updatedAt: string;
 }
 
+export type OutboxStatus = "queued" | "sending" | "sent" | "failed" | "cancelled";
+
+/** A reply waiting for Hermes to send it from Gmail (then it becomes a message in the thread). */
+export interface OutboxItem {
+  id: string;
+  threadId: string;
+  toEmail: string;
+  subject: string;
+  body: string;
+  status: OutboxStatus;
+  error: string;
+  approvalId?: string;
+  requestedBy: string;
+  createdAt: string;
+  claimedAt?: string;
+  sentAt?: string;
+}
+
 export type CampaignStatus = "planned" | "live" | "paused" | "completed";
 export const CHANNELS = ["Email", "LinkedIn", "Meta Ads", "Google Ads", "Referral", "Event", "Content", "Other"] as const;
 export type Channel = (typeof CHANNELS)[number];
@@ -184,6 +202,7 @@ export interface Db {
   clients: Client[];
   services: ClientService[];
   threads: EmailThread[];
+  outbox: OutboxItem[];
   campaigns: Campaign[];
   tasks: Task[];
   approvals: Approval[];

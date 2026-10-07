@@ -4,20 +4,24 @@ import * as React from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import {
+  AlertTriangle,
   ArrowLeft,
   Archive,
   CheckCheck,
   Copy,
   ExternalLink,
   Inbox,
+  Loader2,
   Mail,
   MailPlus,
   MoreHorizontal,
+  RotateCw,
   Search,
   Send,
   ShieldCheck,
   Trash2,
   UserRound,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -37,11 +41,20 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
-import type { EmailThread, ThreadStatus } from "@/lib/data/types";
+import type { EmailThread, OutboxItem, ThreadStatus } from "@/lib/data/types";
 import { formatDate, formatTime, mailtoHref, relativeTime } from "@/lib/format";
 import { usePeople, useStore } from "@/lib/store";
 import { cn, formatCurrency, initials } from "@/lib/utils";
-import { approvedReplyFor, logInbound, markReplySent, submitReplyForApproval } from "@/lib/workflows";
+import {
+  approvedReplyFor,
+  cancelQueuedReply,
+  logInbound,
+  markReplySent,
+  pendingReplyFor,
+  queueReply,
+  retryQueuedReply,
+  submitReplyForApproval,
+} from "@/lib/workflows";
 
 import { LogEmailDialog } from "./log-email-dialog";
 
@@ -80,11 +93,48 @@ function SendPanel({ thread, body, onSent }: { thread: EmailThread; body: string
   );
 }
 
+/** A reply in Hermes's hands: queued, being sent from Gmail, or failed. */
+function PendingReply({ item, onCancel, onRetry }: { item: OutboxItem; onCancel: () => void; onRetry: () => void }) {
+  const failed = item.status === "failed";
+  return (
+    <div className={cn("space-y-3 rounded-lg border p-4", failed ? "border-destructive/40 bg-destructive/5" : "border-primary/30 bg-primary/5")}>
+      <p className="flex items-center gap-2 text-sm font-medium">
+        {failed ? (
+          <>
+            <AlertTriangle className="size-4 text-destructive" /> Gmail send failed
+          </>
+        ) : (
+          <>
+            <Loader2 className="size-4 animate-spin text-primary" /> {item.status === "sending" ? "Hermes is sending it from Gmail…" : "Queued for Hermes to send from Gmail"}
+          </>
+        )}
+      </p>
+      <p className="max-h-32 overflow-y-auto rounded-md border bg-background p-3 text-sm whitespace-pre-wrap scrollbar-thin">{item.body}</p>
+      {failed && item.error && <p className="text-xs text-destructive">{item.error}</p>}
+      <div className="flex flex-wrap gap-2">
+        {failed && (
+          <Button size="sm" onClick={onRetry}>
+            <RotateCw /> Retry
+          </Button>
+        )}
+        {item.status !== "sending" && (
+          <Button size="sm" variant="outline" onClick={onCancel}>
+            <X /> Cancel
+          </Button>
+        )}
+      </div>
+      {!failed && <p className="text-xs text-muted-foreground">It appears in the conversation as soon as Gmail has sent it.</p>}
+    </div>
+  );
+}
+
 export function InboxView() {
   const router = useRouter();
   const pathname = usePathname();
   const params = useSearchParams();
-  const { db, update, remove, transact } = useStore();
+  const { db, update, remove, transact, mode } = useStore();
+  // Sending through Gmail needs the cloud workspace, where Hermes picks up the outbox.
+  const viaGmail = mode === "cloud";
   const { owner } = usePeople();
 
   const [filter, setFilter] = React.useState<Filter>("all");
@@ -123,6 +173,13 @@ export function InboxView() {
   const client = active ? db.clients.find((c) => c.id === active.clientId || (c.email && c.email.toLowerCase() === active.contactEmail.toLowerCase())) : undefined;
   const approval = active ? approvedReplyFor(db, active) : undefined;
   const draft = active?.draft ?? "";
+  const pending = active ? pendingReplyFor(db, active.id) : undefined;
+
+  const sendViaGmail = (body: string, approvalId?: string) => {
+    if (!active || !body.trim()) return;
+    transact((d) => queueReply(d, active.id, body, owner, approvalId));
+    toast.success("Queued for Gmail", { description: "Hermes sends it from your Gmail within a minute or two." });
+  };
 
   const submit = () => {
     if (!active || !draft.trim()) return;
@@ -295,7 +352,19 @@ export function InboxView() {
 
           <div className="shrink-0 border-t bg-card p-3 sm:p-4">
             <div className="mx-auto max-w-3xl">
-              {active.status === "awaiting-approval" ? (
+              {pending ? (
+                <PendingReply
+                  item={pending}
+                  onCancel={() => {
+                    transact((d) => cancelQueuedReply(d, pending.id));
+                    toast.info("Send cancelled", { description: pending.approvalId ? undefined : "Your text is back in the reply box." });
+                  }}
+                  onRetry={() => {
+                    transact((d) => retryQueuedReply(d, pending.id));
+                    toast.success("Queued again");
+                  }}
+                />
+              ) : active.status === "awaiting-approval" ? (
                 <div className="flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4 text-sm sm:flex-row sm:items-center">
                   <ShieldCheck className="size-5 shrink-0 text-primary" />
                   <div className="min-w-0 flex-1">
@@ -312,8 +381,14 @@ export function InboxView() {
                     <CheckCheck className="size-4 text-success" /> Approved reply, ready to send
                   </p>
                   <p className="max-h-32 overflow-y-auto rounded-md border bg-background p-3 text-sm whitespace-pre-wrap scrollbar-thin">{approval.content}</p>
+                  {viaGmail && (
+                    <Button onClick={() => sendViaGmail(approval.content, approval.id)}>
+                      <Send /> Send via Gmail
+                    </Button>
+                  )}
                   <SendPanel thread={active} body={approval.content} onSent={() => sent(approval.content)} />
                   <p className="text-xs text-muted-foreground">
+                    {viaGmail ? "“Send via Gmail” has Hermes send it from your Gmail, in the same conversation. " : ""}
                     “Open in email app” fills in a new email in your own mail program. Send it there, then click “Mark as sent”.
                   </p>
                 </div>
@@ -335,16 +410,27 @@ export function InboxView() {
                           </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
+                          {viaGmail && (
+                            <DropdownMenuItem onClick={submit}>
+                              <ShieldCheck /> Submit for approval instead
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem asChild>
                             <a href={mailtoHref(active.contactEmail, active.subject, draft.trim())} onClick={() => sent(draft.trim())}>
-                              <Send /> Skip approval and send
+                              <ExternalLink /> Send from my email app
                             </a>
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
-                      <Button size="sm" onClick={submit} disabled={!draft.trim()}>
-                        <ShieldCheck /> Submit for approval
-                      </Button>
+                      {viaGmail ? (
+                        <Button size="sm" onClick={() => sendViaGmail(draft)} disabled={!draft.trim()}>
+                          <Send /> Send via Gmail
+                        </Button>
+                      ) : (
+                        <Button size="sm" onClick={submit} disabled={!draft.trim()}>
+                          <ShieldCheck /> Submit for approval
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
