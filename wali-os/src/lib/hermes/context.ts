@@ -1,5 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+import { cleanEmailBody } from "@/lib/email-clean";
+
 import { check } from "./server";
 
 type Row = Record<string, unknown>;
@@ -56,7 +58,9 @@ export async function buildContext(db: SupabaseClient) {
   const approvalRows = check(approvals) as Row[];
   const threadRows = (check(threads) as (Row & { messages: Row[] })[]).map(({ messages, ...t }): Row => {
     const sorted = [...messages].sort((a, b) => String(a.at).localeCompare(String(b.at)));
-    return { ...t, message_count: sorted.length, last_message: sorted.at(-1) ?? null };
+    const last = sorted.at(-1);
+    // The latest message as written, without the quoted history and signature under it.
+    return { ...t, message_count: sorted.length, last_message: last ? { ...last, body: cleanEmailBody(String(last.body ?? "")).text } : null };
   });
   const active = allClients.filter((c) => c.status === "active");
 

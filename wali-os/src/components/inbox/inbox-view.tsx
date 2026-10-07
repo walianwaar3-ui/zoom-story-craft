@@ -42,7 +42,8 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import type { EmailThread, OutboxItem, ThreadStatus } from "@/lib/data/types";
-import { formatDate, formatTime, mailtoHref, relativeTime } from "@/lib/format";
+import { emailPreview } from "@/lib/email-clean";
+import { mailtoHref, relativeTime } from "@/lib/format";
 import { usePeople, useStore } from "@/lib/store";
 import { cn, formatCurrency, initials } from "@/lib/utils";
 import {
@@ -57,6 +58,7 @@ import {
 } from "@/lib/workflows";
 
 import { LogEmailDialog } from "./log-email-dialog";
+import { MessageBubble, dayLabel } from "./message-bubble";
 
 type Filter = "all" | ThreadStatus;
 const filters: { value: Filter; label: string }[] = [
@@ -269,7 +271,7 @@ export function InboxView() {
                       <p className="truncate text-xs font-medium">{t.subject || "(no subject)"}</p>
                       <p className="line-clamp-1 text-xs text-muted-foreground">
                         {last?.direction === "out" && "You: "}
-                        {last?.body}
+                        {last ? emailPreview(last.body) : ""}
                       </p>
                       <ThreadStatusBadge status={t.status} className="mt-1.5 px-1.5 py-0 text-[10px]" />
                     </div>
@@ -332,20 +334,23 @@ export function InboxView() {
 
           <div className="flex-1 overflow-y-auto px-4 py-6 scrollbar-thin sm:px-8">
             <div className="mx-auto flex max-w-3xl flex-col gap-4">
-              {active.messages.map((m) => (
-                <article
-                  key={m.id}
-                  className={cn("rounded-xl border p-4 shadow-xs", m.direction === "out" ? "ml-6 border-primary/25 bg-primary/5 sm:ml-16" : "mr-6 bg-card sm:mr-16")}
-                >
-                  <header className="mb-2 flex items-center justify-between gap-3 text-xs">
-                    <span className="font-medium">{m.direction === "out" ? `You → ${active.contactEmail}` : active.contactName || active.contactEmail}</span>
-                    <span className="text-muted-foreground">
-                      {formatDate(m.at, { month: "short", day: "numeric" })} · {formatTime(m.at)}
-                    </span>
-                  </header>
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{m.body}</p>
-                </article>
-              ))}
+              {[...active.messages]
+                .sort((a, b) => a.at.localeCompare(b.at))
+                .map((m, i, all) => {
+                  const newDay = i === 0 || new Date(all[i - 1].at).toDateString() !== new Date(m.at).toDateString();
+                  return (
+                    <React.Fragment key={m.id}>
+                      {newDay && (
+                        <div className="flex items-center gap-3 text-xs text-muted-foreground" role="separator">
+                          <span className="h-px flex-1 bg-border" />
+                          {dayLabel(m.at)}
+                          <span className="h-px flex-1 bg-border" />
+                        </div>
+                      )}
+                      <MessageBubble message={m} contactName={active.contactName} contactEmail={active.contactEmail} ownerName={owner} />
+                    </React.Fragment>
+                  );
+                })}
               <div ref={endRef} />
             </div>
           </div>
