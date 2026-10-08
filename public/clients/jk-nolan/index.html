@@ -210,20 +210,21 @@ table.phases{width:100%;min-width:560px;border-collapse:collapse}
 /* envelope */
 .envelope-sec{padding-block:20px 110px}
 /* envelope: --B = pocket height, --F = open flap height. JS starts it .sealed (letter tucked in, only its top peeking) and slides the pocket down off the letter when it scrolls into view. */
-.envelope{--B:clamp(230px,30vw,440px);--F:clamp(200px,28vw,420px);position:relative;max-width:1240px;margin:0 auto;overflow:hidden;padding-top:calc(var(--F) * .3);transition:height 1.6s cubic-bezier(.65,0,.25,1)}
+.envelope{--B:clamp(260px,46vw,660px);--F:clamp(200px,28vw,420px);position:relative;max-width:1240px;margin:0 auto;overflow:hidden;padding-top:calc(var(--F) * .3);transition:height 1.6s cubic-bezier(.65,0,.25,1)}
 .env-back{position:absolute;left:0;right:0;bottom:0;height:var(--B);background:var(--forest-2);border-radius:0 0 14px 14px}
 .flap{position:absolute;left:0;right:0;bottom:calc(var(--B) - 1px);height:var(--F);background:var(--forest);clip-path:polygon(0 100%,47% 3%,50% 0,53% 3%,100% 100%);transform-origin:bottom;transform:scaleY(var(--flap,1));transition:transform .5s cubic-bezier(.2,.7,.2,1)}
-.letter{position:relative;z-index:2;background:var(--white);max-width:960px;margin:0 auto;padding:clamp(36px,5vw,70px) clamp(22px,8vw,140px) calc(var(--B) * .62);box-shadow:0 -4px 30px rgba(0,0,0,.16)}
+.letter{position:relative;z-index:2;background:var(--white);max-width:960px;margin:0 auto;padding:clamp(36px,5vw,70px) clamp(22px,8vw,140px) calc(var(--B) + 28px);box-shadow:0 -4px 30px rgba(0,0,0,.16)}
 .letter .hand-title{font-size:clamp(40px,4vw,54px)}
 .letter .hand-title svg{left:-70px;width:calc(100% + 110px)}
 .letter .lead{margin-top:56px;font-size:clamp(23px,2.3vw,32px);line-height:1.3}
 .letter .prose{margin-top:32px;font-size:18px;max-width:640px}
-.letter ul{margin:6px 0 0;padding:0;list-style:none;display:grid;gap:14px}
-.letter li{padding-left:28px;position:relative;color:var(--ink-80)}
-.letter li::before{content:"";position:absolute;left:0;top:.55em;width:12px;height:12px;border:1px solid var(--brown);transform:rotate(45deg) scale(.7)}
-.apply{display:flex;flex-wrap:wrap;align-items:center;gap:18px 40px;margin-top:46px}
-.apply .hand{font-size:40px}
-.apply-note{font-family:var(--mono);font-size:13px;color:var(--brown);flex-basis:100%;min-height:1.2em}
+.letter ul{margin:6px 0 0;padding:0;list-style:none;display:grid}
+.letter li{padding:14px 0;border-bottom:1px solid var(--rule-soft);color:var(--ink)}
+.letter li:first-child{padding-top:4px}
+.apply{display:grid;justify-items:start;gap:0;margin-top:46px}
+.apply-note{font-family:var(--mono);font-size:13px;color:var(--brown);min-height:1.2em;margin-top:14px}
+.soon{position:relative;justify-self:center;font-size:clamp(36px,3.4vw,46px);line-height:1;padding:14px 46px 18px;margin-top:40px}
+.soon svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
 .pocket-wrap{position:absolute;z-index:3;left:0;right:0;bottom:0;height:var(--B);filter:drop-shadow(0 -6px 10px rgba(0,0,0,.28))}
 .pocket{position:absolute;inset:0;background:var(--forest);clip-path:polygon(0 0,50% 46%,100% 0,100% 100%,0 100%);border-radius:0 0 14px 14px}
 .pocket svg{position:absolute;inset:0;width:100%;height:100%}
@@ -558,8 +559,8 @@ table.phases{width:100%;min-width:560px;border-collapse:collapse}
       </div>
       <div class="apply">
         <button class="btn" type="button" id="apply-btn">Begin your application</button>
-        <span class="hand">talk to you soon...</span>
         <p class="apply-note" id="apply-note" aria-live="polite"></p>
+        <span class="hand soon">talk to you soon...<svg class="ink" viewBox="0 0 320 70" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M200 6 C 110 2, 20 10, 6 34 C -4 56, 80 66, 170 64 C 260 62, 318 50, 312 32 C 306 14, 250 8, 150 9" fill="none" stroke="#6B4A3A" stroke-width="1.5" stroke-linecap="round"/></svg></span>
       </div>
     </div>
     <button class="open-hint" type="button" id="open-letter" hidden>Open the letter</button>
