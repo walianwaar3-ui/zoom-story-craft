@@ -1210,11 +1210,76 @@ document.documentElement.classList.add('js');
 
 // Analytics: pushes to GTM dataLayer, Meta Pixel and GA4 when present.
 window.dataLayer = window.dataLayer || [];
+// First-party analytics (feeds /dashboard): batches events and beacons them to /api/track
+var IR = (function(){
+  var PAGE = 'lp', CAMPAIGN = 'infinite-rizq-lahore-2026', q = [], timer = null;
+  function rid(){ return Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
+  function keep(store, k){ try { var v = store.getItem(k); if (!v) { v = rid(); store.setItem(k, v); } return v; } catch (e) { return rid(); } }
+  var vid = keep(window.localStorage, 'ir_vid'), sid = keep(window.sessionStorage, 'ir_sid');
+  var utm = {};
+  try {
+    var qs = new URLSearchParams(location.search);
+    ['utm_source', 'utm_medium', 'utm_campaign'].forEach(function(k){
+      var v = qs.get(k) || sessionStorage.getItem('ir_' + k) || '';
+      if (v) sessionStorage.setItem('ir_' + k, v);
+      utm[k] = v;
+    });
+  } catch (e) {}
+  function flush(){
+    if (!q.length) return;
+    var body = JSON.stringify({ campaign: CAMPAIGN, page: PAGE, vid: vid, sid: sid, ref: document.referrer,
+      us: utm.utm_source, um: utm.utm_medium, uc: utm.utm_campaign, events: q.splice(0, 30) });
+    try {
+      if (navigator.sendBeacon && navigator.sendBeacon('/api/track', new Blob([body], { type: 'application/json' }))) return;
+    } catch (e) {}
+    fetch('/api/track', { method: 'POST', body: body, keepalive: true, headers: { 'Content-Type': 'application/json' } }).catch(function(){});
+  }
+  function send(e, l, n){
+    q.push({ e: e, l: l == null || l === '' ? undefined : String(l).slice(0, 120), n: typeof n === 'number' && isFinite(n) ? n : undefined });
+    clearTimeout(timer);
+    if (q.length >= 20) flush(); else timer = setTimeout(flush, 1500);
+  }
+  // Engaged time: seconds the tab is visible, sent whenever the visitor leaves or hides the tab
+  var engaged = 0;
+  setInterval(function(){ if (document.visibilityState === 'visible') engaged++; }, 1000);
+  function leave(){ if (engaged > 0) { send('engaged_time', null, Math.min(engaged, 3600)); engaged = 0; } flush(); }
+  document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'hidden') leave(); });
+  window.addEventListener('pagehide', leave);
+  // Section reach + scroll depth
+  if ('IntersectionObserver' in window) {
+    var seen = {};
+    var so = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        var key = en.target.getAttribute('data-ir-section');
+        if (en.isIntersecting && !seen[key]) { seen[key] = true; send('section_view', key); so.unobserve(en.target); }
+      });
+    }, { rootMargin: '-40% 0px -40% 0px' });  // counts once the section crosses the middle of the screen, whatever its height
+    Array.prototype.forEach.call(document.querySelectorAll('section, [data-ir-section]'), function(el){
+      var key = el.getAttribute('data-ir-section') || el.id || (el.className || 'section').split(' ')[0];
+      el.setAttribute('data-ir-section', key); so.observe(el);
+    });
+  }
+  var marks = [25, 50, 75, 100], hit = {};
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - innerHeight; if (h <= 0) return;
+    var pct = scrollY / h * 100;
+    marks.forEach(function(m){ if (pct >= (m === 100 ? 97 : m) && !hit[m]) { hit[m] = true; send('scroll_depth', m); } });
+  }, { passive: true });
+  // FAQ opens
+  Array.prototype.forEach.call(document.querySelectorAll('details'), function(d){
+    d.addEventListener('toggle', function(){ if (d.open) { var s = d.querySelector('summary'); send('faq_open', s ? s.textContent.trim() : ''); } });
+  });
+  return { send: send, flush: flush };
+})();
+var IR_EVENT_NAMES = { lp_view: 'page_view', thankyou_view: 'page_view' };
+
 function track(name, data){
   data = data || {};
   window.dataLayer.push(Object.assign({ event: name }, data));
   if (typeof window.fbq === 'function') window.fbq('trackCustom', name, data);
   if (typeof window.gtag === 'function') window.gtag('event', name, data);
+  var label = data.location || data.tier || data.state || data.field || data.commit || (data.percent != null ? data.percent : null);
+  IR.send(IR_EVENT_NAMES[name] || name, label, typeof data.value === 'number' ? data.value : data.percent);
 }
 
 function fmt(n){ return Number(n).toLocaleString('en-US'); }

@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Campaign Analytics | Infinite Rizq</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0a0a0b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!--
+  CAMPAIGN ANALYTICS: infiniterizq.com/dashboard
+  Data comes from the first-party tracker on the landing and thank-you pages
+  (POST /api/track -> Supabase ir_events). This page reads aggregates from
+  /api/stats with the dashboard access key. Nothing personal is stored:
+  visitors are random IDs, never names, emails or phone numbers.
+-->
+<style>
+:root{
+  --bg:#0a0a0b;--card:#141417;--card-2:#1a1a1e;--line:rgba(255,255,255,.08);--line-2:rgba(255,255,255,.14);
+  --ivory:#f3ede1;--text:#c9c3b6;--muted:#8a857b;--gold:#d4a73a;--gold-2:#e8c66a;--gold-soft:rgba(212,167,58,.16);
+  --track:rgba(255,255,255,.06);--good:#5fcf97;--warn:#e0a24a;
+  --serif:'Playfair Display',Georgia,serif;--sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3{color:var(--ivory);margin:0}
+button{font:inherit}
+:focus-visible{outline:2px solid var(--gold-2);outline-offset:2px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* Gate */
+.gate{min-height:100vh;display:grid;place-items:center;padding:24px}
+.gate-card{width:100%;max-width:400px;background:var(--card);border:1px solid var(--line-2);border-radius:18px;padding:30px 26px;text-align:center}
+.gate-card h1{font-family:var(--serif);font-size:1.6rem;font-weight:600;margin:10px 0 6px}
+.gate-card p{color:var(--muted);font-size:.9rem;margin:0 0 20px}
+.gate-card input[type=password]{width:100%;background:#0d0d0f;border:1px solid var(--line-2);border-radius:10px;color:var(--ivory);font:500 1rem var(--sans);padding:13px 14px;letter-spacing:.06em;text-align:center}
+.gate-card label.rem input{accent-color:var(--gold)}
+.gate-card label.rem{display:flex;gap:8px;align-items:center;justify-content:center;font-size:.82rem;color:var(--muted);margin:12px 0 16px}
+.gate-err{color:#ef8f86;font-size:.85rem;min-height:1.2em;margin-top:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(180deg,var(--gold-2),var(--gold));color:#141005;font-weight:700;border:0;border-radius:10px;padding:12px 20px;cursor:pointer}
+.btn.wide{width:100%}
+.ghost{background:transparent;border:1px solid var(--line-2);color:var(--text);border-radius:999px;padding:7px 14px;font-size:.84rem;font-weight:600;cursor:pointer}
+.ghost:hover{border-color:var(--gold);color:var(--ivory)}
+.mark{width:42px;height:42px;border-radius:50%;display:inline-grid;place-items:center;background:#1a1a1e;border:1px solid var(--line-2);font:600 .8rem var(--serif);color:var(--ivory)}
+
+/* Header + filters */
+.top{position:sticky;top:0;z-index:5;background:rgba(10,10,11,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-top:14px;padding-bottom:14px}
+.ttl{display:flex;align-items:center;gap:12px;margin-right:auto;min-width:0}
+.ttl h1{font-family:var(--serif);font-size:1.25rem;font-weight:600;line-height:1.2}
+.ttl small{display:block;color:var(--muted);font-size:.74rem;letter-spacing:.12em;text-transform:uppercase}
+.range{display:flex;gap:4px;background:var(--card);border:1px solid var(--line-2);border-radius:999px;padding:4px}
+.range button{background:transparent;border:0;color:var(--muted);font-size:.82rem;font-weight:600;padding:6px 12px;border-radius:999px;cursor:pointer}
+.range button[aria-pressed="true"]{background:linear-gradient(180deg,var(--gold-2),var(--gold));color:#141005}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.status{color:var(--muted);font-size:.78rem;padding:10px 20px 0;max-width:1180px;margin:0 auto}
+
+main{padding:18px 0 60px}
+.grid{display:grid;gap:14px}
+.kpis{grid-template-columns:repeat(4,1fr)}
+.two{grid-template-columns:1fr 1fr}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 18px 16px;min-width:0}
+.card h2{font-size:.98rem;font-weight:600;font-family:var(--sans);margin-bottom:2px}
+.card .sub{color:var(--muted);font-size:.8rem;margin:0 0 14px}
+.sec-title{font-family:var(--serif);font-size:1.15rem;font-weight:600;color:var(--ivory);margin:28px 0 12px}
+
+/* KPI tiles */
+.kpi .lbl{font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.kpi .val{font-family:var(--serif);font-size:2rem;font-weight:600;color:var(--ivory);line-height:1.15;margin-top:6px}
+.kpi .ctx{font-size:.8rem;color:var(--text);margin-top:4px}
+.kpi .ctx b{color:var(--gold-2);font-weight:600}
+.kpi.hl{border-color:rgba(212,167,58,.4);background:linear-gradient(180deg,rgba(212,167,58,.10),var(--card) 70%)}
+
+/* Bars */
+.bars{display:grid;gap:10px}
+.bar-row{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,2fr) auto;gap:12px;align-items:center;font-size:.85rem;cursor:default}
+.bar-row .name{color:var(--ivory);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-row .name small{display:block;color:var(--muted);font-size:.74rem}
+.bar-track{height:12px;background:var(--track);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;background:var(--gold);border-radius:0 4px 4px 0;min-width:2px;transition:width .4s ease}
+.bar-row:hover .bar-fill{background:var(--gold-2)}
+.bar-row .num{color:var(--ivory);font-weight:600;text-align:right;min-width:74px}
+.bar-row .num small{color:var(--muted);font-weight:500;margin-left:6px}
+.drop{color:var(--muted);font-size:.74rem}
+.empty{color:var(--muted);font-size:.86rem;padding:14px 0}
+
+/* Daily chart */
+.chart{position:relative;height:220px}
+.chart svg{width:100%;height:100%;display:block;overflow:visible}
+.chart .axis{fill:var(--muted);font-size:11px;font-family:var(--sans)}
+.chart .grid-line{stroke:rgba(255,255,255,.07);stroke-width:1}
+.chart .col{fill:var(--gold)}
+.chart .col.on{fill:var(--gold-2)}
+.chart .hit{fill:transparent;cursor:crosshair}
+.tip{position:fixed;z-index:20;pointer-events:none;background:#0d0d0f;border:1px solid var(--line-2);border-radius:10px;padding:10px 12px;font-size:.8rem;color:var(--text);box-shadow:0 12px 30px rgba(0,0,0,.5);min-width:170px;opacity:0;transition:opacity .12s}
+.tip.on{opacity:1}
+.tip b{color:var(--ivory)}
+.tip .tr{display:flex;justify-content:space-between;gap:16px}
+
+/* Tables */
+.tbl-wrap{overflow-x:auto;margin:0 -4px}
+table{width:100%;border-collapse:collapse;font-size:.84rem}
+th,td{text-align:left;padding:9px 6px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:600;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+td{color:var(--text)}
+td:first-child{color:var(--ivory)}
+.tag{display:inline-block;font-size:.68rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--gold-2);background:var(--gold-soft);border-radius:999px;padding:2px 8px;margin-right:6px}
+
+.note{font-size:.8rem;color:var(--muted);margin-top:10px}
+.foot{color:var(--muted);font-size:.78rem;margin-top:30px;line-height:1.6}
+.foot code{word-break:break-all;color:var(--text)}
+
+@media (max-width:960px){ .kpis{grid-template-columns:repeat(2,1fr)} .two{grid-template-columns:1fr} }
+@media (max-width:560px){
+  .wrap{padding:0 14px}
+  .kpi .val{font-size:1.6rem}
+  .ttl h1{font-size:1.08rem}
+  .range{width:100%;justify-content:space-between}
+  .range button{padding:6px 8px;font-size:.78rem}
+  .bar-row{grid-template-columns:1fr auto;gap:4px 10px}
+  .bar-row .bar-track{grid-column:1 / -1;grid-row:2}
+  .top{position:static}
+  table th:nth-child(5),table td:nth-child(5){display:none}
+  td .tag{display:block;width:max-content;margin:0 0 3px}
+}
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <form class="gate-card" id="gate-form" autocomplete="off">
+    <span class="mark">WWO</span>
+    <h1>Campaign analytics</h1>
+    <p>Infinite Rizq · Lahore 2026. Enter the access key to view the dashboard.</p>
+    <input id="key" type="password" placeholder="IR-XXXX-XXXX-XXXX" aria-label="Access key" required>
+    <label class="rem"><input type="checkbox" id="remember" checked> Remember on this device</label>
+    <button class="btn wide" type="submit">Open dashboard</button>
+    <div class="gate-err" id="gate-err" role="alert"></div>
+  </form>
+</div>
+
+<div id="app" hidden>
+  <header class="top">
+    <div class="wrap">
+      <div class="ttl">
+        <span class="mark">WWO</span>
+        <div><h1>Infinite Rizq · Campaign analytics</h1><small id="camp">infinite-rizq-lahore-2026</small></div>
+      </div>
+      <div class="range" role="group" aria-label="Date range">
+        <button type="button" data-range="today" aria-pressed="false">Today</button>
+        <button type="button" data-range="7" aria-pressed="false">7 days</button>
+        <button type="button" data-range="30" aria-pressed="false">30 days</button>
+        <button type="button" data-range="all" aria-pressed="true">All time</button>
+      </div>
+      <div class="actions">
+        <button class="ghost" type="button" id="refresh">Refresh</button>
+        <button class="ghost" type="button" id="save">Save snapshot</button>
+        <button class="ghost" type="button" id="csv">Export CSV</button>
+        <button class="ghost" type="button" id="lock">Lock</button>
+      </div>
+    </div>
+  </header>
+  <p class="status" id="status" aria-live="polite">Loading…</p>
+
+  <main class="wrap">
+    <div class="grid kpis" id="kpis"></div>
+
+    <h2 class="sec-title">Traffic over time</h2>
+    <div class="card">
+      <h2>Unique visitors per day</h2>
+      <p class="sub">Pakistan time. Hover a day for VSL plays, card checkouts, paid and applications.</p>
+      <div class="chart" id="daily"></div>
+    </div>
+
+    <h2 class="sec-title">Conversion</h2>
+    <div class="grid two">
+      <div class="card">
+        <h2>Funnel</h2>
+        <p class="sub">Unique visitors who reached each step, as a share of everyone who landed.</p>
+        <div class="bars" id="funnel"></div>
+      </div>
+      <div class="card">
+        <h2>Card checkout by ticket</h2>
+        <p class="sub">Clicks on the Stripe button for each tier.</p>
+        <div class="bars" id="tiers"></div>
+        <h2 style="margin-top:22px">Mastermind applications</h2>
+        <p class="sub">Answer to “Ready to commit $2,500?”</p>
+        <div class="bars" id="commit"></div>
+      </div>
+    </div>
+
+    <h2 class="sec-title">Page engagement</h2>
+    <div class="grid two">
+      <div class="card">
+        <h2>Section reach</h2>
+        <p class="sub">Share of visitors who saw each part of the landing page, in page order.</p>
+        <div class="bars" id="sections"></div>
+      </div>
+      <div class="card">
+        <h2>Scroll depth</h2>
+        <p class="sub">How far down the page visitors scrolled.</p>
+        <div class="bars" id="scroll"></div>
+        <h2 style="margin-top:22px">VSL retention</h2>
+        <p class="sub">Visitors who reached each point of the video, of those who pressed play.</p>
+        <div class="bars" id="vsl"></div>
+      </div>
+    </div>
+
+    <h2 class="sec-title">Touchpoints</h2>
+    <div class="card">
+      <h2>Every interaction</h2>
+      <p class="sub">Buttons, payment actions, video, FAQ and form events across both pages.</p>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Interaction</th><th>Where</th><th class="n">Clicks</th><th class="n">Unique</th><th class="n">% of visitors</th></tr></thead>
+        <tbody id="touch"></tbody>
+      </table></div>
+    </div>
+
+    <div class="grid two" style="margin-top:14px">
+      <div class="card">
+        <h2>Most-opened FAQs</h2>
+        <p class="sub">The questions people need answered before paying.</p>
+        <div class="bars" id="faq"></div>
+      </div>
+      <div class="card">
+        <h2>Traffic sources</h2>
+        <p class="sub">UTM source, or the referring site. “direct” is typed URLs and apps that hide the referrer.</p>
+        <div class="bars" id="sources"></div>
+      </div>
+      <div class="card">
+        <h2>Devices</h2>
+        <p class="sub">Unique visitors by device type.</p>
+        <div class="bars" id="devices"></div>
+      </div>
+      <div class="card">
+        <h2>Countries</h2>
+        <p class="sub">Unique visitors by country.</p>
+        <div class="bars" id="countries"></div>
+      </div>
+    </div>
+
+    <p class="foot">
+      How this is measured: a visitor is one browser (a random ID, no personal data). “Paid” counts visitors who reached the thank-you page, which Stripe only sends people to after a successful card payment; bank and JazzCash buyers are recorded in the attendee sheet instead.
+      Tag ad links with <code>?utm_source=meta&amp;utm_medium=paid&amp;utm_campaign=lahore-oct</code> so they show up under Traffic sources.
+      Use <b>Save snapshot</b> at the end of the campaign to keep a permanent record for the next launch.
+    </p>
+  </main>
+</div>
+
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+(function(){
+var KEY_STORE = 'ir_dash_key', state = { key: '', range: 'all', data: null };
+var $ = function(id){ return document.getElementById(id); };
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }
+function fmt(n){ return Number(n || 0).toLocaleString('en-US'); }
+function pct(a, b){ return b ? Math.round(a / b * 1000) / 10 : 0; }
+function pctTxt(a, b){ return b ? pct(a, b) + '%' : '·'; }
+function dur(s){ s = Math.round(s || 0); return Math.floor(s / 60) + 'm ' + ('0' + s % 60).slice(-2) + 's'; }
+
+var SECTION_NAMES = { hero: 'Hero + VSL', why: 'Why this room is rare', problem: 'Blockages + rizq visual', experience: 'Inside the room', guide: 'About Shahrez', 'for': 'Who it’s for', tickets: 'Tickets + payment', reserve: 'Final call to action', faq: 'FAQ' };
+var SECTION_ORDER = ['hero', 'why', 'problem', 'experience', 'guide', 'for', 'tickets', 'reserve', 'faq'];
+var EVENT_NAMES = {
+  cta_click: 'Button click', checkout_stripe: 'Card checkout (Stripe)', whatsapp_click: 'WhatsApp coordinator',
+  payment_copy: 'Copied payment details', vsl_start: 'Played main VSL', vsl_complete: 'Finished main VSL',
+  rizq_visual_toggle: 'Before/after toggle', faq_open: 'Opened FAQ', upsell_vsl_start: 'Played mastermind VSL',
+  application_start: 'Started application', application_submit: 'Submitted application'
+};
+var LABEL_NAMES = {
+  cta_hero: 'Hero: Reserve your seat', cta_nav: 'Top bar: Reserve', cta_sticky_mobile: 'Mobile sticky bar',
+  cta_final: 'Final section: Reserve', cta_vsl_end: 'End of VSL: Reserve', cta_ticket_general: 'Ticket card: General',
+  cta_ticket_pair: 'Ticket card: Pair Pass', cta_ticket_inner: 'Ticket card: Inner Table',
+  cta_whatsapp_faq: 'FAQ: WhatsApp', cta_whatsapp_payment: 'Payment box: WhatsApp',
+  general: 'General · PKR 11,111', pair: 'Pair Pass · PKR 15,555', inner: 'Inner Table · PKR 33,333',
+  blocked: 'Before the room', open: 'After the room',
+  yes: 'Yes, ready to commit', 'yes-discuss': 'Yes, wants to discuss', 'not-now': 'Not right now'
+};
+var PAGE_NAMES = { lp: 'Landing page', 'thank-you': 'Thank-you page' };
+function lbl(v){ return LABEL_NAMES[v] || v || ''; }
+
+// ---------- Access ----------
+function remembered(){ try { return localStorage.getItem(KEY_STORE) || sessionStorage.getItem(KEY_STORE) || ''; } catch (e) { return ''; } }
+function rememberKey(k, persist){ try { (persist ? localStorage : sessionStorage).setItem(KEY_STORE, k); } catch (e) {} }
+function forget(){ try { localStorage.removeItem(KEY_STORE); sessionStorage.removeItem(KEY_STORE); } catch (e) {} }
+
+$('gate-form').addEventListener('submit', function(e){
+  e.preventDefault();
+  var k = $('key').value.trim().toUpperCase();
+  $('gate-err').textContent = '';
+  load(k).then(function(ok){
+    if (ok) rememberKey(k, $('remember').checked);
+    else $('gate-err').textContent = 'That key didn’t work. Check it and try again.';
+  });
+});
+$('lock').addEventListener('click', function(){ forget(); location.reload(); });
+
+// ---------- Data ----------
+function rangeBounds(r){
+  var now = new Date();
+  if (r === 'today') { var d = new Date(); d.setHours(0, 0, 0, 0); return { from: d.toISOString() }; }
+  if (r === '7' || r === '30') return { from: new Date(now.getTime() - Number(r) * 864e5).toISOString() };
+  return {};
+}
+function load(key){
+  var b = rangeBounds(state.range);
+  $('status').textContent = 'Loading…';
+  return fetch('/api/stats', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key: key, from: b.from || null, to: null }) })
+    .then(function(r){ return r.json().then(function(j){ return { status: r.status, body: j }; }); })
+    .then(function(res){
+      if (res.status === 401) { if (!$('app').hidden) { forget(); location.reload(); } return false; }
+      if (!res.body.ok) { $('status').textContent = res.body.error || 'Could not load analytics.'; return true; }
+      state.key = key; state.data = res.body.data;
+      $('gate').hidden = true; $('app').hidden = false;
+      render(state.data);
+      return true;
+    })
+    .catch(function(){ $('status').textContent = 'Network error. Try Refresh.'; return !$('app').hidden; });
+}
+
+document.querySelectorAll('[data-range]').forEach(function(b){
+  b.addEventListener('click', function(){
+    state.range = b.getAttribute('data-range');
+    document.querySelectorAll('[data-range]').forEach(function(x){ x.setAttribute('aria-pressed', String(x === b)); });
+    load(state.key);
+  });
+});
+$('refresh').addEventListener('click', function(){ load(state.key); });
+
+// ---------- Rendering ----------
+function kpi(label, value, ctx, hl){
+  return '<div class="card kpi' + (hl ? ' hl' : '') + '"><div class="lbl">' + label + '</div><div class="val tnum">' + value + '</div><div class="ctx">' + (ctx || '&nbsp;') + '</div></div>';
+}
+function bars(el, rows, opts){
+  opts = opts || {};
+  if (!rows.length) { el.innerHTML = '<div class="empty">No data yet for this range.</div>'; return; }
+  var max = opts.max || Math.max.apply(null, rows.map(function(r){ return r.value; })) || 1;
+  el.innerHTML = rows.map(function(r){
+    var w = Math.max(0, Math.min(100, r.value / max * 100));
+    var tip = r.tip || (r.name + ': ' + fmt(r.value));
+    return '<div class="bar-row" data-tip="' + esc(tip) + '">' +
+      '<div class="name">' + esc(r.name) + (r.note ? '<small>' + esc(r.note) + '</small>' : '') + '</div>' +
+      '<div class="bar-track"><div class="bar-fill" style="width:' + w.toFixed(1) + '%"></div></div>' +
+      '<div class="num tnum">' + fmt(r.value) + (r.share != null ? '<small>' + r.share + '</small>' : '') + '</div></div>';
+  }).join('');
+}
+
+function render(d){
+  var t = d.totals || {}, v = t.visitors || 0;
+  $('camp').textContent = d.campaign || '';
+  var since = d.first_event ? new Date(d.first_event).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : null;
+  $('status').textContent = 'Updated ' + new Date(d.generated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) +
+    (since ? ' · data since ' + since : ' · no events in this range yet') + ' · ' + fmt(t.total_events) + ' events';
+
+  $('kpis').innerHTML = [
+    kpi('Unique visitors', fmt(v), fmt(t.sessions) + ' sessions · ' + fmt(t.pageviews) + ' page views'),
+    kpi('VSL play rate', pctTxt(t.vsl_starts, v), fmt(t.vsl_starts) + ' played · <b>' + pctTxt(t.vsl_completes, t.vsl_starts) + '</b> finished'),
+    kpi('Checkout click rate', pctTxt(t.checkout_visitors, v), fmt(t.checkout_visitors) + ' visitors · ' + fmt(t.checkout_clicks) + ' clicks'),
+    kpi('Paid by card', fmt(t.thankyou_visitors), '<b>' + pctTxt(t.thankyou_visitors, v) + '</b> of visitors converted', true),
+    kpi('Avg engaged time', dur(t.avg_engaged_sec), 'per session on the landing page'),
+    kpi('Bank / JazzCash intent', fmt(t.whatsapp_clicks + t.payment_copies), fmt(t.whatsapp_clicks) + ' WhatsApp · ' + fmt(t.payment_copies) + ' copied details'),
+    kpi('Button clicks', fmt(t.cta_clicks), 'all “Reserve” and ticket buttons'),
+    kpi('Mastermind applications', fmt(t.app_submits), '<b>' + pctTxt(t.app_submits, t.thankyou_visitors) + '</b> of buyers · ' + fmt(t.app_starts) + ' started', true)
+  ].join('');
+
+  renderDaily(d.daily || []);
+
+  var landed = (d.funnel && d.funnel[0] && d.funnel[0].n) || 0, prev = null;
+  bars($('funnel'), (d.funnel || []).map(function(s){
+    var row = { name: s.step, value: s.n, share: pctTxt(s.n, landed),
+      note: prev != null && prev > 0 && s.n <= prev ? 'keeps ' + pct(s.n, prev) + '% of previous step' : null,
+      tip: s.step + ': ' + fmt(s.n) + ' visitors (' + pctTxt(s.n, landed) + ' of landed)' };
+    prev = s.n; return row;
+  }), { max: landed || 1 });
+
+  bars($('tiers'), (d.checkout_tiers || []).map(function(r){ return { name: lbl(r.label), value: r.clicks, share: fmt(r.visitors) + ' ppl' }; }));
+  bars($('commit'), (d.commit || []).map(function(r){ return { name: lbl(r.label), value: r.n }; }));
+
+  var secMap = {}; (d.sections || []).forEach(function(s){ secMap[s.label] = s.visitors; });
+  var secKeys = SECTION_ORDER.filter(function(k){ return secMap[k] != null; }).concat(Object.keys(secMap).filter(function(k){ return SECTION_ORDER.indexOf(k) < 0; }));
+  bars($('sections'), secKeys.map(function(k){ return { name: SECTION_NAMES[k] || k, value: secMap[k], share: pctTxt(secMap[k], v) }; }), { max: v || 1 });
+
+  var sc = {}; (d.scroll || []).forEach(function(s){ sc[s.label] = s.visitors; });
+  bars($('scroll'), ['25', '50', '75', '100'].filter(function(k){ return sc[k] != null; }).map(function(k){ return { name: k === '100' ? 'Reached the bottom' : 'Scrolled ' + k + '%', value: sc[k], share: pctTxt(sc[k], v) }; }), { max: v || 1 });
+
+  var vp = {}; (d.vsl_progress || []).forEach(function(s){ vp[s.label] = s.visitors; });
+  var vs = t.vsl_starts || 0;
+  bars($('vsl'), vs ? [{ name: 'Pressed play', value: vs, share: '100%' }].concat(['25', '50', '75', '100'].map(function(k){ return { name: k === '100' ? 'Watched to the end' : 'Watched ' + k + '%', value: vp[k] || 0, share: pctTxt(vp[k] || 0, vs) }; })) : [], { max: vs || 1 });
+
+  var rows = (d.interactions || []);
+  $('touch').innerHTML = rows.length ? rows.map(function(r){
+    return '<tr><td>' + esc(EVENT_NAMES[r.event] || r.event) + '</td><td><span class="tag">' + esc(PAGE_NAMES[r.page] || r.page) + '</span>' + esc(lbl(r.label)) + '</td>' +
+      '<td class="n">' + fmt(r.count) + '</td><td class="n">' + fmt(r.visitors) + '</td><td class="n">' + pctTxt(r.visitors, v) + '</td></tr>';
+  }).join('') : '<tr><td colspan="5" class="empty">No interactions yet for this range.</td></tr>';
+
+  bars($('faq'), (d.faq || []).map(function(r){ return { name: r.label, value: r.opens }; }));
+  bars($('sources'), (d.sources || []).map(function(r){ return { name: r.label, value: r.visitors, share: pctTxt(r.visitors, v) }; }));
+  bars($('devices'), (d.devices || []).map(function(r){ return { name: r.label.charAt(0).toUpperCase() + r.label.slice(1), value: r.visitors, share: pctTxt(r.visitors, v) }; }));
+  bars($('countries'), (d.countries || []).map(function(r){ return { name: r.label === '??' ? 'Unknown' : r.label, value: r.visitors, share: pctTxt(r.visitors, v) }; }));
+}
+
+function renderDaily(days){
+  var el = $('daily');
+  if (!days.length) { el.innerHTML = '<div class="empty">No visits yet for this range.</div>'; return; }
+  var W = 1000, H = 220, L = 34, B = 26, T = 8, n = days.length;
+  var max = Math.max(1, Math.max.apply(null, days.map(function(x){ return x.visitors; })));
+  var step = Math.pow(10, Math.floor(Math.log10(max))); var top = Math.ceil(max / step) * step; if (top / step < 3) { step = step / 2; }
+  var slot = (W - L) / n, bw = Math.max(2, Math.min(42, slot - 4));
+  var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img" aria-label="Unique visitors per day">';
+  for (var g = 0; g <= top; g += step) {
+    var gy = T + (H - B - T) * (1 - g / top);
+    svg += '<line class="grid-line" x1="' + L + '" x2="' + W + '" y1="' + gy + '" y2="' + gy + '"/><text class="axis" x="' + (L - 6) + '" y="' + (gy + 4) + '" text-anchor="end">' + g + '</text>';
+  }
+  var every = Math.ceil(n / 10);
+  days.forEach(function(x, i){
+    var h = (H - B - T) * (x.visitors / top), cx = L + slot * i + slot / 2, y = H - B - h;
+    var r = Math.min(4, bw / 2, h);
+    svg += '<path class="col" data-i="' + i + '" d="M' + (cx - bw / 2) + ' ' + (H - B) + 'V' + (y + r) + 'Q' + (cx - bw / 2) + ' ' + y + ' ' + (cx - bw / 2 + r) + ' ' + y + 'H' + (cx + bw / 2 - r) + 'Q' + (cx + bw / 2) + ' ' + y + ' ' + (cx + bw / 2) + ' ' + (y + r) + 'V' + (H - B) + 'Z"/>';
+    svg += '<rect class="hit" data-i="' + i + '" x="' + (L + slot * i) + '" y="' + T + '" width="' + slot + '" height="' + (H - T) + '"/>';
+    if (i % every === 0) svg += '<text class="axis" x="' + cx + '" y="' + (H - 8) + '" text-anchor="middle">' + new Date(x.day + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + '</text>';
+  });
+  el.innerHTML = svg + '</svg>';
+  var cols = el.querySelectorAll('.col');
+  el.querySelectorAll('.hit').forEach(function(h){
+    var i = +h.getAttribute('data-i'), x = days[i];
+    h.addEventListener('mousemove', function(e){
+      cols.forEach(function(c){ c.classList.toggle('on', +c.getAttribute('data-i') === i); });
+      showTip(e, '<b>' + new Date(x.day + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) + '</b>' +
+        '<div class="tr"><span>Visitors</span><b>' + fmt(x.visitors) + '</b></div><div class="tr"><span>Played VSL</span><b>' + fmt(x.vsl) + '</b></div>' +
+        '<div class="tr"><span>Card checkouts</span><b>' + fmt(x.checkouts) + '</b></div><div class="tr"><span>Paid</span><b>' + fmt(x.purchases) + '</b></div>' +
+        '<div class="tr"><span>Applications</span><b>' + fmt(x.applications) + '</b></div>');
+    });
+    h.addEventListener('mouseleave', function(){ cols.forEach(function(c){ c.classList.remove('on'); }); hideTip(); });
+  });
+}
+
+// ---------- Tooltip for bar rows ----------
+var tip = $('tip');
+function showTip(e, html){ tip.innerHTML = html; tip.classList.add('on');
+  var x = e.clientX + 14, y = e.clientY + 14, r = tip.getBoundingClientRect();
+  if (x + r.width > innerWidth - 8) x = e.clientX - r.width - 14; if (y + r.height > innerHeight - 8) y = e.clientY - r.height - 14;
+  tip.style.left = x + 'px'; tip.style.top = y + 'px'; }
+function hideTip(){ tip.classList.remove('on'); }
+document.addEventListener('mousemove', function(e){
+  var row = e.target.closest && e.target.closest('.bar-row');
+  if (row) showTip(e, esc(row.getAttribute('data-tip'))); else if (!e.target.closest('.chart')) hideTip();
+});
+
+// ---------- Save / export ----------
+function download(name, text, type){
+  var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: type }));
+  a.download = name; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+function stamp(){ return new Date().toISOString().slice(0, 10); }
+$('save').addEventListener('click', function(){
+  if (!state.data) return;
+  download('infinite-rizq-snapshot-' + state.range + '-' + stamp() + '.json',
+    JSON.stringify({ range: state.range, saved_at: new Date().toISOString(), data: state.data }, null, 2), 'application/json');
+});
+$('csv').addEventListener('click', function(){
+  if (!state.data) return;
+  var d = state.data, t = d.totals || {}, lines = [['section', 'metric', 'detail', 'value', 'unique_visitors']];
+  Object.keys(t).forEach(function(k){ lines.push(['kpi', k, '', t[k], '']); });
+  (d.funnel || []).forEach(function(s){ lines.push(['funnel', s.step, '', s.n, s.n]); });
+  (d.sections || []).forEach(function(s){ lines.push(['section_reach', SECTION_NAMES[s.label] || s.label, '', s.visitors, s.visitors]); });
+  (d.interactions || []).forEach(function(r){ lines.push(['interaction', EVENT_NAMES[r.event] || r.event, (PAGE_NAMES[r.page] || r.page) + ': ' + lbl(r.label), r.count, r.visitors]); });
+  (d.daily || []).forEach(function(x){ lines.push(['daily', x.day, 'visitors/vsl/checkouts/paid/applications', [x.visitors, x.vsl, x.checkouts, x.purchases, x.applications].join(' / '), x.visitors]); });
+  (d.sources || []).forEach(function(r){ lines.push(['source', r.label, '', r.visitors, r.visitors]); });
+  var csv = lines.map(function(row){ return row.map(function(c){ c = String(c == null ? '' : c); return /[",\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c; }).join(','); }).join('\n');
+  download('infinite-rizq-metrics-' + state.range + '-' + stamp() + '.csv', csv, 'text/csv');
+});
+
+// Auto-open with a remembered key
+var saved = remembered();
+if (saved) { $('key').value = saved; load(saved).then(function(ok){ if (!ok) { forget(); $('gate-err').textContent = 'Please enter the access key.'; } }); }
+setInterval(function(){ if (state.key && document.visibilityState === 'visible') load(state.key); }, 120000);
+})();
+</script>
+</body>
+</html>
