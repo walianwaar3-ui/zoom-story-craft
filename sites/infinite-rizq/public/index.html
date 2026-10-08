@@ -976,6 +976,7 @@ footer .row{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-betw
           <li><svg><use href="#check"/></svg>Leave with someone who holds you to the plan</li>
         </ul>
         <a href="#tickets" class="btn btn-block" data-checkout="pair" data-track="cta_ticket_pair">Reserve two seats <svg aria-hidden="true"><use href="#arrow"/></svg></a>
+        <p class="alt-pay" data-alt-pay="pair" hidden>Secure card payment via Stripe · <a href="#pay" data-alt-tier="pair">or pay by bank / JazzCash</a></p>
       </article>
 
       <article class="tier rv">
@@ -990,6 +991,7 @@ footer .row{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-betw
           <li><svg><use href="#check"/></svg>Ask him anything, at a table of 15</li>
         </ul>
         <a href="#tickets" class="btn btn-ghost btn-block" data-checkout="inner" data-track="cta_ticket_inner">Claim an Inner Table seat</a>
+        <p class="alt-pay" data-alt-pay="inner" hidden>Secure card payment via Stripe · <a href="#pay" data-alt-tier="inner">or pay by bank / JazzCash</a></p>
       </article>
     </div>
     <p class="after"><svg style="display:inline;width:14px;height:14px;vertical-align:-2px;margin-right:6px"><use href="#lock"/></svg>Pay by card, bank transfer or JazzCash · Prices in PKR · Seats are non-refundable but transferable</p>
@@ -1087,7 +1089,7 @@ footer .row{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-betw
       </details>
       <details>
         <summary>How do I pay, and who do I contact?<span class="pm" aria-hidden="true"></span></summary>
-        <div class="ans"><p>Pay by bank transfer to <b>Bank of Punjab</b> (Account title: WALEED ANWAR · Account no. 6020042684100018) or by <b>JazzCash</b> to 0322 4078237. Then send your payment screenshot and full name on WhatsApp to our Event Coordinator, <b>Wali Anwaar</b>, at <a href="https://wa.me/13322332380" target="_blank" rel="noopener" data-wa data-track="cta_whatsapp_faq">+1 (332) 233-2380</a>. Your seat is confirmed on reply.</p></div>
+        <div class="ans"><p>The fastest way is <b>by card</b>: tap the button on your ticket and pay securely through Stripe, and your seat is confirmed instantly. You can also pay by bank transfer to <b>Bank of Punjab</b> (Account title: WALEED ANWAR · Account no. 6020042684100018) or by <b>JazzCash</b> to 0322 4078237. Then send your payment screenshot and full name on WhatsApp to our Event Coordinator, <b>Wali Anwaar</b>, at <a href="https://wa.me/13322332380" target="_blank" rel="noopener" data-wa data-track="cta_whatsapp_faq">+1 (332) 233-2380</a>. For bank and JazzCash payments, your seat is confirmed on reply.</p></div>
       </details>
       <details>
         <summary>What if I can’t attend after booking?<span class="pm" aria-hidden="true"></span></summary>
@@ -1149,7 +1151,7 @@ var CONFIG = {
   whatsapp: "13322332380",
 
   // Checkout links (GHL order form, Stripe, etc.). Empty = ticket buttons go to the bank/JazzCash payment block.
-  checkout: { general: "https://buy.stripe.com/dRm00k5BZ4c28frbaKeAg1O", pair: "", inner: "" }
+  checkout: { general: "https://buy.stripe.com/dRm00k5BZ4c28frbaKeAg1O", pair: "https://buy.stripe.com/7sYeVe0hF8si8fremWeAg1P", inner: "https://buy.stripe.com/14AcN64xV4c20MZ1AaeAg1R" }
 };
 
 /* ======================================================================= */
