@@ -1121,7 +1121,7 @@ footer .row{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-betw
    ======================================================================= */
 var CONFIG = {
   // Master VSL. Accepts a Wistia share link or media ID, a YouTube URL, a Vimeo URL, or a direct .mp4 URL.
-  vsl: "https://www.youtube.com/embed/gU6o43166XA",
+  vsl: "https://fast.wistia.com/embed/medias/wx0okw1btw",   // Wistia (previous: YouTube gU6o43166XA)
   vslLength: "4 min",                    // e.g. "8 min" — leave empty to hide
 
   // Confirm exact start/end time (Pakistan time, +05:00).
@@ -1351,6 +1351,14 @@ if (CONFIG.seatsRemaining !== null && CONFIG.seatsRemaining !== undefined) {
       if (!document.querySelector('script[src*="E-v1.js"]')) {
         var ws = document.createElement('script'); ws.src = 'https://fast.wistia.com/assets/external/E-v1.js'; ws.async = true; document.head.appendChild(ws);
       }
+      // Fallback: if Wistia's script is blocked or slow, use the standard Wistia iframe player
+      setTimeout(function(){
+        if (!window.Wistia) {
+          box.querySelector('.wistia_responsive_padding').innerHTML = '<iframe src="https://fast.wistia.net/embed/iframe/' + id +
+            '?autoPlay=true&playerColor=d4a73a&settingsControl=false&playbackRateControl=false&qualityControl=false&copyLinkAndThumbnailEnabled=false" ' +
+            'allow="autoplay; fullscreen" allowfullscreen title="Infinite Rizq VSL" style="position:absolute;inset:0;width:100%;height:100%;border:0"></iframe>';
+        }
+      }, 4000);
     } else if ((id = vimeoId(url))) {
       box.innerHTML = '<iframe src="https://player.vimeo.com/video/' + id + '?autoplay=1&playsinline=1" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="Infinite Rizq VSL"></iframe>';
     } else {
