@@ -265,8 +265,8 @@ function pct(a, b){ return b ? Math.round(a / b * 1000) / 10 : 0; }
 function pctTxt(a, b){ return b ? pct(a, b) + '%' : '·'; }
 function dur(s){ s = Math.round(s || 0); return Math.floor(s / 60) + 'm ' + ('0' + s % 60).slice(-2) + 's'; }
 
-var SECTION_NAMES = { hero: 'Hero + VSL', why: 'Why this room is rare', problem: 'Blockages + rizq visual', experience: 'Inside the room', guide: 'About Shahrez', 'for': 'Who it’s for', tickets: 'Tickets + payment', reserve: 'Final call to action', faq: 'FAQ' };
-var SECTION_ORDER = ['hero', 'why', 'problem', 'experience', 'guide', 'for', 'tickets', 'reserve', 'faq'];
+var SECTION_NAMES = { hero: 'Hero + VSL', why: 'Why this room is rare', problem: 'Blockages + rizq visual', experience: 'Inside the room', guide: 'About Shahrez', 'for': 'Who it’s for', details: 'Event details (where / when / what)', tickets: 'Tickets + payment', reserve: 'Final call to action', faq: 'FAQ' };
+var SECTION_ORDER = ['hero', 'why', 'problem', 'experience', 'guide', 'for', 'details', 'tickets', 'reserve', 'faq'];
 var EVENT_NAMES = {
   cta_click: 'Button click', checkout_stripe: 'Card checkout (Stripe)', whatsapp_click: 'WhatsApp coordinator',
   payment_copy: 'Copied payment details', vsl_start: 'Played main VSL', vsl_complete: 'Finished main VSL',
@@ -275,7 +275,7 @@ var EVENT_NAMES = {
 };
 var LABEL_NAMES = {
   cta_hero: 'Hero: Reserve your seat', cta_nav: 'Top bar: Reserve', cta_sticky_mobile: 'Mobile sticky bar',
-  cta_final: 'Final section: Reserve', cta_vsl_end: 'End of VSL: Reserve', cta_ticket_general: 'Ticket card: General',
+  cta_final: 'Final section: Reserve', cta_details: 'Details: See ticket options', details_map: 'Details: Open map', details_calendar: 'Details: Add to calendar', cta_vsl_end: 'End of VSL: Reserve', cta_ticket_general: 'Ticket card: General',
   cta_ticket_pair: 'Ticket card: Pair Pass', cta_ticket_inner: 'Ticket card: Inner Table',
   cta_whatsapp_faq: 'FAQ: WhatsApp', cta_whatsapp_payment: 'Payment box: WhatsApp',
   general: 'General · PKR 11,111', pair: 'Pair Pass · PKR 15,555', inner: 'Inner Table · PKR 33,333',
