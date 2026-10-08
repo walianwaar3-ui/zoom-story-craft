@@ -179,6 +179,29 @@ p{margin:0 0 1.1em}
   font-size:.74rem;color:var(--muted);letter-spacing:.06em
 }
 .vsl-sound svg{width:16px;height:16px}
+.vsl .ytwrap{position:absolute;inset:0;overflow:hidden;background:#000}
+.vsl .ytwrap iframe,.vsl .ytwrap > div{position:absolute;left:0;width:100%;top:-70px;height:calc(100% + 140px);border:0}
+.vp{position:absolute;inset:0;z-index:2;color:#fff}
+.vp-shield{position:absolute;inset:0;cursor:pointer;background:transparent;transition:background .3s}
+.vsl.paused .vp-shield{background:rgba(5,5,6,.55)}
+.vp-big{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);pointer-events:none;opacity:0;transition:opacity .25s}
+.vsl.paused .vp-big{opacity:1}
+.vp-bar{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;gap:12px;padding:28px 16px 12px;background:linear-gradient(transparent,rgba(0,0,0,.75));opacity:0;transition:opacity .3s}
+.vsl:hover .vp-bar,.vsl.paused .vp-bar,.vsl.touch .vp-bar{opacity:1}
+.vp-bar button{flex:0 0 auto;width:34px;height:34px;display:grid;place-items:center;border:0;border-radius:50%;background:rgba(255,255,255,.08);color:#fff;cursor:pointer}
+.vp-bar button:hover{background:rgba(212,167,58,.3)}
+.vp-bar svg{width:17px;height:17px}
+.vp-track{flex:1;height:5px;border-radius:9px;background:rgba(255,255,255,.2);cursor:pointer;position:relative}
+.vp-track::before{content:"";position:absolute;inset:-10px 0}
+.vp-track i{display:block;height:100%;width:0;border-radius:9px;background:linear-gradient(90deg,var(--gold),var(--gold-2))}
+.vp-time{font-size:.78rem;font-variant-numeric:tabular-nums;color:#e7e1d4;white-space:nowrap}
+.vp-end{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:20px;background:radial-gradient(60% 70% at 50% 45%,rgba(212,167,58,.22),transparent 70%),rgba(5,5,6,.92)}
+.vp-end[hidden]{display:none}
+.vp-end p{margin:0;font-family:var(--serif);font-size:clamp(1.2rem,3vw,1.9rem);color:var(--ivory)}
+.vp-end .btn{width:auto}
+.vp-replay{display:inline-flex;align-items:center;gap:8px;font:inherit;font-size:.86rem;color:var(--muted);background:transparent;border:0;cursor:pointer}
+.vp-replay svg{width:16px;height:16px}
+@media (max-width:640px){.vp-bar{gap:8px;padding:22px 10px 8px}.vp-bar button{width:30px;height:30px}.vp-time{font-size:.7rem}}
 .vsl-note{font-size:.84rem;color:var(--muted);margin:14px 0 0}
 
 .meta{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:36px 0 30px;padding:0;list-style:none}
@@ -541,6 +564,10 @@ footer .row{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-betw
   <symbol id="copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 8V6.5A2.5 2.5 0 0013.5 4h-7A2.5 2.5 0 004 6.5v7A2.5 2.5 0 006.5 16H8" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
   <symbol id="bank" viewBox="0 0 24 24"><path d="M3 9.5L12 4l9 5.5M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="phone" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M11 18.5h2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="pause" viewBox="0 0 24 24"><rect x="6.5" y="5" width="4" height="14" rx="1" fill="currentColor"/><rect x="13.5" y="5" width="4" height="14" rx="1" fill="currentColor"/></symbol>
+  <symbol id="muted" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M16 9.5l5 5M21 9.5l-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="fs" viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="replay" viewBox="0 0 24 24"><path d="M4 12a8 8 0 108-8 8 8 0 00-6 2.7M4 4v4h4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="sound" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M15.5 9a4 4 0 010 6M18 6.5a7.5 7.5 0 010 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
 </svg>
 
@@ -1094,7 +1121,7 @@ footer .row{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-betw
 var CONFIG = {
   // Master VSL. Accepts a YouTube URL, a Vimeo URL, or a direct .mp4 URL.
   vsl: "https://www.youtube.com/embed/gU6o43166XA",
-  vslLength: "",                         // e.g. "8 min" — leave empty to hide
+  vslLength: "4 min",                    // e.g. "8 min" — leave empty to hide
 
   // Confirm exact start/end time (Pakistan time, +05:00).
   eventStart: "2026-10-17T12:00:00+05:00",
@@ -1225,24 +1252,79 @@ if (CONFIG.seatsRemaining !== null && CONFIG.seatsRemaining !== undefined) {
     track('vsl_start');
     var id;
     if ((id = ytId(url))) {
-      box.innerHTML = '<div id="yt-vsl"></div>';
+      box.innerHTML = '<div class="ytwrap"><div id="yt-vsl"></div></div>' +
+        '<div class="vp">' +
+          '<div class="vp-shield" data-vp-toggle></div>' +
+          '<div class="vp-big"><span class="play"><svg><use href="#play"/></svg></span></div>' +
+          '<div class="vp-bar">' +
+            '<button type="button" data-vp-pp aria-label="Play or pause"><svg><use href="#pause"/></svg></button>' +
+            '<div class="vp-track" data-vp-seek role="slider" aria-label="Seek"><i data-vp-fill></i></div>' +
+            '<span class="vp-time" data-vp-time>0:00</span>' +
+            '<button type="button" data-vp-mute aria-label="Mute or unmute"><svg><use href="#sound"/></svg></button>' +
+            '<button type="button" data-vp-fs aria-label="Fullscreen"><svg><use href="#fs"/></svg></button>' +
+          '</div>' +
+          '<div class="vp-end" data-vp-end hidden><p>Ready to do the work?</p>' +
+            '<a href="#tickets" class="btn" data-track="cta_vsl_end">Reserve your seat</a>' +
+            '<button type="button" class="vp-replay" data-vp-replay><svg><use href="#replay"/></svg>Watch again</button></div>' +
+        '</div>';
+      if (matchMedia('(hover: none)').matches) box.classList.add('touch');
+      var q = function(sel){ return box.querySelector(sel); };
+      function fmtT(t){ t = Math.max(0, Math.floor(t || 0)); return Math.floor(t / 60) + ':' + ('0' + t % 60).slice(-2); }
       window.onYouTubeIframeAPIReady = function(){
         if (!document.getElementById('yt-vsl')) return; // fallback player already in place
+        var timer;
         var p = new YT.Player('yt-vsl', {
-          videoId: id, playerVars: { autoplay: 1, rel: 0, modestbranding: 1, playsinline: 1 },
-          events: { onStateChange: function(e){
-            if (e.data === 1) { var t = setInterval(function(){
-              progress(p.getCurrentTime(), p.getDuration());
-              if (p.getPlayerState() !== 1) clearInterval(t);
-            }, 1000); }
-          } }
+          videoId: id,
+          playerVars: { autoplay: 1, controls: 0, rel: 0, modestbranding: 1, playsinline: 1, disablekb: 1, fs: 0, iv_load_policy: 3, cc_load_policy: 0 },
+          events: {
+            onReady: function(){
+              try { p.unloadModule('captions'); p.unloadModule('cc'); } catch (e) {}
+              p.playVideo();
+            },
+            onStateChange: function(e){
+              var playing = e.data === 1;
+              box.classList.toggle('paused', !playing);
+              q('[data-vp-pp] use').setAttribute('href', playing ? '#pause' : '#play');
+              if (playing) {
+                try { p.unloadModule('captions'); } catch (err) {}
+                q('[data-vp-end]').hidden = true;
+                clearInterval(timer);
+                timer = setInterval(function(){
+                  var c = p.getCurrentTime(), d = p.getDuration();
+                  progress(c, d);
+                  q('[data-vp-fill]').style.width = (d ? c / d * 100 : 0) + '%';
+                  q('[data-vp-time]').textContent = fmtT(c) + ' / ' + fmtT(d);
+                }, 250);
+              } else clearInterval(timer);
+              if (e.data === 0) { q('[data-vp-end]').hidden = false; progress(1, 1); track('vsl_complete'); }
+            }
+          }
+        });
+        q('[data-vp-toggle]').addEventListener('click', function(){ p.getPlayerState() === 1 ? p.pauseVideo() : p.playVideo(); });
+        q('[data-vp-pp]').addEventListener('click', function(){ p.getPlayerState() === 1 ? p.pauseVideo() : p.playVideo(); });
+        q('[data-vp-replay]').addEventListener('click', function(){ p.seekTo(0, true); p.playVideo(); });
+        q('[data-vp-mute]').addEventListener('click', function(){
+          if (p.isMuted()) p.unMute(); else p.mute();
+          q('[data-vp-mute] use').setAttribute('href', p.isMuted() ? '#sound' : '#muted');
+        });
+        q('[data-vp-seek]').addEventListener('click', function(e){
+          var r = this.getBoundingClientRect(), d = p.getDuration();
+          if (d) p.seekTo(Math.min(1, Math.max(0, (e.clientX - r.left) / r.width)) * d, true);
+        });
+        var fsBtn = q('[data-vp-fs]'), fsFn = box.requestFullscreen || box.webkitRequestFullscreen;
+        if (!fsFn) fsBtn.style.display = 'none';
+        fsBtn.addEventListener('click', function(){
+          if (document.fullscreenElement || document.webkitFullscreenElement) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+          else fsFn.call(box);
         });
       };
+      box.classList.add('paused');
       var s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(s);
-      // Fallback: if the API script is blocked or slow, embed the plain player so the video always plays
+      // Fallback: if the API script is blocked or slow, embed the standard player so the video always plays
       setTimeout(function(){
         if (!window.YT || !window.YT.Player) {
-          box.innerHTML = '<iframe src="https://www.youtube.com/embed/' + id + '?autoplay=1&rel=0&modestbranding=1&playsinline=1" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="Infinite Rizq VSL"></iframe>';
+          box.classList.remove('paused');
+          box.innerHTML = '<iframe src="https://www.youtube.com/embed/' + id + '?autoplay=1&rel=0&modestbranding=1&playsinline=1&iv_load_policy=3&cc_load_policy=0" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="Infinite Rizq VSL"></iframe>';
         }
       }, 3500);
     } else if ((id = vimeoId(url))) {
