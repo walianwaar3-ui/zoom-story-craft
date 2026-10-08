@@ -7,6 +7,7 @@
  * Put the Web app URL in Vercel as SHEET_WEBHOOK_URL, and the same SECRET as SHEET_WEBHOOK_SECRET.
  */
 const SECRET = 'PASTE_SHEET_WEBHOOK_SECRET_HERE';
+const SHEET_ID = '1-mqtgE8-SBuDlPhmnH4RmCvmWD-Hh_qk3m30IYD0uy4'; // Infinite Rizq — Attendees & Tickets
 
 const COMMIT_LABELS = {
   'yes': "Yes, I'm ready to commit",
@@ -22,7 +23,7 @@ function doPost(e) {
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
   try {
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const ss = SpreadsheetApp.openById(SHEET_ID);
     if (body.type === 'application') {
       const a = body.data || {};
       ss.getSheetByName('Mastermind Applications').appendRow([
