@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ArrowRight, CheckCheck, CheckCircle2, Circle, DollarSign, Mail, Plus, Users } from "lucide-react";
 
+import { ActivityFeed } from "@/components/dashboard/activity-feed";
 import { PageHeader } from "@/components/layout/page-header";
 import { EmptyState } from "@/components/shared/empty-state";
 import { StatCard } from "@/components/shared/stat-card";
@@ -133,6 +134,8 @@ export function DashboardView() {
         />
         <StatCard label="Pending approvals" value={String(pending.length)} icon={CheckCheck} footnote={pending[0] ? `Oldest ${relativeTime(pending[0].createdAt)}` : "All clear"} />
       </div>
+
+      <ActivityFeed />
 
       <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
         <Card>
