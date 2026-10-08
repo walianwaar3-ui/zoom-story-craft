@@ -1,0 +1,9 @@
+{
+  "name": "infinite-rizq-site",
+  "private": true,
+  "type": "module",
+  "description": "Infinite Rizq landing page, post-purchase mastermind application and its form handler (Vercel).",
+  "dependencies": {
+    "@vercel/blob": "^2.8.1"
+  }
+}
