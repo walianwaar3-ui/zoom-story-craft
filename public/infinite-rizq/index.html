@@ -1015,8 +1015,8 @@ footer .row{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-betw
    ======================================================================= */
 var CONFIG = {
   // Master VSL. Accepts a YouTube URL, a Vimeo URL, or a direct .mp4 URL.
-  vsl: "",
-  vslLength: "8 min",
+  vsl: "https://www.youtube.com/embed/gU6o43166XA",
+  vslLength: "",                         // e.g. "8 min" — leave empty to hide
 
   // Confirm exact start/end time (Pakistan time, +05:00).
   eventStart: "2026-10-17T12:00:00+05:00",
@@ -1058,7 +1058,7 @@ function $all(s){ return Array.prototype.slice.call(document.querySelectorAll(s)
 // Labels, prices, checkout links
 $all('[data-time-label]').forEach(function(el){ el.textContent = CONFIG.timeLabel; });
 $all('[data-venue-label]').forEach(function(el){ el.textContent = CONFIG.venue; });
-$all('[data-vsl-length]').forEach(function(el){ el.textContent = CONFIG.vslLength; });
+$all('[data-vsl-length]').forEach(function(el){ if (CONFIG.vslLength) el.textContent = CONFIG.vslLength; else el.parentNode.textContent = 'Watch this first'; });
 $all('[data-inner-seats]').forEach(function(el){ el.textContent = CONFIG.innerTableSeats; });
 $all('[data-seats-total]').forEach(function(el){ el.textContent = CONFIG.seatsTotal; });
 Object.keys(CONFIG.prices).forEach(function(k){
@@ -1123,6 +1123,7 @@ if (CONFIG.seatsRemaining !== null && CONFIG.seatsRemaining !== undefined) {
     if ((id = ytId(url))) {
       box.innerHTML = '<div id="yt-vsl"></div>';
       window.onYouTubeIframeAPIReady = function(){
+        if (!document.getElementById('yt-vsl')) return; // fallback player already in place
         var p = new YT.Player('yt-vsl', {
           videoId: id, playerVars: { autoplay: 1, rel: 0, modestbranding: 1, playsinline: 1 },
           events: { onStateChange: function(e){
@@ -1134,6 +1135,12 @@ if (CONFIG.seatsRemaining !== null && CONFIG.seatsRemaining !== undefined) {
         });
       };
       var s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api'; document.head.appendChild(s);
+      // Fallback: if the API script is blocked or slow, embed the plain player so the video always plays
+      setTimeout(function(){
+        if (!window.YT || !window.YT.Player) {
+          box.innerHTML = '<iframe src="https://www.youtube.com/embed/' + id + '?autoplay=1&rel=0&modestbranding=1&playsinline=1" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="Infinite Rizq VSL"></iframe>';
+        }
+      }, 3500);
     } else if ((id = vimeoId(url))) {
       box.innerHTML = '<iframe src="https://player.vimeo.com/video/' + id + '?autoplay=1&playsinline=1" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="Infinite Rizq VSL"></iframe>';
     } else {
