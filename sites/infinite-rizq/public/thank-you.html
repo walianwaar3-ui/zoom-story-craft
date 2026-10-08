@@ -68,7 +68,7 @@ p{margin:0 0 1.1em}
 .wait i{width:8px;height:8px;border-radius:50%;background:var(--red);animation:ping 1.8s infinite}
 @keyframes ping{0%{box-shadow:0 0 0 0 rgba(224,115,107,.6)}80%,100%{box-shadow:0 0 0 9px rgba(224,115,107,0)}}
 .hero h1{font-size:clamp(2rem,5.6vw,3.6rem);max-width:800px;margin:0 auto 18px}
-.hero .lead{font-size:1.12rem;max-width:660px;margin:0 auto 34px}
+.hero .lead{font-size:1rem;max-width:620px;margin:0 auto 34px}
 .chips{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:28px 0 0;padding:0;list-style:none}
 .chips li{background:rgba(255,255,255,.03);border:1px solid var(--line-2);padding:8px 14px;border-radius:999px;font-size:.86rem;color:var(--ivory);font-weight:500}
 .chips b{color:var(--gold-2)}
@@ -83,6 +83,22 @@ p{margin:0 0 1.1em}
 .play svg{width:28px;height:28px;margin-left:5px;color:#141005}
 .vsl-title{font-family:var(--serif);font-size:clamp(1.05rem,2.6vw,1.45rem);font-weight:600}
 .vsl-meta{font-size:.76rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+/* VSL thumbnail + animated play button */
+.vsl-poster .thumb{position:absolute;inset:0;background:center/cover no-repeat;opacity:0;transition:opacity .6s ease}
+.vsl-poster .thumb::after{content:"";position:absolute;inset:0;background:radial-gradient(70% 80% at 50% 50%,rgba(5,5,6,.15),rgba(5,5,6,.7)),linear-gradient(180deg,rgba(5,5,6,0) 40%,rgba(5,5,6,.6))}
+.vsl-poster .thumb.on{opacity:1}
+.vsl-poster.has-thumb .rings{opacity:.2}
+.vsl-poster > :not(.thumb):not(.rings):not(.vsl-sound){position:relative;z-index:1}
+.vsl-poster .vsl-sound{z-index:1}
+.vsl-poster.has-thumb .vsl-title,.vsl-poster.has-thumb .vsl-meta{text-shadow:0 2px 14px rgba(0,0,0,.9)}
+.vsl-poster.has-thumb .vsl-meta{color:#ddd5c4}
+.play{animation:playGlow 2.8s ease-in-out infinite}
+.play::before,.play::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid rgba(240,210,130,.8);animation:playRing 2.4s cubic-bezier(.2,.6,.3,1) infinite;pointer-events:none}
+.play::after{animation-delay:1.2s}
+.play svg{position:relative}
+.vsl-poster:hover .play,.vsl-poster:focus-visible .play{transform:scale(1.1);box-shadow:0 0 0 12px rgba(212,167,58,.22),0 0 60px 12px rgba(232,198,106,.45)}
+@keyframes playRing{0%{transform:scale(1);opacity:.85}100%{transform:scale(2.1);opacity:0}}
+@keyframes playGlow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.15)}}
 
 /* Next steps */
 .sec{padding:64px 0}
@@ -134,6 +150,7 @@ footer{border-top:1px solid var(--line);padding:32px 0 48px;font-size:.82rem;col
   .confirm{padding-top:24px}
   .confirm-card{padding:18px}
   .hero{padding:40px 0 20px}
+  .hero .lead{font-size:.94rem}
   .vsl{border-radius:14px;margin:0 -4px}
   .play{width:66px;height:66px}
   .sec{padding:48px 0}
@@ -326,6 +343,23 @@ document.querySelectorAll('[data-track]').forEach(function(el){
 (function(){
   var box = document.getElementById('vsl'), btn = box.querySelector('[data-vsl-play]');
   function m(u, re){ var x = u.match(re); return x && x[1]; }
+
+  // Poster thumbnail: Wistia's swatch straight away, then the full-size still via oEmbed (JSONP)
+  (function(){
+    var wid = m(CONFIG.vsl || '', /(?:wistia\.(?:com|net)\/(?:medias|embed\/iframe|embed\/medias)\/|^)([a-z0-9]{10})(?:\b|$)/i); if (!wid) return;
+    var t = document.createElement('span'), full = false;
+    t.className = 'thumb'; t.setAttribute('aria-hidden', 'true'); btn.insertBefore(t, btn.firstChild);
+    function show(src, isFull){
+      var img = new Image();
+      img.onload = function(){ if (full && !isFull) return; full = full || isFull; t.style.backgroundImage = 'url("' + src + '")'; t.classList.add('on'); btn.classList.add('has-thumb'); };
+      img.src = src;
+    }
+    show('https://fast.wistia.com/embed/medias/' + wid + '/swatch', false);
+    var cb = 'wistiaThumb' + wid, s = document.createElement('script');
+    window[cb] = function(j){ if (j && j.thumbnail_url) show(j.thumbnail_url.replace(/image_crop_resized=\d+x\d+/, 'image_crop_resized=1280x720'), true); };
+    s.src = 'https://fast.wistia.com/oembed.json?url=' + encodeURIComponent('https://home.wistia.com/medias/' + wid) + '&callback=' + cb;
+    s.async = true; document.head.appendChild(s);
+  })();
   btn.addEventListener('click', function(){
     var u = CONFIG.vsl, id;
     if (!u) { box.querySelector('[data-vsl-meta]').textContent = 'Video goes live shortly'; return; }
