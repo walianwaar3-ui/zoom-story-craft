@@ -392,6 +392,8 @@ p{margin:0 0 1.1em}
 .checks{list-style:none;margin:0 0 26px;padding:20px 0 0;border-top:1px solid var(--line);flex:1}
 .checks li{display:flex;gap:10px;font-size:.95rem;margin-bottom:12px;color:var(--ivory);line-height:1.5}
 .checks svg{flex:0 0 18px;width:18px;height:18px;color:var(--gold-2);margin-top:3px}
+.alt-pay{margin:10px 0 0;font-size:.8rem;color:var(--muted);text-align:center}
+.alt-pay a{color:var(--gold-2)}
 .after{text-align:center;color:var(--muted);font-size:.88rem;margin-top:30px}
 
 /* ---------- Payment ---------- */
@@ -959,6 +961,7 @@ footer .row{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-betw
           <li><svg><use href="#check"/></svg>Workbook and pen at your seat</li>
         </ul>
         <a href="#tickets" class="btn btn-ghost btn-block" data-checkout="general" data-track="cta_ticket_general">Reserve my seat</a>
+        <p class="alt-pay" data-alt-pay="general" hidden>Secure card payment via Stripe · <a href="#pay" data-alt-tier="general">or pay by bank / JazzCash</a></p>
       </article>
 
       <article class="tier feat rv">
@@ -989,7 +992,7 @@ footer .row{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-betw
         <a href="#tickets" class="btn btn-ghost btn-block" data-checkout="inner" data-track="cta_ticket_inner">Claim an Inner Table seat</a>
       </article>
     </div>
-    <p class="after"><svg style="display:inline;width:14px;height:14px;vertical-align:-2px;margin-right:6px"><use href="#lock"/></svg>Pay by bank transfer or JazzCash · Prices in PKR · Seats are non-refundable but transferable</p>
+    <p class="after"><svg style="display:inline;width:14px;height:14px;vertical-align:-2px;margin-right:6px"><use href="#lock"/></svg>Pay by card, bank transfer or JazzCash · Prices in PKR · Seats are non-refundable but transferable</p>
 
     <div class="pay rv" id="pay">
       <div class="pay-head">
@@ -1146,7 +1149,7 @@ var CONFIG = {
   whatsapp: "13322332380",
 
   // Checkout links (GHL order form, Stripe, etc.). Empty = ticket buttons go to the bank/JazzCash payment block.
-  checkout: { general: "", pair: "", inner: "" }
+  checkout: { general: "https://buy.stripe.com/dRm00k5BZ4c28frbaKeAg1O", pair: "", inner: "" }
 };
 
 /* ======================================================================= */
@@ -1184,13 +1187,26 @@ function waLink(tier){
 $all('[data-wa]').forEach(function(el){ el.href = waLink(null); el.addEventListener('click', function(){ track('whatsapp_click', {}); }); });
 $all('[data-checkout]').forEach(function(el){
   var tier = el.getAttribute('data-checkout'), url = CONFIG.checkout[tier];
-  if (url) { el.setAttribute('href', url); return; }
+  if (url) {
+    el.setAttribute('href', url);
+    var alt = document.querySelector('[data-alt-pay="' + tier + '"]'); if (alt) alt.hidden = false;
+    el.addEventListener('click', function(){ track('checkout_stripe', { tier: tier, value: CONFIG.prices[tier], currency: 'PKR' }); });
+    return;
+  }
   el.setAttribute('href', '#pay');
   el.addEventListener('click', function(){
     var sel = document.querySelector('[data-pay-sel]');
     document.querySelector('[data-pay-tier]').textContent = TIER_NAMES[tier] + ' — PKR ' + fmt(CONFIG.prices[tier]);
     sel.hidden = false;
     $all('.pay [data-wa]').forEach(function(a){ a.href = waLink(tier); });
+  });
+});
+$all('[data-alt-tier]').forEach(function(a){
+  a.addEventListener('click', function(){
+    var tier = a.getAttribute('data-alt-tier');
+    document.querySelector('[data-pay-tier]').textContent = TIER_NAMES[tier] + ' — PKR ' + fmt(CONFIG.prices[tier]);
+    document.querySelector('[data-pay-sel]').hidden = false;
+    $all('.pay [data-wa]').forEach(function(w){ w.href = waLink(tier); });
   });
 });
 $all('[data-copy]').forEach(function(b){
