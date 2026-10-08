@@ -369,6 +369,38 @@ p{margin:0 0 1.1em}
 .checks svg{flex:0 0 18px;width:18px;height:18px;color:var(--gold-2);margin-top:3px}
 .after{text-align:center;color:var(--muted);font-size:.88rem;margin-top:30px}
 
+/* ---------- Payment ---------- */
+.pay{max-width:880px;margin:44px auto 0;background:var(--bg-2);border:1px solid rgba(212,167,58,.3);border-radius:24px;padding:34px 32px}
+.pay-head h3{font-size:1.7rem;margin:0}
+.pay-sel{margin:10px 0 0;color:var(--text);font-size:.95rem}
+.pay-sel b{color:var(--gold-2)}
+.steps3{list-style:none;padding:0;margin:24px 0 0;display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.steps3 li{display:flex;gap:12px;align-items:flex-start;font-size:.94rem;color:var(--ivory);line-height:1.5}
+.steps3 li span{flex:0 0 28px;height:28px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:.82rem;color:#141005;background:linear-gradient(180deg,var(--gold-2),var(--gold))}
+.steps3 b{color:var(--gold-2);font-weight:600}
+.pay-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:24px}
+.acct{background:var(--card);border:1px solid var(--line-2);border-radius:16px;padding:20px}
+.acct-h{display:flex;align-items:center;gap:10px;font-weight:600;color:var(--ivory);margin-bottom:12px}
+.acct-ic{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;color:var(--gold-2);background:var(--gold-soft);border:1px solid rgba(212,167,58,.4)}
+.acct-ic svg{width:17px;height:17px}
+.acct dl{margin:0}
+.acct dt{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+.acct dd{margin:2px 0 0;color:var(--ivory);font-weight:600;font-size:1.05rem}
+.acct dd.num{display:flex;align-items:center;justify-content:space-between;gap:10px;font-variant-numeric:tabular-nums;letter-spacing:.04em;word-break:break-all}
+.cp{flex:0 0 auto;display:inline-flex;align-items:center;gap:6px;font:inherit;font-size:.78rem;font-weight:600;letter-spacing:0;color:var(--gold-2);background:transparent;border:1px solid rgba(212,167,58,.45);border-radius:8px;padding:6px 10px;cursor:pointer}
+.cp svg{width:14px;height:14px}
+.cp.ok{color:var(--green);border-color:rgba(95,207,151,.5)}
+.coord{display:flex;align-items:center;justify-content:space-between;gap:18px;flex-wrap:wrap;margin-top:18px;padding:18px 20px;border-radius:16px;background:rgba(37,211,102,.06);border:1px solid rgba(37,211,102,.25)}
+.coord-who{display:flex;align-items:center;gap:12px}
+.coord-av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-family:var(--serif);font-weight:600;color:var(--ivory);background:#1a1a1e;border:1px solid var(--line-2)}
+.coord-who b{display:block;color:var(--ivory)}
+.coord-who span{font-size:.86rem;color:var(--muted)}
+.btn-wa{background:#25d366;color:#05210f;box-shadow:0 10px 30px -10px rgba(37,211,102,.6)}
+.btn-wa:hover{box-shadow:0 14px 36px -10px rgba(37,211,102,.75)}
+.btn-wa svg{width:20px;height:20px}
+.btn-wa:hover svg{transform:none}
+.faq .ans a{color:var(--gold-2)}
+
 /* ---------- Final ---------- */
 .final{padding:120px 0;text-align:center;overflow:hidden;isolation:isolate;position:relative}
 .final::before{content:"";position:absolute;inset:auto -20% -40%;height:700px;background:radial-gradient(50% 50% at 50% 50%,rgba(212,167,58,.22),transparent 70%);z-index:-1}
@@ -467,6 +499,9 @@ footer .row{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-betw
   .cd{min-width:0;flex:1;padding:12px 4px}
   .cd b{font-size:1.7rem}
   .final{padding:84px 0}
+  .pay{padding:24px 16px;border-radius:18px}
+  .steps3,.pay-grid{grid-template-columns:1fr}
+  .coord{padding:16px}
   .mbar{display:block}
   .quote{font-size:1.15rem}
 }
@@ -502,6 +537,10 @@ footer .row{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-betw
   <symbol id="door" viewBox="0 0 24 24"><path d="M6 21V4.5l9-1.5v18M3 21h18M12 12.5v.5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="leaf" viewBox="0 0 24 24"><path d="M5 19c0-8 5-13 14-14-1 9-6 14-14 14zM5 19l7-7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="warn" viewBox="0 0 24 24"><path d="M12 4l9 16H3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 10v4M12 17v.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+  <symbol id="wa" viewBox="0 0 24 24"><path d="M12 3a9 9 0 00-7.8 13.5L3 21l4.6-1.2A9 9 0 1012 3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.6 8.2c.2-.5.5-.5.8-.5h.5c.2 0 .4 0 .6.5l.7 1.6c.1.2 0 .4-.1.6l-.5.6c-.1.1-.2.3 0 .5.5.8 1.1 1.4 1.9 1.9.2.1.4.1.5 0l.6-.6c.2-.2.4-.2.6-.1l1.6.7c.4.2.4.3.4.5 0 .6-.3 1.4-1.1 1.7-.7.3-1.9.3-3.7-.8-1.9-1.2-3-3-3.3-3.7-.4-.9-.3-1.9.1-2.4z" fill="currentColor"/></symbol>
+  <symbol id="copy" viewBox="0 0 24 24"><rect x="8" y="8" width="12" height="12" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M16 8V6.5A2.5 2.5 0 0013.5 4h-7A2.5 2.5 0 004 6.5v7A2.5 2.5 0 006.5 16H8" fill="none" stroke="currentColor" stroke-width="1.8"/></symbol>
+  <symbol id="bank" viewBox="0 0 24 24"><path d="M3 9.5L12 4l9 5.5M5 10v8M9.5 10v8M14.5 10v8M19 10v8M3 20h18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="phone" viewBox="0 0 24 24"><rect x="7" y="2.5" width="10" height="19" rx="2.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M11 18.5h2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
   <symbol id="sound" viewBox="0 0 24 24"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M15.5 9a4 4 0 010 6M18 6.5a7.5 7.5 0 010 11" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
 </svg>
 
@@ -922,7 +961,42 @@ footer .row{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-betw
         <a href="#tickets" class="btn btn-ghost btn-block" data-checkout="inner" data-track="cta_ticket_inner">Claim an Inner Table seat</a>
       </article>
     </div>
-    <p class="after"><svg style="display:inline;width:14px;height:14px;vertical-align:-2px;margin-right:6px"><use href="#lock"/></svg>Secure checkout · Prices in PKR · Seats are non-refundable but transferable</p>
+    <p class="after"><svg style="display:inline;width:14px;height:14px;vertical-align:-2px;margin-right:6px"><use href="#lock"/></svg>Pay by bank transfer or JazzCash · Prices in PKR · Seats are non-refundable but transferable</p>
+
+    <div class="pay rv" id="pay">
+      <div class="pay-head">
+        <span class="eyebrow">How to pay</span>
+        <h3>Reserve your seat in 3 steps</h3>
+        <p class="pay-sel" data-pay-sel hidden>Your selection: <b data-pay-tier></b></p>
+      </div>
+      <ol class="steps3">
+        <li><span>1</span><div>Transfer your ticket amount to <b>Bank of Punjab</b> or <b>JazzCash</b> below.</div></li>
+        <li><span>2</span><div>Take a screenshot of the payment.</div></li>
+        <li><span>3</span><div>Send it on WhatsApp to our Event Coordinator with your full name. Your seat is confirmed on reply.</div></li>
+      </ol>
+      <div class="pay-grid">
+        <div class="acct">
+          <div class="acct-h"><span class="acct-ic"><svg><use href="#bank"/></svg></span>Bank of Punjab</div>
+          <dl>
+            <dt>Account title</dt><dd>WALEED ANWAR</dd>
+            <dt>Account no.</dt><dd class="num">6020042684100018 <button type="button" class="cp" data-copy="6020042684100018" aria-label="Copy account number"><svg><use href="#copy"/></svg><span>Copy</span></button></dd>
+          </dl>
+        </div>
+        <div class="acct">
+          <div class="acct-h"><span class="acct-ic"><svg><use href="#phone"/></svg></span>JazzCash</div>
+          <dl>
+            <dt>Mobile account</dt><dd class="num">0322 4078237 <button type="button" class="cp" data-copy="03224078237" aria-label="Copy JazzCash number"><svg><use href="#copy"/></svg><span>Copy</span></button></dd>
+          </dl>
+        </div>
+      </div>
+      <div class="coord">
+        <div class="coord-who">
+          <span class="coord-av">WA</span>
+          <div><b>Wali Anwaar</b><span>Event Coordinator · WhatsApp +1 (332) 233-2380</span></div>
+        </div>
+        <a class="btn btn-wa" href="https://wa.me/13322332380" target="_blank" rel="noopener" data-wa data-track="cta_whatsapp_payment"><svg aria-hidden="true"><use href="#wa"/></svg>Send payment on WhatsApp</a>
+      </div>
+    </div>
   </div>
 </section>
 
@@ -981,8 +1055,12 @@ footer .row{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-betw
         <div class="ans"><p>General Admission is PKR 11,111. The Pair Pass is PKR 15,555 in total for two people. The Inner Table is PKR 33,333 and is limited to <span data-inner-seats>15</span> seats.</p></div>
       </details>
       <details>
+        <summary>How do I pay, and who do I contact?<span class="pm" aria-hidden="true"></span></summary>
+        <div class="ans"><p>Pay by bank transfer to <b>Bank of Punjab</b> (Account title: WALEED ANWAR · Account no. 6020042684100018) or by <b>JazzCash</b> to 0322 4078237. Then send your payment screenshot and full name on WhatsApp to our Event Coordinator, <b>Wali Anwaar</b>, at <a href="https://wa.me/13322332380" target="_blank" rel="noopener" data-wa data-track="cta_whatsapp_faq">+1 (332) 233-2380</a>. Your seat is confirmed on reply.</p></div>
+      </details>
+      <details>
         <summary>What if I can’t attend after booking?<span class="pm" aria-hidden="true"></span></summary>
-        <div class="ans"><p>With only 200 seats, tickets are non-refundable. You can transfer your seat to someone else — just contact us before the event and we’ll update the name.</p></div>
+        <div class="ans"><p>With only 200 seats, tickets are non-refundable. You can transfer your seat to someone else. Just message our Event Coordinator, Wali Anwaar, on WhatsApp (+1 (332) 233-2380) before the event and we’ll update the name.</p></div>
       </details>
     </div>
   </div>
@@ -1036,7 +1114,10 @@ var CONFIG = {
   // Intentional prices — do not round. Pair = total for two people.
   prices: { general: 11111, pair: 15555, inner: 33333 },
 
-  // Checkout links (GHL order form, Stripe, etc.). Empty = button scrolls to tickets.
+  // Event Coordinator WhatsApp (digits only, with country code).
+  whatsapp: "13322332380",
+
+  // Checkout links (GHL order form, Stripe, etc.). Empty = ticket buttons go to the bank/JazzCash payment block.
   checkout: { general: "", pair: "", inner: "" }
 };
 
@@ -1065,9 +1146,32 @@ Object.keys(CONFIG.prices).forEach(function(k){
   $all('[data-price="' + k + '"]').forEach(function(el){ el.textContent = fmt(CONFIG.prices[k]); });
 });
 if (CONFIG.privateClientClaim) $all('[data-claim]').forEach(function(el){ el.textContent = CONFIG.privateClientClaim; });
+var TIER_NAMES = { general: 'General Admission', pair: 'The Pair Pass (2 seats)', inner: 'The Inner Table' };
+function waLink(tier){
+  var msg = 'Assalam o Alaikum Wali, I want to reserve my seat for Infinite Rizq (17 Oct, Lahore).' +
+    (tier ? ' Ticket: ' + TIER_NAMES[tier] + ' - PKR ' + fmt(CONFIG.prices[tier]) + '.' : '') +
+    ' Name: ____. Attaching my payment screenshot.';
+  return 'https://wa.me/' + CONFIG.whatsapp + '?text=' + encodeURIComponent(msg);
+}
+$all('[data-wa]').forEach(function(el){ el.href = waLink(null); el.addEventListener('click', function(){ track('whatsapp_click', {}); }); });
 $all('[data-checkout]').forEach(function(el){
-  var url = CONFIG.checkout[el.getAttribute('data-checkout')];
-  if (url) el.setAttribute('href', url);
+  var tier = el.getAttribute('data-checkout'), url = CONFIG.checkout[tier];
+  if (url) { el.setAttribute('href', url); return; }
+  el.setAttribute('href', '#pay');
+  el.addEventListener('click', function(){
+    var sel = document.querySelector('[data-pay-sel]');
+    document.querySelector('[data-pay-tier]').textContent = TIER_NAMES[tier] + ' — PKR ' + fmt(CONFIG.prices[tier]);
+    sel.hidden = false;
+    $all('.pay [data-wa]').forEach(function(a){ a.href = waLink(tier); });
+  });
+});
+$all('[data-copy]').forEach(function(b){
+  b.addEventListener('click', function(){
+    var v = b.getAttribute('data-copy'), lab = b.querySelector('span');
+    function done(){ b.classList.add('ok'); lab.textContent = 'Copied'; setTimeout(function(){ b.classList.remove('ok'); lab.textContent = 'Copy'; }, 1800); }
+    if (navigator.clipboard) navigator.clipboard.writeText(v).then(done, done); else done();
+    track('payment_copy', { field: b.getAttribute('aria-label') });
+  });
 });
 $all('[data-track]').forEach(function(el){
   el.addEventListener('click', function(){ track('cta_click', { location: el.getAttribute('data-track') }); });
