@@ -1,6 +1,8 @@
 // Mastermind application handler.
 // Validates the form and stores each application as a private JSON file in the
-// "infinite-rizq-applications" Vercel Blob store (token: BLOB_READ_WRITE_TOKEN).
+// "infinite-rizq-applications" Vercel Blob store (token: BLOB_READ_WRITE_TOKEN),
+// then copies it to the Google Sheet (integrations/google-sheet.gs) when
+// SHEET_WEBHOOK_URL and SHEET_WEBHOOK_SECRET are set.
 import { put } from '@vercel/blob';
 
 const COMMIT_OPTIONS = ['yes', 'yes-discuss', 'not-now'];
@@ -31,6 +33,25 @@ export function validate(body) {
   if (!COMMIT_OPTIONS.includes(data.commit)) errors.commit = 'Please choose an option.';
   if (data.knowShahrez.length < 3) errors.knowShahrez = 'Please answer this question.';
   return { data, errors };
+}
+
+// Best effort: Blob storage is the record of truth, so a sheet failure never fails the submission.
+export async function sendToSheet(record) {
+  const url = process.env.SHEET_WEBHOOK_URL;
+  const secret = process.env.SHEET_WEBHOOK_SECRET;
+  if (!url || !secret) return;
+  try {
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret, type: 'application', data: record }),
+      signal: AbortSignal.timeout(8000),
+    });
+    const result = await resp.json().catch(() => ({}));
+    if (!result.ok) console.error('Sheet rejected application', resp.status, result.error);
+  } catch (err) {
+    console.error('Failed to send application to sheet', err);
+  }
 }
 
 export default async function handler(req, res) {
@@ -66,9 +87,11 @@ export default async function handler(req, res) {
       contentType: 'application/json',
       addRandomSuffix: true,
     });
-    return res.status(200).json({ ok: true });
   } catch (err) {
     console.error('Failed to store application', err);
     return res.status(500).json({ ok: false, error: 'Could not save your application. Please try again.' });
   }
+
+  await sendToSheet(record);
+  return res.status(200).json({ ok: true });
 }
