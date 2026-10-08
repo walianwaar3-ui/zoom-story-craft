@@ -1120,7 +1120,7 @@ footer .row{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-betw
    CONFIG — the only block you should need to edit before launch
    ======================================================================= */
 var CONFIG = {
-  // Master VSL. Accepts a YouTube URL, a Vimeo URL, or a direct .mp4 URL.
+  // Master VSL. Accepts a Wistia share link or media ID, a YouTube URL, a Vimeo URL, or a direct .mp4 URL.
   vsl: "https://www.youtube.com/embed/gU6o43166XA",
   vslLength: "4 min",                    // e.g. "8 min" — leave empty to hide
 
@@ -1245,6 +1245,7 @@ if (CONFIG.seatsRemaining !== null && CONFIG.seatsRemaining !== undefined) {
     });
   }
   function ytId(u){ var x = u.match(/(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/); return x && x[1]; }
+  function wistiaId(u){ var x = u.match(/(?:wistia\.(?:com|net)\/(?:medias|embed\/iframe|embed\/medias)\/|wvideo=|^)([a-z0-9]{10})(?:\b|$)/i); return x && x[1]; }
   function vimeoId(u){ var x = u.match(/vimeo\.com\/(?:video\/)?(\d+)/); return x && x[1]; }
 
   btn.addEventListener('click', function(){
@@ -1328,6 +1329,28 @@ if (CONFIG.seatsRemaining !== null && CONFIG.seatsRemaining !== undefined) {
           box.innerHTML = '<iframe src="https://www.youtube.com/embed/' + id + '?autoplay=1&rel=0&modestbranding=1&playsinline=1&iv_load_policy=3&cc_load_policy=0" allow="autoplay; encrypted-media; picture-in-picture; fullscreen" allowfullscreen title="Infinite Rizq VSL"></iframe>';
         }
       }, 3500);
+    } else if ((id = wistiaId(url))) {
+      // Wistia: clean branded player (gold controls), no third-party branding or suggested videos
+      box.innerHTML = '<div class="wistia_responsive_padding" style="position:absolute;inset:0">' +
+        '<div class="wistia_embed wistia_async_' + id + ' videoFoam=false autoPlay=true playerColor=d4a73a ' +
+        'settingsControl=false playbackRateControl=false qualityControl=false copyLinkAndThumbnailEnabled=false ' +
+        'controlsVisibleOnLoad=false fullscreenButton=true volumeControl=true playbar=true smallPlayButton=true ' +
+        'endVideoBehavior=default" style="height:100%;width:100%">&nbsp;</div></div>' +
+        '<div class="vp"><div class="vp-end" data-vp-end hidden><p>Ready to do the work?</p>' +
+          '<a href="#tickets" class="btn" data-track="cta_vsl_end">Reserve your seat</a>' +
+          '<button type="button" class="vp-replay" data-vp-replay><svg><use href="#replay"/></svg>Watch again</button></div></div>';
+      var vpLayer = box.querySelector('.vp'); vpLayer.style.pointerEvents = 'none';
+      var endEl = box.querySelector('[data-vp-end]'); endEl.style.pointerEvents = 'auto';
+      window._wq = window._wq || [];
+      window._wq.push({ id: id, onReady: function(video){
+        video.play();
+        video.bind('percentwatchedchanged', function(pct){ progress(pct, 1); });
+        video.bind('end', function(){ endEl.hidden = false; progress(1, 1); track('vsl_complete'); });
+        box.querySelector('[data-vp-replay]').addEventListener('click', function(){ endEl.hidden = true; video.time(0); video.play(); });
+      } });
+      if (!document.querySelector('script[src*="E-v1.js"]')) {
+        var ws = document.createElement('script'); ws.src = 'https://fast.wistia.com/assets/external/E-v1.js'; ws.async = true; document.head.appendChild(ws);
+      }
     } else if ((id = vimeoId(url))) {
       box.innerHTML = '<iframe src="https://player.vimeo.com/video/' + id + '?autoplay=1&playsinline=1" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen title="Infinite Rizq VSL"></iframe>';
     } else {
