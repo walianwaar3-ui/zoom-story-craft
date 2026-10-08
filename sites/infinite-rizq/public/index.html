@@ -224,6 +224,14 @@ p{margin:0 0 1.1em}
 .prox{list-style:none;padding:0;margin:22px 0 0;display:grid;gap:8px}
 .prox li{display:flex;gap:12px;align-items:baseline;color:var(--ivory);font-family:var(--serif);font-size:1.2rem}
 .prox li::before{content:"";flex:0 0 7px;height:7px;border-radius:50%;background:var(--gold);transform:translateY(-3px)}
+.access{margin:26px 0 0;padding:22px 0 0;border-top:1px solid var(--line)}
+.access p{margin:0 0 12px}
+.access .first{font-family:var(--serif);font-size:1.45rem;color:var(--ivory);line-height:1.25}
+.access b{color:var(--ivory);font-weight:600}
+.access sup{color:var(--gold);font-size:.7em}
+.access [lang="ar"]{font-size:1.05em}
+.access .close{font-family:var(--serif);font-style:italic;font-size:1.25rem;color:var(--gold-2);line-height:1.35;margin-top:18px}
+.access .fine{font-size:.76rem;color:var(--muted);margin:14px 0 0}
 .ask{font-family:var(--serif);font-style:italic;font-size:1.35rem;color:var(--gold-2);margin:26px 0 0;line-height:1.35}
 .hard{
   margin-top:28px;padding:18px 20px;border-left:3px solid var(--gold);
@@ -238,6 +246,7 @@ p{margin:0 0 1.1em}
 .field img{width:100%;height:auto;display:block}
 .field::after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 60px 30px #050506;border-radius:inherit}
 .fn{position:absolute;left:var(--x);top:var(--y);display:flex;align-items:flex-start;gap:1.4cqw;transform:translate(-3.2cqw,-3.2cqw);z-index:1}
+.fn .fn-t{white-space:nowrap}
 .fn.flip{flex-direction:row-reverse;transform:translate(calc(-100% + 3.2cqw),-3.2cqw);text-align:right}
 .fn-ic{flex:0 0 auto;width:6.4cqw;height:6.4cqw;border-radius:50%;display:grid;place-items:center;color:var(--red);background:rgba(20,8,8,.55);border:1px solid rgba(224,115,107,.55);box-shadow:0 0 2.4cqw rgba(224,115,107,.45),inset 0 0 1.2cqw rgba(224,115,107,.25);backdrop-filter:blur(2px)}
 .fn-ic svg{width:42%;height:42%}
@@ -308,6 +317,8 @@ p{margin:0 0 1.1em}
 .pillar .k{font-size:.72rem;letter-spacing:.22em;text-transform:uppercase;color:var(--gold);font-weight:600}
 .pillar h3{margin:10px 0 10px;font-size:1.5rem}
 .pillar p{margin:0;color:var(--text);font-size:.98rem}
+.pillar p+p{margin-top:12px}
+.pillar p.end{color:var(--ivory);font-weight:600}
 
 .method{
   margin-top:20px;background:radial-gradient(80% 120% at 50% 0%,rgba(212,167,58,.10),transparent 60%),var(--bg-2);
@@ -354,6 +365,7 @@ p{margin:0 0 1.1em}
 .stats{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin:30px 0 0}
 .stat{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 14px}
 .stat b{display:block;font-family:var(--serif);font-size:1.3rem;color:var(--gold-2);line-height:1.1;font-weight:600}
+.stat.wide{grid-column:1/-1}
 .stat span{font-size:.78rem;color:var(--muted);line-height:1.4;display:block;margin-top:4px}
 
 /* ---------- Qualify ---------- */
@@ -676,7 +688,15 @@ footer .row{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-betw
         <li>They invest in relationships.</li>
         <li>They invest in environments that challenge how they think.</li>
       </ul>
-      <p style="margin-top:22px">On 17 October, that environment comes to Lahore — the processes normally kept for private engagements, and 200 ambitious, growth-oriented people working on themselves in the same room.</p>
+      <div class="access">
+        <p class="first">For the first time ever.</p>
+        <p>The processes, frameworks, and knowledge normally reserved for World Wealth Organization members and Shahrez’s private clients are coming to Lahore.</p>
+        <p>This is access to the same level of private knowledge and processes found in engagements valued at up to <b>$1,000,000 per year</b>.<sup>*</sup></p>
+        <p>And for the first time, these teachings will be shared live with just <b>200 people</b>.</p>
+        <p>200 individuals whom Allah <span lang="ar" dir="rtl">سبحانه وتعالى</span> has destined to be in the same room.</p>
+        <p class="close">One room. One afternoon. Access that was never meant for the masses.</p>
+        <p class="fine"><sup>*</sup> Refers to the value of certain private engagements with Shahrez — not the ticket price, and not a promise of equivalent results.</p>
+      </div>
       <p class="ask">What could change if you put yourself in the right room?</p>
       <p class="hard">This is a one-time event. No recordings. No replays. No playback access. No digital replacement. This experience exists only for the people physically in the room.</p>
     </div>
@@ -714,54 +734,58 @@ footer .row{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-betw
 </defs>
 <ellipse class="fl-core" cx="501" cy="210" rx="190" ry="230" fill="url(#fl-core)"/>
 <g class="fl-s" style="--d:0.00s">
-<circle class="fl-src" cx="430" cy="42" r="6"/><path class="fl-base" d="M430.0 42.0 Q428.8 81.0 449.2 91.2"/><path class="fl-dots" d="M430.0 42.0 Q428.8 81.0 449.2 91.2"/>
-<path class="fl-post fl-base" d="M449.2 91.2 Q462.8 98.0 486.0 92.0"/><path class="fl-post fl-dots" d="M449.2 91.2 Q462.8 98.0 486.0 92.0"/>
-<circle class="fl-hit" cx="449.2" cy="91.2" r="10"/>
-<g class="fl-rock" transform="translate(449.2 91.2) rotate(117)"><g class="fl-rock-in"><polygon transform="scale(1.35)" points="-24,-5 -16,-11 3,-12 19,-8 25,-1 20,7 4,11 -15,9 -25,3" fill="url(#fl-rock)" stroke="#ff8a7e" stroke-opacity=".6" filter="url(#fl-red)"/><path transform="scale(1.35)" d="M-12 -4 L-2 1 L8 -5 M1 1 L5 7" stroke="#2a0705" stroke-width="1.3" fill="none"/></g></g>
-<circle class="fl-burst" cx="449.2" cy="91.2" r="12"/>
+<circle class="fl-src" cx="300.0" cy="42.0" r="6"/><path class="fl-base" d="M300.0 42.0 Q372.0 52.0 424.0 82.0"/><path class="fl-dots" d="M300.0 42.0 Q372.0 52.0 424.0 82.0"/>
+<path class="fl-post fl-base" d="M424.0 82.0 Q451.7 98.0 487.0 93.0"/><path class="fl-post fl-dots" d="M424.0 82.0 Q451.7 98.0 487.0 93.0"/>
+<circle class="fl-hit" cx="424.0" cy="82.0" r="10"/>
+<g class="fl-rock" transform="translate(424.0 82.0) rotate(120)"><g class="fl-rock-in"><polygon transform="scale(1.35)" points="-24,-5 -16,-11 3,-12 19,-8 25,-1 20,7 4,11 -15,9 -25,3" fill="url(#fl-rock)" stroke="#ff8a7e" stroke-opacity=".6" filter="url(#fl-red)"/><path transform="scale(1.35)" d="M-12 -4 L-2 1 L8 -5 M1 1 L5 7" stroke="#2a0705" stroke-width="1.3" fill="none"/></g></g>
+<circle class="fl-burst" cx="424.0" cy="82.0" r="12"/>
 </g>
 <g class="fl-s" style="--d:0.25s">
-<circle class="fl-src" cx="556" cy="42" r="6"/><path class="fl-base" d="M556.0 42.0 Q562.0 81.0 546.4 91.2"/><path class="fl-dots" d="M556.0 42.0 Q562.0 81.0 546.4 91.2"/>
-<path class="fl-post fl-base" d="M546.4 91.2 Q536.0 98.0 516.0 92.0"/><path class="fl-post fl-dots" d="M546.4 91.2 Q536.0 98.0 516.0 92.0"/>
-<circle class="fl-hit" cx="546.4" cy="91.2" r="10"/>
-<g class="fl-rock" transform="translate(546.4 91.2) rotate(237)"><g class="fl-rock-in"><polygon transform="scale(1.35)" points="-24,-5 -16,-11 3,-12 19,-8 25,-1 20,7 4,11 -15,9 -25,3" fill="url(#fl-rock)" stroke="#ff8a7e" stroke-opacity=".6" filter="url(#fl-red)"/><path transform="scale(1.35)" d="M-12 -4 L-2 1 L8 -5 M1 1 L5 7" stroke="#2a0705" stroke-width="1.3" fill="none"/></g></g>
-<circle class="fl-burst" cx="546.4" cy="91.2" r="12"/>
+<circle class="fl-src" cx="701.0" cy="42.0" r="6"/><path class="fl-base" d="M701.0 42.0 Q629.0 52.0 577.0 82.0"/><path class="fl-dots" d="M701.0 42.0 Q629.0 52.0 577.0 82.0"/>
+<path class="fl-post fl-base" d="M577.0 82.0 Q549.3 98.0 514.0 93.0"/><path class="fl-post fl-dots" d="M577.0 82.0 Q549.3 98.0 514.0 93.0"/>
+<circle class="fl-hit" cx="577.0" cy="82.0" r="10"/>
+<g class="fl-rock" transform="translate(577.0 82.0) rotate(240)"><g class="fl-rock-in"><polygon transform="scale(1.35)" points="-24,-5 -16,-11 3,-12 19,-8 25,-1 20,7 4,11 -15,9 -25,3" fill="url(#fl-rock)" stroke="#ff8a7e" stroke-opacity=".6" filter="url(#fl-red)"/><path transform="scale(1.35)" d="M-12 -4 L-2 1 L8 -5 M1 1 L5 7" stroke="#2a0705" stroke-width="1.3" fill="none"/></g></g>
+<circle class="fl-burst" cx="577.0" cy="82.0" r="12"/>
 </g>
 <g class="fl-s" style="--d:0.50s">
-<circle class="fl-src" cx="70" cy="207" r="6"/><path class="fl-base" d="M70.0 207.0 Q190.0 168.9 310.0 174.0"/><path class="fl-dots" d="M70.0 207.0 Q190.0 168.9 310.0 174.0"/>
-<path class="fl-post fl-base" d="M310.0 174.0 Q390.0 177.4 470.0 200.0"/><path class="fl-post fl-dots" d="M310.0 174.0 Q390.0 177.4 470.0 200.0"/>
-<circle class="fl-hit" cx="310.0" cy="174.0" r="10"/>
-<g class="fl-rock" transform="translate(310.0 174.0) rotate(92)"><g class="fl-rock-in"><polygon transform="scale(1.35)" points="-24,-5 -16,-11 3,-12 19,-8 25,-1 20,7 4,11 -15,9 -25,3" fill="url(#fl-rock)" stroke="#ff8a7e" stroke-opacity=".6" filter="url(#fl-red)"/><path transform="scale(1.35)" d="M-12 -4 L-2 1 L8 -5 M1 1 L5 7" stroke="#2a0705" stroke-width="1.3" fill="none"/></g></g>
-<circle class="fl-burst" cx="310.0" cy="174.0" r="12"/>
+<circle class="fl-src" cx="62.0" cy="212.0" r="6"/><path class="fl-base" d="M62.0 212.0 Q150.0 112.0 330.0 166.0"/><path class="fl-dots" d="M62.0 212.0 Q150.0 112.0 330.0 166.0"/>
+<path class="fl-post fl-base" d="M330.0 166.0 Q399.0 186.7 470.0 200.0"/><path class="fl-post fl-dots" d="M330.0 166.0 Q399.0 186.7 470.0 200.0"/>
+<circle class="fl-hit" cx="330.0" cy="166.0" r="10"/>
+<g class="fl-rock" transform="translate(330.0 166.0) rotate(107)"><g class="fl-rock-in"><polygon transform="scale(1.35)" points="-24,-5 -16,-11 3,-12 19,-8 25,-1 20,7 4,11 -15,9 -25,3" fill="url(#fl-rock)" stroke="#ff8a7e" stroke-opacity=".6" filter="url(#fl-red)"/><path transform="scale(1.35)" d="M-12 -4 L-2 1 L8 -5 M1 1 L5 7" stroke="#2a0705" stroke-width="1.3" fill="none"/></g></g>
+<circle class="fl-burst" cx="330.0" cy="166.0" r="12"/>
 </g>
 <g class="fl-s" style="--d:0.75s">
-<circle class="fl-src" cx="725" cy="207" r="6"/><path class="fl-base" d="M725.0 207.0 Q667.1 174.9 609.2 178.8"/><path class="fl-dots" d="M725.0 207.0 Q667.1 174.9 609.2 178.8"/>
-<path class="fl-post fl-base" d="M609.2 178.8 Q570.6 181.4 532.0 200.0"/><path class="fl-post fl-dots" d="M609.2 178.8 Q570.6 181.4 532.0 200.0"/>
-<circle class="fl-hit" cx="609.2" cy="178.8" r="10"/>
-<g class="fl-rock" transform="translate(609.2 178.8) rotate(266)"><g class="fl-rock-in"><polygon transform="scale(1.35)" points="-24,-5 -16,-11 3,-12 19,-8 25,-1 20,7 4,11 -15,9 -25,3" fill="url(#fl-rock)" stroke="#ff8a7e" stroke-opacity=".6" filter="url(#fl-red)"/><path transform="scale(1.35)" d="M-12 -4 L-2 1 L8 -5 M1 1 L5 7" stroke="#2a0705" stroke-width="1.3" fill="none"/></g></g>
-<circle class="fl-burst" cx="609.2" cy="178.8" r="12"/>
+<circle class="fl-src" cx="939.0" cy="212.0" r="6"/><path class="fl-base" d="M939.0 212.0 Q851.0 112.0 671.0 166.0"/><path class="fl-dots" d="M939.0 212.0 Q851.0 112.0 671.0 166.0"/>
+<path class="fl-post fl-base" d="M671.0 166.0 Q602.0 186.7 531.0 200.0"/><path class="fl-post fl-dots" d="M671.0 166.0 Q602.0 186.7 531.0 200.0"/>
+<circle class="fl-hit" cx="671.0" cy="166.0" r="10"/>
+<g class="fl-rock" transform="translate(671.0 166.0) rotate(253)"><g class="fl-rock-in"><polygon transform="scale(1.35)" points="-24,-5 -16,-11 3,-12 19,-8 25,-1 20,7 4,11 -15,9 -25,3" fill="url(#fl-rock)" stroke="#ff8a7e" stroke-opacity=".6" filter="url(#fl-red)"/><path transform="scale(1.35)" d="M-12 -4 L-2 1 L8 -5 M1 1 L5 7" stroke="#2a0705" stroke-width="1.3" fill="none"/></g></g>
+<circle class="fl-burst" cx="671.0" cy="166.0" r="12"/>
 </g>
 <g class="fl-s" style="--d:1.00s">
-<circle class="fl-src" cx="162" cy="415" r="6"/><path class="fl-base" d="M162.0 415.0 Q258.0 404.5 354.0 365.2"/><path class="fl-dots" d="M162.0 415.0 Q258.0 404.5 354.0 365.2"/>
-<path class="fl-post fl-base" d="M354.0 365.2 Q418.0 339.0 482.0 300.0"/><path class="fl-post fl-dots" d="M354.0 365.2 Q418.0 339.0 482.0 300.0"/>
-<circle class="fl-hit" cx="354.0" cy="365.2" r="10"/>
-<g class="fl-rock" transform="translate(354.0 365.2) rotate(68)"><g class="fl-rock-in"><polygon transform="scale(1.35)" points="-24,-5 -16,-11 3,-12 19,-8 25,-1 20,7 4,11 -15,9 -25,3" fill="url(#fl-rock)" stroke="#ff8a7e" stroke-opacity=".6" filter="url(#fl-red)"/><path transform="scale(1.35)" d="M-12 -4 L-2 1 L8 -5 M1 1 L5 7" stroke="#2a0705" stroke-width="1.3" fill="none"/></g></g>
-<circle class="fl-burst" cx="354.0" cy="365.2" r="12"/>
+<circle class="fl-src" cx="152.0" cy="428.0" r="6"/><path class="fl-base" d="M152.0 428.0 Q222.0 330.0 350.0 364.0"/><path class="fl-dots" d="M152.0 428.0 Q222.0 330.0 350.0 364.0"/>
+<path class="fl-post fl-base" d="M350.0 364.0 Q420.9 382.8 482.0 300.0"/><path class="fl-post fl-dots" d="M350.0 364.0 Q420.9 382.8 482.0 300.0"/>
+<circle class="fl-hit" cx="350.0" cy="364.0" r="10"/>
+<g class="fl-rock" transform="translate(350.0 364.0) rotate(105)"><g class="fl-rock-in"><polygon transform="scale(1.35)" points="-24,-5 -16,-11 3,-12 19,-8 25,-1 20,7 4,11 -15,9 -25,3" fill="url(#fl-rock)" stroke="#ff8a7e" stroke-opacity=".6" filter="url(#fl-red)"/><path transform="scale(1.35)" d="M-12 -4 L-2 1 L8 -5 M1 1 L5 7" stroke="#2a0705" stroke-width="1.3" fill="none"/></g></g>
+<circle class="fl-burst" cx="350.0" cy="364.0" r="12"/>
 </g>
 <g class="fl-s" style="--d:1.25s">
-<circle class="fl-src" cx="681" cy="415" r="6"/><path class="fl-base" d="M681.0 415.0 Q632.7 404.5 584.4 365.2"/><path class="fl-dots" d="M681.0 415.0 Q632.7 404.5 584.4 365.2"/>
-<path class="fl-post fl-base" d="M584.4 365.2 Q552.2 339.0 520.0 300.0"/><path class="fl-post fl-dots" d="M584.4 365.2 Q552.2 339.0 520.0 300.0"/>
-<circle class="fl-hit" cx="584.4" cy="365.2" r="10"/>
-<g class="fl-rock" transform="translate(584.4 365.2) rotate(-51)"><g class="fl-rock-in"><polygon transform="scale(1.35)" points="-24,-5 -16,-11 3,-12 19,-8 25,-1 20,7 4,11 -15,9 -25,3" fill="url(#fl-rock)" stroke="#ff8a7e" stroke-opacity=".6" filter="url(#fl-red)"/><path transform="scale(1.35)" d="M-12 -4 L-2 1 L8 -5 M1 1 L5 7" stroke="#2a0705" stroke-width="1.3" fill="none"/></g></g>
-<circle class="fl-burst" cx="584.4" cy="365.2" r="12"/>
+<circle class="fl-src" cx="849.0" cy="428.0" r="6"/><path class="fl-base" d="M849.0 428.0 Q779.0 330.0 651.0 364.0"/><path class="fl-dots" d="M849.0 428.0 Q779.0 330.0 651.0 364.0"/>
+<path class="fl-post fl-base" d="M651.0 364.0 Q580.1 382.8 519.0 300.0"/><path class="fl-post fl-dots" d="M651.0 364.0 Q580.1 382.8 519.0 300.0"/>
+<circle class="fl-hit" cx="651.0" cy="364.0" r="10"/>
+<g class="fl-rock" transform="translate(651.0 364.0) rotate(255)"><g class="fl-rock-in"><polygon transform="scale(1.35)" points="-24,-5 -16,-11 3,-12 19,-8 25,-1 20,7 4,11 -15,9 -25,3" fill="url(#fl-rock)" stroke="#ff8a7e" stroke-opacity=".6" filter="url(#fl-red)"/><path transform="scale(1.35)" d="M-12 -4 L-2 1 L8 -5 M1 1 L5 7" stroke="#2a0705" stroke-width="1.3" fill="none"/></g></g>
+<circle class="fl-burst" cx="651.0" cy="364.0" r="12"/>
 </g>
 </svg>
-        <div class="fn flip" style="--x:43.0%;--y:6.3%"><span class="fn-ic"><svg><use href="#users"/></svg></span><span class="fn-t"><b>Connections</b><em><span class="st-b">Blocked</span><span class="st-o">Unblocked</span></em><small>The wrong rooms</small></span></div>
-        <div class="fn" style="--x:55.6%;--y:6.3%"><span class="fn-ic"><svg><use href="#coin"/></svg></span><span class="fn-t"><b>Money</b><em><span class="st-b">Blocked</span><span class="st-o">Unblocked</span></em><small>Scarcity · fear of loss</small></span></div>
-        <div class="fn" style="--x:7.0%;--y:31.2%"><span class="fn-ic"><svg><use href="#heart"/></svg></span><span class="fn-t"><b>Marriage</b><em><span class="st-b">Blocked</span><span class="st-o">Unblocked</span></em><small>Repeating old patterns</small></span></div>
-        <div class="fn" style="--x:72.4%;--y:31.2%"><span class="fn-ic"><svg><use href="#door"/></svg></span><span class="fn-t"><b>Opportunity</b><em><span class="st-b">Blocked</span><span class="st-o">Unblocked</span></em><small>Talking yourself out of it</small></span></div>
-        <div class="fn" style="--x:16.2%;--y:62.5%"><span class="fn-ic"><svg><use href="#leaf"/></svg></span><span class="fn-t"><b>Peace</b><em><span class="st-b">Blocked</span><span class="st-o">Unblocked</span></em><small>Needing to control outcomes</small></span></div>
-        <div class="fn" style="--x:68.0%;--y:62.5%"><span class="fn-ic"><svg><use href="#expand"/></svg></span><span class="fn-t"><b>Growth</b><em><span class="st-b">Blocked</span><span class="st-o">Unblocked</span></em><small>Stuck in an old identity</small></span></div>
+        <div class="fn flip" style="--x:30.0%;--y:6.3%"><span class="fn-ic"><svg><use href="#users"/></svg></span><span class="fn-t"><b>Connections</b><em><span class="st-b">Blocked</span><span class="st-o">Unblocked</span></em><small>The wrong rooms</small></span></div>
+        <div class="fn" style="--x:70.0%;--y:6.3%"><span class="fn-ic"><svg><use href="#coin"/></svg></span><span class="fn-t"><b>Money</b><em><span class="st-b">Blocked</span><span class="st-o">Unblocked</span></em><small>Scarcity · fear of loss</small></span></div>
+        <div class="fn" style="--x:6.2%;--y:31.9%"><span class="fn-ic"><svg><use href="#heart"/></svg></span><span class="fn-t"><b>Marriage</b><em><span class="st-b">Blocked</span><span class="st-o">Unblocked</span></em><small>Repeating old patterns</small></span></div>
+        <div class="fn flip" style="--x:93.8%;--y:31.9%"><span class="fn-ic"><svg><use href="#door"/></svg></span><span class="fn-t"><b>Opportunity</b><em><span class="st-b">Blocked</span><span class="st-o">Unblocked</span></em><small>Talking yourself out of it</small></span></div>
+        <div class="fn" style="--x:15.2%;--y:64.5%"><span class="fn-ic"><svg><use href="#leaf"/></svg></span><span class="fn-t"><b>Peace</b><em><span class="st-b">Blocked</span><span class="st-o">Unblocked</span></em><small>Needing to control outcomes</small></span></div>
+        <div class="fn flip" style="--x:84.8%;--y:64.5%"><span class="fn-ic"><svg><use href="#expand"/></svg></span><span class="fn-t"><b>Growth</b><em><span class="st-b">Blocked</span><span class="st-o">Unblocked</span></em><small>Stuck in an old identity</small></span></div>
+      </div>
+      <div class="seg" role="group" aria-label="Show before or after the room">
+        <button type="button" data-flow="blocked" aria-pressed="true">Before the room</button>
+        <button type="button" data-flow="open" aria-pressed="false">After the room</button>
       </div>
       <ul class="field-list">
         <li><span class="fn-ic"><svg><use href="#users"/></svg></span><span class="fn-t"><b>Connections</b><em><span class="st-b">Blocked</span><span class="st-o">Unblocked</span></em><small>The wrong rooms</small></span></li>
@@ -771,10 +795,6 @@ footer .row{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-betw
         <li><span class="fn-ic"><svg><use href="#leaf"/></svg></span><span class="fn-t"><b>Peace</b><em><span class="st-b">Blocked</span><span class="st-o">Unblocked</span></em><small>Needing to control outcomes</small></span></li>
         <li><span class="fn-ic"><svg><use href="#expand"/></svg></span><span class="fn-t"><b>Growth</b><em><span class="st-b">Blocked</span><span class="st-o">Unblocked</span></em><small>Stuck in an old identity</small></span></li>
       </ul>
-      <div class="seg" role="group" aria-label="Show before or after the room">
-        <button type="button" data-flow="blocked" aria-pressed="true">Before the room</button>
-        <button type="button" data-flow="open" aria-pressed="false">After the room</button>
-      </div>
       <figcaption>
         <span class="st-b">The rizq Allah has written for you is already flowing toward you. <b>Something between you and it is in the way</b> — and pushing harder doesn’t move it.</span>
         <span class="st-o">Remove the blockage, and <b>what was always written for you can reach you.</b> That is the work of the room.</span>
@@ -815,18 +835,32 @@ footer .row{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-betw
     <div class="pillars">
       <article class="pillar rv">
         <div class="k">01 · Blockage removal</div>
-        <h3>High-level blockage removal processes</h3>
-        <p>Practical spiritual and psychological processes to identify and work through money blockages, limiting beliefs about wealth, relationship blockages, emotional resistance, fear, spiritual obstacles and identity limits. Processes — not motivational advice.</p>
+        <h3>Remove Your Spiritual Blocks.</h3>
+        <p>What if the rizq Allah has written for you is already at your doorstep, but your own patterns are preventing you from recognizing the opportunity?</p>
+        <p>Fear. Scarcity. Limiting beliefs. Emotional resistance. An identity that keeps pulling you backward.</p>
+        <p>You could be standing inches away from an opportunity and still talk yourself out of it.</p>
+        <p>You’ll learn practical spiritual and psychological processes to identify and work through the internal obstacles that may be holding you back.</p>
+        <p class="end">Not another motivational speech. Actual processes you can apply.</p>
       </article>
       <article class="pillar rv">
-        <div class="k">02 · You do the work</div>
-        <h3>Pen in hand. No spectators.</h3>
-        <p>You won’t sit back and consume. You’ll examine your own patterns and apply every process during the session, on paper, before you leave the room.</p>
+        <div class="k">02 · Live implementation</div>
+        <h3>You Do the Work. No Procrastination.</h3>
+        <p>You aren’t coming to sit in an auditorium, listen to someone speak, feel inspired, and return to the same life.</p>
+        <p>You’re coming to do the work.</p>
+        <p>Pen in hand. Processes in front of you.</p>
+        <p>You’ll examine your beliefs, confront your patterns, and physically work through exercises during the event.</p>
+        <p>No waiting until Monday.<br>No telling yourself you’ll do it later.</p>
+        <p class="end">The work begins inside the room.</p>
       </article>
       <article class="pillar rv">
-        <div class="k">03 · Proximity &amp; environment</div>
-        <h3>The room reinforces the work</h3>
-        <p>A high-level learning environment, 200 growth-oriented people, and connections that can outlast the day — all in service of the transformation you came for. You leave with practical tools to keep implementing.</p>
+        <div class="k">03 · The right environment</div>
+        <h3>Build Lifelong Connections.</h3>
+        <p>Let’s face it.</p>
+        <p>Not everybody thinks like you.</p>
+        <p>Not everybody wants more from life. Not everybody is committed to growth, personal development, wealth, and becoming a better version of themselves.</p>
+        <p>But imagine being surrounded by 199 other people who share that ambition.</p>
+        <p>People who understand your outlook on life.<br>People who challenge the way you think.<br>People you could build businesses, friendships, partnerships, and lifelong relationships with.</p>
+        <p class="end">Sometimes, one conversation in the right room can change the direction of your life.</p>
       </article>
     </div>
 
@@ -895,7 +929,8 @@ footer .row{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-betw
         <div class="stat"><b>14 months</b><span>Homeless to millionaire</span></div>
         <div class="stat"><b>8-figure</b><span>Business entrepreneur</span></div>
         <div class="stat"><b>Founder</b><span>World Wealth Organization</span></div>
-        <div class="stat"><b>Creator</b><span>Wealth &amp; identity transformation methodology</span></div>
+        <div class="stat"><b>Philosopher</b><span>Developer of the World Wealth Success System</span></div>
+        <div class="stat wide"><b>Student of knowledge</b><span>Pursuing Islamic knowledge in Madinah</span></div>
       </div>
       <p class="quote">“More money doesn’t automatically give you more peace. You can achieve everything you once wanted — and still be controlled by fear.”</p>
     </div>
