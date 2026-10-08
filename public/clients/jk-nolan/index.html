@@ -1,0 +1,623 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>J.K. Nolan Homepage</title>
+<meta name="description" content="J.K. Nolan builds digital advertising systems for established experts whose work is genuinely valuable but hard to explain.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&family=Square+Peg&family=Libre+Caslon+Text:wght@700&display=swap">
+<style>
+/* Layout: 1440 editorial canvas — 60px gutters, a 1/3 label column against a 2/3 reading column, punctuated by full-bleed bands (sage, cocoa, envelope green). Single committed paper look, both host themes. */
+:root{
+  --paper:#F3EFE7; --paper-2:#ECEAE1; --dawn:#F2EAE0; --wafer:#DED2C4;
+  --ink:#2A2420; --ink-80:rgba(42,36,32,.8); --ink-60:rgba(42,36,32,.6);
+  --brown:#6B4A3A; --gold:#C5A06D; --sage:#8E9C80; --forest:#3D4A31; --forest-2:#34402A;
+  --rule:#9C8A78; --rule-soft:rgba(107,74,58,.18); --white:#FFFFFF;
+  --serif:"Instrument Serif","Times New Roman",Georgia,serif;
+  --sans:"Geist",ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"Geist Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --hand:"Square Peg","Segoe Script","Bradley Hand",cursive;
+  --logo:"Libre Caslon Text",Georgia,serif;
+  --gutter:clamp(16px,4.2vw,60px);
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;background-color:var(--paper);color:var(--ink);font-family:var(--sans);font-size:18px;line-height:1.4;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='276' height='276'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .32 0 0 0 0 .24 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  -webkit-font-smoothing:antialiased;overflow-x:hidden;
+}
+img{max-width:100%;display:block}
+a{color:inherit}
+:focus-visible{outline:2px solid var(--brown);outline-offset:3px}
+.wrap{max-width:1440px;margin:0 auto;padding-inline:var(--gutter)}
+.serif{font-family:var(--serif);font-weight:400}
+h1,h2,h3{font-family:var(--serif);font-weight:400;margin:0;text-wrap:balance;letter-spacing:-.015em}
+p{margin:0}
+.prose{display:grid;gap:1.4em;color:var(--ink-80);font-size:18px;line-height:1.4;max-width:620px}
+.mono-label{font-family:var(--mono);text-transform:uppercase;letter-spacing:1px;color:var(--brown);font-size:20px}
+.lead{font-family:var(--serif);font-size:30px;line-height:1.2;color:var(--ink);max-width:650px}
+.rule{border:0;border-top:1px solid var(--rule);margin:0}
+.hand{font-family:var(--hand);color:var(--brown);font-weight:400}
+
+/* polaroid */
+.polaroid{position:relative;filter:drop-shadow(0 10px 18px rgba(42,36,32,.18))}
+.polaroid img{width:100%;height:auto}
+
+/* header */
+.site-head{padding-top:26px}
+.logo{font-family:var(--logo);font-weight:700;font-size:21px;letter-spacing:-.02em;text-decoration:none;color:var(--ink)}
+.site-head .rule{margin-top:22px;border-color:var(--ink)}
+
+/* hero */
+.hero{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;padding-block:70px 60px;align-items:start}
+.hero h1{font-size:clamp(52px,6.2vw,92px);line-height:1.04;letter-spacing:-.03em;margin-top:30px}
+.hero h1 .mark{position:relative;display:inline-block;white-space:nowrap}
+.hero h1 svg{position:absolute;pointer-events:none;overflow:visible}
+.u1{left:-2%;bottom:-.06em;width:104%;height:.22em}
+.u2{left:-8%;top:-.02em;width:122%;height:1.12em}
+.hero .sub{margin-top:44px;font-size:clamp(17px,1.5vw,21px);line-height:1.4;color:var(--ink-80);max-width:540px}
+.collage{position:relative;aspect-ratio:560/690;width:100%;max-width:560px;justify-self:end}
+.collage .polaroid{position:absolute}
+.collage .p1{left:0;top:0;width:54%}
+.collage .p2{left:30%;top:9%;width:70%;z-index:2}
+.collage .p3{left:12%;top:60%;width:48%;z-index:3}
+
+/* terms */
+.terms{display:grid;grid-template-columns:200px repeat(3,minmax(0,1fr));gap:44px;padding-block:40px 70px;align-items:start}
+.hand-title{position:relative;display:inline-block;font-size:38px;line-height:1;padding-bottom:8px}
+.hand-title svg{position:absolute;left:-10px;bottom:-4px;width:calc(100% + 20px);height:14px;overflow:visible}
+.terms .hand-title{margin-top:40px}
+.term{border-top:1px solid var(--rule-soft);padding-top:26px;font-family:var(--mono)}
+.term h3{font-family:var(--mono);font-size:16px;letter-spacing:1px;text-transform:uppercase;line-height:1.25;color:var(--ink);margin-bottom:24px}
+.term p{font-size:14.5px;line-height:1.55;color:var(--ink-80)}
+
+/* section scaffolding */
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,2fr);column-gap:60px;row-gap:40px}
+.split > .right{max-width:680px}
+.big{font-size:clamp(48px,5.6vw,80px);line-height:1.04;letter-spacing:-.03em}
+section{position:relative}
+.pad{padding-block:110px}
+
+/* fit */
+.fit .big{position:sticky;top:40px;align-self:start;padding-top:150px}
+.fit-rows{display:grid;gap:70px}
+.fit-row{display:grid;grid-template-columns:232px minmax(0,1fr);gap:20px}
+.fit-row .prose{font-size:18px}
+.fit .lead{margin:90px 0 0 113px}
+
+/* disclaimer */
+.disclaimer{max-width:1095px;margin:110px auto 0;background:var(--dawn);display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr);gap:30px;padding:48px 52px 56px;position:relative}
+.disclaimer .lead{font-size:30px;margin-top:40px;max-width:540px}
+.disclaimer .prose{margin-top:34px;max-width:510px;font-size:17px}
+.disclaimer .polaroid{width:min(100%,330px);margin:40px auto 0;transform:rotate(-1deg)}
+.arrow-doodle{position:absolute;left:52%;bottom:110px;width:70px;height:72px;color:var(--brown)}
+
+/* translation */
+.translation .big{font-size:clamp(44px,4.4vw,60px);margin-top:36px}
+.translation .polaroid{width:min(100%,280px);margin:60px 0 0 90px}
+.translation .lead{margin-top:40px;font-size:24px;max-width:560px}
+.translation .prose{margin-top:46px;max-width:590px}
+
+/* method */
+.method .big{font-size:clamp(56px,6.2vw,92px)}
+.method-intro{font-size:18px;line-height:1.45;color:var(--ink);max-width:670px}
+.phase{padding-top:56px;margin-top:80px;border-top:1px solid var(--rule)}
+.phase-no{font-family:var(--mono);font-size:30px;color:var(--ink-60)}
+.phase h2{font-size:clamp(48px,5.6vw,80px);line-height:1.05;margin-top:14px}
+.phase .lead{font-size:clamp(24px,2.1vw,30px)}
+.phase .prose{margin-top:56px;font-size:17px}
+.coda{margin-top:56px;padding-top:44px;border-top:1px solid var(--rule)}
+.coda .lead{font-size:clamp(22px,2.1vw,30px)}
+
+/* machine */
+.machine{grid-column:1/-1;margin-left:clamp(0px,23.6%,340px);margin-top:20px}
+.machine-bar{background:var(--ink);color:var(--paper-2);font-family:var(--mono);letter-spacing:.35em;font-size:15px;text-transform:uppercase;padding:18px 22px}
+.machine-body{position:relative;padding-left:45px;padding-top:24px;display:grid;gap:40px}
+.machine-body::before{content:"";position:absolute;left:14px;top:0;bottom:400px;border-left:1px solid var(--rule)}
+.system{position:relative;border:1px solid var(--ink);border-top:0;background:rgba(243,239,231,.6)}
+.system::before{content:"";position:absolute;left:-31px;top:33px;width:30px;border-top:1px solid var(--rule)}
+.system::after{content:"";position:absolute;left:-34px;top:30px;width:7px;height:7px;border-radius:50%;background:var(--brown)}
+.system-bar{background:var(--ink);color:var(--paper-2);font-family:var(--mono);letter-spacing:.35em;font-size:15px;text-transform:uppercase;padding:20px 22px;margin:0 -1px}
+.cols{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.col{padding:24px 22px 26px;border-left:1px solid var(--rule-soft);position:relative}
+.col:first-child{border-left:0}
+.col h4{font-family:var(--serif);font-weight:400;font-size:22px;letter-spacing:-.01em;margin:0 0 14px;padding-bottom:14px;border-bottom:1px solid var(--brown)}
+.col ul{list-style:none;margin:0;padding:0}
+.col li{padding:12px 0;border-top:1px solid var(--rule-soft);font-size:15px;line-height:1.3}
+.col li:first-child{border-top:0}
+.col li b{display:block;font-weight:500;color:var(--ink);text-transform:capitalize}
+.col li span{color:var(--brown)}
+.col .step{position:absolute;left:-14px;top:26px;width:27px;height:27px;border:1px solid var(--ink);border-radius:50%;background:var(--paper);display:grid;place-items:center;font-size:13px;color:var(--ink)}
+.machine-note{font-family:var(--serif);font-size:clamp(22px,2.1vw,30px);line-height:1.25;color:var(--ink-80);max-width:640px;margin:48px 0 0 clamp(0px,7%,100px)}
+
+/* proof metrics */
+.metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:30px;margin-top:40px;max-width:640px}
+.metrics p.cap{font-family:var(--serif);font-size:19px;line-height:1.25;color:var(--ink-80);min-height:72px}
+.metrics ul{list-style:none;margin:20px 0 0;padding:0;border-top:1px solid var(--rule-soft)}
+.metrics li{font-family:var(--serif);font-size:23px;padding:14px 0;border-bottom:1px solid var(--rule-soft)}
+
+/* build */
+.build{background:linear-gradient(180deg,var(--sage) 0%,rgba(142,156,128,.55) 30%,rgba(243,239,231,0) 62%);padding-top:70px;margin-top:100px}
+.build-inner{max-width:900px;margin:0 auto}
+.build h2{text-align:center;font-size:clamp(52px,5.6vw,80px)}
+.build .intro{text-align:center;font-family:var(--serif);font-size:clamp(22px,2vw,28px);line-height:1.25;max-width:660px;margin:30px auto 0}
+.build .runs{font-family:var(--serif);font-size:clamp(21px,1.9vw,26px);margin-top:80px}
+.table-wrap{overflow-x:auto;margin:20px 0 0 36px}
+table.phases{width:100%;min-width:560px;border-collapse:collapse}
+.phases th{font-family:var(--mono);font-weight:400;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-60);text-align:left;padding:0 0 14px;border-bottom:1.5px solid var(--ink)}
+.phases td{padding:34px 0;border-bottom:1px solid var(--rule-soft);vertical-align:top;font-family:var(--sans);font-size:19px;color:var(--brown);position:relative;letter-spacing:.02em}
+.phases td:first-child{font-family:var(--serif);font-size:30px;color:var(--ink);letter-spacing:-.01em;line-height:1}
+.phases tr td::after{content:"";position:absolute;left:0;right:12%;bottom:-2px;height:4px;background:var(--ink);transform:scaleX(0);transform-origin:left;transition:transform .35s ease}
+.phases tr:hover td::after,.phases tr.on td::after{transform:scaleX(1)}
+.phases tr:last-child td{border-bottom:1.5px solid var(--ink)}
+.total{margin-top:40px;font-size:24px;color:var(--ink)}
+.total b{font-weight:600}
+.build .prose{max-width:860px;margin-top:26px}
+.build h3{font-size:clamp(23px,2vw,28px);line-height:1.25;margin-top:80px;padding-bottom:22px;border-bottom:1px solid var(--rule-soft)}
+.promise{padding:36px 0 46px 32px;border-bottom:1px solid var(--rule-soft)}
+.promise .no{font-family:var(--mono);font-size:16px;color:var(--brown)}
+.promise h4{font-family:var(--serif);font-weight:400;font-size:28px;margin:12px 0 22px}
+.promise p{color:var(--ink-80);max-width:760px}
+.build h3.plain{border:0;margin-top:70px;padding-bottom:0;font-size:28px}
+.build .indent{padding-left:40px;margin-top:22px}
+
+/* case */
+.case{background:var(--ink);color:var(--paper-2);margin-top:90px;padding-block:70px 98px}
+.case .fig{font-family:var(--mono);color:var(--gold);font-size:24px}
+.case h2{font-size:clamp(54px,6.2vw,90px);line-height:1.05;margin-top:20px;color:var(--paper-2)}
+.case .prose{color:rgba(236,234,225,.85);max-width:860px;margin-top:38px}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));margin:90px 0 0;max-width:1260px}
+.stat{padding:0 30px;text-align:left;justify-self:center;max-width:320px}
+.stat + .stat{border-left:1px solid rgba(236,234,225,.25)}
+.stat strong{display:block;font-family:var(--mono);font-weight:400;color:var(--gold);font-size:clamp(50px,6.6vw,96px);line-height:1;letter-spacing:-.04em;font-variant-numeric:tabular-nums;text-align:center}
+.stat span{display:block;margin-top:28px;font-size:17px;line-height:1.4;color:rgba(236,234,225,.9)}
+.case .after{margin-top:90px}
+.actions{display:flex;flex-wrap:wrap;gap:20px 60px;align-items:center;margin-top:56px}
+.btn{display:inline-block;font-family:var(--mono);font-size:17px;letter-spacing:1px;text-transform:uppercase;text-decoration:none;background:var(--forest);color:var(--paper-2);padding:16px 32px;border:0;cursor:pointer;transition:background .2s}
+.btn:hover{background:var(--forest-2)}
+.link-arrow{font-family:var(--mono);font-size:17px;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;color:inherit}
+.link-arrow:hover{text-decoration:underline;text-underline-offset:5px}
+
+/* offers */
+.offers{padding-block:110px 40px}
+.offers > p{font-family:var(--serif);font-size:clamp(24px,2.3vw,33px);line-height:1.3;max-width:960px;padding-left:4px}
+.offer-list{margin-top:56px;border-top:1px solid var(--rule)}
+.offer{display:grid;grid-template-columns:340px minmax(0,1fr) 260px;gap:24px;padding:46px 0 0;align-items:start}
+.offer h3{font-size:clamp(34px,3vw,42px);line-height:1.05;letter-spacing:-.02em}
+.offer p{font-size:17px;max-width:640px}
+.offer p + p{color:var(--brown);margin-top:12px}
+.offer .link-arrow{color:var(--brown);font-size:16px;padding-top:12px}
+
+/* about */
+.about{padding-block:110px 0}
+.about .polaroid{width:min(100%,370px);transform:rotate(-1deg);margin-top:20px}
+.about blockquote{margin:0;font-family:var(--serif);font-size:clamp(26px,2.5vw,34px);line-height:1.3;color:var(--ink);max-width:640px}
+.about .prose{margin-top:44px;font-size:17px;color:var(--ink)}
+.signoff{position:relative;font-size:clamp(32px,3vw,44px);margin-top:46px;display:inline-block;line-height:1.1}
+.signoff svg{position:absolute;overflow:visible;pointer-events:none}
+.byline{display:flex;gap:70px;align-items:flex-start;margin-top:30px;flex-wrap:wrap}
+.byline .mono-label{font-size:17px;letter-spacing:2px}
+.monogram{width:255px;opacity:.95}
+
+/* envelope */
+.envelope-sec{padding-block:20px 110px}
+/* envelope: --B = pocket height, --F = open flap height. JS starts it .sealed (letter tucked in, only its top peeking) and slides the pocket down off the letter when it scrolls into view. */
+.envelope{--B:clamp(230px,30vw,440px);--F:clamp(200px,28vw,420px);position:relative;max-width:1240px;margin:0 auto;overflow:hidden;padding-top:calc(var(--F) * .3);transition:height 1.6s cubic-bezier(.65,0,.25,1)}
+.env-back{position:absolute;left:0;right:0;bottom:0;height:var(--B);background:var(--forest-2);border-radius:0 0 14px 14px}
+.flap{position:absolute;left:0;right:0;bottom:calc(var(--B) - 1px);height:var(--F);background:var(--forest);clip-path:polygon(0 100%,47% 3%,50% 0,53% 3%,100% 100%);transform-origin:bottom;transform:scaleY(var(--flap,1));transition:transform .5s cubic-bezier(.2,.7,.2,1)}
+.letter{position:relative;z-index:2;background:var(--white);max-width:960px;margin:0 auto;padding:clamp(36px,5vw,70px) clamp(22px,8vw,140px) calc(var(--B) * .62);box-shadow:0 -4px 30px rgba(0,0,0,.16)}
+.letter .hand-title{font-size:clamp(40px,4vw,54px)}
+.letter .hand-title svg{left:-70px;width:calc(100% + 110px)}
+.letter .lead{margin-top:56px;font-size:clamp(23px,2.3vw,32px);line-height:1.3}
+.letter .prose{margin-top:32px;font-size:18px;max-width:640px}
+.letter ul{margin:6px 0 0;padding:0;list-style:none;display:grid;gap:14px}
+.letter li{padding-left:28px;position:relative;color:var(--ink-80)}
+.letter li::before{content:"";position:absolute;left:0;top:.55em;width:12px;height:12px;border:1px solid var(--brown);transform:rotate(45deg) scale(.7)}
+.apply{display:flex;flex-wrap:wrap;align-items:center;gap:18px 40px;margin-top:46px}
+.apply .hand{font-size:40px}
+.apply-note{font-family:var(--mono);font-size:13px;color:var(--brown);flex-basis:100%;min-height:1.2em}
+.pocket-wrap{position:absolute;z-index:3;left:0;right:0;bottom:0;height:var(--B);filter:drop-shadow(0 -6px 10px rgba(0,0,0,.28))}
+.pocket{position:absolute;inset:0;background:var(--forest);clip-path:polygon(0 0,50% 46%,100% 0,100% 100%,0 100%);border-radius:0 0 14px 14px}
+.pocket svg{position:absolute;inset:0;width:100%;height:100%}
+.seal{position:absolute;z-index:4;left:50%;top:46%;width:clamp(110px,13vw,180px);transform:translate(-50%,-50%) rotate(var(--seal-r,0deg));transition:transform .6s cubic-bezier(.2,.7,.2,1)}
+.envelope.sealed .seal{--seal-r:-8deg}
+.envelope .flap{--flap:1}
+.envelope.sealed .flap{--flap:.92}
+.open-hint{position:absolute;z-index:5;left:50%;bottom:calc(var(--B) * .12);transform:translateX(-50%);font-family:var(--mono);font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--paper-2);background:none;border:1px solid rgba(236,234,225,.5);padding:10px 18px;cursor:pointer;transition:opacity .4s,background .2s}
+.open-hint:hover{background:rgba(236,234,225,.12)}
+.envelope:not(.sealed) .open-hint{opacity:0;pointer-events:none}
+
+/* footer */
+.site-foot{background:var(--ink);color:var(--paper-2);padding-block:46px}
+.site-foot .wrap{display:flex;justify-content:space-between;align-items:center}
+.site-foot .logo{color:var(--paper-2)}
+.dots{display:flex;gap:16px}.dots i{width:5px;height:5px;border-radius:50%;background:var(--gold)}
+
+/* effects */
+.polaroid{transition:transform .5s cubic-bezier(.2,.7,.2,1),filter .5s}
+.polaroid:hover{transform:translateY(-8px) rotate(1.5deg) scale(1.02);filter:drop-shadow(0 22px 30px rgba(42,36,32,.28));z-index:5}
+.link-arrow{transition:letter-spacing .3s,color .2s}
+.link-arrow:hover{letter-spacing:2.5px}
+.offer{transition:background .3s}
+.offer h3{transition:transform .4s cubic-bezier(.2,.7,.2,1)}
+.offer:hover h3{transform:translateX(10px)}
+.col li{transition:background .25s,padding .25s}
+.col li:hover{background:rgba(197,160,109,.12);padding-left:8px}
+.term{transition:border-color .3s}
+.term:hover{border-top-color:var(--brown)}
+.btn{transition:background .2s,transform .2s,box-shadow .2s}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 18px rgba(0,0,0,.25)}
+/* hand-drawn strokes draw themselves in */
+.ink path{stroke-dasharray:1;stroke-dashoffset:0}
+.fx .ink:not(.drawn) path{stroke-dashoffset:1}
+.fx .ink.drawn path{animation:draw 1.3s cubic-bezier(.6,0,.3,1) both}
+.fx .ink.drawn path:nth-child(2){animation-delay:.35s}
+@keyframes draw{from{stroke-dashoffset:1}to{stroke-dashoffset:0}}
+/* hero entrance */
+.fx .hero h1,.fx .hero .sub{animation:rise .9s cubic-bezier(.2,.7,.2,1) both}
+.fx .hero .sub{animation-delay:.25s}
+.fx .collage .polaroid{animation:drop 1s cubic-bezier(.2,.8,.2,1.05) both}
+.fx .collage .p2{animation-delay:.2s}.fx .collage .p3{animation-delay:.4s}
+@keyframes rise{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+@keyframes drop{from{opacity:0;transform:translateY(-30px) rotate(-6deg) scale(1.05)}to{opacity:1;transform:none}}
+/* scroll reveals: hidden only once JS has confirmed the element is below the fold */
+.fx .reveal.below{opacity:0;transform:translateY(28px)}
+.fx .reveal{transition:opacity .9s cubic-bezier(.2,.7,.2,1),transform .9s cubic-bezier(.2,.7,.2,1)}
+/* machine timeline grows */
+.fx .machine-body::before{transform-origin:top;transform:scaleY(var(--grow,1));transition:transform 1.4s cubic-bezier(.6,0,.3,1)}
+@media (prefers-reduced-motion:reduce){.fx .reveal.below{opacity:1;transform:none}.fx .ink path{stroke-dashoffset:0!important;animation:none!important}.fx *{animation:none!important}}
+
+/* responsive */
+@media (max-width:1100px){
+  .terms{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .terms .hand-title{grid-column:1/-1;margin-top:0;justify-self:start}
+  .offer{grid-template-columns:minmax(0,1fr) minmax(0,1.6fr)}
+  .offer .link-arrow{grid-column:2}
+  .machine{margin-left:0}
+}
+@media (max-width:860px){
+  body{font-size:17px}
+  .hero,.split,.disclaimer{grid-template-columns:minmax(0,1fr)}
+  .collage{justify-self:center;max-width:460px}
+  .terms{grid-template-columns:minmax(0,1fr);gap:28px}
+  .fit .big{position:static;padding-top:0}
+  .fit-row{grid-template-columns:minmax(0,1fr);gap:12px}
+  .fit .lead{margin:60px 0 0}
+  .disclaimer{padding:36px 22px 44px;margin-top:80px}
+  .arrow-doodle{display:none}
+  .translation .polaroid{margin:30px auto 0}
+  .pad{padding-block:80px}
+  .phase{margin-top:50px}
+  .cols{grid-template-columns:minmax(0,1fr)}
+  .col{border-left:0;border-top:1px solid var(--rule-soft)}
+  .col:first-child{border-top:0}
+  .col .step{display:none}
+  .machine-body{padding-left:28px}
+  .machine-body::before{left:6px}
+  .system::before{left:-21px;width:20px}
+  .system::after{left:-25px}
+  .machine-bar,.system-bar{letter-spacing:.18em;font-size:13px}
+  .metrics{grid-template-columns:minmax(0,1fr)}
+  .metrics p.cap{min-height:0}
+  .table-wrap{margin-left:0}
+  table.phases{min-width:0}
+  .phases td{font-size:15px;padding:22px 10px 22px 0}
+  .phases td:first-child{font-size:22px}
+  .promise{padding-left:0}
+  .build .indent{padding-left:0}
+  .stats{grid-template-columns:minmax(0,1fr);gap:46px;margin-top:60px}
+  .stat{padding:0;justify-self:start;max-width:none}
+  .stat + .stat{border-left:0;border-top:1px solid rgba(236,234,225,.25);padding-top:46px}
+  .stat strong{text-align:left}
+  .offer{grid-template-columns:minmax(0,1fr);gap:12px}
+  .offer .link-arrow{grid-column:auto}
+  .about .polaroid{margin:0 auto}
+  .letter .hand-title svg{left:-10px;width:calc(100% + 20px)}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<header class="site-head wrap">
+  <a class="logo" href="#top" id="top">J.K. NOLAN</a>
+  <hr class="rule">
+</header>
+
+<main>
+<section class="wrap hero" aria-labelledby="h-hero">
+  <div>
+    <h1 id="h-hero">Translating <span class="mark">offline expertise<svg class="u1 ink" viewBox="0 0 300 14" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M2 8 C 60 3, 120 12, 180 7 S 270 5, 298 9" fill="none" stroke="#6B4A3A" stroke-width="1.6" stroke-linecap="round"/><path pathLength="1" d="M14 11 C 90 8, 170 13, 286 10" fill="none" stroke="#6B4A3A" stroke-width="1" stroke-linecap="round" opacity=".7"/></svg></span><br>into online <span class="mark">profit<svg class="u2 ink" viewBox="0 0 200 80" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M8 44 C 2 70, 70 84, 130 74 C 180 66, 200 40, 182 24 C 160 6, 70 4, 30 20 C 10 28, 4 40, 20 52 M120 6 C 160 0, 200 8, 210 14" fill="none" stroke="#6B4A3A" stroke-width="1.6" stroke-linecap="round"/></svg></span></h1>
+    <p class="sub">I build digital advertising systems for established experts whose work is genuinely valuable but hard to explain to the people they want to reach.</p>
+  </div>
+  <div class="collage" aria-hidden="false">
+    <figure class="polaroid p1" style="margin:0"><img loading="lazy" src="assets/img/chair.webp" alt="Espresso and an open notebook on a wooden chair in late sun"></figure>
+    <figure class="polaroid p2" style="margin:0"><img loading="lazy" src="assets/img/portrait.webp" alt="James Nolan in a dark suit, leaning on a stone balustrade"></figure>
+    <figure class="polaroid p3" style="margin:0"><img loading="lazy" src="assets/img/study.webp" alt="A study table covered in open books and notes"></figure>
+  </div>
+</section>
+
+<section class="wrap" aria-label="Important terms">
+  <div class="terms">
+    <div class="hand-title hand">Important Terms<svg class="ink" viewBox="0 0 200 14" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M2 12 C 50 4, 120 2, 198 3" fill="none" stroke="#6B4A3A" stroke-width="1.4" stroke-linecap="round"/></svg></div>
+    <div class="term"><h3>First-Principles Advertising:</h3><p>The discipline. A business has a commercial truth—discoverable, not invented.</p></div>
+    <div class="term"><h3>The Authorization Method:</h3><p>The work of revealing that truth, before any money is spent.</p></div>
+    <div class="term"><h3>The Digital Acquisition Machine:</h3><p>The system built to carry it to market. An asset that compounds the longer it runs.</p></div>
+  </div>
+  <hr class="rule">
+</section>
+
+<section class="wrap pad fit" aria-labelledby="h-fit">
+  <div class="split">
+    <h2 class="reveal big" id="h-fit">I can help<br>you if...</h2>
+    <div class="right" style="max-width:none">
+      <div class="fit-rows">
+        <div class="reveal fit-row"><div class="mono-label">You are:</div><div class="prose"><p>An expert who built a genuinely excellent business offline, over years, through reputation, referral, word of mouth, and some organic reach.</p><p>Doing well, with great margins—wealthy in the plain sense, with investments, properties, and passive income behind you.</p><p>Successful, in other words. Not distressed, and not failing.</p></div></div>
+        <div class="reveal fit-row"><div class="mono-label">You want:</div><div class="prose"><p>To get wealthier, to create impact, to cement legacy</p><p>To finally pull the one lever you haven't: digital—a dependable flow of high-quality prospects, real trust built with them, and consistent conversion.</p><p>Online dominance in a market where you're currently offline-only.</p></div></div>
+        <div class="reveal fit-row"><div class="mono-label">You're prudent:</div><div class="prose"><p>You didn't get wealthy making bad bets, and you're not about to start.</p><p>What's held you back from digital is the sound reluctance of a smart person to commit real money to an outcome you can't be sure of.</p><p>You want the odds on your side, and you want to know that when you spend in the market, it makes you money.</p></div></div>
+      </div>
+      <p class="reveal lead">If that's you, within a small margin of error, then I've built a product specifically for you, and you're in exactly the right place.<br><br>But first –</p>
+    </div>
+  </div>
+
+  <div class="reveal disclaimer">
+    <div>
+      <div class="hand-title hand">Important Disclaimer<svg class="ink" viewBox="0 0 200 14" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M2 12 C 50 6, 120 4, 198 2 M 20 13 C 80 10, 150 9, 196 7" fill="none" stroke="#6B4A3A" stroke-width="1.3" stroke-linecap="round"/></svg></div>
+      <p class="lead">If you're selling something that doesn't really work—promising a transformation with nothing beneath it, reselling someone else's expertise as your own, or building an offer to extract money rather than earn it—I won't help you.</p>
+      <div class="prose"><p>In fact, the Method I've created can't help you. It works by revealing what's true about a business. Point it at a fraud and you see a fraud. And since I want no part of that world, your business has to be the real thing— genuine expertise, a real track record of excellence. Because when the substance is there, what the Method produces is extraordinary.</p></div>
+    </div>
+    <figure class="polaroid" style="margin-bottom:0"><img loading="lazy" src="assets/img/pen.webp" alt="A fountain pen resting on a handwritten letter"></figure>
+    <svg class="arrow-doodle ink" viewBox="0 0 70 72" aria-hidden="true"><path pathLength="1" d="M4 4 C 12 30, 30 52, 66 68 M66 68 L 52 66 M66 68 L 60 55" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+  </div>
+</section>
+
+<section class="wrap translation" aria-labelledby="h-trans">
+  <hr class="rule">
+  <div class="split">
+    <div>
+      <h2 class="reveal big" id="h-trans">The Translation<br>Problem</h2>
+      <figure class="polaroid"><img loading="lazy" src="assets/img/books.webp" alt="Open books scattered in raking light"></figure>
+    </div>
+    <div class="right">
+      <p class="reveal lead">Standing between you and those extraordinary results, however, is a problem peculiar to the service business owner with genuine expertise.</p>
+      <div class="prose">
+        <p>Your expertise is what makes you valuable, and it's also what makes you hard to understand. The deeper your expertise, the more difficult the problem.</p>
+        <p>You've never had to bridge that gap, because referral bridged it for you. When someone is sent to you by a person they trust, that trust does the work—you don't have to make a stranger understand why you're their best choice, because someone already vouched that you are. Cold traffic comes with no such introduction. For the first time, you have to make your value clear to someone who arrives knowing nothing about you.</p>
+        <p>This is a translation problem, plainly. Left unsolved, it dooms a campaign before it can launch—if the market can't see that you have what they want, no amount of budget, no targeting hacks, and no production can make up for it.</p>
+        <p>Solving this problem is my business. And it's how I turn near-certain failure into the highest probability that when you spend your money, you make it back and then some.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap pad method" aria-labelledby="h-method" id="method">
+  <div class="split" style="align-items:end">
+    <h2 class="reveal big" id="h-method">The Method</h2>
+    <p class="right method-intro">I do this through a discipline I call First-Principles Advertising, which simply means that everything is built only on what's demonstrably true about your business. The method that bears this out in practice is the Authorization Method—it reveals what's true about your business and translates it for your market in language your buyers will understand. It runs in three phases.</p>
+  </div>
+
+  <article class="phase split" aria-labelledby="h-auth">
+    <div><div class="phase-no">01/</div><h2 id="h-auth">Authorization</h2></div>
+    <div class="right">
+      <p class="lead">This is the first phase, and the most intensive—it demands the most intellectual labor of anything I do, because the goal is to define the entire commercial identity of your business, top to bottom. It's a clarity few firms ever achieve in their entire lifespan.</p>
+      <div class="prose">
+        <p>First, I collect everything there is to know about your business and form my initial hypotheses. Then I come to you for two days in person, and we extract the rest—through careful interviews, observation, and questions no one has yet thought to ask you, and that you've never asked yourself. Then I synthesize all of it into two critical documents.</p>
+        <p>The first is the Persuasion Genome: the essence of your business, declared. The name is deliberate. A genome is the code an entire organism is built from, and this is the code your business is built from. It defines your business more completely than it has ever been defined—its character and its temperament, what you do and how you do it, the pillars of your positioning, the buyers you're for and the ones you aren't, the trajectory you're on— and a good deal more besides. Everything downstream refers back to it, derives its authority from it, and cannot contradict it. It is your constitution. And it rests on the foundational premise of First-Principles Advertising—that every business of real substance has a distinct commercial identity that must be revealed and cannot be invented.</p>
+        <p>The second document emerges from the first. Where the Genome is the permanent, enduring truth of your business, the Strategic Blueprint is the strategy for bringing that truth to market now. It studies and captures the market as it stands today—the desires of your prospects, the conditions and surfaces where we need to meet them, and the best instrument for converting them into customers. It then lays out exactly how we translate your essence into that market to answer those desires, and sets the Standard of Proof the plan will meet when it collides with the market.</p>
+      </div>
+      <div class="coda"><p class="lead">That Standard is a number I write down and sign my name to before a dollar is spent. I can do this because nothing downstream is a guess. What we build is Authorized by the Blueprint, the Blueprint by the Genome—so when it reaches its intended market, everything it accomplishes there was already predetermined the moment we declared your essence.</p></div>
+    </div>
+  </article>
+
+  <article class="phase split" aria-labelledby="h-cons">
+    <div><div class="phase-no">02/</div><h2 id="h-cons">Construction</h2></div>
+    <div class="right"><p class="lead">This is where we execute on everything the Blueprint specifies—the phase where the Machine is actually built. It comes together across three systems at once: the creative that carries your translated expertise to market, the brand and web presence that gives it a modern home, and the systems and intelligence that run the whole operation. A business that has never advertised online has almost none of this. By the end of Construction, you have all of it.</p></div>
+
+    <div class="machine">
+      <div class="machine-bar">The Digital Acquisition Machine</div>
+      <div class="machine-body">
+        <div class="reveal system">
+          <div class="system-bar">The Creative Suite</div>
+          <div class="cols">
+            <div class="col"><h4>Professional Production</h4><ul><li><b>Two to three full shoot days</b></li><li><b>Cinema-grade Sony FX6 cameras</b></li><li><b>Professional lighting and audio</b></li><li><b>On-site directorship</b></li><li><b>Every word scripted for seamless teleprompter delivery</b></li></ul></div>
+            <div class="col"><span class="step" aria-hidden="true">→</span><h4>Video Sales Assets</h4><ul><li><b>Video sales letters</b><span>Sell and pre-qualify, so the people who continue are already leaning in</span></li><li><b>Due-diligence content</b><span>Answers the critical objections while the buyer is most consumptive, before they ever reach you</span></li><li><b>Nurture &amp; trust assets</b><span>Keep prospects warm, reinforce belief, and surface other customers' perspectives</span></li></ul></div>
+            <div class="col"><span class="step" aria-hidden="true">→</span><h4>The Creative Library</h4><ul><li><b>60+ professionally produced video ads</b><span>Sufficient volume for multiple full testing cycles</span></li><li><b>Full creative messaging matrix</b><span>Rapid, iterative testing across every key buyer segment in your Genome</span></li></ul></div>
+          </div>
+        </div>
+        <div class="reveal system">
+          <div class="system-bar">Brand &amp; Web Presence</div>
+          <div class="cols">
+            <div class="col"><h4>Brand Modernization</h4><ul><li><b>Updated logo suite</b></li><li><b>Upgraded color palette</b></li><li><b>Refined typography</b></li><li><b>Complete brand guidelines</b></li></ul></div>
+            <div class="col"><h4>Authoritative Web Presence</h4><ul><li><b>4–5 page authoritative microsite</b><span>Where your translated expertise lives</span></li><li><b>Built on an architecture drawn from your market analysis</b></li><li><b>Optimized for speed and discoverability</b></li></ul></div>
+            <div class="col"><h4>Conversion Funnel</h4><ul><li><b>Dedicated pages optimized for cold traffic conversion</b></li><li><b>Built-in application</b><span>Qualifies cold traffic at the door and keeps your data pure</span></li><li><b>Native scheduling</b><span>Maximizes your qualified-lead-to-booking ratio</span></li></ul></div>
+          </div>
+        </div>
+        <div class="reveal system">
+          <div class="system-bar">Systems &amp; Intelligence</div>
+          <div class="cols">
+            <div class="col"><h4>Custom Operational Core</h4><ul><li><b>Custom CRM &amp; pipeline build</b><span>Your entire sales operation, architected to how your business actually works</span></li><li><b>Third-party integrations</b><span>Wired into the tools, vendors, and fulfillment systems your operation depends on</span></li><li><b>AI &amp; automation layer</b><span>Intelligent routing and workflow that runs the operation with minimal hand-holding</span></li><li><b>Lifecycle management</b><span>Every prospect tracked, scored, nurtured, and re-engaged from first touch to close</span></li></ul></div>
+            <div class="col"><h4>Tracking &amp; Analytics</h4><ul><li><b>Custom conversion tracking</b><span>Institutional-grade data fed back to the ad platform, so it finds more buyers like your best ones</span></li><li><b>Full-surface analytics</b><span>Every touchpoint across your digital footprint, from the first ad</span></li></ul></div>
+            <div class="col"><h4>Compliance Access</h4><ul><li><b>Whitelisted ad account for restricted categories</b><span>Finance, health, and adjacent</span></li><li><b>Removes the compliance friction that stops most advertisers cold</b></li><li><b>Access that takes years to earn, held by very few</b></li></ul></div>
+          </div>
+        </div>
+      </div>
+      <p class="reveal machine-note">This is the complete inventory of your Digital Acquisition Machine, and every component is tailor-made for your business. When it's finished, you can hold it up against the Strategic Blueprint and inspect it, item by item. Everything will match, one to one—every piece present and traceable, through the Blueprint, to your Persuasion Genome.</p>
+    </div>
+  </article>
+
+  <article class="phase split" aria-labelledby="h-proof">
+    <div><div class="phase-no">03/</div><h2 id="h-proof">Proof</h2></div>
+    <div class="right">
+      <p class="lead" style="font-size:clamp(22px,1.9vw,26px)">Now built, the Digital Acquisition Machine must prove itself against the Standard set forth in the Blueprint.</p>
+      <div class="prose" style="margin-top:36px"><p>The Standard is a sensitivity analysis—a range of modeled scenarios, from conservative to optimal, every one of them projected against what your business needs to profit, given its costs, its baselines, and its ad spend. Wherever performance lands in that range, the result is profitable and sustainable by design. Each scenario is measured across a thirty-day period, against the metrics that determine profitability for your type of business:</p></div>
+      <div class="reveal metrics">
+        <div><p class="cap">For businesses with short sales cycles, where revenue is measurable inside the thirty-day period:</p><ul><li>Cost per booked call</li><li>Revenue</li><li>ROAS</li></ul></div>
+        <div><p class="cap">For businesses with long sales cycles, where deals take months to close and collected revenue is a lagging indicator, we measure:</p><ul><li>Cost per booked call</li><li>Committed pipeline value</li><li>Projected ROAS</li></ul></div>
+      </div>
+      <div class="coda"><p class="lead">My commitment inside this thirty-day window, before there is any further discussion of ongoing management, is to prove the Machine's path to profitability. Proof is achieved when performance lands at or above the conservative scenario—the floor of the range, and still a genuinely profitable result. It is the least the Machine will do.</p></div>
+    </div>
+  </article>
+</section>
+
+<section class="build" aria-labelledby="h-build" id="build">
+  <div class="wrap"><div class="build-inner">
+    <h2 id="h-build">The Build</h2>
+    <p class="intro">For the business owner whose expertise is vast and difficult to explain, the Method, the Machine, and the Proof I've described are delivered through a single engagement. I call it the Build.</p>
+    <p class="runs">It runs in the three phases you've just seen, on a fixed schedule and a fixed investment:</p>
+    <div class="reveal table-wrap">
+      <table class="phases">
+        <thead><tr><th scope="col" style="width:35%">Phase</th><th scope="col" style="width:33%">Timeline</th><th scope="col">Investment</th></tr></thead>
+        <tbody>
+          <tr class="on"><td>Authorization</td><td>30 days</td><td>$40,000, at signing</td></tr>
+          <tr><td>Construction</td><td>60 days</td><td>$80,000</td></tr>
+          <tr><td>Proof</td><td>30 days</td><td>Included — plus $30,000 in ad spend, funded directly to the platform</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="total"><b>$150,000 total</b> — $120,000 in fees, $30,000 in ad spend.</p>
+    <div class="prose"><p>Ninety days to build the Machine, thirty to prove it. One hundred and twenty days from signing to the point where you decide whether to continue—by which time you've already watched the Machine clear the Standard set out in the Strategic Blueprint.</p></div>
+
+    <h3>Before I offer an important note on the timeline, let me address two things I think you'll appreciate.</h3>
+    <div class="reveal promise"><div class="no">01/</div><h4>First, Proof is included.</h4><p>I don't charge to manage the Machine through the period where I prove that it works. My intention is that you see the results for yourself before venturing any further commitment.</p></div>
+    <div class="reveal promise"><div class="no">02/</div><h4>Second, after Authorization,</h4><p>if the Persuasion Genome and the Strategic Blueprint aren't everything I've promised, you have the option to walk away. You can end it there, and you're not bound to continue.</p></div>
+
+    <h3 class="plain">On the timeline</h3>
+    <div class="prose indent">
+      <p>Others will offer to build and launch you a "funnel" in two weeks. I take ninety days to build a Digital Acquisition Machine, and that's because of what's being built, and because of the order of the work.</p>
+      <p>You've seen the inventory—a custom Machine, engineered from your own Genome, not a series of templates with your logo dropped on.</p>
+      <p>You can find an agency who'll give you a fourteen-day guarantee, but then they'll ask you for a ninety-day minimum to go out and spend your money through trial and error to possibly generate a result. I reverse the equation. Instead of burning your budget in the marketplace for ninety days, I spend that same time Authorizing your company, translating that truth into a strategy for today's market, and constructing the Machine to spec—so that when we start advertising, we approach it with the highest probability of success, committed to clearing a threshold of definitive Proof inside a thirty-day window.</p>
+    </div>
+    <h3 class="plain">After Proof</h3>
+    <div class="prose indent"><p>If the Machine has cleared its Standard and you want to continue, the engagement becomes an ongoing partnership: a monthly retainer and a share of the revenue the Machine produces. We discuss those terms when the time comes—once you've seen exactly what you'd be continuing.</p></div>
+  </div></div>
+</section>
+
+<section class="case" aria-labelledby="h-case" id="case-study">
+  <div class="wrap">
+    <div class="fig">Fig 01 / Case Study</div>
+    <h2 id="h-case">AAI Financial Group</h2>
+    <div class="prose"><p>AAI Financial is a commercial lending advisory firm with nine years of track record, $526M closed, and an analytical operation of depth and sophistication—yet none of it was visible to anyone who hadn't already worked with them. Here is a complete look at what happened in the first thirty days after the Authorization Method made its expertise legible to the firm's ideal prospects.</p></div>
+    <div class="stats">
+      <div class="reveal stat"><strong data-count="146" data-fmt="$#">$146</strong><span>cost per booked call, against a $500 standard set in advance</span></div>
+      <div class="reveal stat"><strong data-count="394" data-fmt="#m">394m</strong><span>committed pipeline generated on $28K of ad spend, in 30 days</span></div>
+      <div class="reveal stat"><strong data-count="1.68" data-fmt="$#m" data-dec="2">$1.68m</strong><span>average deal size, matching the firm's own historical average</span></div>
+    </div>
+    <div class="prose after"><p>The firm had never advertised. On a brand-new ad account, under Special Ad Category rules that force the broadest targeting the platform allows, the creative was precise enough to bring in the exact borrower the firm had spent years earning by referral.</p></div>
+    <div class="actions"><a class="btn" href="#case-study">View Case Study</a><a class="link-arrow" href="#offers">→ Explore the full body of work</a></div>
+  </div>
+</section>
+
+<section class="wrap offers" aria-label="Ways to work together" id="offers">
+  <p>In addition to the Build, there are two further ways to put the Authorization Method to work—each adapted to a different kind of business and situation.</p>
+  <div class="offer-list">
+    <div class="reveal offer"><h3>The Build</h3><div><p>For the expert who built their business through reputation and referral.</p><p>You're ready to bring it online seriously for the first time.</p></div><a class="link-arrow" href="#build">→ Explore the Build</a></div>
+    <div class="reveal offer"><h3>The Symphony</h3><div><p>For the organization where every sale depends on a constellation of decision-makers.</p><p>You need to translate your whole business across multiple psychological profiles to persuade them all.</p></div><a class="link-arrow" href="#offers">→ Explore the Symphony</a></div>
+    <div class="reveal offer"><h3>The Atomic<br>Creative Index</h3><div><p>The crowning application of the Method, for the business already advertising at scale.</p><p>You need an inexhaustible source of Authorized creative that never runs dry.</p></div><a class="link-arrow" href="#offers">→ Explore the Index</a></div>
+  </div>
+</section>
+
+<section class="wrap about" aria-label="About James Nolan">
+  <div class="split">
+    <figure class="polaroid"><img loading="lazy" src="assets/img/james.webp" alt="James Nolan lighting a cigar on a terrace among cypress trees"></figure>
+    <div class="right">
+      <blockquote class="reveal">"If I had to say, the funniest thing about this strange life of mine is that the money and success I've been able to drive for my clients has almost nothing to do with marketing at all. It has to do with the life I lived before I ever stepped into the world of business— and a skill set I developed that few people inside this world possess.</blockquote>
+      <div class="prose">
+        <p>Start with the thinking. From the ages of sixteen to eighteen, before I ever set foot in a university, I studied more philosophy—the whole history of it, Plato through Aristotle, the Hellenists, Locke and Hume and Berkeley, Kant, Nietzsche, Kierkegaard—than most people study in four years of the subject at university. And what is philosophy, if not the exploration of every possibility? Which is exactly the work of bringing a business to market: explore every possibility, narrow to the best, and go to work.</p>
+        <p>Then history—my focus at university, medieval history and Christianity. History forces you to reconstruct the past from fragmentary evidence, through deep analytical work. And what is that, if not Authorization? I walk into a business, I gather the fragments, I reconstruct the truth. History teaches you one more thing, too, and it's very important: the discipline of suspending judgment to understand people as they were, as they are, not as you wish they had been. That sounds a lot like copywriting, doesn't it? And that's messaging. That's understanding your buyer. History taught me to understand people on their own terms.</p>
+        <p>And music—the great love of my life. Music is a language of its own, the communication of emotion beneath the words, something primal, something near divine. Because persuasion isn't only analytical. It lives in resonance, in rhythm, in the non-rational register where buying decisions are actually made.</p>
+      </div>
+      <p class="reveal signoff hand">That's what it's <span style="position:relative;display:inline-block">all about.<svg class="ink" viewBox="0 0 100 10" preserveAspectRatio="none" style="left:0;bottom:-4px;width:100%;height:8px" aria-hidden="true"><path pathLength="1" d="M2 6 C 30 9, 70 3, 98 5" fill="none" stroke="#6B4A3A" stroke-width="1.4" stroke-linecap="round"/></svg></span> And that's <span style="position:relative;display:inline-block">who I am."<svg class="ink" viewBox="0 0 120 50" preserveAspectRatio="none" style="left:-10%;top:-8%;width:120%;height:125%" aria-hidden="true"><path pathLength="1" d="M10 14 C 2 30, 40 44, 80 40 C 116 36, 124 18, 100 10 C 76 2, 30 4, 12 14 M 40 42 C 70 48, 96 50, 110 48" fill="none" stroke="#6B4A3A" stroke-width="1.3" stroke-linecap="round"/></svg></span></p>
+      <div class="byline"><div class="mono-label">— James Nolan</div><img loading="lazy" class="reveal monogram" src="assets/img/monogram.webp" alt="J.K. Nolan monogram"></div>
+    </div>
+  </div>
+</section>
+
+<section class="wrap envelope-sec" aria-labelledby="h-contact" id="apply">
+  <div class="envelope">
+    <div class="env-back" aria-hidden="true"></div>
+    <div class="flap" aria-hidden="true"></div>
+    <div class="letter">
+      <h2 class="hand-title hand" id="h-contact">Here's how to get in touch...<svg class="ink" viewBox="0 0 300 14" preserveAspectRatio="none" aria-hidden="true"><path pathLength="1" d="M2 12 C 80 6, 200 4, 298 3" fill="none" stroke="#6B4A3A" stroke-width="1.3" stroke-linecap="round"/></svg></h2>
+      <p class="lead">I refuse to scale this into a commodity. There are parts of this work—the Authorization above all—that I'll never delegate, because they're mine to do. That puts a fixed cap on how many engagements I can take in a given month without the quality suffering.</p>
+      <div class="prose">
+        <p>So before you apply, let me be clear about whom this is for. I work with businesses of genuine substance—real expertise, a real track record—the kind the Method was built to reveal. And the engagement asks a few things of you in return:</p>
+        <ul>
+          <li>You show up fully for the on-site intensive and the shoot days.</li>
+          <li>You provide what I need, when I ask for it.</li>
+          <li>You hold to a 24-hour response window through the build—the same standard I hold myself to with you.</li>
+          <li>You're in a position to make a six-figure investment comfortably.</li>
+        </ul>
+        <p>If that's you, here's what to do next. Press the button below to begin your application. I'll ask you a series of questions to establish whether we're a fit. If we are, you'll be invited to book a call—and if we're right for each other, we'll begin the Authorization process.</p>
+      </div>
+      <div class="apply">
+        <button class="btn" type="button" id="apply-btn">Begin your application</button>
+        <span class="hand">talk to you soon...</span>
+        <p class="apply-note" id="apply-note" aria-live="polite"></p>
+      </div>
+    </div>
+    <button class="open-hint" type="button" id="open-letter" hidden>Open the letter</button>
+    <div class="pocket-wrap" aria-hidden="true">
+      <div class="pocket"><svg viewBox="0 0 1000 300" preserveAspectRatio="none"><path d="M0 300 L500 138 L1000 300" fill="none" stroke="rgba(0,0,0,.3)" stroke-width="1.2" vector-effect="non-scaling-stroke"/></svg></div>
+      <img class="seal" src="assets/img/seal.webp" alt="">
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="site-foot">
+  <div class="wrap"><a class="logo" href="#top">J.K. NOLAN</a><div class="dots" aria-hidden="true"><i></i><i></i></div></div>
+</footer>
+
+<script>
+(function(){
+  var root=document.documentElement, reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+  root.classList.add('fx');
+  var vh=function(){return innerHeight||800};
+  /* reveals + ink: hide only what is below the fold right now */
+  var reveals=[].slice.call(document.querySelectorAll('.reveal'));
+  var inks=[].slice.call(document.querySelectorAll('.ink'));
+  reveals.forEach(function(el){ if(el.getBoundingClientRect().top>vh()*0.92) el.classList.add('below'); });
+  var io=new IntersectionObserver(function(es){es.forEach(function(e){ if(!e.isIntersecting) return;
+    var el=e.target; el.classList.remove('below'); el.classList.add('drawn');
+    if(el.dataset.count) countUp(el);
+    if(el.classList.contains('machine-body')) el.style.setProperty('--grow',1);
+    if(el.classList.contains('envelope')) openLetter();
+    io.unobserve(el); });},{rootMargin:'0px 0px -12% 0px',threshold:0});
+  reveals.forEach(function(el){io.observe(el)});
+  inks.forEach(function(el){io.observe(el)});
+  /* stagger siblings */
+  ['.fit-row','.system','.promise','.stat','.offer'].forEach(function(s){[].forEach.call(document.querySelectorAll(s),function(el,i){el.style.transitionDelay=(i%3)*0.12+'s'})});
+  /* machine timeline */
+  var mb=document.querySelector('.machine-body'); if(mb && mb.getBoundingClientRect().top>vh()){mb.style.setProperty('--grow',0); io.observe(mb);}
+  /* stat count-up */
+  function countUp(el){ if(reduce) return; var to=parseFloat(el.dataset.count), dec=+(el.dataset.dec||0), fmt=el.dataset.fmt, t0=null;
+    function f(t){ if(!t0)t0=t; var p=Math.min(1,(t-t0)/1400), e=1-Math.pow(1-p,3);
+      el.textContent=fmt.replace('#',(to*e).toFixed(dec)); if(p<1) requestAnimationFrame(f); }
+    requestAnimationFrame(f); }
+  [].forEach.call(document.querySelectorAll('[data-count]'),function(el){ if(el.getBoundingClientRect().top>vh()) io.observe(el); });
+  /* build table */
+  var rows=document.querySelectorAll('.phases tbody tr');
+  rows.forEach(function(r){r.addEventListener('mouseenter',function(){rows.forEach(function(x){x.classList.remove('on')});r.classList.add('on')});});
+  /* envelope: tuck the letter in, slide the pocket down when it arrives */
+  var env=document.querySelector('.envelope'), letter=env.querySelector('.letter'), hint=document.getElementById('open-letter'), opened=false;
+  function sealedHeight(){ var B=env.querySelector('.pocket-wrap').offsetHeight, top=parseFloat(getComputedStyle(env).paddingTop); return Math.round(top + Math.min(letter.offsetHeight, B*0.55 + Math.max(260, B*0.9)) ); }
+  function openLetter(){ if(opened) return; opened=true; env.classList.remove('sealed');
+    env.style.height=(env.scrollHeight)+'px';
+    var done=function(){env.style.height='';}; if(reduce){done();} else setTimeout(done,1700); }
+  if(env.getBoundingClientRect().top>vh()*0.5 && !reduce){
+    env.classList.add('sealed'); env.style.height=sealedHeight()+'px'; hint.hidden=false;
+    var io2=new IntersectionObserver(function(es){ if(es[0].intersectionRatio>=0.6 || es[0].boundingClientRect.top<vh()*0.35){ setTimeout(openLetter,700); io2.disconnect(); } },{threshold:[0,0.3,0.6,1]});
+    io2.observe(env);
+    hint.addEventListener('click',openLetter);
+    addEventListener('resize',function(){ if(!opened) env.style.height=sealedHeight()+'px'; });
+  }
+  /* apply */
+  var b=document.getElementById('apply-btn'),n=document.getElementById('apply-note');
+  b.addEventListener('click',function(){n.textContent='The application form connects here (e.g. your GoHighLevel survey link).';});
+})();
+</script>
+</body>
+</html>
