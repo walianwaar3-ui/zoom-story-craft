@@ -60,6 +60,10 @@ p{margin:0 0 1.1em}
 .confirm-card h2{font-family:var(--sans);font-size:1.15rem;font-weight:700;margin:0 0 4px}
 .confirm-card p{margin:0;font-size:.95rem}
 .confirm-card b{color:var(--ivory)}
+.next-up{list-style:none;padding:12px 0 0;margin:12px 0 0;border-top:1px solid rgba(95,207,151,.2);display:grid;gap:8px;font-size:.92rem}
+.next-up li{display:flex;gap:10px;align-items:flex-start}
+.next-up svg{flex:0 0 18px;width:18px;height:18px;margin-top:3px;color:#5fcf97}
+.next-up a{color:var(--gold-2);font-weight:600;white-space:nowrap}
 
 /* Hero */
 .hero{position:relative;padding:56px 0 30px;text-align:center;overflow:hidden;isolation:isolate}
@@ -165,6 +169,8 @@ footer{border-top:1px solid var(--line);padding:32px 0 48px;font-size:.82rem;col
 <body>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+<symbol id="wa" viewBox="0 0 24 24"><path d="M12 3a9 9 0 00-7.8 13.5L3 21l4.6-1.2A9 9 0 1012 3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.6 8.2c.2-.5.5-.5.8-.5h.5c.2 0 .4 0 .6.5l.7 1.6c.1.2 0 .4-.1.6l-.5.6c-.1.1-.2.3 0 .5.5.8 1.1 1.4 1.9 1.9.2.1.4.1.5 0l.6-.6c.2-.2.4-.2.6-.1l1.6.7c.4.2.4.3.4.5 0 .6-.3 1.4-1.1 1.7-.7.3-1.9.3-3.7-.8-1.9-1.2-3-3-3.3-3.7-.4-.9-.3-1.9.1-2.4z" fill="currentColor"/></symbol>
   <symbol id="check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
   <symbol id="play" viewBox="0 0 24 24"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></symbol>
   <symbol id="arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
@@ -186,7 +192,11 @@ footer{border-top:1px solid var(--line);padding:32px 0 48px;font-size:.82rem;col
       <span class="confirm-ic"><svg aria-hidden="true"><use href="#check"/></svg></span>
       <div>
         <h2>Payment received. Your seat is confirmed.</h2>
-        <p>Welcome to <b>Infinite Rizq</b>. Your receipt is on its way to your email. Save the date: <b>Saturday, 17 October 2026 · Lahore</b>. Event details will be sent to you on WhatsApp.</p>
+        <p>Welcome to <b>Infinite Rizq</b>. Your receipt is on its way to your email. Save the date: <b>Saturday, 17 October 2026 · 12 PM to 4 PM · Expo Center Lahore</b>.</p>
+        <ul class="next-up">
+          <li><svg aria-hidden="true"><use href="#clock"/></svg><span>Your <b>ticket and event details</b> will be sent to your WhatsApp <b>within 12 to 24 hours</b>.</span></li>
+          <li><svg aria-hidden="true"><use href="#wa"/></svg><span>Not received it, or any issue? WhatsApp our Event Coordinator <b>Wali Anwaar</b>: <a href="https://wa.me/13322332380?text=Assalam%20o%20Alaikum%20Wali%2C%20I%20just%20paid%20for%20Infinite%20Rizq%20and%20need%20help%20with%20my%20ticket." target="_blank" rel="noopener" data-track="cta_whatsapp_confirm">+1 (332) 233-2380</a></span></li>
+        </ul>
       </div>
     </div>
   </div>
