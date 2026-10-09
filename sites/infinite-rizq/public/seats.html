@@ -14,8 +14,8 @@
   SEAT PICKER: infiniterizq.com/seats?t=<pass token>
   Each paid ticket gets a private link (a row in Supabase ir_seat_passes). The page shows
   Auditorium 2 (9 rows x 22 seats = 198) and lets the holder pick seats in their tier's zone:
-  Inner Table = Row A (16 seats, 6 reserved at the ends), General + Pair Pass = Rows B to F,
-  Back tier = Rows G to I. Rules are enforced by ir_claim_pass() in the database.
+  Inner Table = Row A (16 seats, 6 reserved at the ends), General + Pair Pass = Rows B to G,
+  Back tier = Rows H and I. Rules are enforced by ir_claim_pass() in the database.
   Confirming issues the seat pass instantly and it is final: changes go through the coordinator on WhatsApp.
 -->
 <style>
@@ -121,10 +121,10 @@ footer a{color:var(--gold-2)}
 
     <div id="choose" hidden>
       <div class="tiers">
-        <button class="tier" type="button" data-tier="general"><b>General Admission</b><span class="pr">PKR 11,111</span><small>1 seat · Rows B to F</small></button>
-        <button class="tier" type="button" data-tier="pair"><b>Pair Pass</b><span class="pr">PKR 15,555</span><small>2 seats side by side · Rows B to F</small></button>
+        <button class="tier" type="button" data-tier="general"><b>General Admission</b><span class="pr">PKR 11,111</span><small>1 seat · Rows B to G</small></button>
+        <button class="tier" type="button" data-tier="pair"><b>Pair Pass</b><span class="pr">PKR 15,555</span><small>2 seats side by side · Rows B to G</small></button>
         <button class="tier" type="button" data-tier="inner"><b>Inner Table</b><span class="pr">PKR 33,333</span><small>1 seat · Row A, front row</small></button>
-        <button class="tier" type="button" data-tier="back"><b>Back Rows</b><span class="pr">PKR 5,500</span><small>1 seat · Rows G to I</small></button>
+        <button class="tier" type="button" data-tier="back"><b>Back Rows</b><span class="pr">PKR 5,500</span><small>1 seat · Rows H and I</small></button>
       </div>
       <p class="hint" style="margin-top:18px;font-size:.88rem">Already picked your seat? <a href="/my-seat" style="color:var(--gold-2)">See your seat pass</a></p>
     </div>
@@ -176,7 +176,7 @@ var token = new URLSearchParams(location.search).get('t') || '';
 var ROWS = ['A','B','C','D','E','F','G','H','I'];
 var TIER = { inner: 'Inner Table', general: 'General Admission', pair: 'Pair Pass', back: 'Back Rows' };
 var ZONE_OF = { inner: 'inner', general: 'mid', pair: 'mid', back: 'back' };
-var ZONE_TEXT = { inner: 'Row A, the front row nearest the stage', mid: 'Rows B to F', back: 'Rows G to I' };
+var ZONE_TEXT = { inner: 'Row A, the front row nearest the stage', mid: 'Rows B to G', back: 'Rows H and I' };
 var OPEN = !token;
 var WA = '13322332380';
 var state = { pass: null, seats: [], mine: [], picked: [], locked: false };

