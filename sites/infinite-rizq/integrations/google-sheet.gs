@@ -20,6 +20,8 @@ function doPost(e) {
   try { body = JSON.parse(e.postData.contents); } catch (err) { return reply({ ok: false, error: 'bad json' }); }
   if (!body || body.secret !== SECRET) return reply({ ok: false, error: 'unauthorized' });
 
+  if (body.type === 'kpis') return reply({ ok: true, data: salesKpis() });
+
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
   try {
@@ -38,6 +40,33 @@ function doPost(e) {
   } finally {
     lock.releaseLock();
   }
+}
+
+// Sales sanity metrics for the /dashboard, read straight from the Tickets tab.
+// Only rows with Payment Verified = Yes count as sold.
+function salesKpis() {
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  const rows = ss.getSheetByName('Tickets').getDataRange().getValues().slice(1);
+  const tiers = {
+    'General': { bookings: 0, seats: 0, revenue: 0 },
+    'Pair Pass': { bookings: 0, seats: 0, revenue: 0 },
+    'Inner Table': { bookings: 0, seats: 0, revenue: 0 },
+  };
+  const k = { bookings: 0, seats: 0, revenue: 0, pending: 0, notIssued: 0, checkedIn: 0, tiers: tiers };
+  rows.forEach(function (r) {
+    if (!String(r[2]).trim()) return; // no name, unused ticket ID
+    const verified = String(r[11]).trim();
+    if (verified !== 'Yes') { if (verified !== 'No') k.pending++; return; }
+    const seats = Number(r[4]) || 1, amount = Number(r[9]) || 0, t = tiers[String(r[3]).trim()];
+    k.bookings++; k.seats += seats; k.revenue += amount;
+    if (t) { t.bookings++; t.seats += seats; t.revenue += amount; }
+    if (String(r[12]).trim() !== 'Yes') k.notIssued++;
+    if (String(r[14]).trim() === 'Yes') k.checkedIn += seats;
+  });
+  const apps = ss.getSheetByName('Mastermind Applications');
+  k.applications = apps ? Math.max(0, apps.getLastRow() - 1) : 0;
+  k.asOf = new Date().toISOString();
+  return k;
 }
 
 function reply(obj) {

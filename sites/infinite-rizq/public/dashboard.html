@@ -74,6 +74,9 @@ main{padding:18px 0 60px}
 .kpi .val{font-family:var(--serif);font-size:2rem;font-weight:600;color:var(--ivory);line-height:1.15;margin-top:6px}
 .kpi .ctx{font-size:.8rem;color:var(--text);margin-top:4px}
 .kpi .ctx b{color:var(--gold-2);font-weight:600}
+.kpi.warn{border-color:rgba(224,162,74,.5);background:linear-gradient(180deg,rgba(224,162,74,.12),var(--card) 70%)}
+.kpi.warn .val{color:var(--warn)}
+.sec-title small{font-family:var(--sans);font-size:.74rem;font-weight:500;letter-spacing:.04em;color:var(--muted);margin-left:8px}
 .kpi.hl{border-color:rgba(212,167,58,.4);background:linear-gradient(180deg,rgba(212,167,58,.10),var(--card) 70%)}
 
 /* Bars */
@@ -169,6 +172,10 @@ td:first-child{color:var(--ivory)}
   <p class="status" id="status" aria-live="polite">Loading…</p>
 
   <main class="wrap">
+    <h2 class="sec-title">Sales<small>Live from the ticket sheet · all time · verified payments only</small></h2>
+    <div class="grid kpis" id="sales"></div>
+
+    <h2 class="sec-title">Funnel<small>Selected date range</small></h2>
     <div class="grid kpis" id="kpis"></div>
 
     <h2 class="sec-title">Traffic over time</h2>
@@ -317,7 +324,7 @@ function load(key){
     .then(function(res){
       if (res.status === 401) { if (!$('app').hidden) { forget(); location.reload(); } return false; }
       if (!res.body.ok) { $('status').textContent = res.body.error || 'Could not load analytics.'; return true; }
-      state.key = key; state.data = res.body.data;
+      state.key = key; state.data = res.body.data; state.sales = res.body.sales || null;
       $('gate').hidden = true; $('app').hidden = false;
       render(state.data);
       return true;
@@ -336,7 +343,7 @@ $('refresh').addEventListener('click', function(){ load(state.key); });
 
 // ---------- Rendering ----------
 function kpi(label, value, ctx, hl){
-  return '<div class="card kpi' + (hl ? ' hl' : '') + '"><div class="lbl">' + label + '</div><div class="val tnum">' + value + '</div><div class="ctx">' + (ctx || '&nbsp;') + '</div></div>';
+  return '<div class="card kpi' + (hl === 'warn' ? ' warn' : hl ? ' hl' : '') + '"><div class="lbl">' + label + '</div><div class="val tnum">' + value + '</div><div class="ctx">' + (ctx || '&nbsp;') + '</div></div>';
 }
 function bars(el, rows, opts){
   opts = opts || {};
@@ -352,7 +359,28 @@ function bars(el, rows, opts){
   }).join('');
 }
 
+var CAPACITY = { seats: 200, inner: 15 };
+function renderSales(s){
+  if (!s) {
+    $('sales').innerHTML = '<div class="card empty" style="grid-column:1/-1">Sales numbers are not connected yet. Update the Apps Script in the ticket sheet with the latest version from the repo and deploy a new version.</div>';
+    return;
+  }
+  var tr = s.tiers || {}, g = tr['General'] || {}, p = tr['Pair Pass'] || {}, inn = tr['Inner Table'] || {};
+  var innerSold = inn.seats || 0;
+  $('sales').innerHTML = [
+    kpi('Seats sold', fmt(s.seats), '<b>' + fmt(Math.max(0, CAPACITY.seats - s.seats)) + '</b> left of ' + CAPACITY.seats + ' · ' + fmt(s.bookings) + ' bookings', true),
+    kpi('Revenue verified', 'PKR ' + fmt(s.revenue), 'payments marked Verified in the sheet', true),
+    kpi('Ticket not issued yet', fmt(s.notIssued), s.notIssued ? 'paid and verified, still waiting for a ticket' : 'every verified buyer has a ticket', s.notIssued > 0 ? 'warn' : false),
+    kpi('Pending verification', fmt(s.pending), s.pending ? 'payments to confirm before issuing' : 'nothing waiting', s.pending > 0 ? 'warn' : false),
+    kpi('General', fmt(g.bookings || 0), fmt(g.seats || 0) + ' seats · PKR ' + fmt(g.revenue || 0)),
+    kpi('Pair Pass', fmt(p.bookings || 0), fmt(p.seats || 0) + ' seats · PKR ' + fmt(p.revenue || 0)),
+    kpi('Inner Table', fmt(innerSold) + ' / ' + CAPACITY.inner, '<b>' + fmt(Math.max(0, CAPACITY.inner - innerSold)) + '</b> left · PKR ' + fmt(inn.revenue || 0)),
+    kpi('Checked in', fmt(s.checkedIn), 'of ' + fmt(s.seats) + ' seats on the day')
+  ].join('');
+}
+
 function render(d){
+  renderSales(state.sales);
   var t = d.totals || {}, v = t.visitors || 0;
   $('camp').textContent = d.campaign || '';
   var since = d.first_event ? new Date(d.first_event).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : null;
