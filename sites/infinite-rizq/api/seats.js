@@ -15,6 +15,7 @@ const MESSAGES = {
   need_name: 'Please enter your full name.',
   need_email: 'Please enter a valid email.',
   need_phone: 'Please enter your WhatsApp number.',
+  not_found: 'We could not find a seat pass for that name and email. Use the email you paid with, or WhatsApp the coordinator.',
   bad_tier: 'Please choose your ticket type.',
 };
 const TIER_NAMES = { inner: 'Inner Table', general: 'General Admission', pair: 'Pair Pass', back: 'Back Rows' };
@@ -85,6 +86,11 @@ export default async function handler(req, res) {
       const str = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
       const email = str(body.email, 160);
       if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ ok: false, error: 'Please enter a valid email.' });
+      // Find my seat: email plus a word of the name on the ticket returns that ticket's private pass link.
+      if (body.find) {
+        const f = await rpc('ir_find_pass', { p_email: email, p_name: str(body.name, 120) });
+        return f.ok ? res.status(200).json({ ok: true, data: { token: f.data.token, hasSeat: f.data.has_seat } }) : failure(res, f);
+      }
       const r = t
         ? await rpc('ir_claim_pass', { p_token: t, p_seats: seats, p_name: str(body.name, 120), p_email: email, p_phone: str(body.phone, 40) })
         // Open flow: anyone picks their ticket type; the email links them to a paid ticket, or the seat is held pending verification.
