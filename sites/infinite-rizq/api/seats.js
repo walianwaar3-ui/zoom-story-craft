@@ -15,6 +15,8 @@ const MESSAGES = {
   need_name: 'Please enter your full name.',
   need_email: 'Please enter a valid email.',
   need_phone: 'Please enter your WhatsApp number.',
+  paid_locked: 'Not released: this person is Paid, so their seat is protected. Ask Claude or the coordinator to move or cancel a paid seat.',
+  no_seat: 'Not confirmed: this person has no seat yet. Ask them to pick one at infiniterizq.com/my-seat, then choose Paid again.',
   not_found: 'We could not find a seat pass for that name and email. Use the email you paid with, or WhatsApp the coordinator.',
   bad_tier: 'Please choose your ticket type.',
 };
