@@ -15,7 +15,9 @@
   Each paid ticket gets a private link (a row in Supabase ir_seat_passes). The page shows
   Auditorium 2 (9 rows x 22 seats = 198) and lets the holder pick seats in their tier's zone:
   Inner Table = Row A (16 seats, 6 reserved at the ends), General + Pair Pass = Rows B to G,
-  Back tier = Rows H and I. Rules are enforced by ir_claim_pass() in the database.
+  Back tier = Rows H and I. After the ticket comes the section: Sisters sit on the left half of the hall
+  (seats 1 to 11 of every row), Brothers on the right half (seats 12 to 22). Rules are enforced by
+  ir_claim_seat() in the database.
   Confirming issues the seat pass instantly and it is final: changes go through the coordinator on WhatsApp.
 -->
 <style>
@@ -96,6 +98,10 @@ header b{color:var(--ivory);font-family:var(--serif);font-weight:600;font-size:1
 .switch{display:block;margin:14px auto 0;background:none;border:0;color:var(--gold-2);font:600 .86rem var(--sans);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
 .fields.three{grid-template-columns:1fr 1fr 1fr}
 .keep{word-break:break-all;font-size:.8rem;color:var(--muted);margin-top:10px}
+.gender{max-width:640px;margin:0 auto}
+.close{position:fixed;top:calc(12px + env(safe-area-inset-top));right:14px;z-index:30;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(16,16,19,.92);border:1px solid rgba(212,167,58,.55);color:var(--gold-2);cursor:pointer;backdrop-filter:blur(8px);padding:0}
+.close:hover,.close:focus-visible{background:var(--gold-soft);border-color:var(--gold-2)}
+.close svg{width:18px;height:18px}
 .center-msg{text-align:center;padding:80px 0;color:var(--text)}
 footer{color:var(--muted);font-size:.8rem;text-align:center;padding:30px 0 120px}
 footer a{color:var(--gold-2)}
@@ -141,9 +147,17 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
         <button class="tier" type="button" data-tier="general"><b>General Admission</b><span class="pr">PKR 11,111</span><small>1 seat · Rows B to G</small></button>
         <button class="tier" type="button" data-tier="pair"><b>Pair Pass</b><span class="pr">PKR 15,555</span><small>2 seats side by side · Rows B to G</small></button>
         <button class="tier" type="button" data-tier="inner"><b>Inner Table</b><span class="pr">PKR 33,333</span><small>1 seat · Row A, front row</small></button>
-        <button class="tier" type="button" data-tier="back"><b>Back Rows</b><span class="pr">PKR 5,500</span><small>1 seat · Rows H and I</small></button>
+        <button class="tier" type="button" data-tier="back"><b>Back Rows</b><span class="pr">PKR 5,555</span><small>1 seat · Rows H and I</small></button>
       </div>
       <p class="hint" style="margin-top:18px;font-size:.88rem">Already picked your seat? <a href="/my-seat" style="color:var(--gold-2)">See your seat pass</a></p>
+    </div>
+
+    <div class="gender" id="gender" hidden>
+      <div class="tiers">
+        <button class="tier" type="button" data-section="sisters"><b>Sisters</b><small>Women's Seating Section</small></button>
+        <button class="tier" type="button" data-section="brothers"><b>Brothers</b><small>Men's Seating Section</small></button>
+      </div>
+      <button class="switch" type="button" id="gender-back" hidden>Change ticket type</button>
     </div>
 
     <div class="done" id="done" hidden>
@@ -157,14 +171,16 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
     </div>
 
     <div id="picker">
+      <button class="close" type="button" id="close" aria-label="Close seat selection"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M3 3l12 12M15 3L3 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
       <div class="legend" aria-hidden="true">
         <span><i class="sw av"></i>Available for you</span>
         <span><i class="sw sel"></i>Your pick</span>
         <span><i class="sw tk"></i>Taken</span>
-        <span><i class="sw na"></i>Other ticket</span>
+        <span><i class="sw na"></i>Other ticket or section</span>
       </div>
       <div class="hall" id="hall"></div>
       <p class="hint" id="hint"></p>
+      <button class="switch" type="button" id="switch-section">Change section (Sisters or Brothers)</button>
       <button class="switch" type="button" id="switch" hidden>Change ticket type</button>
 
       <form class="panel" id="panel" novalidate>
@@ -196,7 +212,10 @@ var ZONE_OF = { inner: 'inner', general: 'mid', pair: 'mid', back: 'back' };
 var ZONE_TEXT = { inner: 'Row A, the front row nearest the stage', mid: 'Rows B to G', back: 'Rows H and I' };
 var OPEN = !token;
 var WA = '13322332380';
-var state = { pass: null, seats: [], mine: [], picked: [], locked: false };
+var state = { pass: null, seats: [], mine: [], picked: [], locked: false, section: null };
+// One vertical line down the middle of the hall: seats 1-11 of every row are the Sisters' side, 12-22 the Brothers'.
+var SECTION = { sisters: 'Sisters', brothers: 'Brothers' };
+function sideOf(num){ return num <= 11 ? 'sisters' : 'brothers'; }
 
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }
 function label(id){ var p = id.split('-'); return 'Row ' + p[0] + ', Seat ' + Number(p[1]); }
@@ -235,7 +254,8 @@ function fmtDate(iso){ try { return new Date(iso).toLocaleDateString('en-GB', { 
 function render(){
   $('fields').className = 'fields three';
   if (OPEN && !state.pass) {
-    $('choose').hidden = false; $('picker').hidden = true; $('done').hidden = true; $('pass').innerHTML = '';
+    $('choose').hidden = false; $('picker').hidden = true; $('done').hidden = true; $('gender').hidden = true; $('pass').innerHTML = '';
+    $('h1').innerHTML = 'Choose your <em>seat.</em>';
     $('intro-copy').textContent = state.locked ? 'Seat choice is now closed for the printed seating list. WhatsApp the coordinator below for help.' : 'Which ticket did you buy? Choose it, then pick your seat in that section of the hall.';
     if (state.locked) $('choose').hidden = true;
     return;
@@ -251,8 +271,21 @@ function render(){
   if (!$('f-phone').value) $('f-phone').value = p.phone || '';
 
   var showDone = state.mine.length > 0;
+  var askSection = !showDone && !state.section;
   $('done').hidden = !showDone;
-  $('picker').hidden = !!showDone;
+  $('gender').hidden = !askSection;
+  $('picker').hidden = !!showDone || askSection;
+  $('gender-back').hidden = !OPEN;
+  $('h1').innerHTML = 'Choose your <em>seat.</em>';
+  if (askSection) {
+    $('h1').textContent = 'Are you a Brother or Sister?';
+    $('intro-copy').textContent = 'To maintain separate seating arrangements, please select your seating section.';
+    return;
+  }
+  if (!showDone) {
+    $('pass').innerHTML += '<span class="chip"><b>' + SECTION[state.section] + '</b> · ' + (state.section === 'sisters' ? 'left' : 'right') + ' half</span>';
+    $('intro-copy').textContent = $('intro-copy').textContent.replace('. Gold seats', ', on the ' + (state.section === 'sisters' ? 'left' : 'right') + ' half of the hall. Gold seats');
+  }
   if (showDone) {
     var pending = p.status === 'pending', seatText = labels(state.mine);
     $('intro-copy').textContent = (p.name ? p.name.split(' ')[0] + ', your ' : 'Your ') + 'seat pass is issued. Take a screenshot and show it at the door.';
@@ -263,6 +296,7 @@ function render(){
       '<dt>Pass</dt><dd>' + esc(p.ticket_id) + '</dd>' +
       '<dt>Ticket</dt><dd>' + esc(TIER[p.tier] || p.tier) + (n === 2 ? ' (admits two)' : '') + '</dd>' +
       '<dt>Seat' + (n === 2 ? 's' : '') + '</dt><dd>' + esc(state.mine.join(', ')) + '</dd>' +
+      (p.section ? '<dt>Section</dt><dd>' + esc(SECTION[p.section] || p.section) + '</dd>' : '') +
       '<dt>When</dt><dd>Saturday 17 October 2026, 12 PM to 4 PM</dd>' +
       '<dt>Where</dt><dd>Auditorium 2, Expo Center Lahore</dd>' +
       (p.issued_at ? '<dt>Issued</dt><dd>' + esc(fmtDate(p.issued_at)) + '</dd>' : '') + '</dl>' +
@@ -287,6 +321,11 @@ function drawHall(){
   svg += '<path d="M150 24 Q350 74 550 24 L550 10 L150 10 Z" fill="rgba(212,167,58,.14)" stroke="rgba(212,167,58,.55)"/>' +
     '<text x="350" y="40" text-anchor="middle" fill="#e8c66a" font-family="Playfair Display, Georgia, serif" font-size="15" letter-spacing="4">STAGE</text>' +
     '<text x="350" y="86" text-anchor="middle" fill="#8a857b" font-size="10.5" letter-spacing="2">OPEN FLOOR</text>';
+  // The centre line sits in the gap between seats 11 and 12 and runs from the stage to the entrance.
+  var midX = sx(11) + sw + (step - sw) / 2, mySide = state.section;
+  svg += '<line x1="' + midX + '" y1="96" x2="' + midX + '" y2="420" stroke="rgba(212,167,58,.45)" stroke-width="1" stroke-dasharray="3 4"/>' +
+    '<text x="' + (midX - 150) + '" y="86" text-anchor="middle" font-size="10" letter-spacing="2.5" font-weight="600" fill="' + (mySide === 'sisters' ? '#e8c66a' : '#5a5650') + '">SISTERS</text>' +
+    '<text x="' + (midX + 150) + '" y="86" text-anchor="middle" font-size="10" letter-spacing="2.5" font-weight="600" fill="' + (mySide === 'brothers' ? '#e8c66a' : '#5a5650') + '">BROTHERS</text>';
   var mineZone = ZONE_OF[state.pass.tier];
   ROWS.forEach(function(r, ri){
     var ly = sy(ri, 1) + 13, ry = sy(ri, 22) + 13;
@@ -296,13 +335,13 @@ function drawHall(){
   state.seats.forEach(function(s){
     var ri = ROWS.indexOf(s.row), x = sx(s.num), y = sy(ri, s.num);
     var picked = state.picked.indexOf(s.id) >= 0;
-    var mine = s.zone === mineZone, avail = mine && !s.taken;
+    var mine = s.zone === mineZone && sideOf(s.num) === mySide, avail = mine && !s.taken;
     var fill, stroke = 'none', sw2 = 0, cls = 'seat';
     if (picked) { fill = '#e8c66a'; cls += ' av pk'; }
     else if (s.taken) fill = '#3a3a40';
     else if (avail) { fill = 'rgba(212,167,58,.14)'; stroke = '#d4a73a'; sw2 = 1.5; cls += ' av'; }
     else fill = s.zone === 'reserved' ? '#161619' : '#1e1e22';
-    var status = picked ? 'your pick' : s.taken ? 'taken' : avail ? 'available' : s.zone === 'reserved' ? 'reserved' : 'for another ticket';
+    var status = picked ? 'your pick' : s.taken ? 'taken' : avail ? 'available' : s.zone === 'reserved' ? 'reserved' : s.zone === mineZone ? (SECTION[sideOf(s.num)] + ' section') : 'for another ticket';
     svg += '<g class="' + cls + '" data-id="' + s.id + '"' + (avail || picked ? ' role="button" tabindex="0"' : '') + ' aria-label="Row ' + s.row + ' seat ' + s.num + ', ' + status + '">' +
       '<rect x="' + x + '" y="' + y + '" width="' + sw + '" height="' + sh + '" rx="4" fill="' + fill + '" stroke="' + stroke + '" stroke-width="' + sw2 + '"/>' +
       (picked ? '<path d="M' + (x + 6) + ' ' + (y + 9) + 'l3 3l6 -6" fill="none" stroke="#141005" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' : '') +
@@ -310,13 +349,14 @@ function drawHall(){
   });
   svg += '<text x="350" y="436" text-anchor="middle" fill="#8a857b" font-size="10.5" letter-spacing="2">ENTRANCE FROM LOBBY</text></svg>';
   $('hall').innerHTML = svg;
-  var h = $('hall'); if (h.scrollWidth > h.clientWidth) h.scrollLeft = (h.scrollWidth - h.clientWidth) / 2;
+  // On a narrow phone the map scrolls sideways: open it on the visitor's own half.
+  var h = $('hall'); if (h.scrollWidth > h.clientWidth) h.scrollLeft = mySide === 'sisters' ? 0 : h.scrollWidth - h.clientWidth;
   $('hint').textContent = state.pass.seats === 2 ? 'Tap one seat and we pick the seat beside it for your guest.' : 'Tap a gold seat to choose it. Tap again to undo.';
 }
 
 function seatAt(row, num){ return byId(row + '-' + (num < 10 ? '0' : '') + num); }
 function blockOf(n){ return n <= 5 ? 'L' : n <= 17 ? 'C' : 'R'; }
-function freeForMe(s){ return s && s.zone === ZONE_OF[state.pass.tier] && !s.taken; }
+function freeForMe(s){ return s && s.zone === ZONE_OF[state.pass.tier] && sideOf(s.num) === state.section && !s.taken; }
 
 function pick(id){
   var s = byId(id); if (!s) return;
@@ -361,7 +401,21 @@ document.querySelectorAll('[data-tier]').forEach(function(b){
     state.picked = []; $('msg').textContent = ''; render(); window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 });
-$('switch').addEventListener('click', function(){ state.pass = null; state.picked = []; $('msg').textContent = ''; render(); });
+$('switch').addEventListener('click', function(){ state.pass = null; state.section = null; state.picked = []; $('msg').textContent = ''; render(); });
+document.querySelectorAll('[data-section]').forEach(function(b){
+  b.addEventListener('click', function(){
+    state.section = b.getAttribute('data-section'); state.picked = []; $('msg').textContent = ''; render(); window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
+// Back one step: from the section question to the ticket list (open link only).
+$('gender-back').addEventListener('click', function(){ state.pass = null; state.section = null; state.picked = []; render(); window.scrollTo({ top: 0 }); });
+$('switch-section').addEventListener('click', function(){ state.section = null; state.picked = []; $('msg').textContent = ''; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+// X: leave seat selection without issuing anything. Nothing is reserved until "Issue my seat pass", so we only clear the pick.
+$('close').addEventListener('click', function(){
+  state.picked = []; state.section = null; $('msg').textContent = ''; $('msg').className = 'msg';
+  if (OPEN) state.pass = null;
+  render(); window.scrollTo({ top: 0, behavior: 'smooth' });
+});
 
 $('panel').addEventListener('submit', function(e){
   e.preventDefault();
@@ -374,7 +428,7 @@ $('panel').addEventListener('submit', function(e){
   $('confirm').disabled = true; $('msg').className = 'msg'; $('msg').textContent = 'Issuing your seat pass…';
   fetch('/api/seats', { method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(Object.assign(OPEN ? { tier: state.pass.tier, seats: state.picked, name: name, email: email, phone: phone }
-                              : { t: token, seats: state.picked, name: name, email: email, phone: phone }, fbIds())) })
+                              : { t: token, seats: state.picked, name: name, email: email, phone: phone }, { section: state.section }, fbIds())) })
     .then(function(r){ return r.json(); })
     .then(function(j){
       if (j.ok) {

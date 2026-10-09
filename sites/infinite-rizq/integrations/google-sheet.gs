@@ -12,7 +12,7 @@ const SHEET_ID = '1-mqtgE8-SBuDlPhmnH4RmCvmWD-Hh_qk3m30IYD0uy4'; // Infinite Riz
 const SEAT_TAB = 'Seat Passes';
 const SEAT_HEADERS = ['Issued At', 'Pass', 'Status', 'Ticket Type', 'Seats', 'Full Name', 'Email', 'WhatsApp', 'In Tickets tab', 'Notes'];
 const TIER_LABELS = { inner: 'Inner Table', general: 'General', pair: 'Pair Pass', back: 'Back Rows' };
-const TIER_PRICES = { inner: '33,333', general: '11,111', pair: '15,555', back: '5,500' };
+const TIER_PRICES = { inner: '33,333', general: '11,111', pair: '15,555', back: '5,555' };
 const SITE = 'https://www.infiniterizq.com';
 const WHATSAPP = 'https://wa.me/13322332380';
 

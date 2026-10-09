@@ -5,7 +5,7 @@ import { createHash } from 'node:crypto';
 
 const PIXEL_ID = '1574207957215946';
 const GRAPH = 'https://graph.facebook.com/v23.0';
-export const TIER_PRICE = { inner: 33333, general: 11111, pair: 15555, back: 5500 };
+export const TIER_PRICE = { inner: 33333, general: 11111, pair: 15555, back: 5555 };
 const TIER_NAMES = { inner: 'Inner Table', general: 'General Admission', pair: 'Pair Pass', back: 'Back Rows' };
 
 const sha = v => (v ? createHash('sha256').update(v).digest('hex') : undefined);

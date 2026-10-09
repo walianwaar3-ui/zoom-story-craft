@@ -16,6 +16,8 @@ const MESSAGES = {
   need_name: 'Please enter your full name.',
   need_email: 'Please enter a valid email.',
   need_phone: 'Please enter your WhatsApp number.',
+  need_section: 'Please choose the Sisters or Brothers section first.',
+  wrong_section: 'That seat is outside your section. Sisters sit on the left half, Brothers on the right half.',
   paid_locked: 'Not released: this person is Paid, so their seat is protected. Ask Claude or the coordinator to move or cancel a paid seat.',
   no_seat: 'Not confirmed: this person has no seat yet. Ask them to pick one at infiniterizq.com/my-seat, then choose Paid again.',
   not_found: 'We could not find a seat pass for that name and email. Use the email you paid with, or WhatsApp the coordinator.',
@@ -36,7 +38,7 @@ async function sendSeatToSheet(tok) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ secret, type: 'seat', data: {
         ticketId: p.ticket_id, tier: p.tier, seats: m.data.mine || [], name: p.name, email: p.email,
-        phone: p.phone, status: p.status, issuedAt: p.issued_at,
+        phone: p.phone, status: p.status, issuedAt: p.issued_at, section: p.section,
       } }),
       signal: AbortSignal.timeout(8000),
     });
@@ -131,10 +133,12 @@ export default async function handler(req, res) {
         const f = await rpc('ir_find_pass', { p_email: email, p_name: str(body.name, 120) });
         return f.ok ? res.status(200).json({ ok: true, data: { token: f.data.token, hasSeat: f.data.has_seat } }) : failure(res, f);
       }
+      // Sisters sit on the left half of the hall, Brothers on the right; the database checks every seat against the section.
+      const section = body.section === 'sisters' || body.section === 'brothers' ? body.section : '';
       const r = t
-        ? await rpc('ir_claim_pass', { p_token: t, p_seats: seats, p_name: str(body.name, 120), p_email: email, p_phone: str(body.phone, 40) })
+        ? await rpc('ir_claim_seat', { p_token: t, p_seats: seats, p_name: str(body.name, 120), p_email: email, p_phone: str(body.phone, 40), p_section: section })
         // Open flow: anyone picks their ticket type; the email links them to a paid ticket, or the seat is held pending verification.
-        : await rpc('ir_claim_open', { p_tier: str(body.tier, 10), p_seats: seats, p_name: str(body.name, 120), p_email: email, p_phone: str(body.phone, 40) });
+        : await rpc('ir_claim_open_seat', { p_tier: str(body.tier, 10), p_seats: seats, p_name: str(body.name, 120), p_email: email, p_phone: str(body.phone, 40), p_section: section });
       if (!r.ok) return failure(res, r);
       await Promise.all([sendSeatToSheet(t || (r.data && r.data.token)), savePassMeta(t || (r.data && r.data.token), req, body)]);
       return res.status(200).json({ ok: true, data: r.data });
