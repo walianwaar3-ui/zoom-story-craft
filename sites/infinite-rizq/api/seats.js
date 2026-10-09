@@ -86,6 +86,13 @@ export default async function handler(req, res) {
       const str = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
       const email = str(body.email, 160);
       if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ ok: false, error: 'Please enter a valid email.' });
+      // Coordinator action from the sheet (Seat Passes tab): confirm payment or release a held seat.
+      // The database checks the sheet secret; a wrong secret is refused there.
+      if (body.admin) {
+        const a = await rpc('ir_admin_pass', { p_secret: str(body.secret, 200), p_ticket: str(body.ticketId, 20), p_action: str(body.admin, 10), p_ref: str(body.ref, 20) });
+        if (!a.ok && String((a.data && a.data.message) || '') === 'unauthorized') return res.status(401).json({ ok: false, error: 'unauthorized' });
+        return a.ok ? res.status(200).json({ ok: true, data: a.data }) : failure(res, a);
+      }
       // Find my seat: email plus a word of the name on the ticket returns that ticket's private pass link.
       if (body.find) {
         const f = await rpc('ir_find_pass', { p_email: email, p_name: str(body.name, 120) });
