@@ -435,16 +435,6 @@ function track(name, data){
   IR.send(IR_EVENT_NAMES[name] || name, label, typeof data.value === 'number' ? data.value : data.percent);
 }
 track('thankyou_view', { page: 'mastermind_upsell' });
-(function(){
-  if (typeof window.fbq !== 'function') return;
-  var c = null; try { c = JSON.parse(localStorage.getItem('ir_checkout_tier') || 'null'); } catch (e) {}
-  if (c && c.done) return; // already counted this purchase (page refresh)
-  var fresh = c && Date.now() - c.at < 6 * 3600 * 1000;
-  // Not 'Purchase': the server reports that once the payment is confirmed on the sheet (Paid), for every payment method.
-  // Counting here too would double count card buyers. This custom event still lets ads see the checkout return.
-  window.fbq('trackCustom', 'CheckoutReturn', fresh ? { value: c.value, currency: 'PKR', content_name: c.tier } : { currency: 'PKR' });
-  if (c) { c.done = true; try { localStorage.setItem('ir_checkout_tier', JSON.stringify(c)); } catch (e) {} }
-})();
 document.querySelectorAll('[data-track]').forEach(function(el){
   el.addEventListener('click', function(){ track('cta_click', { location: el.getAttribute('data-track') }); });
 });

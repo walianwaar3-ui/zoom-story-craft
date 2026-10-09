@@ -99,6 +99,11 @@ header b{color:var(--ivory);font-family:var(--serif);font-weight:600;font-size:1
 .fields.three{grid-template-columns:1fr 1fr 1fr}
 .keep{word-break:break-all;font-size:.8rem;color:var(--muted);margin-top:10px}
 .gender{max-width:640px;margin:0 auto}
+.btn.already{text-align:center;display:flex;width:100%;max-width:640px;margin:16px auto 0;text-decoration:none;border-color:rgba(212,167,58,.55);color:var(--gold-2)}
+.btn.already:hover,.btn.already:focus-visible{background:var(--gold-soft)}
+.redirect{position:fixed;top:0;left:0;right:0;z-index:40;background:linear-gradient(180deg,var(--gold-2),var(--gold));color:#141005;text-align:center;font:600 .95rem var(--sans);padding:calc(12px + env(safe-area-inset-top)) 16px 12px}
+.redirect b{font-size:1.15rem}
+.redirect a{color:#141005;margin-left:8px}
 .close{position:fixed;top:calc(12px + env(safe-area-inset-top));right:14px;z-index:30;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(16,16,19,.92);border:1px solid rgba(212,167,58,.55);color:var(--gold-2);cursor:pointer;backdrop-filter:blur(8px);padding:0}
 .close:hover,.close:focus-visible{background:var(--gold-soft);border-color:var(--gold-2)}
 .close svg{width:18px;height:18px}
@@ -132,6 +137,7 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
     <div><b>Infinite Rizq</b><small>Auditorium 2 · Expo Center Lahore</small></div>
   </header>
 
+  <div class="redirect" id="redirect" role="status" aria-live="polite" hidden></div>
   <p class="center-msg" id="loading">Loading your seat map…</p>
   <p class="center-msg" id="fatal" hidden></p>
 
@@ -149,7 +155,7 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
         <button class="tier" type="button" data-tier="inner"><b>Inner Table</b><span class="pr">PKR 33,333</span><small>1 seat · Row A, front row</small></button>
         <button class="tier" type="button" data-tier="back"><b>Back Rows</b><span class="pr">PKR 5,555</span><small>1 seat · Rows H and I</small></button>
       </div>
-      <p class="hint" style="margin-top:18px;font-size:.88rem">Already picked your seat? <a href="/my-seat" style="color:var(--gold-2)">See your seat pass</a></p>
+      <a class="btn ghost already" href="/my-seat">Already picked your seat? See your seat pass</a>
     </div>
 
     <div class="gender" id="gender" hidden>
@@ -211,6 +217,8 @@ var TIER = { inner: 'Inner Table', general: 'General Admission', pair: 'Pair Pas
 var ZONE_OF = { inner: 'inner', general: 'mid', pair: 'mid', back: 'back' };
 var ZONE_TEXT = { inner: 'Row A, the front row nearest the stage', mid: 'Rows B to G', back: 'Rows H and I' };
 var OPEN = !token;
+// Set right after a seat pass is issued: show the pass, then count down to the announcement on /thank-you.
+var justIssued = new URLSearchParams(location.search).get('new') === '1';
 var WA = '13322332380';
 var state = { pass: null, seats: [], mine: [], picked: [], locked: false, section: null };
 // One vertical line down the middle of the hall: seats 1-11 of every row are the Sisters' side, 12-22 the Brothers'.
@@ -307,10 +315,24 @@ function render(){
       '<br>This seat is final. For an urgent change, WhatsApp our Event Coordinator with your pass number.' +
       '<div class="keep">Bookmark this page to see your pass again.</div>';
     $('wa-change').href = 'https://wa.me/' + WA + '?text=' + encodeURIComponent('Assalam o Alaikum Wali, I need help with my Infinite Rizq seat. Pass ' + p.ticket_id + ', ' + seatText + ', ' + (p.name || '') + '.');
+    if (justIssued) startRedirect();
     return;
   }
   drawHall();
   updatePanel();
+}
+
+// Only once, straight after issuing: drop ?new=1 so a bookmark or refresh just shows the pass.
+function startRedirect(){
+  justIssued = false;
+  try { history.replaceState(null, '', '/seats?t=' + encodeURIComponent(token)); } catch (e) {}
+  var left = 5, bar = $('redirect');
+  function tick(){
+    bar.innerHTML = 'Seat pass issued. Wait, you will be redirected to an <b>important announcement</b> in <b>' + left + '</b>…<a href="/thank-you">Go now</a>';
+    if (left-- <= 0) { location.href = '/thank-you'; return; }
+    setTimeout(tick, 1000);
+  }
+  bar.hidden = false; tick();
 }
 
 function drawHall(){
@@ -433,8 +455,8 @@ $('panel').addEventListener('submit', function(e){
     .then(function(j){
       if (j.ok) {
         if (typeof window.fbq === 'function') window.fbq('track', 'CompleteRegistration', { content_name: 'Seat pass ' + state.pass.tier });
-        if (OPEN && j.data && j.data.token) { setTimeout(function(){ location.replace('/seats?t=' + j.data.token); }, 300); return; }
-        state.picked = []; $('msg').textContent = ''; return load();
+        if (OPEN && j.data && j.data.token) { setTimeout(function(){ location.replace('/seats?t=' + j.data.token + '&new=1'); }, 300); return; }
+        justIssued = true; state.picked = []; $('msg').textContent = ''; return load();
       }
       $('msg').textContent = j.error || 'Could not save. Please try again.'; $('msg').className = 'msg err';
       if (j.code === 'taken') { state.picked = []; return load(); }
@@ -442,6 +464,15 @@ $('panel').addEventListener('submit', function(e){
     })
     .catch(function(){ $('msg').textContent = 'Network error. Please try again.'; $('msg').className = 'msg err'; updatePanel(); });
 });
+
+// Stripe now returns buyers here after paying, so the checkout-return signal lives on this page (once per checkout).
+(function(){
+  if (typeof window.fbq !== 'function') return;
+  var c = null; try { c = JSON.parse(localStorage.getItem('ir_checkout_tier') || 'null'); } catch (e) {}
+  if (!c || c.done || Date.now() - c.at > 6 * 3600 * 1000) return;
+  window.fbq('trackCustom', 'CheckoutReturn', { value: c.value, currency: 'PKR', content_name: c.tier });
+  c.done = true; try { localStorage.setItem('ir_checkout_tier', JSON.stringify(c)); } catch (e) {}
+})();
 
 load();
 })();
