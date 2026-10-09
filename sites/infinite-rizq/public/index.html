@@ -577,6 +577,23 @@ footer .row{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-betw
   .js .rv{opacity:1;transform:none}
 }
 </style>
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1574207957215946');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
 </head>
 <body>
 
@@ -1353,13 +1370,17 @@ function waLink(tier){
     ' Name: ____. Attaching my payment screenshot.';
   return 'https://wa.me/' + CONFIG.whatsapp + '?text=' + encodeURIComponent(msg);
 }
-$all('[data-wa]').forEach(function(el){ el.href = waLink(null); el.addEventListener('click', function(){ track('whatsapp_click', {}); }); });
+$all('[data-wa]').forEach(function(el){ el.href = waLink(null); el.addEventListener('click', function(){ track('whatsapp_click', {}); if (typeof window.fbq === 'function') window.fbq('track', 'Contact'); }); });
 $all('[data-checkout]').forEach(function(el){
   var tier = el.getAttribute('data-checkout'), url = CONFIG.checkout[tier];
   if (url) {
     el.setAttribute('href', url);
     var alt = document.querySelector('[data-alt-pay="' + tier + '"]'); if (alt) alt.hidden = false;
-    el.addEventListener('click', function(){ track('checkout_stripe', { tier: tier, value: CONFIG.prices[tier], currency: 'PKR' }); });
+    el.addEventListener('click', function(){
+      track('checkout_stripe', { tier: tier, value: CONFIG.prices[tier], currency: 'PKR' });
+      if (typeof window.fbq === 'function') window.fbq('track', 'InitiateCheckout', { value: CONFIG.prices[tier], currency: 'PKR', content_name: tier });
+      try { localStorage.setItem('ir_checkout_tier', JSON.stringify({ tier: tier, value: CONFIG.prices[tier], at: Date.now() })); } catch (e) {}
+    });
     return;
   }
   el.setAttribute('href', '#pay');

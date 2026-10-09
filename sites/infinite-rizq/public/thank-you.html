@@ -171,6 +171,23 @@ footer{border-top:1px solid var(--line);padding:32px 0 48px;font-size:.82rem;col
 }
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1574207957215946');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
 </head>
 <body>
 
@@ -418,6 +435,14 @@ function track(name, data){
   IR.send(IR_EVENT_NAMES[name] || name, label, typeof data.value === 'number' ? data.value : data.percent);
 }
 track('thankyou_view', { page: 'mastermind_upsell' });
+(function(){
+  if (typeof window.fbq !== 'function') return;
+  var c = null; try { c = JSON.parse(localStorage.getItem('ir_checkout_tier') || 'null'); } catch (e) {}
+  if (c && c.done) return; // already counted this purchase (page refresh)
+  var fresh = c && Date.now() - c.at < 6 * 3600 * 1000;
+  window.fbq('track', 'Purchase', fresh ? { value: c.value, currency: 'PKR', content_name: c.tier } : { currency: 'PKR' });
+  if (c) { c.done = true; try { localStorage.setItem('ir_checkout_tier', JSON.stringify(c)); } catch (e) {} }
+})();
 document.querySelectorAll('[data-track]').forEach(function(el){
   el.addEventListener('click', function(){ track('cta_click', { location: el.getAttribute('data-track') }); });
 });

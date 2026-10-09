@@ -101,6 +101,23 @@ footer{color:var(--muted);font-size:.8rem;text-align:center;padding:30px 0 120px
 footer a{color:var(--gold-2)}
 @media (max-width:560px){ .fields,.fields.three,.tiers{grid-template-columns:1fr} .panel .row .btn{width:100%} }
 </style>
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1574207957215946');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
 </head>
 <body>
 <div class="wrap">
@@ -356,7 +373,8 @@ $('panel').addEventListener('submit', function(e){
     .then(function(r){ return r.json(); })
     .then(function(j){
       if (j.ok) {
-        if (OPEN && j.data && j.data.token) { location.replace('/seats?t=' + j.data.token); return; }
+        if (typeof window.fbq === 'function') window.fbq('track', 'CompleteRegistration', { content_name: 'Seat pass ' + state.pass.tier });
+        if (OPEN && j.data && j.data.token) { setTimeout(function(){ location.replace('/seats?t=' + j.data.token); }, 300); return; }
         state.picked = []; $('msg').textContent = ''; return load();
       }
       $('msg').textContent = j.error || 'Could not save. Please try again.'; $('msg').className = 'msg err';
