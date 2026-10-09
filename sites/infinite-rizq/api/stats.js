@@ -41,7 +41,9 @@ export default async function handler(req, res) {
       let s = await sales;
       if (s) s.source = 'live';
       else { const snap = await rpc('ir_sales', { p_key: body.key.slice(0, 100) }).catch(() => null); s = snap && snap.ok ? snap.data : null; }
-      return res.status(200).json({ ok: true, data: r.data, sales: s });
+      // Seat map with who holds each seat (same access key, checked in the database).
+      const seats = await rpc('ir_admin_seats', { p_key: body.key.slice(0, 100) }).catch(() => null);
+      return res.status(200).json({ ok: true, data: r.data, sales: s, seats: seats && seats.ok ? seats.data : null });
     }
     const msg = r.data && r.data.message;
     if (msg === 'unauthorized') return res.status(401).json({ ok: false, error: 'Wrong access key' });
