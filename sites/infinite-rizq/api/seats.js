@@ -1,19 +1,20 @@
 // Seat picker. GET ?t=<pass token> returns the hall map for that ticket; GET with no token returns the open board.
 // POST with t claims for that ticket; POST with tier (open flow) matches the email to a paid ticket or holds the seat pending.
-// Every rule (zone per tier, pairs side by side, one change, no double booking) is enforced in
-// the database functions ir_seatmap() and ir_claim_seats().
+// Confirming issues the seat pass instantly and it is final. Every rule (zone per tier, pairs side by side,
+// no changes once issued, no double booking) is enforced in the database functions ir_seatmap() and ir_claim_pass().
 import { rpc, parseBody } from './_supabase.js';
 
 const MESSAGES = {
   invalid: 'This seat link is not valid. Please use the link from your confirmation message.',
   locked: 'Seats are now final for the printed seating list. Message the coordinator if something is wrong.',
-  no_more_changes: 'You have already used your one seat change. Message the coordinator if you need help.',
+  final: 'Your seat pass is already issued and is final. For an urgent change, WhatsApp the coordinator with your pass number.',
   wrong_count: 'Please pick the number of seats your ticket includes.',
   wrong_zone: 'That seat is outside the zone for your ticket.',
   not_together: 'Pair Pass seats must be side by side in the same block.',
-  already_chosen: 'You have already chosen your seat with this email. Use the link from your confirmation to see or change it, or WhatsApp the coordinator.',
+  already_chosen: 'A seat pass is already issued for this email. Seats are final; for an urgent change, WhatsApp the coordinator.',
   need_name: 'Please enter your full name.',
   need_email: 'Please enter a valid email.',
+  need_phone: 'Please enter your WhatsApp number.',
   bad_tier: 'Please choose your ticket type.',
 };
 const TIER_NAMES = { inner: 'Inner Table', general: 'General Admission', pair: 'Pair Pass', back: 'Back Rows' };
@@ -61,7 +62,7 @@ export default async function handler(req, res) {
       const email = str(body.email, 160);
       if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ ok: false, error: 'Please enter a valid email.' });
       const r = t
-        ? await rpc('ir_claim_seats', { p_token: t, p_seats: seats, p_name: str(body.name, 120), p_email: email })
+        ? await rpc('ir_claim_pass', { p_token: t, p_seats: seats, p_name: str(body.name, 120), p_email: email, p_phone: str(body.phone, 40) })
         // Open flow: anyone picks their ticket type; the email links them to a paid ticket, or the seat is held pending verification.
         : await rpc('ir_claim_open', { p_tier: str(body.tier, 10), p_seats: seats, p_name: str(body.name, 120), p_email: email, p_phone: str(body.phone, 40) });
       return r.ok ? res.status(200).json({ ok: true, data: r.data }) : failure(res, r);

@@ -15,7 +15,8 @@
   Each paid ticket gets a private link (a row in Supabase ir_seat_passes). The page shows
   Auditorium 2 (9 rows x 22 seats = 198) and lets the holder pick seats in their tier's zone:
   Inner Table = Row A (16 seats, 6 reserved at the ends), General + Pair Pass = Rows B to F,
-  Back tier = Rows G to I. Rules are enforced by ir_claim_seats() in the database.
+  Back tier = Rows G to I. Rules are enforced by ir_claim_pass() in the database.
+  Confirming issues the seat pass instantly and it is final: changes go through the coordinator on WhatsApp.
 -->
 <style>
 :root{
@@ -76,6 +77,16 @@ header b{color:var(--ivory);font-family:var(--serif);font-weight:600;font-size:1
 .done .seatbig{font-family:var(--serif);font-size:clamp(1.8rem,6vw,2.5rem);color:var(--ivory);margin:6px 0 8px;font-weight:600}
 .done p{margin:6px 0 0;font-size:.92rem}
 .done .actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.done .btn{text-decoration:none}
+.spass{text-align:left;margin:16px 0 0;border:1px dashed rgba(212,167,58,.45);border-radius:14px;padding:16px 18px;background:rgba(0,0,0,.25)}
+.spass .who{font-family:var(--serif);color:var(--ivory);font-size:1.25rem;font-weight:600;line-height:1.25}
+.spass dl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:10px 0 0;font-size:.88rem}
+.spass dt{color:var(--muted);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;padding-top:3px}
+.spass dd{margin:0;color:var(--ivory)}
+.final{display:inline-block;margin-top:12px;border:1px solid rgba(95,207,151,.45);color:var(--green);border-radius:999px;padding:3px 10px;font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;font-weight:600}
+.final.wait{border-color:rgba(232,198,106,.5);color:var(--gold-2)}
+.note{font-size:.84rem;color:var(--muted);margin:10px 0 0}
+.note b{color:var(--ivory)}
 .tiers{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;max-width:640px;margin:24px auto 0}
 .tier{all:unset;box-sizing:border-box;cursor:pointer;display:block;background:var(--card);border:1px solid var(--line-2);border-radius:16px;padding:16px 18px;transition:border-color .2s,transform .2s}
 .tier:hover,.tier:focus-visible{border-color:var(--gold);transform:translateY(-2px)}
@@ -103,7 +114,7 @@ footer a{color:var(--gold-2)}
 
   <main id="app" hidden>
     <section class="intro">
-      <h1>Choose your <em>seat.</em></h1>
+      <h1 id="h1">Choose your <em>seat.</em></h1>
       <p id="intro-copy"></p>
       <div class="pass" id="pass"></div>
     </section>
@@ -118,11 +129,12 @@ footer a{color:var(--gold-2)}
     </div>
 
     <div class="done" id="done" hidden>
-      <div class="k" id="done-k">Your seat</div>
+      <div class="k" id="done-k">Seat pass issued</div>
       <div class="seatbig" id="done-seat"></div>
+      <div class="spass" id="spass"></div>
       <p id="done-copy"></p>
       <div class="actions">
-        <button class="btn ghost" type="button" id="change" hidden>Change my seat</button>
+        <a class="btn ghost" id="wa-change" target="_blank" rel="noopener">Urgent change? WhatsApp us</a>
       </div>
     </div>
 
@@ -140,13 +152,14 @@ footer a{color:var(--gold-2)}
       <form class="panel" id="panel" novalidate>
         <div class="row">
           <div class="picked" id="picked">Tap a gold seat to pick it.</div>
-          <button class="btn" type="submit" id="confirm" disabled>Confirm seat</button>
+          <button class="btn" type="submit" id="confirm" disabled>Issue my seat pass</button>
         </div>
         <div class="fields" id="fields" hidden>
           <div><label for="f-name">Full name</label><input id="f-name" autocomplete="name" maxlength="120"></div>
           <div><label for="f-email">Email used to pay</label><input id="f-email" type="email" autocomplete="email" maxlength="160"></div>
-          <div id="phone-wrap" hidden><label for="f-phone">WhatsApp</label><input id="f-phone" type="tel" autocomplete="tel" maxlength="40" placeholder="+92 300 1234567"></div>
+          <div id="phone-wrap"><label for="f-phone">WhatsApp number</label><input id="f-phone" type="tel" autocomplete="tel" maxlength="40" placeholder="+92 300 1234567"></div>
         </div>
+        <p class="note" id="final-note" hidden>Your seat pass is issued the moment you confirm and <b>cannot be changed</b> afterwards. Please check your seat before you confirm.</p>
         <p class="msg" id="msg" role="status" aria-live="polite"></p>
       </form>
     </div>
@@ -164,7 +177,8 @@ var TIER = { inner: 'Inner Table', general: 'General Admission', pair: 'Pair Pas
 var ZONE_OF = { inner: 'inner', general: 'mid', pair: 'mid', back: 'back' };
 var ZONE_TEXT = { inner: 'Row A, the front row nearest the stage', mid: 'Rows B to F', back: 'Rows G to I' };
 var OPEN = !token;
-var state = { pass: null, seats: [], mine: [], picked: [], editing: false, locked: false };
+var WA = '13322332380';
+var state = { pass: null, seats: [], mine: [], picked: [], locked: false };
 
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }
 function label(id){ var p = id.split('-'); return 'Row ' + p[0] + ', Seat ' + Number(p[1]); }
@@ -190,7 +204,7 @@ function load(){
     .then(function(j){
       if (!j.ok) return fatal(j.error || 'Could not load the seat map.');
       state.pass = j.data.pass; state.seats = j.data.seats || []; state.mine = (j.data.mine || []).slice().sort();
-      if (!state.editing) state.picked = [];
+      state.picked = [];
       $('loading').hidden = true; $('app').hidden = false;
       render();
     })
@@ -198,10 +212,10 @@ function load(){
 }
 
 function zoneMine(s){ return s.zone === ZONE_OF[state.pass.tier]; }
-function canPick(){ return !state.mine.length || state.editing; }
+function fmtDate(iso){ try { return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Karachi' }); } catch (e) { return ''; } }
 
 function render(){
-  $('phone-wrap').hidden = !OPEN; $('fields').className = OPEN ? 'fields three' : 'fields';
+  $('fields').className = 'fields three';
   if (OPEN && !state.pass) {
     $('choose').hidden = false; $('picker').hidden = true; $('done').hidden = true; $('pass').innerHTML = '';
     $('intro-copy').textContent = state.locked ? 'Seat choice is now closed for the printed seating list. WhatsApp the coordinator below for help.' : 'Which ticket did you buy? Choose it, then pick your seat in that section of the hall.';
@@ -213,23 +227,34 @@ function render(){
   $('pass').innerHTML = (p.ticket_id ? '<span class="chip">Ticket <b>' + esc(p.ticket_id) + '</b></span>' : '') + '<span class="chip">' + esc(TIER[p.tier] || p.tier) + '</span>' +
     (n === 2 ? '<span class="chip">2 seats, side by side</span>' : '');
   $('intro-copy').textContent = (p.name ? p.name.split(' ')[0] + ', your ' : 'Your ') + (TIER[p.tier] || 'ticket') +
-    (n === 2 ? ' seats are in ' : ' seat is in ') + ZONE_TEXT[ZONE_OF[p.tier]] + '. Gold seats are free for you. Pick ' + (n === 2 ? 'two seats together' : 'one') + ' and confirm.';
+    (n === 2 ? ' seats are in ' : ' seat is in ') + ZONE_TEXT[ZONE_OF[p.tier]] + '. Gold seats are free for you. Pick ' + (n === 2 ? 'two seats together' : 'one') + ', add your details, and your seat pass is issued instantly.';
   if (!$('f-name').value) $('f-name').value = p.name || '';
   if (!$('f-email').value) $('f-email').value = p.email || '';
+  if (!$('f-phone').value) $('f-phone').value = p.phone || '';
 
-  var showDone = state.mine.length && !state.editing;
+  var showDone = state.mine.length > 0;
   $('done').hidden = !showDone;
   $('picker').hidden = !!showDone;
   if (showDone) {
-    $('done-seat').textContent = labels(state.mine);
-    var canChange = !p.locked && p.changes < 1, pending = p.status === 'pending';
-    $('done-k').textContent = pending ? 'Seat reserved' : 'Your seat';
+    var pending = p.status === 'pending', seatText = labels(state.mine);
+    $('intro-copy').textContent = (p.name ? p.name.split(' ')[0] + ', your ' : 'Your ') + 'seat pass is issued. Take a screenshot and show it at the door.';
+    $('pass').innerHTML = ''; $('h1').innerHTML = 'Your seat <em>pass.</em>';
+    $('done-k').textContent = 'Seat pass issued';
+    $('done-seat').textContent = seatText;
+    $('spass').innerHTML = '<div class="who">' + esc(p.name || 'Guest') + '</div><dl>' +
+      '<dt>Pass</dt><dd>' + esc(p.ticket_id) + '</dd>' +
+      '<dt>Ticket</dt><dd>' + esc(TIER[p.tier] || p.tier) + (n === 2 ? ' (admits two)' : '') + '</dd>' +
+      '<dt>Seat' + (n === 2 ? 's' : '') + '</dt><dd>' + esc(state.mine.join(', ')) + '</dd>' +
+      '<dt>When</dt><dd>Saturday 17 October 2026, 12 PM to 4 PM</dd>' +
+      '<dt>Where</dt><dd>Auditorium 2, Expo Center Lahore</dd>' +
+      (p.issued_at ? '<dt>Issued</dt><dd>' + esc(fmtDate(p.issued_at)) + '</dd>' : '') + '</dl>' +
+      '<span class="final' + (pending ? ' wait' : '') + '">' + (pending ? 'Final seat · payment being matched' : 'Final seat · confirmed') + '</span>';
     $('done-copy').innerHTML = (pending
-      ? 'Held under reference <b>' + esc(p.ticket_id) + '</b> while we match your payment (within 12 to 24 hours). If we cannot find a payment for this email, the seat is released.'
-      : 'Saved to ticket <b>' + esc(p.ticket_id) + '</b>. Take a screenshot. Ushers will guide you there on the day.') +
-      (canChange ? '<br>You can change your seat once, until Thursday 15 October.' : '<br>Your seat is final.') +
-      '<div class="keep">Bookmark this page to see or change your seat later.</div>';
-    $('change').hidden = !canChange;
+      ? 'We are matching your payment to <b>' + esc(p.email) + '</b> (within 12 to 24 hours). If no payment is found for this email, the seat is released.'
+      : 'Ushers will guide you to your seat on the day.') +
+      '<br>This seat is final. For an urgent change, WhatsApp our Event Coordinator with your pass number.' +
+      '<div class="keep">Bookmark this page to see your pass again.</div>';
+    $('wa-change').href = 'https://wa.me/' + WA + '?text=' + encodeURIComponent('Assalam o Alaikum Wali, I need help with my Infinite Rizq seat. Pass ' + p.ticket_id + ', ' + seatText + ', ' + (p.name || '') + '.');
     return;
   }
   drawHall();
@@ -244,7 +269,7 @@ function drawHall(){
   svg += '<path d="M150 24 Q350 74 550 24 L550 10 L150 10 Z" fill="rgba(212,167,58,.14)" stroke="rgba(212,167,58,.55)"/>' +
     '<text x="350" y="40" text-anchor="middle" fill="#e8c66a" font-family="Playfair Display, Georgia, serif" font-size="15" letter-spacing="4">STAGE</text>' +
     '<text x="350" y="86" text-anchor="middle" fill="#8a857b" font-size="10.5" letter-spacing="2">OPEN FLOOR</text>';
-  var mineZone = ZONE_OF[state.pass.tier], pickable = canPick();
+  var mineZone = ZONE_OF[state.pass.tier];
   ROWS.forEach(function(r, ri){
     var ly = sy(ri, 1) + 13, ry = sy(ri, 22) + 13;
     svg += '<text x="' + (x0 - 14) + '" y="' + ly + '" text-anchor="middle" fill="#8a857b" font-size="11" font-weight="600">' + r + '</text>' +
@@ -252,12 +277,11 @@ function drawHall(){
   });
   state.seats.forEach(function(s){
     var ri = ROWS.indexOf(s.row), x = sx(s.num), y = sy(ri, s.num);
-    var picked = state.picked.indexOf(s.id) >= 0, held = state.mine.indexOf(s.id) >= 0;
-    var mine = s.zone === mineZone, avail = mine && !s.taken && pickable;
+    var picked = state.picked.indexOf(s.id) >= 0;
+    var mine = s.zone === mineZone, avail = mine && !s.taken;
     var fill, stroke = 'none', sw2 = 0, cls = 'seat';
     if (picked) { fill = '#e8c66a'; cls += ' av pk'; }
     else if (s.taken) fill = '#3a3a40';
-    else if (held && !pickable) fill = '#e8c66a';
     else if (avail) { fill = 'rgba(212,167,58,.14)'; stroke = '#d4a73a'; sw2 = 1.5; cls += ' av'; }
     else fill = s.zone === 'reserved' ? '#161619' : '#1e1e22';
     var status = picked ? 'your pick' : s.taken ? 'taken' : avail ? 'available' : s.zone === 'reserved' ? 'reserved' : 'for another ticket';
@@ -298,7 +322,8 @@ function updatePanel(){
   $('picked').innerHTML = ok ? 'Selected: <b>' + esc(labels(state.picked)) + '</b>' : 'Tap a gold seat to pick ' + (need === 2 ? 'your two seats.' : 'it.');
   $('confirm').disabled = !ok;
   $('fields').hidden = !ok;
-  $('confirm').textContent = need === 2 ? 'Confirm seats' : 'Confirm seat';
+  $('final-note').hidden = !ok;
+  $('confirm').textContent = 'Issue my seat pass';
 }
 
 $('hall').addEventListener('click', function(e){ var g = e.target.closest && e.target.closest('.seat.av'); if (g) pick(g.getAttribute('data-id')); });
@@ -314,23 +339,24 @@ document.querySelectorAll('[data-tier]').forEach(function(b){
   });
 });
 $('switch').addEventListener('click', function(){ state.pass = null; state.picked = []; $('msg').textContent = ''; render(); });
-$('change').addEventListener('click', function(){ state.editing = true; state.picked = []; render(); });
 
 $('panel').addEventListener('submit', function(e){
   e.preventDefault();
   if (state.picked.length !== state.pass.seats) return;
-  var email = $('f-email').value.trim(), name = $('f-name').value.trim();
-  if (OPEN && !name) { $('msg').textContent = 'Please enter your full name.'; $('msg').className = 'msg err'; return; }
-  if ((OPEN || email) && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { $('msg').textContent = 'Please enter the email you paid with.'; $('msg').className = 'msg err'; return; }
-  $('confirm').disabled = true; $('msg').className = 'msg'; $('msg').textContent = 'Saving…';
+  var email = $('f-email').value.trim(), name = $('f-name').value.trim(), phone = $('f-phone').value.trim();
+  function bad(t){ $('msg').textContent = t; $('msg').className = 'msg err'; }
+  if (!name) return bad('Please enter your full name.');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return bad('Please enter the email you paid with.');
+  if (phone.replace(/\D/g, '').length < 10) return bad('Please enter your WhatsApp number.');
+  $('confirm').disabled = true; $('msg').className = 'msg'; $('msg').textContent = 'Issuing your seat pass…';
   fetch('/api/seats', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(OPEN ? { tier: state.pass.tier, seats: state.picked, name: name, email: email, phone: $('f-phone').value }
-                              : { t: token, seats: state.picked, name: name, email: email }) })
+    body: JSON.stringify(OPEN ? { tier: state.pass.tier, seats: state.picked, name: name, email: email, phone: phone }
+                              : { t: token, seats: state.picked, name: name, email: email, phone: phone }) })
     .then(function(r){ return r.json(); })
     .then(function(j){
       if (j.ok) {
         if (OPEN && j.data && j.data.token) { location.replace('/seats?t=' + j.data.token); return; }
-        state.editing = false; state.picked = []; $('msg').textContent = ''; return load();
+        state.picked = []; $('msg').textContent = ''; return load();
       }
       $('msg').textContent = j.error || 'Could not save. Please try again.'; $('msg').className = 'msg err';
       if (j.code === 'taken') { state.picked = []; return load(); }
