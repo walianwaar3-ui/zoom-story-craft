@@ -20,7 +20,7 @@
   BEFORE LAUNCH: edit the CONFIG object at the bottom of this file:
     1. vsl            → YouTube link, Vimeo link or .mp4 URL of the master VSL
     2. checkout.*     → checkout / GHL order-form URLs for each ticket
-    3. prices         → PKR 11,111 / 15,555 / 33,333 (intentional, do not round)
+    3. prices         → PKR 11,111 / 15,555 / 33,333 / 5,555 Back Rows (intentional, do not round)
     4. seatsRemaining → set the REAL number of unsold seats (null hides the counter)
     5. eventStart     → confirm exact start time (placeholder: 12:00 PM PKT)
     6. venue          → add the venue once confirmed
@@ -418,7 +418,8 @@ p{margin:0 0 1.1em}
 .seats-row b{color:var(--gold-2);font-size:1.05rem}
 .bar{height:8px;border-radius:99px;background:rgba(255,255,255,.07);overflow:hidden}
 .bar i{display:block;height:100%;width:0;border-radius:99px;background:linear-gradient(90deg,var(--gold),var(--red));transition:width 1.2s ease}
-.tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:52px;align-items:stretch}
+.tiers{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-top:52px;align-items:stretch;max-width:880px;margin-left:auto;margin-right:auto}
+.stripe-btn{display:block;min-height:48px}
 .tier{display:flex;flex-direction:column;background:var(--card);border:1px solid var(--line);border-radius:22px;padding:32px 26px 26px;position:relative}
 .tier.feat{border-color:rgba(212,167,58,.55);background:linear-gradient(180deg,rgba(212,167,58,.10),transparent 45%),var(--card-2);box-shadow:0 30px 80px -30px rgba(212,167,58,.4)}
 .badge{position:absolute;top:-13px;left:26px;background:linear-gradient(180deg,var(--gold-2),var(--gold));color:#141005;font-size:.7rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;padding:6px 12px;border-radius:999px}
@@ -594,6 +595,7 @@ fbq('track', 'PageView');
 src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
 /></noscript>
 <!-- End Meta Pixel Code -->
+<script async src="https://js.stripe.com/v3/buy-button.js"></script>
 </head>
 <body>
 
@@ -1108,6 +1110,25 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
         <a href="#tickets" class="btn btn-ghost btn-block" data-checkout="inner" data-track="cta_ticket_inner">Claim an Inner Table seat</a>
         <p class="alt-pay" data-alt-pay="inner" hidden>Secure card payment via Stripe · <a href="#pay" data-alt-tier="inner">or pay by bank / JazzCash</a></p>
       </article>
+
+      <article class="tier rv">
+        <span class="flag">Last two rows only</span>
+        <h3>Back Rows</h3>
+        <p class="for">Be in the room, from the last two rows.</p>
+        <div class="price"><small>PKR</small><span data-price="back">5,555</span></div>
+        <p class="pnote">One ticket · Rows H and I</p>
+        <ul class="checks">
+          <li><svg><use href="#check"/></svg>The full four-hour transformation session</li>
+          <li><svg><use href="#check"/></svg>Every live exercise, all four stages</li>
+          <li><svg><use href="#check"/></svg>Live Q&amp;A with Shahrez</li>
+          <li><svg><use href="#check"/></svg>Your own seat in Row H or I</li>
+        </ul>
+        <!-- Stripe Buy Button (PKR 5,555). Its after-payment redirect is set in Stripe. -->
+        <div class="stripe-btn" data-stripe-tier="back">
+          <stripe-buy-button buy-button-id="buy_btn_1UOipBJSNaJ4NZAnCkrf39cF" publishable-key="pk_live_51OHL2rJSNaJ4NZAnQ6wQAqXRTwypKQ86a5WjTrBdQUze8ssrgw4YM0ou0eyYpa0JZBtEdC33KpdRgJXidXUvBI7V00FyErd81l"></stripe-buy-button>
+        </div>
+        <p class="alt-pay">Secure card payment via Stripe · <a href="#pay" data-alt-tier="back">or pay by bank / JazzCash</a></p>
+      </article>
     </div>
     <p class="after"><svg style="display:inline;width:14px;height:14px;vertical-align:-2px;margin-right:6px"><use href="#lock"/></svg>Pay by card, bank transfer or JazzCash · Prices in PKR · Seats are non-refundable but transferable</p>
 
@@ -1204,7 +1225,7 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
       </details>
       <details>
         <summary>How much are tickets?<span class="pm" aria-hidden="true"></span></summary>
-        <div class="ans"><p>General Admission is PKR 11,111. The Pair Pass is PKR 15,555 in total for two people. The Inner Table is PKR 33,333 and is limited to <span data-inner-seats>15</span> seats.</p></div>
+        <div class="ans"><p>General Admission is PKR 11,111. The Pair Pass is PKR 15,555 in total for two people. The Inner Table is PKR 33,333 and is limited to <span data-inner-seats>15</span> seats. Back Rows (the last two rows) is PKR 5,555.</p></div>
       </details>
       <details>
         <summary>How do I pay, and who do I contact?<span class="pm" aria-hidden="true"></span></summary>
@@ -1264,7 +1285,7 @@ var CONFIG = {
 
   // Ticket prices in PKR.
   // Intentional prices, do not round. Pair = total for two people.
-  prices: { general: 11111, pair: 15555, inner: 33333 },
+  prices: { general: 11111, pair: 15555, inner: 33333, back: 5555 },
 
   // Event Coordinator WhatsApp (digits only, with country code).
   whatsapp: "13322332380",
@@ -1363,7 +1384,7 @@ Object.keys(CONFIG.prices).forEach(function(k){
   $all('[data-price="' + k + '"]').forEach(function(el){ el.textContent = fmt(CONFIG.prices[k]); });
 });
 if (CONFIG.privateClientClaim) $all('[data-claim]').forEach(function(el){ el.textContent = CONFIG.privateClientClaim; });
-var TIER_NAMES = { general: 'General Admission', pair: 'The Pair Pass (2 seats)', inner: 'The Inner Table' };
+var TIER_NAMES = { general: 'General Admission', pair: 'The Pair Pass (2 seats)', inner: 'The Inner Table', back: 'Back Rows' };
 function waLink(tier){
   var msg = 'Assalam o Alaikum Wali, I want to reserve my seat for Infinite Rizq (17 Oct, Lahore).' +
     (tier ? ' Ticket: ' + TIER_NAMES[tier] + ', PKR ' + fmt(CONFIG.prices[tier]) + '.' : '') +
@@ -1389,6 +1410,18 @@ $all('[data-checkout]').forEach(function(el){
     document.querySelector('[data-pay-tier]').textContent = TIER_NAMES[tier] + ' · PKR ' + fmt(CONFIG.prices[tier]);
     sel.hidden = false;
     $all('.pay [data-wa]').forEach(function(a){ a.href = waLink(tier); });
+  });
+});
+// Stripe Buy Button tiers: clicks happen inside Stripe's iframe, so we notice focus moving into it.
+$all('[data-stripe-tier]').forEach(function(box){
+  var tier = box.getAttribute('data-stripe-tier'), sent = 0;
+  window.addEventListener('blur', function(){
+    var a = document.activeElement;
+    if (!a || a.tagName !== 'IFRAME' || !box.contains(a) || Date.now() - sent < 3000) return;
+    sent = Date.now();
+    track('checkout_stripe', { tier: tier, value: CONFIG.prices[tier], currency: 'PKR' });
+    if (typeof window.fbq === 'function') window.fbq('track', 'InitiateCheckout', { value: CONFIG.prices[tier], currency: 'PKR', content_name: tier });
+    try { localStorage.setItem('ir_checkout_tier', JSON.stringify({ tier: tier, value: CONFIG.prices[tier], at: Date.now() })); } catch (e) {}
   });
 });
 $all('[data-alt-tier]').forEach(function(a){
