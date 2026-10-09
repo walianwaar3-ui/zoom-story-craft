@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Choose Your Seat | Infinite Rizq</title>
+<meta name="description" content="Choose your seat for Infinite Rizq, Auditorium 2, Expo Center Lahore.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0a0a0b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!--
+  SEAT PICKER: infiniterizq.com/seats?t=<pass token>
+  Each paid ticket gets a private link (a row in Supabase ir_seat_passes). The page shows
+  Auditorium 2 (9 rows x 22 seats = 198) and lets the holder pick seats in their tier's zone:
+  Inner Table = Row A (16 seats, 6 reserved at the ends), General + Pair Pass = Rows B to F,
+  Back tier = Rows G to I. Rules are enforced by ir_claim_seats() in the database.
+-->
+<style>
+:root{
+  --bg:#0a0a0b;--bg-2:#111113;--card:#16161a;--line:rgba(255,255,255,.08);--line-2:rgba(255,255,255,.14);
+  --ivory:#f3ede1;--text:#c9c3b6;--muted:#8a857b;--gold:#d4a73a;--gold-2:#e8c66a;--gold-soft:rgba(212,167,58,.14);
+  --red:#e0736b;--green:#5fcf97;
+  --serif:'Playfair Display',Georgia,serif;--sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+h1,h2{font-family:var(--serif);font-weight:600;color:var(--ivory);line-height:1.15;margin:0}
+h1 em{font-style:italic;color:var(--gold-2);font-weight:500}
+:focus-visible{outline:2px solid var(--gold-2);outline-offset:3px}
+.wrap{max-width:860px;margin:0 auto;padding:0 16px}
+.mark{width:40px;height:40px;border-radius:50%;display:inline-grid;place-items:center;background:#1a1a1e;border:1px solid var(--line-2);font:600 .76rem var(--serif);color:var(--ivory)}
+header{display:flex;align-items:center;gap:12px;padding:18px 0 6px}
+header small{display:block;color:var(--muted);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase}
+header b{color:var(--ivory);font-family:var(--serif);font-weight:600;font-size:1.05rem}
+.intro{padding:26px 0 8px;text-align:center}
+.intro h1{font-size:clamp(1.7rem,4.6vw,2.4rem)}
+.intro p{margin:10px auto 0;max-width:560px;color:var(--text);font-size:.98rem}
+.pass{display:inline-flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px}
+.chip{border:1px solid var(--line-2);border-radius:999px;padding:6px 12px;font-size:.82rem;color:var(--ivory);background:rgba(255,255,255,.03)}
+.chip b{color:var(--gold-2)}
+.legend{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 18px;margin:22px 0 4px;font-size:.8rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.sw{width:14px;height:13px;border-radius:3px;display:inline-block}
+.sw.av{border:1.5px solid var(--gold);background:var(--gold-soft)}
+.sw.sel{background:var(--gold-2)}
+.sw.tk{background:#3a3a40}
+.sw.na{background:#1e1e22;border:1px solid #2a2a2f}
+.hall{margin:10px -16px 0;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 8px}
+.hall svg{display:block;width:100%;min-width:540px;height:auto}
+.seat{cursor:default}
+.seat.av{cursor:pointer}
+.seat.av:not(.pk):hover rect,.seat.av:not(.pk):focus-visible rect{fill:rgba(232,198,106,.35)}
+.seat:focus{outline:none}
+.seat:focus-visible rect{stroke:var(--ivory);stroke-width:2}
+.hint{text-align:center;color:var(--muted);font-size:.8rem;margin:8px 0 0}
+.panel{position:sticky;bottom:0;z-index:5;margin-top:22px;background:rgba(16,16,19,.96);backdrop-filter:blur(10px);border:1px solid rgba(212,167,58,.35);border-radius:18px 18px 0 0;padding:16px 18px calc(16px + env(safe-area-inset-bottom))}
+.panel .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.picked{font-size:.95rem;color:var(--ivory)}
+.picked b{color:var(--gold-2);font-family:var(--serif);font-size:1.15rem;font-weight:600}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.fields label{font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.fields input{width:100%;margin-top:4px;background:#0d0d0f;border:1px solid var(--line-2);border-radius:10px;color:var(--ivory);font:500 .95rem var(--sans);padding:11px 12px}
+.fields input:focus{border-color:var(--gold)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(180deg,var(--gold-2),var(--gold));color:#141005;font:700 .98rem var(--sans);padding:14px 22px;border-radius:12px;border:0;cursor:pointer}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:transparent;border:1px solid var(--line-2);color:var(--ivory)}
+.msg{margin:10px 0 0;font-size:.88rem;min-height:1.3em}
+.msg.err{color:var(--red)}
+.msg.ok{color:var(--green)}
+.done{margin:26px auto 0;max-width:560px;text-align:center;border:1px solid rgba(212,167,58,.4);border-radius:18px;padding:26px 22px;background:linear-gradient(180deg,rgba(212,167,58,.10),var(--card) 70%)}
+.done .k{font-size:.74rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:600}
+.done .seatbig{font-family:var(--serif);font-size:clamp(1.8rem,6vw,2.5rem);color:var(--ivory);margin:6px 0 8px;font-weight:600}
+.done p{margin:6px 0 0;font-size:.92rem}
+.done .actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.center-msg{text-align:center;padding:80px 0;color:var(--text)}
+footer{color:var(--muted);font-size:.8rem;text-align:center;padding:30px 0 120px}
+footer a{color:var(--gold-2)}
+@media (max-width:560px){ .fields{grid-template-columns:1fr} .panel .row .btn{width:100%} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="mark">WWO</span>
+    <div><b>Infinite Rizq</b><small>Auditorium 2 · Expo Center Lahore</small></div>
+  </header>
+
+  <p class="center-msg" id="loading">Loading your seat map…</p>
+  <p class="center-msg" id="fatal" hidden></p>
+
+  <main id="app" hidden>
+    <section class="intro">
+      <h1>Choose your <em>seat.</em></h1>
+      <p id="intro-copy"></p>
+      <div class="pass" id="pass"></div>
+    </section>
+
+    <div class="done" id="done" hidden>
+      <div class="k" id="done-k">Your seat</div>
+      <div class="seatbig" id="done-seat"></div>
+      <p id="done-copy"></p>
+      <div class="actions">
+        <button class="btn ghost" type="button" id="change" hidden>Change my seat</button>
+      </div>
+    </div>
+
+    <div id="picker">
+      <div class="legend" aria-hidden="true">
+        <span><i class="sw av"></i>Available for you</span>
+        <span><i class="sw sel"></i>Your pick</span>
+        <span><i class="sw tk"></i>Taken</span>
+        <span><i class="sw na"></i>Other ticket</span>
+      </div>
+      <div class="hall" id="hall"></div>
+      <p class="hint" id="hint"></p>
+
+      <form class="panel" id="panel" novalidate>
+        <div class="row">
+          <div class="picked" id="picked">Tap a gold seat to pick it.</div>
+          <button class="btn" type="submit" id="confirm" disabled>Confirm seat</button>
+        </div>
+        <div class="fields" id="fields" hidden>
+          <div><label for="f-name">Name on ticket</label><input id="f-name" autocomplete="name" maxlength="120"></div>
+          <div><label for="f-email">Email for confirmation</label><input id="f-email" type="email" autocomplete="email" maxlength="160"></div>
+        </div>
+        <p class="msg" id="msg" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </main>
+
+  <footer>Saturday 17 October 2026 · 12 PM to 4 PM · Questions? WhatsApp Wali Anwaar, <a href="https://wa.me/13322332380">+1 (332) 233-2380</a></footer>
+</div>
+
+<script>
+(function(){
+var $ = function(id){ return document.getElementById(id); };
+var token = new URLSearchParams(location.search).get('t') || '';
+var ROWS = ['A','B','C','D','E','F','G','H','I'];
+var TIER = { inner: 'Inner Table', general: 'General Admission', pair: 'Pair Pass', back: 'Back Rows' };
+var ZONE_OF = { inner: 'inner', general: 'mid', pair: 'mid', back: 'back' };
+var ZONE_TEXT = { inner: 'Row A, the front row nearest the stage', mid: 'Rows B to F', back: 'Rows G to I' };
+var state = { pass: null, seats: [], mine: [], picked: [], editing: false };
+
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }
+function label(id){ var p = id.split('-'); return 'Row ' + p[0] + ', Seat ' + Number(p[1]); }
+function labels(ids){
+  if (!ids.length) return '';
+  if (ids.length === 2 && ids[0][0] === ids[1][0]) return 'Row ' + ids[0][0] + ', Seats ' + Number(ids[0].slice(2)) + ' and ' + Number(ids[1].slice(2));
+  return ids.map(label).join(' + ');
+}
+function byId(id){ for (var i = 0; i < state.seats.length; i++) if (state.seats[i].id === id) return state.seats[i]; return null; }
+function fatal(text){ $('loading').hidden = true; $('app').hidden = true; $('fatal').hidden = false; $('fatal').textContent = text; }
+
+function load(){
+  if (!/^[a-f0-9]{16,64}$/.test(token)) return fatal('This seat link is not valid. Please use the link from your confirmation message, or WhatsApp the coordinator below.');
+  return fetch('/api/seats?t=' + encodeURIComponent(token), { cache: 'no-store' })
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if (!j.ok) return fatal(j.error || 'Could not load the seat map.');
+      state.pass = j.data.pass; state.seats = j.data.seats || []; state.mine = (j.data.mine || []).slice().sort();
+      if (!state.editing) state.picked = [];
+      $('loading').hidden = true; $('app').hidden = false;
+      render();
+    })
+    .catch(function(){ fatal('Network error. Please check your connection and reload.'); });
+}
+
+function zoneMine(s){ return s.zone === ZONE_OF[state.pass.tier]; }
+function canPick(){ return !state.mine.length || state.editing; }
+
+function render(){
+  var p = state.pass, n = p.seats;
+  $('pass').innerHTML = '<span class="chip">Ticket <b>' + esc(p.ticket_id) + '</b></span><span class="chip">' + esc(TIER[p.tier] || p.tier) + '</span>' +
+    (n === 2 ? '<span class="chip">2 seats, side by side</span>' : '');
+  $('intro-copy').textContent = (p.name ? p.name.split(' ')[0] + ', your ' : 'Your ') + (TIER[p.tier] || 'ticket') +
+    (n === 2 ? ' seats are in ' : ' seat is in ') + ZONE_TEXT[ZONE_OF[p.tier]] + '. Gold seats are free for you. Pick ' + (n === 2 ? 'two seats together' : 'one') + ' and confirm.';
+  if (!$('f-name').value) $('f-name').value = p.name || '';
+  if (!$('f-email').value) $('f-email').value = p.email || '';
+
+  var showDone = state.mine.length && !state.editing;
+  $('done').hidden = !showDone;
+  $('picker').hidden = !!showDone;
+  if (showDone) {
+    $('done-seat').textContent = labels(state.mine);
+    var canChange = !p.locked && p.changes < 1;
+    $('done-copy').innerHTML = 'Saved to ticket <b>' + esc(p.ticket_id) + '</b>. Take a screenshot. Ushers will guide you there on the day.' +
+      (canChange ? '<br>You can change your seat once, until Thursday 15 October.' : '<br>Your seat is final.');
+    $('change').hidden = !canChange;
+    return;
+  }
+  drawHall();
+  updatePanel();
+}
+
+function drawHall(){
+  var W = 700, step = 25, sw = 20, sh = 18, aisle = 26, x0 = (W - (22 * step - 5 + 2 * aisle)) / 2, y0 = 118, rowStep = 34, curve = 20 / 90000;
+  function sx(n){ return x0 + (n - 1) * step + (n > 5 ? aisle : 0) + (n > 17 ? aisle : 0); }
+  function sy(r, n){ var dx = sx(n) + sw / 2 - W / 2; return y0 + r * rowStep - curve * dx * dx; }
+  var svg = '<svg viewBox="0 0 ' + W + ' 450" role="group" aria-label="Seat map of Auditorium 2, stage at the top">';
+  svg += '<path d="M150 24 Q350 74 550 24 L550 10 L150 10 Z" fill="rgba(212,167,58,.14)" stroke="rgba(212,167,58,.55)"/>' +
+    '<text x="350" y="40" text-anchor="middle" fill="#e8c66a" font-family="Playfair Display, Georgia, serif" font-size="15" letter-spacing="4">STAGE</text>' +
+    '<text x="350" y="86" text-anchor="middle" fill="#8a857b" font-size="10.5" letter-spacing="2">OPEN FLOOR</text>';
+  var mineZone = ZONE_OF[state.pass.tier], pickable = canPick();
+  ROWS.forEach(function(r, ri){
+    var ly = sy(ri, 1) + 13, ry = sy(ri, 22) + 13;
+    svg += '<text x="' + (x0 - 14) + '" y="' + ly + '" text-anchor="middle" fill="#8a857b" font-size="11" font-weight="600">' + r + '</text>' +
+           '<text x="' + (sx(22) + sw + 14) + '" y="' + ry + '" text-anchor="middle" fill="#8a857b" font-size="11" font-weight="600">' + r + '</text>';
+  });
+  state.seats.forEach(function(s){
+    var ri = ROWS.indexOf(s.row), x = sx(s.num), y = sy(ri, s.num);
+    var picked = state.picked.indexOf(s.id) >= 0, held = state.mine.indexOf(s.id) >= 0;
+    var mine = s.zone === mineZone, avail = mine && !s.taken && pickable;
+    var fill, stroke = 'none', sw2 = 0, cls = 'seat';
+    if (picked) { fill = '#e8c66a'; cls += ' av pk'; }
+    else if (s.taken) fill = '#3a3a40';
+    else if (held && !pickable) fill = '#e8c66a';
+    else if (avail) { fill = 'rgba(212,167,58,.14)'; stroke = '#d4a73a'; sw2 = 1.5; cls += ' av'; }
+    else fill = s.zone === 'reserved' ? '#161619' : '#1e1e22';
+    var status = picked ? 'your pick' : s.taken ? 'taken' : avail ? 'available' : s.zone === 'reserved' ? 'reserved' : 'for another ticket';
+    svg += '<g class="' + cls + '" data-id="' + s.id + '"' + (avail || picked ? ' role="button" tabindex="0"' : '') + ' aria-label="Row ' + s.row + ' seat ' + s.num + ', ' + status + '">' +
+      '<rect x="' + x + '" y="' + y + '" width="' + sw + '" height="' + sh + '" rx="4" fill="' + fill + '" stroke="' + stroke + '" stroke-width="' + sw2 + '"/>' +
+      (picked ? '<path d="M' + (x + 6) + ' ' + (y + 9) + 'l3 3l6 -6" fill="none" stroke="#141005" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' : '') +
+      '</g>';
+  });
+  svg += '<text x="350" y="436" text-anchor="middle" fill="#8a857b" font-size="10.5" letter-spacing="2">ENTRANCE FROM LOBBY</text></svg>';
+  $('hall').innerHTML = svg;
+  var h = $('hall'); if (h.scrollWidth > h.clientWidth) h.scrollLeft = (h.scrollWidth - h.clientWidth) / 2;
+  $('hint').textContent = state.pass.seats === 2 ? 'Tap one seat and we pick the seat beside it for your guest.' : 'Tap a gold seat to choose it. Tap again to undo.';
+}
+
+function seatAt(row, num){ return byId(row + '-' + (num < 10 ? '0' : '') + num); }
+function blockOf(n){ return n <= 5 ? 'L' : n <= 17 ? 'C' : 'R'; }
+function freeForMe(s){ return s && s.zone === ZONE_OF[state.pass.tier] && !s.taken; }
+
+function pick(id){
+  var s = byId(id); if (!s) return;
+  $('msg').textContent = ''; $('msg').className = 'msg';
+  if (state.pass.seats === 1) { state.picked = state.picked[0] === id ? [] : [id]; }
+  else {
+    if (state.picked.indexOf(id) >= 0) { state.picked = []; }
+    else {
+      var right = seatAt(s.row, s.num + 1), left = seatAt(s.row, s.num - 1), mate = null;
+      if (freeForMe(right) && blockOf(s.num + 1) === blockOf(s.num)) mate = right;
+      else if (freeForMe(left) && blockOf(s.num - 1) === blockOf(s.num)) mate = left;
+      if (!mate) { state.picked = []; $('msg').textContent = 'No free seat beside that one. Pick a spot with two gold seats together.'; $('msg').className = 'msg err'; }
+      else state.picked = [s.id, mate.id].sort();
+    }
+  }
+  drawHall(); updatePanel();
+}
+
+function updatePanel(){
+  var need = state.pass.seats, ok = state.picked.length === need;
+  $('picked').innerHTML = ok ? 'Selected: <b>' + esc(labels(state.picked)) + '</b>' : 'Tap a gold seat to pick ' + (need === 2 ? 'your two seats.' : 'it.');
+  $('confirm').disabled = !ok;
+  $('fields').hidden = !ok;
+  $('confirm').textContent = need === 2 ? 'Confirm seats' : 'Confirm seat';
+}
+
+$('hall').addEventListener('click', function(e){ var g = e.target.closest && e.target.closest('.seat.av'); if (g) pick(g.getAttribute('data-id')); });
+$('hall').addEventListener('keydown', function(e){
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  var g = e.target.closest && e.target.closest('.seat.av'); if (g) { e.preventDefault(); pick(g.getAttribute('data-id')); }
+});
+$('change').addEventListener('click', function(){ state.editing = true; state.picked = []; render(); });
+
+$('panel').addEventListener('submit', function(e){
+  e.preventDefault();
+  if (state.picked.length !== state.pass.seats) return;
+  var email = $('f-email').value.trim();
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { $('msg').textContent = 'Please enter a valid email.'; $('msg').className = 'msg err'; return; }
+  $('confirm').disabled = true; $('msg').className = 'msg'; $('msg').textContent = 'Saving…';
+  fetch('/api/seats', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ t: token, seats: state.picked, name: $('f-name').value, email: email }) })
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if (j.ok) { state.editing = false; state.picked = []; $('msg').textContent = ''; return load(); }
+      $('msg').textContent = j.error || 'Could not save. Please try again.'; $('msg').className = 'msg err';
+      if (j.code === 'taken') { state.picked = []; return load(); }
+      updatePanel();
+    })
+    .catch(function(){ $('msg').textContent = 'Network error. Please try again.'; $('msg').className = 'msg err'; updatePanel(); });
+});
+
+load();
+})();
+</script>
+</body>
+</html>
