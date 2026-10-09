@@ -172,7 +172,7 @@ td:first-child{color:var(--ivory)}
   <p class="status" id="status" aria-live="polite">Loading…</p>
 
   <main class="wrap">
-    <h2 class="sec-title">Sales<small>Live from the ticket sheet · all time · verified payments only</small></h2>
+    <h2 class="sec-title">Sales<small id="sales-src">From the ticket sheet · all time · verified payments only</small></h2>
     <div class="grid kpis" id="sales"></div>
 
     <h2 class="sec-title">Funnel<small>Selected date range</small></h2>
@@ -362,9 +362,10 @@ function bars(el, rows, opts){
 var CAPACITY = { seats: 200, inner: 15 };
 function renderSales(s){
   if (!s) {
-    $('sales').innerHTML = '<div class="card empty" style="grid-column:1/-1">Sales numbers are not connected yet. Update the Apps Script in the ticket sheet with the latest version from the repo and deploy a new version.</div>';
+    $('sales').innerHTML = '<div class="card empty" style="grid-column:1/-1">Sales numbers are not available right now. Try Refresh in a minute.</div>';
     return;
   }
+  $('sales-src').textContent = (s.source === 'live' ? 'Live from the ticket sheet' : 'Ticket sheet, as of ' + new Date(s.asOf).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })) + ' · all time · verified payments only';
   var tr = s.tiers || {}, g = tr['General'] || {}, p = tr['Pair Pass'] || {}, inn = tr['Inner Table'] || {};
   var innerSold = inn.seats || 0;
   $('sales').innerHTML = [

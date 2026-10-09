@@ -36,7 +36,13 @@ export default async function handler(req, res) {
   const sales = fetchSales();
   try {
     const r = await rpc('ir_dashboard', { p_key: body.key.slice(0, 100), p_from: isoOrNull(body.from), p_to: isoOrNull(body.to) });
-    if (r.ok) return res.status(200).json({ ok: true, data: r.data, sales: await sales });
+    if (r.ok) {
+      // Live numbers from the sheet when the Apps Script supports it, else the last saved snapshot.
+      let s = await sales;
+      if (s) s.source = 'live';
+      else { const snap = await rpc('ir_sales', { p_key: body.key.slice(0, 100) }).catch(() => null); s = snap && snap.ok ? snap.data : null; }
+      return res.status(200).json({ ok: true, data: r.data, sales: s });
+    }
     const msg = r.data && r.data.message;
     if (msg === 'unauthorized') return res.status(401).json({ ok: false, error: 'Wrong access key' });
     console.error('ir_dashboard failed', r.status, r.data);
