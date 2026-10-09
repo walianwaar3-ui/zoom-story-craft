@@ -335,6 +335,11 @@ function pick(id){
   drawHall(); updatePanel();
 }
 
+// Meta's browser cookies, sent with the pass so the server-side Purchase (when payment is confirmed) matches the ad click.
+function fbIds(){
+  var c = function(n){ var m = document.cookie.match('(?:^|; )' + n + '=([^;]*)'); return m ? decodeURIComponent(m[1]) : undefined; };
+  return { fbp: c('_fbp'), fbc: c('_fbc') };
+}
 function updatePanel(){
   var need = state.pass.seats, ok = state.picked.length === need;
   $('picked').innerHTML = ok ? 'Selected: <b>' + esc(labels(state.picked)) + '</b>' : 'Tap a gold seat to pick ' + (need === 2 ? 'your two seats.' : 'it.');
@@ -368,8 +373,8 @@ $('panel').addEventListener('submit', function(e){
   if (phone.replace(/\D/g, '').length < 10) return bad('Please enter your WhatsApp number.');
   $('confirm').disabled = true; $('msg').className = 'msg'; $('msg').textContent = 'Issuing your seat pass…';
   fetch('/api/seats', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(OPEN ? { tier: state.pass.tier, seats: state.picked, name: name, email: email, phone: phone }
-                              : { t: token, seats: state.picked, name: name, email: email, phone: phone }) })
+    body: JSON.stringify(Object.assign(OPEN ? { tier: state.pass.tier, seats: state.picked, name: name, email: email, phone: phone }
+                              : { t: token, seats: state.picked, name: name, email: email, phone: phone }, fbIds())) })
     .then(function(r){ return r.json(); })
     .then(function(j){
       if (j.ok) {

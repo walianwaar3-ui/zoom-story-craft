@@ -3,6 +3,7 @@
 // Confirming issues the seat pass instantly and it is final. Every rule (zone per tier, pairs side by side,
 // no changes once issued, no double booking) is enforced in the database functions ir_seatmap() and ir_claim_pass().
 import { rpc, parseBody } from './_supabase.js';
+import { purchaseEvent, sendEvents } from './_meta.js';
 
 const MESSAGES = {
   invalid: 'This seat link is not valid. Please use the link from your confirmation message.',
@@ -43,6 +44,35 @@ async function sendSeatToSheet(tok) {
     if (!result.ok) console.error('Sheet rejected seat pass', resp.status, result.error);
   } catch (err) {
     console.error('Failed to send seat pass to sheet', err);
+  }
+}
+
+// Paid on the sheet = real money confirmed, so this is where Meta hears about the Purchase (once per ticket).
+// ir_capi_mark claims the send atomically, so a second Paid on the same row never reports twice.
+async function sendPurchase(secret, pass) {
+  try {
+    const m = await rpc('ir_capi_mark', { p_secret: secret, p_ticket: pass.ticket_id });
+    if (!m.ok || m.data !== true) return;
+    const r = await sendEvents([purchaseEvent(pass)]);
+    if (!r.ok) {
+      console.error('Meta CAPI rejected purchase', pass.ticket_id, r.status, JSON.stringify(r.data));
+      await rpc('ir_capi_unmark', { p_secret: secret, p_ticket: pass.ticket_id });
+    }
+  } catch (err) {
+    console.error('Meta CAPI send failed', pass.ticket_id, err);
+  }
+}
+
+// The buyer's Meta browser ids (cookies) plus IP and device, kept with the pass so the later Purchase matches their ad click.
+async function savePassMeta(tok, req, body) {
+  if (!tok) return;
+  const fb = v => (typeof v === 'string' && /^fb\.\d\.\d+\.[\w.-]{1,200}$/.test(v) ? v : undefined);
+  const ip = String(req.headers['x-forwarded-for'] || '').split(',')[0].trim() || undefined;
+  const ua = String(req.headers['user-agent'] || '').slice(0, 400) || undefined;
+  try {
+    await rpc('ir_pass_meta', { p_token: tok, p_meta: { fbp: fb(body.fbp), fbc: fb(body.fbc), ip, ua } });
+  } catch (err) {
+    console.error('Could not save pass meta', err);
   }
 }
 
@@ -93,6 +123,7 @@ export default async function handler(req, res) {
       if (body.admin) {
         const a = await rpc('ir_admin_pass', { p_secret: str(body.secret, 200), p_ticket: str(body.ticketId, 20), p_action: str(body.admin, 10), p_ref: str(body.ref, 20) });
         if (!a.ok && String((a.data && a.data.message) || '') === 'unauthorized') return res.status(401).json({ ok: false, error: 'unauthorized' });
+        if (a.ok && body.admin === 'verify' && a.data && a.data.status === 'verified' && !a.data.capi_sent_at) await sendPurchase(str(body.secret, 200), a.data);
         return a.ok ? res.status(200).json({ ok: true, data: a.data }) : failure(res, a);
       }
       // Find my seat: email plus a word of the name on the ticket returns that ticket's private pass link.
@@ -105,7 +136,7 @@ export default async function handler(req, res) {
         // Open flow: anyone picks their ticket type; the email links them to a paid ticket, or the seat is held pending verification.
         : await rpc('ir_claim_open', { p_tier: str(body.tier, 10), p_seats: seats, p_name: str(body.name, 120), p_email: email, p_phone: str(body.phone, 40) });
       if (!r.ok) return failure(res, r);
-      await sendSeatToSheet(t || (r.data && r.data.token));
+      await Promise.all([sendSeatToSheet(t || (r.data && r.data.token)), savePassMeta(t || (r.data && r.data.token), req, body)]);
       return res.status(200).json({ ok: true, data: r.data });
     }
     res.setHeader('Allow', 'GET, POST');
