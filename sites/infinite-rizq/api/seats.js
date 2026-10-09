@@ -19,6 +19,30 @@ const MESSAGES = {
 };
 const TIER_NAMES = { inner: 'Inner Table', general: 'General Admission', pair: 'Pair Pass', back: 'Back Rows' };
 
+// Best effort: the database is the record of truth, so a sheet failure never fails the seat pass.
+async function sendSeatToSheet(tok) {
+  const url = process.env.SHEET_WEBHOOK_URL, secret = process.env.SHEET_WEBHOOK_SECRET;
+  if (!url || !secret || !tok) return;
+  try {
+    const m = await rpc('ir_seatmap', { p_token: tok });
+    if (!m.ok) return console.error('seat sheet sync: could not read pass', m.status);
+    const p = m.data.pass || {};
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ secret, type: 'seat', data: {
+        ticketId: p.ticket_id, tier: p.tier, seats: m.data.mine || [], name: p.name, email: p.email,
+        phone: p.phone, status: p.status, issuedAt: p.issued_at,
+      } }),
+      signal: AbortSignal.timeout(8000),
+    });
+    const result = await resp.json().catch(() => ({}));
+    if (!result.ok) console.error('Sheet rejected seat pass', resp.status, result.error);
+  } catch (err) {
+    console.error('Failed to send seat pass to sheet', err);
+  }
+}
+
 function token(v) {
   return typeof v === 'string' && /^[a-f0-9]{16,64}$/.test(v) ? v : null;
 }
@@ -65,7 +89,9 @@ export default async function handler(req, res) {
         ? await rpc('ir_claim_pass', { p_token: t, p_seats: seats, p_name: str(body.name, 120), p_email: email, p_phone: str(body.phone, 40) })
         // Open flow: anyone picks their ticket type; the email links them to a paid ticket, or the seat is held pending verification.
         : await rpc('ir_claim_open', { p_tier: str(body.tier, 10), p_seats: seats, p_name: str(body.name, 120), p_email: email, p_phone: str(body.phone, 40) });
-      return r.ok ? res.status(200).json({ ok: true, data: r.data }) : failure(res, r);
+      if (!r.ok) return failure(res, r);
+      await sendSeatToSheet(t || (r.data && r.data.token));
+      return res.status(200).json({ ok: true, data: r.data });
     }
     res.setHeader('Allow', 'GET, POST');
     return res.status(405).json({ ok: false, error: 'Method not allowed' });

@@ -9,6 +9,10 @@
 const SECRET = 'PASTE_SHEET_WEBHOOK_SECRET_HERE';
 const SHEET_ID = '1-mqtgE8-SBuDlPhmnH4RmCvmWD-Hh_qk3m30IYD0uy4'; // Infinite Rizq — Attendees & Tickets
 
+const SEAT_TAB = 'Seat Passes';
+const SEAT_HEADERS = ['Issued At', 'Pass', 'Status', 'Ticket Type', 'Seats', 'Full Name', 'Email', 'WhatsApp', 'In Tickets tab', 'Notes'];
+const TIER_LABELS = { inner: 'Inner Table', general: 'General', pair: 'Pair Pass', back: 'Back Rows' };
+
 const COMMIT_LABELS = {
   'yes': "Yes, I'm ready to commit",
   'yes-discuss': 'Yes, but wants to discuss details',
@@ -36,10 +40,42 @@ function doPost(e) {
       ]);
       return reply({ ok: true });
     }
+    if (body.type === 'seat') return reply(recordSeat(ss, body.data || {}));
     return reply({ ok: false, error: 'unknown type' });
   } finally {
     lock.releaseLock();
   }
+}
+
+// A seat pass was issued on infiniterizq.com/seats. Log it on the Seat Passes tab and,
+// when it belongs to a paid ticket (IR-xxx), write the seat into that ticket's row.
+// Pending passes (P-xxx) are holds from people whose email did not match a payment yet.
+function recordSeat(ss, d) {
+  const seats = (d.seats || []).join(', ');
+  let tab = ss.getSheetByName(SEAT_TAB);
+  if (!tab) {
+    tab = ss.insertSheet(SEAT_TAB);
+    tab.appendRow(SEAT_HEADERS);
+    tab.getRange(1, 1, 1, SEAT_HEADERS.length).setFontWeight('bold');
+    tab.setFrozenRows(1);
+  }
+  let matched = 'No';
+  const tickets = ss.getSheetByName('Tickets');
+  const ids = tickets.getRange(2, 1, Math.max(1, tickets.getLastRow() - 1), 1).getValues();
+  for (let i = 0; i < ids.length; i++) {
+    if (String(ids[i][0]).trim() !== d.ticketId) continue;
+    const row = i + 2;
+    tickets.getRange(row, 17).setValue(seats); // Q: Seat
+    if (d.phone && !String(tickets.getRange(row, 7).getValue()).trim()) tickets.getRange(row, 7).setValue("'" + d.phone); // G: WhatsApp
+    matched = 'Yes, row ' + row;
+    break;
+  }
+  tab.appendRow([
+    new Date(d.issuedAt || Date.now()), d.ticketId || '',
+    d.status === 'verified' ? 'Paid' : 'Pending: match payment',
+    TIER_LABELS[d.tier] || d.tier || '', seats, d.name || '', d.email || '', "'" + (d.phone || ''), matched, '',
+  ]);
+  return { ok: true, matched: matched };
 }
 
 // Sales sanity metrics for the /dashboard, read straight from the Tickets tab.
