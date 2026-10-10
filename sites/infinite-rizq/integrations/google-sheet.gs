@@ -91,13 +91,14 @@ function salesKpis() {
     'General': { bookings: 0, seats: 0, revenue: 0 },
     'Pair Pass': { bookings: 0, seats: 0, revenue: 0 },
     'Inner Table': { bookings: 0, seats: 0, revenue: 0 },
+    'Back Rows': { bookings: 0, seats: 0, revenue: 0 },
   };
   const k = { bookings: 0, seats: 0, revenue: 0, pending: 0, notIssued: 0, checkedIn: 0, tiers: tiers };
   rows.forEach(function (r) {
     if (!String(r[2]).trim()) return; // no name, unused ticket ID
     const verified = String(r[11]).trim();
     if (verified !== 'Yes') { if (verified !== 'No') k.pending++; return; }
-    const seats = Number(r[4]) || 1, amount = Number(r[9]) || 0, t = tiers[String(r[3]).trim()];
+    const seats = Number(r[4]) || 1, amount = Number(String(r[9]).replace(/[^0-9.]/g, '')) || 0, t = tiers[String(r[3]).trim()];
     k.bookings++; k.seats += seats; k.revenue += amount;
     if (t) { t.bookings++; t.seats += seats; t.revenue += amount; }
     if (String(r[12]).trim() !== 'Yes') k.notIssued++;
