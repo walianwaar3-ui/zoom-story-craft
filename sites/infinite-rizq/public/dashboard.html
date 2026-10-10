@@ -463,17 +463,17 @@ function renderSales(s){
     return;
   }
   $('sales-src').textContent = (s.source === 'live' ? 'Live from the ticket sheet' : 'Ticket sheet, as of ' + new Date(s.asOf).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })) + ' · all time · verified payments only';
-  var tr = s.tiers || {}, g = tr['General'] || {}, p = tr['Pair Pass'] || {}, inn = tr['Inner Table'] || {};
+  var tr = s.tiers || {}, g = tr['General'] || {}, p = tr['Pair Pass'] || {}, inn = tr['Inner Table'] || {}, bk = tr['Back Rows'] || {};
   var innerSold = inn.seats || 0;
   $('sales').innerHTML = [
-    kpi('Seats sold', fmt(s.seats), '<b>' + fmt(Math.max(0, CAPACITY.seats - s.seats)) + '</b> left of ' + CAPACITY.seats + ' · ' + fmt(s.bookings) + ' bookings', true),
+    kpi('Seats sold', fmt(s.seats), '<b>' + fmt(Math.max(0, CAPACITY.seats - s.seats)) + '</b> left of ' + CAPACITY.seats + ' · ' + fmt(s.bookings) + ' bookings · ' + fmt(s.checkedIn || 0) + ' checked in', true),
     kpi('Revenue verified', 'PKR ' + fmt(s.revenue), 'payments marked Verified in the sheet', true),
     kpi('Ticket not issued yet', fmt(s.notIssued), s.notIssued ? 'paid and verified, still waiting for a ticket' : 'every verified buyer has a ticket', s.notIssued > 0 ? 'warn' : false),
     kpi('Pending verification', fmt(s.pending), s.pending ? 'payments to confirm before issuing' : 'nothing waiting', s.pending > 0 ? 'warn' : false),
     kpi('General', fmt(g.bookings || 0), fmt(g.seats || 0) + ' seats · PKR ' + fmt(g.revenue || 0)),
     kpi('Pair Pass', fmt(p.bookings || 0), fmt(p.seats || 0) + ' seats · PKR ' + fmt(p.revenue || 0)),
     kpi('Inner Table', fmt(innerSold) + ' / ' + CAPACITY.inner, '<b>' + fmt(Math.max(0, CAPACITY.inner - innerSold)) + '</b> left · PKR ' + fmt(inn.revenue || 0)),
-    kpi('Checked in', fmt(s.checkedIn), 'of ' + fmt(s.seats) + ' seats on the day')
+    kpi('Back Rows', fmt(bk.bookings || 0), fmt(bk.seats || 0) + ' seats · PKR ' + fmt(bk.revenue || 0))
   ].join('');
 }
 
