@@ -29,6 +29,7 @@ function doPost(e) {
 
   if (body.type === 'kpis') return reply({ ok: true, data: salesKpis() });
   if (body.type === 'tickets') return reply({ ok: true, data: ticketRows() });
+  if (body.type === 'approve') return reply(approvePass(String(body.pass || '').trim()));
 
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
@@ -175,6 +176,26 @@ function onSeatEdit(e) {
   } finally {
     lock.releaseLock();
   }
+}
+
+// "Confirm payment" on the dashboard: the same as choosing Paid in the Status column of the Seat Passes tab.
+// A script edit does not fire the edit trigger, so this sets Paid and runs onSeatEdit on that cell itself.
+function approvePass(passId) {
+  if (!passId) return { ok: false, error: 'No pass given.' };
+  const tab = SpreadsheetApp.openById(SHEET_ID).getSheetByName(SEAT_TAB);
+  if (!tab || tab.getLastRow() < 2) return { ok: false, error: 'The Seat Passes tab is empty.' };
+  const ids = tab.getRange(2, 2, tab.getLastRow() - 1, 1).getValues();
+  let row = -1;
+  for (let i = ids.length - 1; i >= 0; i--) { if (String(ids[i][0]).trim() === passId) { row = i + 2; break; } }
+  if (row < 0) return { ok: false, error: passId + ' is not on the Seat Passes tab.' };
+  const cell = tab.getRange(row, 3), notes = tab.getRange(row, 10);
+  if (String(cell.getValue()).trim() === 'Paid' && /Confirmed/.test(String(notes.getValue()))) return { ok: true, message: 'Already confirmed.' };
+  const before = String(notes.getValue());
+  cell.setValue('Paid');
+  onSeatEdit({ range: cell });
+  const after = String(notes.getValue()).slice(before.length).replace(/^ · /, '');
+  if (/ERROR/.test(after)) return { ok: false, error: after };
+  return { ok: true, message: after || 'Confirmed.' };
 }
 
 function seatAdmin(action, ticketId, ref) {

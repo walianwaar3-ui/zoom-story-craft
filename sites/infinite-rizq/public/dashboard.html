@@ -500,7 +500,7 @@ function renderSeats(data){
   var unseatedPaid = (data.unseated || []).filter(function(u){ return u.status === 'verified'; }).length;
   $('seat-kpis').innerHTML = [
     kpi('Seats taken (paid)', fmt(paid), fmt(Object.keys(paidPeople).length) + ' paid passes', true),
-    kpi('Held, not confirmed', fmt(pend), pend ? 'choose Paid or Released in the sheet' : 'nothing waiting', pend > 0 ? 'warn' : false),
+    kpi('Held, not confirmed', fmt(pend), pend ? 'tap an orange seat to confirm' : 'nothing waiting', pend > 0 ? 'warn' : false),
     kpi('Paid but no seat', fmt(unseatedPaid), unseatedPaid ? 'see the list below' : 'everyone paid is seated', unseatedPaid > 0 ? 'warn' : false),
     kpi('Free seats', fmt(free.inner + free.mid + free.back), 'Inner ' + free.inner + ' · General/Pair ' + free.mid + ' · Back ' + free.back)
   ].join('');
@@ -557,8 +557,29 @@ function showSeat(id){
       '<dt>Email</dt><dd>' + (s.email ? '<a href="mailto:' + esc(s.email) + '">' + esc(s.email) + '</a>' : '<span style="color:var(--muted)">none</span>') + '</dd>' +
       '<dt>WhatsApp</dt><dd>' + (wa ? '<a href="https://wa.me/' + esc(wa) + '" target="_blank" rel="noopener">' + esc(s.phone) + '</a>' : '<span style="color:var(--muted)">none</span>') + '</dd>' +
       (s.at ? '<dt>Seated</dt><dd>' + new Date(s.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + '</dd>' : '') +
-    '</dl>';
+    '</dl>' +
+    (s.status === 'verified' ? '' :
+      '<button type="button" class="btn wide" id="approve" data-pass="' + esc(s.pass) + '" style="margin-top:16px">Confirm payment</button>' +
+      '<p class="note" id="approve-msg">Only after the money is in your account. Same as choosing Paid in the sheet: confirms the seat, adds them to Tickets and emails the seat pass.</p>');
 }
+// Confirm payment from the seat card (phone friendly); the sheet script runs the same Paid flow as the Seat Passes tab.
+$('who').addEventListener('click', function(e){
+  var b = e.target.closest && e.target.closest('#approve');
+  if (!b || b.disabled) return;
+  var pass = b.getAttribute('data-pass'), s = null;
+  (state.seats.seats || []).forEach(function(x){ if (x.pass === pass && !s) s = x; });
+  var price = { inner: '33,333', general: '11,111', pair: '15,555', back: '5,555' }[s && s.tier] || '';
+  if (!confirm('Confirm payment received from ' + ((s && s.name) || pass) + (price ? ' (PKR ' + price + ')' : '') + '?\n\nThis emails their seat pass and cannot be undone here.')) return;
+  var msg = $('approve-msg');
+  b.disabled = true; b.textContent = 'Confirming…';
+  fetch('/api/approve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: state.key, pass: pass }) })
+    .then(function(r){ return r.json().catch(function(){ return { ok: false, error: 'No answer. Check the Seat Passes tab before trying again.' }; }); })
+    .then(function(j){
+      if (j.ok) { b.textContent = 'Confirmed'; msg.textContent = j.message || 'Confirmed.'; msg.style.color = 'var(--good)'; setTimeout(function(){ load(state.key); }, 1200); }
+      else { b.disabled = false; b.textContent = 'Confirm payment'; msg.textContent = j.error || 'Could not confirm. Try again.'; msg.style.color = 'var(--warn)'; }
+    })
+    .catch(function(){ b.disabled = false; b.textContent = 'Confirm payment'; msg.textContent = 'No connection. Check the Seat Passes tab before trying again.'; msg.style.color = 'var(--warn)'; });
+});
 $('seatmap').addEventListener('click', function(e){ var g = e.target.closest && e.target.closest('.st'); if (g) showSeat(g.getAttribute('data-id')); });
 $('seatmap').addEventListener('keydown', function(e){ if (e.key !== 'Enter' && e.key !== ' ') return; var g = e.target.closest && e.target.closest('.st'); if (g) { e.preventDefault(); showSeat(g.getAttribute('data-id')); } });
 $('seat-q').addEventListener('input', function(){
