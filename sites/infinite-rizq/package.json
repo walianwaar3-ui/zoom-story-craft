@@ -4,6 +4,7 @@
   "type": "module",
   "description": "Infinite Rizq landing page, post-purchase mastermind application and its form handler (Vercel).",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.133.0",
     "@vercel/blob": "^2.8.1"
   }
 }

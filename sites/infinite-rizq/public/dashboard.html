@@ -155,6 +155,23 @@ td:first-child{color:var(--ivory)}
   table th:nth-child(5),table td:nth-child(5){display:none}
   td .tag{display:block;width:max-content;margin:0 0 3px}
 }
+/* Ask the data */
+.ask{background:linear-gradient(180deg,rgba(212,167,58,.08),var(--card) 60%);border:1px solid rgba(212,167,58,.35);border-radius:16px;padding:16px 18px;margin:18px 0 6px}
+.ask-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.ask-head h2{font-family:var(--serif);font-size:1.15rem;font-weight:600}
+.ask-head small{color:var(--muted);font-size:.8rem}
+.ask-log{display:flex;flex-direction:column;gap:10px;margin:12px 0 0;max-height:440px;overflow-y:auto}
+.ask-log:empty{display:none}
+.msg-q{align-self:flex-end;max-width:85%;background:var(--card-2);border:1px solid var(--line-2);border-radius:12px 12px 2px 12px;padding:8px 12px;color:var(--ivory)}
+.msg-a{align-self:flex-start;max-width:100%;border-left:2px solid var(--gold);padding:4px 0 4px 12px;color:var(--text);white-space:pre-wrap;line-height:1.55}
+.msg-a b{color:var(--ivory)}
+.msg-a.err{border-color:#ef8f86;color:#ef8f86}
+.msg-a.wait{color:var(--muted);font-style:italic}
+.ask-form{display:flex;gap:8px;margin-top:12px}
+.ask-form input{flex:1;min-width:0;background:#0d0d0f;border:1px solid var(--line-2);border-radius:10px;color:var(--ivory);font:500 .95rem var(--sans);padding:11px 12px}
+.ask-form input:focus{border-color:var(--gold);outline:none}
+.ask-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.ask-chips button{font-size:.78rem;padding:5px 11px}
 </style>
 </head>
 <body>
@@ -195,6 +212,22 @@ td:first-child{color:var(--ivory)}
   <p class="status" id="status" aria-live="polite">Loading…</p>
 
   <main class="wrap">
+    <section class="ask" aria-labelledby="ask-title">
+      <div class="ask-head"><h2 id="ask-title">Ask your data</h2><small>Live from the ticket sheet, seat system and site analytics · read only</small></div>
+      <div class="ask-log" id="ask-log" aria-live="polite"></div>
+      <form class="ask-form" id="ask-form">
+        <input id="ask-q" maxlength="1000" autocomplete="off" placeholder="e.g. Who are the paid tickets not issued yet?" aria-label="Your question">
+        <button class="btn" type="submit" id="ask-go">Ask</button>
+      </form>
+      <div class="ask-chips" id="ask-chips">
+        <button class="ghost" type="button">Who are the paid tickets not issued yet?</button>
+        <button class="ghost" type="button">Who is holding a seat without confirmed payment?</button>
+        <button class="ghost" type="button">Revenue and seats by ticket type</button>
+        <button class="ghost" type="button">Any paid buyers without a seat, or mismatched amounts?</button>
+        <button class="ghost" type="button">How many seats are left on the Sisters and Brothers sides?</button>
+      </div>
+    </section>
+
     <h2 class="sec-title">Sales<small id="sales-src">From the ticket sheet · all time · verified payments only</small></h2>
     <div class="grid kpis" id="sales"></div>
 
@@ -347,6 +380,30 @@ $('gate-form').addEventListener('submit', function(e){
   });
 });
 $('lock').addEventListener('click', function(){ forget(); location.reload(); });
+
+// ---------- Ask your data ----------
+var askHistory = [];
+function askLine(cls, html){ var d = document.createElement('div'); d.className = cls; d.innerHTML = html; $('ask-log').appendChild(d); $('ask-log').scrollTop = 1e9; return d; }
+function fmtAnswer(t){ return esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>'); }
+function ask(q){
+  q = (q || '').trim(); if (!q || $('ask-go').disabled) return;
+  $('ask-q').value = ''; $('ask-go').disabled = true;
+  askLine('msg-q', esc(q));
+  var wait = askLine('msg-a wait', 'Reading the latest data…');
+  fetch('/api/ask', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key: state.key, question: q, history: askHistory }) })
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if (!j.ok) { wait.className = 'msg-a err'; wait.textContent = j.error || 'Could not answer. Try again.'; return; }
+      wait.className = 'msg-a'; wait.innerHTML = fmtAnswer(j.answer) + (j.partial ? '\n…(answer cut short, ask for the rest)' : '');
+      askHistory.push({ role: 'user', content: q }, { role: 'assistant', content: j.answer });
+      askHistory = askHistory.slice(-8);
+    })
+    .catch(function(){ wait.className = 'msg-a err'; wait.textContent = 'Network error. Try again.'; })
+    .then(function(){ $('ask-go').disabled = false; $('ask-q').focus(); });
+}
+$('ask-form').addEventListener('submit', function(e){ e.preventDefault(); ask($('ask-q').value); });
+document.querySelectorAll('#ask-chips button').forEach(function(b){ b.addEventListener('click', function(){ ask(b.textContent); }); });
 
 // ---------- Data ----------
 function rangeBounds(r){

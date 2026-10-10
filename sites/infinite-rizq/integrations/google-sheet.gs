@@ -28,6 +28,7 @@ function doPost(e) {
   if (!body || body.secret !== SECRET) return reply({ ok: false, error: 'unauthorized' });
 
   if (body.type === 'kpis') return reply({ ok: true, data: salesKpis() });
+  if (body.type === 'tickets') return reply({ ok: true, data: ticketRows() });
 
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
@@ -106,6 +107,16 @@ function salesKpis() {
   k.applications = apps ? Math.max(0, apps.getLastRow() - 1) : 0;
   k.asOf = new Date().toISOString();
   return k;
+}
+
+// Every used row of the Tickets tab, for the dashboard's "Ask" assistant (read only).
+function ticketRows() {
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  const rows = ss.getSheetByName('Tickets').getDataRange().getDisplayValues();
+  const head = rows.shift();
+  return rows.filter(function (r) { return String(r[2]).trim(); }).map(function (r) {
+    const o = {}; head.forEach(function (h, i) { if (h) o[h] = r[i]; }); return o;
+  });
 }
 
 function reply(obj) {
