@@ -159,12 +159,14 @@ function onSeatEdit(e) {
 
     // Add to Tickets once, so sales numbers and check-in count this buyer.
     const linked = String(tab.getRange(row, 9).getValue()).trim();
+    let ticketId = p.ticket_ref || '';
     if (!/^Yes/.test(linked)) {
       const ref = addToTickets(p);
-      if (ref) { tab.getRange(row, 9).setValue('Yes, ' + ref.label); seatAdmin('link', passId, ref.id); }
+      if (ref) { tab.getRange(row, 9).setValue('Yes, ' + ref.label); seatAdmin('link', passId, ref.id); ticketId = ref.id; }
     }
     if (p.email) {
       MailApp.sendEmail({ to: p.email, bcc: 'walianwaar3@gmail.com', name: 'Infinite Rizq', subject: 'Your seat is confirmed: ' + seatText(p.seats), htmlBody: confirmEmail(p) });
+      markIssued(ticketId, p.ticket_id);
       note('Confirmed, email sent.');
     } else {
       note('Confirmed. No email on file: send the pass link on WhatsApp.');
@@ -197,6 +199,19 @@ function addToTickets(p) {
     'Confirmed from Seat Passes (' + p.ticket_id + '). Fill payment method and ref.', seatText(p.seats, true),
   ]]);
   return { id: id, label: 'row ' + r + ' (' + id + ')' };
+}
+
+// The confirmation email is the ticket: tick "Ticket Issued" and date it on the buyer's Tickets row.
+function markIssued(ticketId, passId) {
+  const t = SpreadsheetApp.openById(SHEET_ID).getSheetByName('Tickets');
+  const rows = t.getRange(2, 1, Math.max(1, t.getLastRow() - 1), 16).getValues();
+  for (let i = 0; i < rows.length; i++) {
+    const id = String(rows[i][0]).trim(), notes = String(rows[i][15]);
+    if ((ticketId && id === ticketId) || (passId && notes.indexOf('(' + passId + ')') >= 0)) {
+      t.getRange(i + 2, 13, 1, 2).setValues([['Yes', Utilities.formatDate(new Date(), 'Asia/Karachi', 'dd MMM yyyy')]]);
+      return;
+    }
+  }
 }
 
 function seatText(seats, short) {
