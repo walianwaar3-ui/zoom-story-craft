@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>You're In | Apply for the Private Mastermind | Infinite Rizq</title>
+<meta name="description" content="Your Infinite Rizq seat is confirmed. Apply for a private two-hour mastermind with Shahrez Hayder. Five seats only.">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0a0a0b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!--
+  POST-PURCHASE PAGE: infiniterizq.com/thank-you
+  Set your Stripe payment link's "After payment" redirect to this URL.
+  Edit the CONFIG block at the bottom: add the mastermind VSL (Wistia / YouTube / mp4).
+  Applications are saved privately to the Vercel Blob store "infinite-rizq-applications".
+-->
+
+<style>
+:root{
+  --bg:#0a0a0b;--bg-2:#111113;--card:#16161a;--line:rgba(255,255,255,.08);--line-2:rgba(255,255,255,.14);
+  --ivory:#f3ede1;--text:#c9c3b6;--muted:#8a857b;--gold:#d4a73a;--gold-2:#e8c66a;--gold-soft:rgba(212,167,58,.14);
+  --green:#5fcf97;--red:#e0736b;
+  --serif:'Playfair Display',Georgia,serif;--sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:17px;line-height:1.65;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+img,svg,iframe,video{max-width:100%;display:block}
+a{color:inherit}
+h1,h2,h3{font-family:var(--serif);font-weight:600;color:var(--ivory);line-height:1.12;margin:0 0 .5em}
+h1 em,h2 em{font-style:italic;color:var(--gold-2);font-weight:500}
+p{margin:0 0 1.1em}
+.wrap{max-width:860px;margin:0 auto;padding:0 24px}
+.center{text-align:center}
+.eyebrow{display:inline-block;font-size:.74rem;font-weight:600;letter-spacing:.24em;text-transform:uppercase;color:var(--gold);margin-bottom:16px}
+.muted{color:var(--muted)}
+:focus-visible{outline:2px solid var(--gold-2);outline-offset:3px}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;background:linear-gradient(180deg,var(--gold-2),var(--gold));color:#141005;
+  font:700 1.02rem var(--sans);padding:18px 34px;border-radius:12px;border:0;cursor:pointer;text-decoration:none;
+  box-shadow:0 10px 30px -8px rgba(212,167,58,.55),inset 0 1px 0 rgba(255,255,255,.35);transition:transform .2s,filter .2s}
+.btn:hover{transform:translateY(-2px);filter:brightness(1.05)}
+.btn[disabled]{opacity:.6;cursor:wait;transform:none}
+.btn svg{width:18px;height:18px}
+
+/* Nav */
+.nav{border-bottom:1px solid var(--line)}
+.nav .wrap{display:flex;align-items:center;gap:12px;height:64px}
+.brand-mark{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#1a1a1e;border:1px solid var(--line-2);font:600 .78rem var(--serif);color:var(--ivory)}
+.brand-txt{font-family:var(--serif);font-size:.7rem;letter-spacing:.14em;text-transform:uppercase;color:var(--ivory)}
+
+/* Confirmation */
+.confirm{padding:40px 0 0}
+.confirm-card{display:flex;gap:16px;align-items:flex-start;background:linear-gradient(135deg,rgba(95,207,151,.10),rgba(95,207,151,.02));border:1px solid rgba(95,207,151,.35);border-radius:18px;padding:22px 24px}
+.confirm-ic{flex:0 0 46px;height:46px;border-radius:50%;display:grid;place-items:center;background:rgba(95,207,151,.15);color:var(--green)}
+.confirm-ic svg{width:24px;height:24px}
+.confirm-card h2{font-family:var(--sans);font-size:1.15rem;font-weight:700;margin:0 0 4px}
+.confirm-card p{margin:0;font-size:.95rem}
+.confirm-card b{color:var(--ivory)}
+.next-up{list-style:none;padding:12px 0 0;margin:12px 0 0;border-top:1px solid rgba(95,207,151,.2);display:grid;gap:8px;font-size:.92rem}
+.next-up li{display:flex;gap:10px;align-items:flex-start}
+.next-up svg{flex:0 0 18px;width:18px;height:18px;margin-top:3px;color:#5fcf97}
+.next-up a{color:var(--gold-2);font-weight:600;white-space:nowrap}
+
+/* Hero */
+.hero{position:relative;padding:56px 0 30px;text-align:center;overflow:hidden;isolation:isolate}
+.hero::before{content:"";position:absolute;inset:-40% -30% auto;height:700px;background:radial-gradient(50% 50% at 50% 50%,rgba(212,167,58,.18),transparent 70%);z-index:-1}
+.wait{display:inline-flex;align-items:center;gap:8px;font-size:.8rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--red);border:1px solid rgba(224,115,107,.4);border-radius:999px;padding:7px 14px;margin-bottom:22px}
+.wait i{width:8px;height:8px;border-radius:50%;background:var(--red);animation:ping 1.8s infinite}
+@keyframes ping{0%{box-shadow:0 0 0 0 rgba(224,115,107,.6)}80%,100%{box-shadow:0 0 0 9px rgba(224,115,107,0)}}
+.hero h1{font-size:clamp(2rem,5.6vw,3.6rem);max-width:800px;margin:0 auto 18px}
+.hero .lead{font-size:.95rem;line-height:1.7;max-width:580px;margin:0 auto 34px}
+.chips{display:flex;flex-wrap:wrap;justify-content:center;gap:10px;margin:28px 0 0;padding:0;list-style:none}
+.chips li{background:rgba(255,255,255,.03);border:1px solid var(--line-2);padding:8px 14px;border-radius:999px;font-size:.86rem;color:var(--ivory);font-weight:500}
+.chips b{color:var(--gold-2)}
+.closing{display:inline-flex;align-items:center;gap:10px;margin:22px auto 0;padding:10px 18px;border-radius:999px;background:rgba(224,115,107,.1);border:1px solid rgba(224,115,107,.55);color:var(--ivory);font-size:.9rem;font-weight:500}
+.closing b{color:var(--red);font-weight:700;letter-spacing:.1em;text-transform:uppercase;font-size:.78rem}
+.closing .dot{flex:0 0 8px;width:8px;height:8px;border-radius:50%;background:var(--red);animation:livep 1.6s infinite}
+@keyframes livep{0%{box-shadow:0 0 0 0 rgba(224,115,107,.6)}70%{box-shadow:0 0 0 8px rgba(224,115,107,0)}100%{box-shadow:0 0 0 0 rgba(224,115,107,0)}}
+@media (prefers-reduced-motion:reduce){.closing .dot{animation:none}}
+@media (max-width:600px){.closing{border-radius:16px;text-align:left;font-size:.84rem}}
+
+/* VSL */
+.vsl{position:relative;aspect-ratio:16/9;border-radius:20px;overflow:hidden;background:#050506;border:1px solid rgba(212,167,58,.28);box-shadow:0 40px 100px -30px rgba(212,167,58,.35)}
+.vsl iframe,.vsl video{position:absolute;inset:0;width:100%;height:100%;border:0}
+.vsl-poster{position:absolute;inset:0;width:100%;height:100%;border:0;padding:0;cursor:pointer;color:var(--ivory);font-family:var(--sans);
+  background:radial-gradient(60% 70% at 50% 45%,rgba(212,167,58,.22),transparent 70%),#070708;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+.play{width:80px;height:80px;border-radius:50%;background:linear-gradient(180deg,var(--gold-2),var(--gold));display:grid;place-items:center;box-shadow:0 0 0 10px rgba(212,167,58,.14),0 0 0 22px rgba(212,167,58,.06);transition:transform .25s}
+.vsl-poster:hover .play{transform:scale(1.06)}
+.play svg{width:28px;height:28px;margin-left:5px;color:#141005}
+.vsl-title{font-family:var(--serif);font-size:clamp(1.05rem,2.6vw,1.45rem);font-weight:600}
+.vsl-meta{font-size:.76rem;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+/* VSL thumbnail + animated play button */
+.vsl-poster .thumb{position:absolute;inset:0;background:center/cover no-repeat;opacity:0;transition:opacity .6s ease}
+.vsl-poster .thumb::after{content:"";position:absolute;inset:0;background:radial-gradient(70% 80% at 50% 50%,rgba(5,5,6,.15),rgba(5,5,6,.7)),linear-gradient(180deg,rgba(5,5,6,0) 40%,rgba(5,5,6,.6))}
+.vsl-poster .thumb.on{opacity:1}
+.vsl-poster.has-thumb .rings{opacity:.2}
+.vsl-poster > :not(.thumb):not(.rings):not(.vsl-sound){position:relative;z-index:1}
+.vsl-poster .vsl-sound{z-index:1}
+.vsl-poster.has-thumb .vsl-title,.vsl-poster.has-thumb .vsl-meta{text-shadow:0 2px 14px rgba(0,0,0,.9)}
+.vsl-poster.has-thumb .vsl-meta{color:#ddd5c4}
+.play{animation:playGlow 2.8s ease-in-out infinite}
+.play::before,.play::after{content:"";position:absolute;inset:0;border-radius:50%;border:2px solid rgba(240,210,130,.8);animation:playRing 2.4s cubic-bezier(.2,.6,.3,1) infinite;pointer-events:none}
+.play::after{animation-delay:1.2s}
+.play svg{position:relative}
+.vsl-poster:hover .play,.vsl-poster:focus-visible .play{transform:scale(1.1);box-shadow:0 0 0 12px rgba(212,167,58,.22),0 0 60px 12px rgba(232,198,106,.45)}
+@keyframes playRing{0%{transform:scale(1);opacity:.85}100%{transform:scale(2.1);opacity:0}}
+@keyframes playGlow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.15)}}
+
+/* Next steps */
+.sec{padding:64px 0}
+.steps{list-style:none;padding:0;margin:30px 0 0;display:grid;grid-template-columns:repeat(4,1fr);gap:14px;counter-reset:s}
+.steps li{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 18px}
+.steps .n{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;font-weight:700;font-size:.82rem;color:#141005;background:linear-gradient(180deg,var(--gold-2),var(--gold));margin-bottom:12px}
+.steps h3{font-family:var(--sans);font-size:1rem;font-weight:700;margin:0 0 4px}
+.steps p{margin:0;font-size:.88rem;color:var(--muted);line-height:1.5}
+
+/* Form */
+.apply{background:var(--bg-2);border:1px solid rgba(212,167,58,.3);border-radius:24px;padding:36px 34px}
+.apply h2{font-size:clamp(1.6rem,4vw,2.2rem)}
+.field{margin-top:20px}
+.field label,.field legend{display:block;font-weight:600;color:var(--ivory);font-size:.95rem;margin-bottom:8px}
+.field .hint{display:block;font-weight:400;color:var(--muted);font-size:.82rem;margin-top:2px}
+.field input,.field textarea{width:100%;font:inherit;font-size:1rem;color:var(--ivory);background:var(--card);border:1px solid var(--line-2);border-radius:12px;padding:14px 16px;transition:border-color .2s}
+.field textarea{min-height:110px;resize:vertical}
+.field input:focus,.field textarea:focus{outline:none;border-color:var(--gold)}
+.field.err input,.field.err textarea,.field.err .opts{border-color:rgba(224,115,107,.7)}
+.err-msg{display:none;color:var(--red);font-size:.84rem;margin-top:6px}
+.field.err .err-msg{display:block}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:0 16px}
+fieldset{border:0;padding:0;margin:0}
+.opts{display:grid;gap:10px;border:1px solid transparent;border-radius:14px}
+.opt{display:flex;gap:12px;align-items:flex-start;background:var(--card);border:1px solid var(--line-2);border-radius:12px;padding:14px 16px;cursor:pointer;transition:border-color .2s,background .2s}
+.opt input{margin:4px 0 0;accent-color:var(--gold);width:18px;height:18px;flex:0 0 18px}
+.opt b{display:block;color:var(--ivory);font-weight:600;font-size:.96rem}
+.opt span{font-size:.85rem;color:var(--muted)}
+.opt:has(input:checked){border-color:var(--gold);background:rgba(212,167,58,.07)}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.submit{margin-top:28px}
+.submit .btn{width:100%}
+.fine{font-size:.82rem;color:var(--muted);text-align:center;margin:14px 0 0}
+.form-error{display:none;margin-top:14px;color:var(--red);text-align:center;font-size:.9rem}
+.success{display:none;text-align:center;padding:20px 0}
+.success .confirm-ic{margin:0 auto 16px;width:64px;height:64px}
+.success .confirm-ic svg{width:32px;height:32px}
+.apply.done form{display:none}
+.apply.done .success{display:block}
+
+footer{border-top:1px solid var(--line);padding:32px 0 48px;font-size:.82rem;color:var(--muted);text-align:center}
+
+@media (max-width:760px){
+  .steps{grid-template-columns:1fr 1fr}
+}
+@media (max-width:560px){
+  body{font-size:16px}
+  .wrap{padding:0 16px}
+  .confirm{padding-top:24px}
+  .confirm-card{padding:18px}
+  .hero{padding:40px 0 20px}
+  .hero .lead{font-size:.875rem;line-height:1.65;max-width:34em;padding:0 6px;color:#c9c2b4;text-wrap:pretty}
+  .vsl{border-radius:14px;margin:0 -4px}
+  .play{width:66px;height:66px}
+  .sec{padding:48px 0}
+  .steps{grid-template-columns:1fr}
+  .apply{padding:24px 16px;border-radius:18px}
+  .row2{grid-template-columns:1fr}
+  .btn{width:100%}
+}
+@media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+</style>
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1574207957215946');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M12 7.5V12l3 2" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></symbol>
+<symbol id="wa" viewBox="0 0 24 24"><path d="M12 3a9 9 0 00-7.8 13.5L3 21l4.6-1.2A9 9 0 1012 3z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.6 8.2c.2-.5.5-.5.8-.5h.5c.2 0 .4 0 .6.5l.7 1.6c.1.2 0 .4-.1.6l-.5.6c-.1.1-.2.3 0 .5.5.8 1.1 1.4 1.9 1.9.2.1.4.1.5 0l.6-.6c.2-.2.4-.2.6-.1l1.6.7c.4.2.4.3.4.5 0 .6-.3 1.4-1.1 1.7-.7.3-1.9.3-3.7-.8-1.9-1.2-3-3-3.3-3.7-.4-.9-.3-1.9.1-2.4z" fill="currentColor"/></symbol>
+  <symbol id="check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  <symbol id="play" viewBox="0 0 24 24"><path d="M7 4.5v15l12.5-7.5z" fill="currentColor"/></symbol>
+  <symbol id="arrow" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+
+<header class="nav">
+  <div class="wrap">
+    <span class="brand-mark">WWO</span>
+    <span class="brand-txt">World Wealth Organization · Infinite Rizq</span>
+  </div>
+</header>
+
+<main>
+
+<!-- 1. ACKNOWLEDGEMENT -->
+<section class="confirm">
+  <div class="wrap">
+    <div class="confirm-card" role="status">
+      <span class="confirm-ic"><svg aria-hidden="true"><use href="#check"/></svg></span>
+      <div>
+        <h2>Payment received. Your seat is confirmed.</h2>
+        <p>Welcome to <b>Infinite Rizq</b>. Your receipt is on its way to your email. Save the date: <b>Saturday, 17 October 2026 · 12 PM to 4 PM · Expo Center Lahore</b>.</p>
+        <ul class="next-up">
+          <li><svg aria-hidden="true"><use href="#clock"/></svg><span>Your <b>ticket and event details</b> will be sent to your WhatsApp <b>within 12 to 24 hours</b>.</span></li>
+          <li><svg aria-hidden="true"><use href="#wa"/></svg><span>Not received it, or any issue? WhatsApp our Event Coordinator <b>Wali Anwaar</b>: <a href="https://wa.me/13322332380?text=Assalam%20o%20Alaikum%20Wali%2C%20I%20just%20paid%20for%20Infinite%20Rizq%20and%20need%20help%20with%20my%20ticket." target="_blank" rel="noopener" data-track="cta_whatsapp_confirm">+1 (332) 233-2380</a></span></li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 2. UPSELL HERO + VSL -->
+<section class="hero">
+  <div class="wrap">
+    <div class="wait"><i aria-hidden="true"></i>Wait, one more thing</div>
+    <span class="eyebrow" style="display:block">By application only · 5 seats</span>
+    <h1>Apply for a private two-hour mastermind with <em>Shahrez Hayder.</em></h1>
+    <p class="lead">Infinite Rizq opens the room to 200 people. This is different: five people, one table, two hours of focused work on <i>your</i> business, your wealth and the blockages specific to you.</p>
+
+    <div class="vsl" id="vsl">
+      <button type="button" class="vsl-poster" data-vsl-play aria-label="Play video about the private mastermind">
+        <span class="play"><svg><use href="#play"/></svg></span>
+        <span class="vsl-title">Watch this before you apply</span>
+        <span class="vsl-meta" data-vsl-meta>Private mastermind · 5 seats</span>
+      </button>
+    </div>
+
+    <ul class="chips">
+      <li><b>2 hours</b> with Shahrez</li>
+      <li><b>5</b> people only</li>
+      <li>By <b>application</b></li>
+    </ul>
+
+    <p class="closing"><span class="dot" aria-hidden="true"></span><span><b>Applications closing soon</b> &middot; They close as soon as all 5 seats are taken.</span></p>
+
+    <p style="margin-top:32px"><a href="#apply" class="btn" data-track="cta_apply_hero">Submit your application <svg aria-hidden="true"><use href="#arrow"/></svg></a></p>
+  </div>
+</section>
+
+<!-- 3. WHAT HAPPENS NEXT -->
+<section class="sec" id="next">
+  <div class="wrap">
+    <div class="center">
+      <span class="eyebrow">What happens next</span>
+      <h2>Four steps. No pressure.</h2>
+      <p class="muted">Submitting an application doesn't commit you to anything. Seats go to the best fit, not the fastest click.</p>
+    </div>
+    <ol class="steps">
+      <li><div class="n">1</div><h3>Apply</h3><p>Answer a few short questions. It takes about two minutes.</p></li>
+      <li><div class="n">2</div><h3>Review</h3><p>Shahrez's team personally reviews every application.</p></li>
+      <li><div class="n">3</div><h3>Conversation</h3><p>If you're shortlisted, our Event Coordinator messages you on WhatsApp within 48 hours.</p></li>
+      <li><div class="n">4</div><h3>Confirm</h3><p>Accepted applicants secure one of the five seats. Date and location are shared privately.</p></li>
+    </ol>
+  </div>
+</section>
+
+<!-- 4. APPLICATION FORM -->
+<section class="sec" id="apply" style="padding-top:0">
+  <div class="wrap">
+    <div class="apply" data-apply>
+      <form novalidate data-form>
+        <span class="eyebrow">Mastermind application</span>
+        <h2>Tell us who you are.</h2>
+        <p class="closing" style="margin:0 0 14px"><span class="dot" aria-hidden="true"></span><span><b>Closing soon</b> &middot; Only 5 seats. Applications close once they're filled.</span></p>
+        <p class="muted" style="margin:0">Be honest. The more we understand you, the better we can decide if this room is right for you.</p>
+
+        <div class="row2">
+          <div class="field" data-field="name">
+            <label for="f-name">Full name</label>
+            <input id="f-name" name="name" type="text" autocomplete="name" required maxlength="120">
+            <div class="err-msg" data-err="name"></div>
+          </div>
+          <div class="field" data-field="email">
+            <label for="f-email">Email</label>
+            <input id="f-email" name="email" type="email" autocomplete="email" inputmode="email" required maxlength="160">
+            <div class="err-msg" data-err="email"></div>
+          </div>
+        </div>
+
+        <div class="field" data-field="phone">
+          <label for="f-phone">WhatsApp number<span class="hint">Include your country code, e.g. +92 300 1234567</span></label>
+          <input id="f-phone" name="phone" type="tel" autocomplete="tel" inputmode="tel" required maxlength="40" placeholder="+92">
+          <div class="err-msg" data-err="phone"></div>
+        </div>
+
+        <div class="field" data-field="business">
+          <label for="f-business">Who are you, and what's your business?<span class="hint">What you do, what you've built, and where you want to go next.</span></label>
+          <textarea id="f-business" name="business" required maxlength="2000"></textarea>
+          <div class="err-msg" data-err="business"></div>
+        </div>
+
+        <div class="field" data-field="commit">
+          <fieldset>
+            <legend>The mastermind is a premium investment, shared personally with accepted applicants. If you're accepted, are you ready to commit?</legend>
+            <div class="opts">
+              <label class="opt"><input type="radio" name="commit" value="yes"><div><b>Yes, I'm ready to commit</b><span>If it's the right fit, I'm in.</span></div></label>
+              <label class="opt"><input type="radio" name="commit" value="yes-discuss"><div><b>Yes, but I'd like to discuss the details</b><span>I'm serious, I just have a few questions first.</span></div></label>
+              <label class="opt"><input type="radio" name="commit" value="not-now"><div><b>Not right now</b><span>I'm interested, but not ready to invest at this level yet.</span></div></label>
+            </div>
+          </fieldset>
+          <div class="err-msg" data-err="commit"></div>
+        </div>
+
+        <div class="field" data-field="knowShahrez">
+          <label for="f-know">What do you know about Shahrez Hayder?<span class="hint">How did you find him, and what made you want to learn from him?</span></label>
+          <textarea id="f-know" name="knowShahrez" required maxlength="2000"></textarea>
+          <div class="err-msg" data-err="knowShahrez"></div>
+        </div>
+
+        <div class="hp" aria-hidden="true"><label>Website <input name="website" tabindex="-1" autocomplete="off"></label></div>
+
+        <div class="submit">
+          <button type="submit" class="btn" data-submit>Submit my application <svg aria-hidden="true"><use href="#arrow"/></svg></button>
+          <p class="form-error" data-form-error role="alert"></p>
+          <p class="fine">Your details are kept private and only used to review your application.</p>
+        </div>
+      </form>
+
+      <div class="success" role="status" tabindex="-1" data-success>
+        <span class="confirm-ic"><svg aria-hidden="true"><use href="#check"/></svg></span>
+        <h2>Application received.</h2>
+        <p>Thank you<span data-success-name></span>. Shahrez's team will review your application personally.</p>
+        <p class="muted">If you're shortlisted, our Event Coordinator <b style="color:var(--ivory)">Wali Anwaar</b> will message you on WhatsApp within 48 hours. In the meantime, we'll see you in the room on 17 October, insha'Allah.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>© 2026 World Wealth Organization · Infinite Rizq · Lahore, 17 October 2026</p>
+    <p style="margin:0">Questions? WhatsApp our Event Coordinator: <a href="https://wa.me/13322332380" style="color:var(--gold-2)">+1 (332) 233-2380</a></p>
+  </div>
+</footer>
+
+<script>
+/* =======================================================================
+   CONFIG
+   ======================================================================= */
+var CONFIG = {
+  // Mastermind VSL: a Wistia link/media ID, YouTube URL, Vimeo URL or .mp4. Empty shows "coming shortly".
+  vsl: "https://fast.wistia.com/embed/medias/w2pimlev2g",
+  endpoint: "/api/apply"
+};
+
+/* ======================================================================= */
+window.dataLayer = window.dataLayer || [];
+// First-party analytics (feeds /dashboard): batches events and beacons them to /api/track
+var IR = (function(){
+  var PAGE = 'thank-you', CAMPAIGN = 'infinite-rizq-lahore-2026', q = [], timer = null;
+  function rid(){ return Math.random().toString(36).slice(2, 10) + Date.now().toString(36); }
+  function keep(store, k){ try { var v = store.getItem(k); if (!v) { v = rid(); store.setItem(k, v); } return v; } catch (e) { return rid(); } }
+  var vid = keep(window.localStorage, 'ir_vid'), sid = keep(window.sessionStorage, 'ir_sid');
+  var utm = {};
+  try {
+    var qs = new URLSearchParams(location.search);
+    ['utm_source', 'utm_medium', 'utm_campaign'].forEach(function(k){
+      var v = qs.get(k) || sessionStorage.getItem('ir_' + k) || '';
+      if (v) sessionStorage.setItem('ir_' + k, v);
+      utm[k] = v;
+    });
+  } catch (e) {}
+  function flush(){
+    if (!q.length) return;
+    var body = JSON.stringify({ campaign: CAMPAIGN, page: PAGE, vid: vid, sid: sid, ref: document.referrer,
+      us: utm.utm_source, um: utm.utm_medium, uc: utm.utm_campaign, events: q.splice(0, 30) });
+    try {
+      if (navigator.sendBeacon && navigator.sendBeacon('/api/track', new Blob([body], { type: 'application/json' }))) return;
+    } catch (e) {}
+    fetch('/api/track', { method: 'POST', body: body, keepalive: true, headers: { 'Content-Type': 'application/json' } }).catch(function(){});
+  }
+  function send(e, l, n){
+    q.push({ e: e, l: l == null || l === '' ? undefined : String(l).slice(0, 120), n: typeof n === 'number' && isFinite(n) ? n : undefined });
+    clearTimeout(timer);
+    if (q.length >= 20) flush(); else timer = setTimeout(flush, 1500);
+  }
+  // Engaged time: seconds the tab is visible, sent whenever the visitor leaves or hides the tab
+  var engaged = 0;
+  setInterval(function(){ if (document.visibilityState === 'visible') engaged++; }, 1000);
+  function leave(){ if (engaged > 0) { send('engaged_time', null, Math.min(engaged, 3600)); engaged = 0; } flush(); }
+  document.addEventListener('visibilitychange', function(){ if (document.visibilityState === 'hidden') leave(); });
+  window.addEventListener('pagehide', leave);
+  // Section reach + scroll depth
+  if ('IntersectionObserver' in window) {
+    var seen = {};
+    var so = new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        var key = en.target.getAttribute('data-ir-section');
+        if (en.isIntersecting && !seen[key]) { seen[key] = true; send('section_view', key); so.unobserve(en.target); }
+      });
+    }, { rootMargin: '-40% 0px -40% 0px' });  // counts once the section crosses the middle of the screen, whatever its height
+    Array.prototype.forEach.call(document.querySelectorAll('section, [data-ir-section]'), function(el){
+      var key = el.getAttribute('data-ir-section') || el.id || (el.className || 'section').split(' ')[0];
+      el.setAttribute('data-ir-section', key); so.observe(el);
+    });
+  }
+  var marks = [25, 50, 75, 100], hit = {};
+  window.addEventListener('scroll', function(){
+    var h = document.documentElement.scrollHeight - innerHeight; if (h <= 0) return;
+    var pct = scrollY / h * 100;
+    marks.forEach(function(m){ if (pct >= (m === 100 ? 97 : m) && !hit[m]) { hit[m] = true; send('scroll_depth', m); } });
+  }, { passive: true });
+  // FAQ opens
+  Array.prototype.forEach.call(document.querySelectorAll('details'), function(d){
+    d.addEventListener('toggle', function(){ if (d.open) { var s = d.querySelector('summary'); send('faq_open', s ? s.textContent.trim() : ''); } });
+  });
+  return { send: send, flush: flush };
+})();
+var IR_EVENT_NAMES = { lp_view: 'page_view', thankyou_view: 'page_view' };
+
+function track(name, data){
+  data = data || {};
+  window.dataLayer.push(Object.assign({ event: name }, data));
+  if (typeof window.fbq === 'function') window.fbq('trackCustom', name, data);
+  if (typeof window.gtag === 'function') window.gtag('event', name, data);
+  var label = data.location || data.tier || data.state || data.field || data.commit || (data.percent != null ? data.percent : null);
+  IR.send(IR_EVENT_NAMES[name] || name, label, typeof data.value === 'number' ? data.value : data.percent);
+}
+track('thankyou_view', { page: 'mastermind_upsell' });
+document.querySelectorAll('[data-track]').forEach(function(el){
+  el.addEventListener('click', function(){ track('cta_click', { location: el.getAttribute('data-track') }); });
+});
+
+// VSL (click to load)
+(function(){
+  var box = document.getElementById('vsl'), btn = box.querySelector('[data-vsl-play]');
+  function m(u, re){ var x = u.match(re); return x && x[1]; }
+
+  // Poster thumbnail: Wistia's swatch straight away, then the full-size still via oEmbed (JSONP)
+  (function(){
+    var wid = m(CONFIG.vsl || '', /(?:wistia\.(?:com|net)\/(?:medias|embed\/iframe|embed\/medias)\/|^)([a-z0-9]{10})(?:\b|$)/i); if (!wid) return;
+    var t = document.createElement('span'), full = false;
+    t.className = 'thumb'; t.setAttribute('aria-hidden', 'true'); btn.insertBefore(t, btn.firstChild);
+    function show(src, isFull){
+      var img = new Image();
+      img.onload = function(){ if (full && !isFull) return; full = full || isFull; t.style.backgroundImage = 'url("' + src + '")'; t.classList.add('on'); btn.classList.add('has-thumb'); };
+      img.src = src;
+    }
+    show('https://fast.wistia.com/embed/medias/' + wid + '/swatch', false);
+    var cb = 'wistiaThumb' + wid, s = document.createElement('script');
+    window[cb] = function(j){ if (j && j.thumbnail_url) show(j.thumbnail_url.replace(/image_crop_resized=\d+x\d+/, 'image_crop_resized=1280x720'), true); };
+    s.src = 'https://fast.wistia.com/oembed.json?url=' + encodeURIComponent('https://home.wistia.com/medias/' + wid) + '&callback=' + cb;
+    s.async = true; document.head.appendChild(s);
+  })();
+  btn.addEventListener('click', function(){
+    var u = CONFIG.vsl, id;
+    if (!u) { box.querySelector('[data-vsl-meta]').textContent = 'Video goes live shortly'; return; }
+    track('upsell_vsl_start');
+    if ((id = m(u, /(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/))) {
+      box.innerHTML = '<iframe src="https://www.youtube.com/embed/' + id + '?autoplay=1&rel=0&modestbranding=1&playsinline=1&iv_load_policy=3&cc_load_policy=0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen title="Mastermind video"></iframe>';
+    } else if ((id = m(u, /(?:wistia\.(?:com|net)\/(?:medias|embed\/iframe|embed\/medias)\/|^)([a-z0-9]{10})(?:\b|$)/i))) {
+      box.innerHTML = '<iframe src="https://fast.wistia.net/embed/iframe/' + id + '?autoPlay=true&playerColor=d4a73a&settingsControl=false&playbackRateControl=false&qualityControl=false&copyLinkAndThumbnailEnabled=false" allow="autoplay; fullscreen" allowfullscreen title="Mastermind video"></iframe>';
+    } else if ((id = m(u, /vimeo\.com\/(?:video\/)?(\d+)/))) {
+      box.innerHTML = '<iframe src="https://player.vimeo.com/video/' + id + '?autoplay=1&playsinline=1" allow="autoplay; fullscreen" allowfullscreen title="Mastermind video"></iframe>';
+    } else {
+      var v = document.createElement('video'); v.src = u; v.controls = true; v.autoplay = true; v.playsInline = true;
+      box.innerHTML = ''; box.appendChild(v);
+    }
+  });
+})();
+
+// Application form
+(function(){
+  var wrap = document.querySelector('[data-apply]'), form = wrap.querySelector('[data-form]');
+  var submitBtn = form.querySelector('[data-submit]'), formErr = form.querySelector('[data-form-error]');
+  var started = false;
+  function clearField(e){
+    var f = e.target.closest('[data-field]');
+    if (f && f.classList.contains('err')) { f.classList.remove('err'); f.querySelector('[data-err]').textContent = ''; }
+  }
+  form.addEventListener('input', function(e){ clearField(e); if (!started) { started = true; track('application_start'); } });
+  form.addEventListener('change', clearField);
+
+  function utm(){
+    var out = {}; new URLSearchParams(location.search).forEach(function(v, k){ if (/^utm_|^fbclid$|^gclid$/.test(k)) out[k] = v.slice(0, 200); });
+    return out;
+  }
+  function showErrors(errors){
+    form.querySelectorAll('[data-field]').forEach(function(f){
+      var k = f.getAttribute('data-field'), msg = errors[k];
+      f.classList.toggle('err', !!msg);
+      f.querySelector('[data-err]').textContent = msg || '';
+    });
+    var first = form.querySelector('.field.err input, .field.err textarea');
+    if (first) first.focus();
+  }
+  function localCheck(d){
+    var e = {};
+    if (d.name.trim().length < 2) e.name = 'Please enter your full name.';
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(d.email.trim())) e.email = 'Please enter a valid email.';
+    if (d.phone.replace(/\D/g, '').length < 8) e.phone = 'Please enter a valid WhatsApp number.';
+    if (d.business.trim().length < 10) e.business = 'Tell us a little more about who you are.';
+    if (!d.commit) e.commit = 'Please choose an option.';
+    if (d.knowShahrez.trim().length < 3) e.knowShahrez = 'Please answer this question.';
+    return e;
+  }
+
+  form.addEventListener('submit', function(ev){
+    ev.preventDefault();
+    formErr.style.display = 'none';
+    var fd = new FormData(form);
+    var data = {
+      name: fd.get('name') || '', email: fd.get('email') || '', phone: fd.get('phone') || '',
+      business: fd.get('business') || '', commit: fd.get('commit') || '', knowShahrez: fd.get('knowShahrez') || '',
+      website: fd.get('website') || '', page: location.pathname, utm: utm()
+    };
+    var errs = localCheck(data);
+    showErrors(errs);
+    if (Object.keys(errs).length) return;
+
+    submitBtn.disabled = true; submitBtn.firstChild.textContent = 'Submitting… ';
+    fetch(CONFIG.endpoint, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) })
+      .then(function(r){ return r.json().then(function(b){ return { status: r.status, body: b }; }); })
+      .then(function(r){
+        if (r.body && r.body.ok) {
+          track('application_submit', { commit: data.commit });
+          if (typeof window.fbq === 'function') window.fbq('track', 'Lead', { content_name: 'Mastermind application' });
+          wrap.querySelector('[data-success-name]').textContent = ', ' + data.name.trim().split(' ')[0];
+          wrap.classList.add('done');
+          wrap.querySelector('[data-success]').focus();
+        } else if (r.body && r.body.errors) {
+          showErrors(r.body.errors);
+        } else {
+          throw new Error((r.body && r.body.error) || 'Something went wrong');
+        }
+      })
+      .catch(function(){
+        formErr.textContent = 'We couldn’t submit your application. Please check your connection and try again, or WhatsApp us on +1 (332) 233-2380.';
+        formErr.style.display = 'block';
+      })
+      .then(function(){ submitBtn.disabled = false; submitBtn.firstChild.textContent = 'Submit my application '; });
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Choose Your Seat | Infinite Rizq</title>
+<meta name="description" content="Choose your seat for Infinite Rizq, Auditorium 2, Expo Center Lahore.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0a0a0b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!--
+  SEAT PICKER: infiniterizq.com/seats?t=<pass token>
+  Each paid ticket gets a private link (a row in Supabase ir_seat_passes). The page shows
+  Auditorium 2 (9 rows x 22 seats = 198) and lets the holder pick seats in their tier's zone:
+  Inner Table = Row A (16 seats, 6 reserved at the ends), General + Pair Pass = Rows B to G,
+  Back tier = Rows H and I. After the ticket comes the section: Sisters sit on the left half of the hall
+  (seats 1 to 11 of every row), Brothers on the right half (seats 12 to 22). Rules are enforced by
+  ir_claim_seat() in the database.
+  Confirming issues the seat pass instantly and it is final: changes go through the coordinator on WhatsApp.
+-->
+<style>
+:root{
+  --bg:#0a0a0b;--bg-2:#111113;--card:#16161a;--line:rgba(255,255,255,.08);--line-2:rgba(255,255,255,.14);
+  --ivory:#f3ede1;--text:#c9c3b6;--muted:#8a857b;--gold:#d4a73a;--gold-2:#e8c66a;--gold-soft:rgba(212,167,58,.14);
+  --red:#e0736b;--green:#5fcf97;
+  --serif:'Playfair Display',Georgia,serif;--sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+h1,h2{font-family:var(--serif);font-weight:600;color:var(--ivory);line-height:1.15;margin:0}
+h1 em{font-style:italic;color:var(--gold-2);font-weight:500}
+:focus-visible{outline:2px solid var(--gold-2);outline-offset:3px}
+.wrap{max-width:860px;margin:0 auto;padding:0 16px}
+.mark{width:40px;height:40px;border-radius:50%;display:inline-grid;place-items:center;background:#1a1a1e;border:1px solid var(--line-2);font:600 .76rem var(--serif);color:var(--ivory)}
+header{display:flex;align-items:center;gap:12px;padding:18px 0 6px}
+header small{display:block;color:var(--muted);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase}
+header b{color:var(--ivory);font-family:var(--serif);font-weight:600;font-size:1.05rem}
+.intro{padding:26px 0 8px;text-align:center}
+.intro h1{font-size:clamp(1.7rem,4.6vw,2.4rem)}
+.intro p{margin:10px auto 0;max-width:560px;color:var(--text);font-size:.98rem}
+.pass{display:inline-flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:16px}
+.chip{border:1px solid var(--line-2);border-radius:999px;padding:6px 12px;font-size:.82rem;color:var(--ivory);background:rgba(255,255,255,.03)}
+.chip b{color:var(--gold-2)}
+.legend{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 18px;margin:22px 0 4px;font-size:.8rem;color:var(--muted)}
+.legend span{display:inline-flex;align-items:center;gap:7px}
+.sw{width:14px;height:13px;border-radius:3px;display:inline-block}
+.sw.av{border:1.5px solid var(--gold);background:var(--gold-soft)}
+.sw.sel{background:var(--gold-2)}
+.sw.tk{background:#3a3a40}
+.sw.na{background:#1e1e22;border:1px solid #2a2a2f}
+.hall{margin:10px -16px 0;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 8px}
+.hall svg{display:block;width:100%;min-width:540px;height:auto}
+.seat{cursor:default}
+.seat.av{cursor:pointer}
+.seat.av:not(.pk):hover rect,.seat.av:not(.pk):focus-visible rect{fill:rgba(232,198,106,.35)}
+.seat:focus{outline:none}
+.seat:focus-visible rect{stroke:var(--ivory);stroke-width:2}
+.hint{text-align:center;color:var(--muted);font-size:.8rem;margin:8px 0 0}
+.panel{position:sticky;bottom:0;z-index:5;margin-top:22px;background:rgba(16,16,19,.96);backdrop-filter:blur(10px);border:1px solid rgba(212,167,58,.35);border-radius:18px 18px 0 0;padding:16px 18px calc(16px + env(safe-area-inset-bottom))}
+.panel .row{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between}
+.picked{font-size:.95rem;color:var(--ivory)}
+.picked b{color:var(--gold-2);font-family:var(--serif);font-size:1.15rem;font-weight:600}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.fields label{font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.fields input{width:100%;margin-top:4px;background:#0d0d0f;border:1px solid var(--line-2);border-radius:10px;color:var(--ivory);font:500 .95rem var(--sans);padding:11px 12px}
+.fields input:focus{border-color:var(--gold)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(180deg,var(--gold-2),var(--gold));color:#141005;font:700 .98rem var(--sans);padding:14px 22px;border-radius:12px;border:0;cursor:pointer}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn.ghost{background:transparent;border:1px solid var(--line-2);color:var(--ivory)}
+.msg{margin:10px 0 0;font-size:.88rem;min-height:1.3em}
+.msg.err{color:var(--red)}
+.msg.ok{color:var(--green)}
+.done{margin:26px auto 0;max-width:560px;text-align:center;border:1px solid rgba(212,167,58,.4);border-radius:18px;padding:26px 22px;background:linear-gradient(180deg,rgba(212,167,58,.10),var(--card) 70%)}
+.done .k{font-size:.74rem;letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:600}
+.done .seatbig{font-family:var(--serif);font-size:clamp(1.8rem,6vw,2.5rem);color:var(--ivory);margin:6px 0 8px;font-weight:600}
+.done p{margin:6px 0 0;font-size:.92rem}
+.done .actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.done .btn{text-decoration:none}
+.spass{text-align:left;margin:16px 0 0;border:1px dashed rgba(212,167,58,.45);border-radius:14px;padding:16px 18px;background:rgba(0,0,0,.25)}
+.spass .who{font-family:var(--serif);color:var(--ivory);font-size:1.25rem;font-weight:600;line-height:1.25}
+.spass dl{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;margin:10px 0 0;font-size:.88rem}
+.spass dt{color:var(--muted);font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;padding-top:3px}
+.spass dd{margin:0;color:var(--ivory)}
+.final{display:inline-block;margin-top:12px;border:1px solid rgba(95,207,151,.45);color:var(--green);border-radius:999px;padding:3px 10px;font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;font-weight:600}
+.final.wait{border-color:rgba(232,198,106,.5);color:var(--gold-2)}
+.note{font-size:.84rem;color:var(--muted);margin:10px 0 0}
+.note b{color:var(--ivory)}
+.tiers{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;max-width:640px;margin:24px auto 0}
+.tier{all:unset;box-sizing:border-box;cursor:pointer;display:block;background:var(--card);border:1px solid var(--line-2);border-radius:16px;padding:16px 18px;transition:border-color .2s,transform .2s}
+.tier:hover,.tier:focus-visible{border-color:var(--gold);transform:translateY(-2px)}
+.tier b{display:block;font-family:var(--serif);color:var(--ivory);font-size:1.15rem;font-weight:600}
+.tier .pr{color:var(--gold-2);font-weight:600;font-size:.9rem}
+.tier small{display:block;color:var(--muted);font-size:.82rem;margin-top:4px}
+.switch{display:block;margin:14px auto 0;background:none;border:0;color:var(--gold-2);font:600 .86rem var(--sans);cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.fields.three{grid-template-columns:1fr 1fr 1fr}
+.keep{word-break:break-all;font-size:.8rem;color:var(--muted);margin-top:10px}
+.gender{max-width:640px;margin:0 auto}
+.btn.already{text-align:center;display:flex;width:100%;max-width:640px;margin:16px auto 0;text-decoration:none;border-color:rgba(212,167,58,.55);color:var(--gold-2)}
+.btn.already:hover,.btn.already:focus-visible{background:var(--gold-soft)}
+.redirect{position:fixed;top:0;left:0;right:0;z-index:40;background:linear-gradient(180deg,var(--gold-2),var(--gold));color:#141005;text-align:center;font:600 .95rem var(--sans);padding:calc(12px + env(safe-area-inset-top)) 16px 12px}
+.redirect b{font-size:1.15rem}
+.redirect a{color:#141005;margin-left:8px}
+.close{position:fixed;top:calc(12px + env(safe-area-inset-top));right:14px;z-index:30;width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:rgba(16,16,19,.92);border:1px solid rgba(212,167,58,.55);color:var(--gold-2);cursor:pointer;backdrop-filter:blur(8px);padding:0}
+.close:hover,.close:focus-visible{background:var(--gold-soft);border-color:var(--gold-2)}
+.close svg{width:18px;height:18px}
+.center-msg{text-align:center;padding:80px 0;color:var(--text)}
+footer{color:var(--muted);font-size:.8rem;text-align:center;padding:30px 0 120px}
+footer a{color:var(--gold-2)}
+@media (max-width:560px){ .fields,.fields.three,.tiers{grid-template-columns:1fr} .panel .row .btn{width:100%} }
+</style>
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1574207957215946');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="mark">WWO</span>
+    <div><b>Infinite Rizq</b><small>Auditorium 2 · Expo Center Lahore</small></div>
+  </header>
+
+  <div class="redirect" id="redirect" role="status" aria-live="polite" hidden></div>
+  <p class="center-msg" id="loading">Loading your seat map…</p>
+  <p class="center-msg" id="fatal" hidden></p>
+
+  <main id="app" hidden>
+    <section class="intro">
+      <h1 id="h1">Choose your <em>seat.</em></h1>
+      <p id="intro-copy"></p>
+      <div class="pass" id="pass"></div>
+    </section>
+
+    <div id="choose" hidden>
+      <div class="tiers">
+        <button class="tier" type="button" data-tier="general"><b>General Admission</b><span class="pr">PKR 11,111</span><small>1 seat · Rows B to G</small></button>
+        <button class="tier" type="button" data-tier="pair"><b>Pair Pass</b><span class="pr">PKR 15,555</span><small>2 seats side by side · Rows B to G</small></button>
+        <button class="tier" type="button" data-tier="inner"><b>Inner Table</b><span class="pr">PKR 33,333</span><small>1 seat · Row A, front row</small></button>
+        <button class="tier" type="button" data-tier="back"><b>Back Rows</b><span class="pr">PKR 5,555</span><small>1 seat · Rows H and I</small></button>
+      </div>
+      <a class="btn ghost already" href="/my-seat">Already picked your seat? See your seat pass</a>
+    </div>
+
+    <div class="gender" id="gender" hidden>
+      <div class="tiers">
+        <button class="tier" type="button" data-section="sisters"><b>Sisters</b><small>Women's Seating Section</small></button>
+        <button class="tier" type="button" data-section="brothers"><b>Brothers</b><small>Men's Seating Section</small></button>
+      </div>
+      <button class="switch" type="button" id="gender-back" hidden>Change ticket type</button>
+    </div>
+
+    <div class="done" id="done" hidden>
+      <div class="k" id="done-k">Seat pass issued</div>
+      <div class="seatbig" id="done-seat"></div>
+      <div class="spass" id="spass"></div>
+      <p id="done-copy"></p>
+      <div class="actions">
+        <a class="btn ghost" id="wa-change" target="_blank" rel="noopener">Urgent change? WhatsApp us</a>
+      </div>
+    </div>
+
+    <div id="picker">
+      <button class="close" type="button" id="close" aria-label="Close seat selection"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M3 3l12 12M15 3L3 15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></button>
+      <div class="legend" aria-hidden="true">
+        <span><i class="sw av"></i>Available for you</span>
+        <span><i class="sw sel"></i>Your pick</span>
+        <span><i class="sw tk"></i>Taken</span>
+        <span><i class="sw na"></i>Other ticket or section</span>
+      </div>
+      <div class="hall" id="hall"></div>
+      <p class="hint" id="hint"></p>
+      <button class="switch" type="button" id="switch-section">Change section (Sisters or Brothers)</button>
+      <button class="switch" type="button" id="switch" hidden>Change ticket type</button>
+
+      <form class="panel" id="panel" novalidate>
+        <div class="row">
+          <div class="picked" id="picked">Tap a gold seat to pick it.</div>
+          <button class="btn" type="submit" id="confirm" disabled>Issue my seat pass</button>
+        </div>
+        <div class="fields" id="fields" hidden>
+          <div><label for="f-name">Full name</label><input id="f-name" autocomplete="name" maxlength="120"></div>
+          <div><label for="f-email">Email used to pay</label><input id="f-email" type="email" autocomplete="email" maxlength="160"></div>
+          <div id="phone-wrap"><label for="f-phone">WhatsApp number</label><input id="f-phone" type="tel" autocomplete="tel" maxlength="40" placeholder="+92 300 1234567"></div>
+        </div>
+        <p class="note" id="final-note" hidden>Your seat pass is issued the moment you confirm and <b>cannot be changed</b> afterwards. Please check your seat before you confirm.</p>
+        <p class="msg" id="msg" role="status" aria-live="polite"></p>
+      </form>
+    </div>
+  </main>
+
+  <footer>Saturday 17 October 2026 · 12 PM to 4 PM · Questions? WhatsApp Wali Anwaar, <a href="https://wa.me/13322332380">+1 (332) 233-2380</a></footer>
+</div>
+
+<script>
+(function(){
+var $ = function(id){ return document.getElementById(id); };
+var token = new URLSearchParams(location.search).get('t') || '';
+var ROWS = ['A','B','C','D','E','F','G','H','I'];
+var TIER = { inner: 'Inner Table', general: 'General Admission', pair: 'Pair Pass', back: 'Back Rows' };
+var ZONE_OF = { inner: 'inner', general: 'mid', pair: 'mid', back: 'back' };
+var ZONE_TEXT = { inner: 'Row A, the front row nearest the stage', mid: 'Rows B to G', back: 'Rows H and I' };
+var OPEN = !token;
+// Set right after a seat pass is issued: show the pass, then count down to the announcement on /thank-you.
+var justIssued = new URLSearchParams(location.search).get('new') === '1';
+var WA = '13322332380';
+var state = { pass: null, seats: [], mine: [], picked: [], locked: false, section: null };
+// One vertical line down the middle of the hall: seats 1-11 of every row are the Sisters' side, 12-22 the Brothers'.
+var SECTION = { sisters: 'Sisters', brothers: 'Brothers' };
+function sideOf(num){ return num <= 11 ? 'sisters' : 'brothers'; }
+
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }
+function label(id){ var p = id.split('-'); return 'Row ' + p[0] + ', Seat ' + Number(p[1]); }
+function labels(ids){
+  if (!ids.length) return '';
+  if (ids.length === 2 && ids[0][0] === ids[1][0]) return 'Row ' + ids[0][0] + ', Seats ' + Number(ids[0].slice(2)) + ' and ' + Number(ids[1].slice(2));
+  return ids.map(label).join(' + ');
+}
+function byId(id){ for (var i = 0; i < state.seats.length; i++) if (state.seats[i].id === id) return state.seats[i]; return null; }
+function fatal(text){ $('loading').hidden = true; $('app').hidden = true; $('fatal').hidden = false; $('fatal').textContent = text; }
+
+function load(){
+  if (OPEN) {
+    return fetch('/api/seats', { cache: 'no-store' }).then(function(r){ return r.json(); }).then(function(j){
+      if (!j.ok) return fatal(j.error || 'Could not load the seat map.');
+      state.seats = j.data.seats || []; state.locked = !!j.data.locked; state.picked = state.picked.filter(function(id){ var s = byId(id); return s && !s.taken; });
+      $('loading').hidden = true; $('app').hidden = false; render();
+    }).catch(function(){ fatal('Network error. Please check your connection and reload.'); });
+  }
+  if (!/^[a-f0-9]{16,64}$/.test(token)) return fatal('This seat link is not valid. Please use the link from your confirmation message, or WhatsApp the coordinator below.');
+  return fetch('/api/seats?t=' + encodeURIComponent(token), { cache: 'no-store' })
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if (!j.ok) return fatal(j.error || 'Could not load the seat map.');
+      state.pass = j.data.pass; state.seats = j.data.seats || []; state.mine = (j.data.mine || []).slice().sort();
+      state.picked = [];
+      $('loading').hidden = true; $('app').hidden = false;
+      render();
+    })
+    .catch(function(){ fatal('Network error. Please check your connection and reload.'); });
+}
+
+function zoneMine(s){ return s.zone === ZONE_OF[state.pass.tier]; }
+function fmtDate(iso){ try { return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Asia/Karachi' }); } catch (e) { return ''; } }
+
+function render(){
+  $('fields').className = 'fields three';
+  if (OPEN && !state.pass) {
+    $('choose').hidden = false; $('picker').hidden = true; $('done').hidden = true; $('gender').hidden = true; $('pass').innerHTML = '';
+    $('h1').innerHTML = 'Choose your <em>seat.</em>';
+    $('intro-copy').textContent = state.locked ? 'Seat choice is now closed for the printed seating list. WhatsApp the coordinator below for help.' : 'Which ticket did you buy? Choose it, then pick your seat in that section of the hall.';
+    if (state.locked) $('choose').hidden = true;
+    return;
+  }
+  $('choose').hidden = true; $('switch').hidden = !OPEN;
+  var p = state.pass, n = p.seats;
+  $('pass').innerHTML = (p.ticket_id ? '<span class="chip">Ticket <b>' + esc(p.ticket_id) + '</b></span>' : '') + '<span class="chip">' + esc(TIER[p.tier] || p.tier) + '</span>' +
+    (n === 2 ? '<span class="chip">2 seats, side by side</span>' : '');
+  $('intro-copy').textContent = (p.name ? p.name.split(' ')[0] + ', your ' : 'Your ') + (TIER[p.tier] || 'ticket') +
+    (n === 2 ? ' seats are in ' : ' seat is in ') + ZONE_TEXT[ZONE_OF[p.tier]] + '. Gold seats are free for you. Pick ' + (n === 2 ? 'two seats together' : 'one') + ', add your details, and your seat pass is issued instantly.';
+  if (!$('f-name').value) $('f-name').value = p.name || '';
+  if (!$('f-email').value) $('f-email').value = p.email || '';
+  if (!$('f-phone').value) $('f-phone').value = p.phone || '';
+
+  var showDone = state.mine.length > 0;
+  var askSection = !showDone && !state.section;
+  $('done').hidden = !showDone;
+  $('gender').hidden = !askSection;
+  $('picker').hidden = !!showDone || askSection;
+  $('gender-back').hidden = !OPEN;
+  $('h1').innerHTML = 'Choose your <em>seat.</em>';
+  if (askSection) {
+    $('h1').textContent = 'Are you a Brother or Sister?';
+    $('intro-copy').textContent = 'To maintain separate seating arrangements, please select your seating section.';
+    return;
+  }
+  if (!showDone) {
+    $('pass').innerHTML += '<span class="chip"><b>' + SECTION[state.section] + '</b> · ' + (state.section === 'sisters' ? 'left' : 'right') + ' half</span>';
+    $('intro-copy').textContent = $('intro-copy').textContent.replace('. Gold seats', ', on the ' + (state.section === 'sisters' ? 'left' : 'right') + ' half of the hall. Gold seats');
+  }
+  if (showDone) {
+    var pending = p.status === 'pending', seatText = labels(state.mine);
+    $('intro-copy').textContent = (p.name ? p.name.split(' ')[0] + ', your ' : 'Your ') + 'seat pass is issued. Take a screenshot and show it at the door.';
+    $('pass').innerHTML = ''; $('h1').innerHTML = 'Your seat <em>pass.</em>';
+    $('done-k').textContent = 'Seat pass issued';
+    $('done-seat').textContent = seatText;
+    $('spass').innerHTML = '<div class="who">' + esc(p.name || 'Guest') + '</div><dl>' +
+      '<dt>Pass</dt><dd>' + esc(p.ticket_id) + '</dd>' +
+      '<dt>Ticket</dt><dd>' + esc(TIER[p.tier] || p.tier) + (n === 2 ? ' (admits two)' : '') + '</dd>' +
+      '<dt>Seat' + (n === 2 ? 's' : '') + '</dt><dd>' + esc(state.mine.join(', ')) + '</dd>' +
+      (p.section ? '<dt>Section</dt><dd>' + esc(SECTION[p.section] || p.section) + '</dd>' : '') +
+      '<dt>When</dt><dd>Saturday 17 October 2026, 12 PM to 4 PM</dd>' +
+      '<dt>Where</dt><dd>Auditorium 2, Expo Center Lahore</dd>' +
+      (p.issued_at ? '<dt>Issued</dt><dd>' + esc(fmtDate(p.issued_at)) + '</dd>' : '') + '</dl>' +
+      '<span class="final' + (pending ? ' wait' : '') + '">' + (pending ? 'Final seat · payment being matched' : 'Final seat · confirmed') + '</span>';
+    $('done-copy').innerHTML = (pending
+      ? 'We are matching your payment to <b>' + esc(p.email) + '</b> (within 12 to 24 hours). If no payment is found for this email, the seat is released.'
+      : 'Ushers will guide you to your seat on the day.') +
+      '<br>This seat is final. For an urgent change, WhatsApp our Event Coordinator with your pass number.' +
+      '<div class="keep">Bookmark this page to see your pass again.</div>';
+    $('wa-change').href = 'https://wa.me/' + WA + '?text=' + encodeURIComponent('Assalam o Alaikum Wali, I need help with my Infinite Rizq seat. Pass ' + p.ticket_id + ', ' + seatText + ', ' + (p.name || '') + '.');
+    if (justIssued) startRedirect();
+    return;
+  }
+  drawHall();
+  updatePanel();
+}
+
+// Only once, straight after issuing: drop ?new=1 so a bookmark or refresh just shows the pass.
+function startRedirect(){
+  justIssued = false;
+  try { history.replaceState(null, '', '/seats?t=' + encodeURIComponent(token)); } catch (e) {}
+  var left = 5, bar = $('redirect');
+  function tick(){
+    bar.innerHTML = 'Seat pass issued. Wait, you will be redirected to an <b>important announcement</b> in <b>' + left + '</b>…<a href="/thank-you">Go now</a>';
+    if (left-- <= 0) { location.href = '/thank-you'; return; }
+    setTimeout(tick, 1000);
+  }
+  bar.hidden = false; tick();
+}
+
+function drawHall(){
+  var W = 700, step = 25, sw = 20, sh = 18, aisle = 26, x0 = (W - (22 * step - 5 + 2 * aisle)) / 2, y0 = 118, rowStep = 34, curve = 20 / 90000;
+  function sx(n){ return x0 + (n - 1) * step + (n > 5 ? aisle : 0) + (n > 17 ? aisle : 0); }
+  function sy(r, n){ var dx = sx(n) + sw / 2 - W / 2; return y0 + r * rowStep - curve * dx * dx; }
+  var svg = '<svg viewBox="0 0 ' + W + ' 450" role="group" aria-label="Seat map of Auditorium 2, stage at the top">';
+  svg += '<path d="M150 24 Q350 74 550 24 L550 10 L150 10 Z" fill="rgba(212,167,58,.14)" stroke="rgba(212,167,58,.55)"/>' +
+    '<text x="350" y="40" text-anchor="middle" fill="#e8c66a" font-family="Playfair Display, Georgia, serif" font-size="15" letter-spacing="4">STAGE</text>' +
+    '<text x="350" y="86" text-anchor="middle" fill="#8a857b" font-size="10.5" letter-spacing="2">OPEN FLOOR</text>';
+  // The centre line sits in the gap between seats 11 and 12 and runs from the stage to the entrance.
+  var midX = sx(11) + sw + (step - sw) / 2, mySide = state.section;
+  svg += '<line x1="' + midX + '" y1="96" x2="' + midX + '" y2="420" stroke="rgba(212,167,58,.45)" stroke-width="1" stroke-dasharray="3 4"/>' +
+    '<text x="' + (midX - 150) + '" y="86" text-anchor="middle" font-size="10" letter-spacing="2.5" font-weight="600" fill="' + (mySide === 'sisters' ? '#e8c66a' : '#5a5650') + '">SISTERS</text>' +
+    '<text x="' + (midX + 150) + '" y="86" text-anchor="middle" font-size="10" letter-spacing="2.5" font-weight="600" fill="' + (mySide === 'brothers' ? '#e8c66a' : '#5a5650') + '">BROTHERS</text>';
+  var mineZone = ZONE_OF[state.pass.tier];
+  ROWS.forEach(function(r, ri){
+    var ly = sy(ri, 1) + 13, ry = sy(ri, 22) + 13;
+    svg += '<text x="' + (x0 - 14) + '" y="' + ly + '" text-anchor="middle" fill="#8a857b" font-size="11" font-weight="600">' + r + '</text>' +
+           '<text x="' + (sx(22) + sw + 14) + '" y="' + ry + '" text-anchor="middle" fill="#8a857b" font-size="11" font-weight="600">' + r + '</text>';
+  });
+  state.seats.forEach(function(s){
+    var ri = ROWS.indexOf(s.row), x = sx(s.num), y = sy(ri, s.num);
+    var picked = state.picked.indexOf(s.id) >= 0;
+    var mine = s.zone === mineZone && sideOf(s.num) === mySide, avail = mine && !s.taken;
+    var fill, stroke = 'none', sw2 = 0, cls = 'seat';
+    if (picked) { fill = '#e8c66a'; cls += ' av pk'; }
+    else if (s.taken) fill = '#3a3a40';
+    else if (avail) { fill = 'rgba(212,167,58,.14)'; stroke = '#d4a73a'; sw2 = 1.5; cls += ' av'; }
+    else fill = s.zone === 'reserved' ? '#161619' : '#1e1e22';
+    var status = picked ? 'your pick' : s.taken ? 'taken' : avail ? 'available' : s.zone === 'reserved' ? 'reserved' : s.zone === mineZone ? (SECTION[sideOf(s.num)] + ' section') : 'for another ticket';
+    svg += '<g class="' + cls + '" data-id="' + s.id + '"' + (avail || picked ? ' role="button" tabindex="0"' : '') + ' aria-label="Row ' + s.row + ' seat ' + s.num + ', ' + status + '">' +
+      '<rect x="' + x + '" y="' + y + '" width="' + sw + '" height="' + sh + '" rx="4" fill="' + fill + '" stroke="' + stroke + '" stroke-width="' + sw2 + '"/>' +
+      (picked ? '<path d="M' + (x + 6) + ' ' + (y + 9) + 'l3 3l6 -6" fill="none" stroke="#141005" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' : '') +
+      '</g>';
+  });
+  svg += '<text x="350" y="436" text-anchor="middle" fill="#8a857b" font-size="10.5" letter-spacing="2">ENTRANCE FROM LOBBY</text></svg>';
+  $('hall').innerHTML = svg;
+  // On a narrow phone the map scrolls sideways: open it on the visitor's own half.
+  var h = $('hall'); if (h.scrollWidth > h.clientWidth) h.scrollLeft = mySide === 'sisters' ? 0 : h.scrollWidth - h.clientWidth;
+  $('hint').textContent = state.pass.seats === 2 ? 'Tap one seat and we pick the seat beside it for your guest.' : 'Tap a gold seat to choose it. Tap again to undo.';
+}
+
+function seatAt(row, num){ return byId(row + '-' + (num < 10 ? '0' : '') + num); }
+function blockOf(n){ return n <= 5 ? 'L' : n <= 17 ? 'C' : 'R'; }
+function freeForMe(s){ return s && s.zone === ZONE_OF[state.pass.tier] && sideOf(s.num) === state.section && !s.taken; }
+
+function pick(id){
+  var s = byId(id); if (!s) return;
+  $('msg').textContent = ''; $('msg').className = 'msg';
+  if (state.pass.seats === 1) { state.picked = state.picked[0] === id ? [] : [id]; }
+  else {
+    if (state.picked.indexOf(id) >= 0) { state.picked = []; }
+    else {
+      var right = seatAt(s.row, s.num + 1), left = seatAt(s.row, s.num - 1), mate = null;
+      if (freeForMe(right) && blockOf(s.num + 1) === blockOf(s.num)) mate = right;
+      else if (freeForMe(left) && blockOf(s.num - 1) === blockOf(s.num)) mate = left;
+      if (!mate) { state.picked = []; $('msg').textContent = 'No free seat beside that one. Pick a spot with two gold seats together.'; $('msg').className = 'msg err'; }
+      else state.picked = [s.id, mate.id].sort();
+    }
+  }
+  drawHall(); updatePanel();
+}
+
+// Meta's browser cookies, sent with the pass so the server-side Purchase (when payment is confirmed) matches the ad click.
+function fbIds(){
+  var c = function(n){ var m = document.cookie.match('(?:^|; )' + n + '=([^;]*)'); return m ? decodeURIComponent(m[1]) : undefined; };
+  return { fbp: c('_fbp'), fbc: c('_fbc') };
+}
+function updatePanel(){
+  var need = state.pass.seats, ok = state.picked.length === need;
+  $('picked').innerHTML = ok ? 'Selected: <b>' + esc(labels(state.picked)) + '</b>' : 'Tap a gold seat to pick ' + (need === 2 ? 'your two seats.' : 'it.');
+  $('confirm').disabled = !ok;
+  $('fields').hidden = !ok;
+  $('final-note').hidden = !ok;
+  $('confirm').textContent = 'Issue my seat pass';
+}
+
+$('hall').addEventListener('click', function(e){ var g = e.target.closest && e.target.closest('.seat.av'); if (g) pick(g.getAttribute('data-id')); });
+$('hall').addEventListener('keydown', function(e){
+  if (e.key !== 'Enter' && e.key !== ' ') return;
+  var g = e.target.closest && e.target.closest('.seat.av'); if (g) { e.preventDefault(); pick(g.getAttribute('data-id')); }
+});
+document.querySelectorAll('[data-tier]').forEach(function(b){
+  b.addEventListener('click', function(){
+    var t = b.getAttribute('data-tier');
+    state.pass = { tier: t, seats: t === 'pair' ? 2 : 1, ticket_id: '', name: '', email: '', changes: 0, locked: state.locked, status: 'pending' };
+    state.picked = []; $('msg').textContent = ''; render(); window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
+$('switch').addEventListener('click', function(){ state.pass = null; state.section = null; state.picked = []; $('msg').textContent = ''; render(); });
+document.querySelectorAll('[data-section]').forEach(function(b){
+  b.addEventListener('click', function(){
+    state.section = b.getAttribute('data-section'); state.picked = []; $('msg').textContent = ''; render(); window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+});
+// Back one step: from the section question to the ticket list (open link only).
+$('gender-back').addEventListener('click', function(){ state.pass = null; state.section = null; state.picked = []; render(); window.scrollTo({ top: 0 }); });
+$('switch-section').addEventListener('click', function(){ state.section = null; state.picked = []; $('msg').textContent = ''; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+// X: leave seat selection without issuing anything. Nothing is reserved until "Issue my seat pass", so we only clear the pick.
+$('close').addEventListener('click', function(){
+  state.picked = []; state.section = null; $('msg').textContent = ''; $('msg').className = 'msg';
+  if (OPEN) state.pass = null;
+  render(); window.scrollTo({ top: 0, behavior: 'smooth' });
+});
+
+$('panel').addEventListener('submit', function(e){
+  e.preventDefault();
+  if (state.picked.length !== state.pass.seats) return;
+  var email = $('f-email').value.trim(), name = $('f-name').value.trim(), phone = $('f-phone').value.trim();
+  function bad(t){ $('msg').textContent = t; $('msg').className = 'msg err'; }
+  if (!name) return bad('Please enter your full name.');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return bad('Please enter the email you paid with.');
+  if (phone.replace(/\D/g, '').length < 10) return bad('Please enter your WhatsApp number.');
+  $('confirm').disabled = true; $('msg').className = 'msg'; $('msg').textContent = 'Issuing your seat pass…';
+  fetch('/api/seats', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(Object.assign(OPEN ? { tier: state.pass.tier, seats: state.picked, name: name, email: email, phone: phone }
+                              : { t: token, seats: state.picked, name: name, email: email, phone: phone }, { section: state.section }, fbIds())) })
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if (j.ok) {
+        if (typeof window.fbq === 'function') window.fbq('track', 'CompleteRegistration', { content_name: 'Seat pass ' + state.pass.tier });
+        if (OPEN && j.data && j.data.token) { setTimeout(function(){ location.replace('/seats?t=' + j.data.token + '&new=1'); }, 300); return; }
+        justIssued = true; state.picked = []; $('msg').textContent = ''; return load();
+      }
+      $('msg').textContent = j.error || 'Could not save. Please try again.'; $('msg').className = 'msg err';
+      if (j.code === 'taken') { state.picked = []; return load(); }
+      updatePanel();
+    })
+    .catch(function(){ $('msg').textContent = 'Network error. Please try again.'; $('msg').className = 'msg err'; updatePanel(); });
+});
+
+// Stripe now returns buyers here after paying, so the checkout-return signal lives on this page (once per checkout).
+(function(){
+  if (typeof window.fbq !== 'function') return;
+  var c = null; try { c = JSON.parse(localStorage.getItem('ir_checkout_tier') || 'null'); } catch (e) {}
+  if (!c || c.done || Date.now() - c.at > 6 * 3600 * 1000) return;
+  window.fbq('trackCustom', 'CheckoutReturn', { value: c.value, currency: 'PKR', content_name: c.tier });
+  c.done = true; try { localStorage.setItem('ir_checkout_tier', JSON.stringify(c)); } catch (e) {}
+})();
+
+load();
+})();
+</script>
+</body>
+</html>

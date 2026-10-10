@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Campaign Analytics | Infinite Rizq</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0a0a0b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!--
+  CAMPAIGN ANALYTICS: infiniterizq.com/dashboard
+  Data comes from the first-party tracker on the landing and thank-you pages
+  (POST /api/track -> Supabase ir_events). This page reads aggregates from
+  /api/stats with the dashboard access key. Nothing personal is stored:
+  visitors are random IDs, never names, emails or phone numbers.
+-->
+<style>
+:root{
+  --bg:#0a0a0b;--card:#141417;--card-2:#1a1a1e;--line:rgba(255,255,255,.08);--line-2:rgba(255,255,255,.14);
+  --ivory:#f3ede1;--text:#c9c3b6;--muted:#8a857b;--gold:#d4a73a;--gold-2:#e8c66a;--gold-soft:rgba(212,167,58,.16);
+  --track:rgba(255,255,255,.06);--good:#5fcf97;--warn:#e0a24a;
+  --serif:'Playfair Display',Georgia,serif;--sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+h1,h2,h3{color:var(--ivory);margin:0}
+button{font:inherit}
+:focus-visible{outline:2px solid var(--gold-2);outline-offset:2px}
+.wrap{max-width:1180px;margin:0 auto;padding:0 20px}
+.tnum{font-variant-numeric:tabular-nums}
+
+/* Gate */
+.gate{min-height:100vh;display:grid;place-items:center;padding:24px}
+.gate-card{width:100%;max-width:400px;background:var(--card);border:1px solid var(--line-2);border-radius:18px;padding:30px 26px;text-align:center}
+.gate-card h1{font-family:var(--serif);font-size:1.6rem;font-weight:600;margin:10px 0 6px}
+.gate-card p{color:var(--muted);font-size:.9rem;margin:0 0 20px}
+.gate-card input[type=password]{width:100%;background:#0d0d0f;border:1px solid var(--line-2);border-radius:10px;color:var(--ivory);font:500 1rem var(--sans);padding:13px 14px;letter-spacing:.06em;text-align:center}
+.gate-card label.rem input{accent-color:var(--gold)}
+.gate-card label.rem{display:flex;gap:8px;align-items:center;justify-content:center;font-size:.82rem;color:var(--muted);margin:12px 0 16px}
+.gate-err{color:#ef8f86;font-size:.85rem;min-height:1.2em;margin-top:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(180deg,var(--gold-2),var(--gold));color:#141005;font-weight:700;border:0;border-radius:10px;padding:12px 20px;cursor:pointer}
+.btn.wide{width:100%}
+.ghost{background:transparent;border:1px solid var(--line-2);color:var(--text);border-radius:999px;padding:7px 14px;font-size:.84rem;font-weight:600;cursor:pointer}
+.ghost:hover{border-color:var(--gold);color:var(--ivory)}
+.mark{width:42px;height:42px;border-radius:50%;display:inline-grid;place-items:center;background:#1a1a1e;border:1px solid var(--line-2);font:600 .8rem var(--serif);color:var(--ivory)}
+
+/* Header + filters */
+.top{position:sticky;top:0;z-index:5;background:rgba(10,10,11,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .wrap{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-top:14px;padding-bottom:14px}
+.ttl{display:flex;align-items:center;gap:12px;margin-right:auto;min-width:0}
+.ttl h1{font-family:var(--serif);font-size:1.25rem;font-weight:600;line-height:1.2}
+.ttl small{display:block;color:var(--muted);font-size:.74rem;letter-spacing:.12em;text-transform:uppercase}
+.range{display:flex;gap:4px;background:var(--card);border:1px solid var(--line-2);border-radius:999px;padding:4px}
+.range button{background:transparent;border:0;color:var(--muted);font-size:.82rem;font-weight:600;padding:6px 12px;border-radius:999px;cursor:pointer}
+.range button[aria-pressed="true"]{background:linear-gradient(180deg,var(--gold-2),var(--gold));color:#141005}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.status{color:var(--muted);font-size:.78rem;padding:10px 20px 0;max-width:1180px;margin:0 auto}
+
+main{padding:18px 0 60px}
+.grid{display:grid;gap:14px}
+.kpis{grid-template-columns:repeat(4,1fr)}
+.two{grid-template-columns:1fr 1fr}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 18px 16px;min-width:0}
+.card h2{font-size:.98rem;font-weight:600;font-family:var(--sans);margin-bottom:2px}
+.card .sub{color:var(--muted);font-size:.8rem;margin:0 0 14px}
+.sec-title{font-family:var(--serif);font-size:1.15rem;font-weight:600;color:var(--ivory);margin:28px 0 12px}
+
+/* KPI tiles */
+.kpi .lbl{font-size:.74rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.kpi .val{font-family:var(--serif);font-size:2rem;font-weight:600;color:var(--ivory);line-height:1.15;margin-top:6px}
+.kpi .ctx{font-size:.8rem;color:var(--text);margin-top:4px}
+.kpi .ctx b{color:var(--gold-2);font-weight:600}
+.kpi.warn{border-color:rgba(224,162,74,.5);background:linear-gradient(180deg,rgba(224,162,74,.12),var(--card) 70%)}
+.kpi.warn .val{color:var(--warn)}
+.sec-title small{font-family:var(--sans);font-size:.74rem;font-weight:500;letter-spacing:.04em;color:var(--muted);margin-left:8px}
+.kpi.hl{border-color:rgba(212,167,58,.4);background:linear-gradient(180deg,rgba(212,167,58,.10),var(--card) 70%)}
+
+/* Bars */
+.bars{display:grid;gap:10px}
+.bar-row{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,2fr) auto;gap:12px;align-items:center;font-size:.85rem;cursor:default}
+.bar-row .name{color:var(--ivory);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-row .name small{display:block;color:var(--muted);font-size:.74rem}
+.bar-track{height:12px;background:var(--track);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;background:var(--gold);border-radius:0 4px 4px 0;min-width:2px;transition:width .4s ease}
+.bar-row:hover .bar-fill{background:var(--gold-2)}
+.bar-row .num{color:var(--ivory);font-weight:600;text-align:right;min-width:74px}
+.bar-row .num small{color:var(--muted);font-weight:500;margin-left:6px}
+.drop{color:var(--muted);font-size:.74rem}
+.empty{color:var(--muted);font-size:.86rem;padding:14px 0}
+
+/* Daily chart */
+.chart{position:relative;height:220px}
+.chart svg{width:100%;height:100%;display:block;overflow:visible}
+.chart .axis{fill:var(--muted);font-size:11px;font-family:var(--sans)}
+.chart .grid-line{stroke:rgba(255,255,255,.07);stroke-width:1}
+.chart .col{fill:var(--gold)}
+.chart .col.on{fill:var(--gold-2)}
+.chart .hit{fill:transparent;cursor:crosshair}
+.tip{position:fixed;z-index:20;pointer-events:none;background:#0d0d0f;border:1px solid var(--line-2);border-radius:10px;padding:10px 12px;font-size:.8rem;color:var(--text);box-shadow:0 12px 30px rgba(0,0,0,.5);min-width:170px;opacity:0;transition:opacity .12s}
+.tip.on{opacity:1}
+.tip b{color:var(--ivory)}
+.tip .tr{display:flex;justify-content:space-between;gap:16px}
+
+/* Tables */
+.tbl-wrap{overflow-x:auto;margin:0 -4px}
+table{width:100%;border-collapse:collapse;font-size:.84rem}
+th,td{text-align:left;padding:9px 6px;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:600;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums}
+td{color:var(--text)}
+td:first-child{color:var(--ivory)}
+.tag{display:inline-block;font-size:.68rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--gold-2);background:var(--gold-soft);border-radius:999px;padding:2px 8px;margin-right:6px}
+
+.note{font-size:.8rem;color:var(--muted);margin-top:10px}
+.foot{color:var(--muted);font-size:.78rem;margin-top:30px;line-height:1.6}
+.foot code{word-break:break-all;color:var(--text)}
+
+/* Seat map */
+.seatwrap{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:14px;align-items:start}
+.hall{overflow-x:auto;-webkit-overflow-scrolling:touch}
+.hall svg{display:block;width:100%;min-width:560px;height:auto}
+.hall .st{cursor:pointer}
+.hall .st:hover rect,.hall .st.sel rect{stroke:var(--ivory);stroke-width:2}
+.hall .st.dim{opacity:.18}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.78rem;color:var(--muted);margin:0 0 10px}
+.legend i{display:inline-block;width:12px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+.seat-tools{display:flex;gap:8px;margin-bottom:10px}
+.seat-tools input{flex:1;background:#0d0d0f;border:1px solid var(--line-2);border-radius:10px;color:var(--ivory);font:500 .88rem var(--sans);padding:9px 12px}
+.who{position:sticky;top:84px}
+.who .k{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:600}
+.who .big{font-family:var(--serif);font-size:1.6rem;color:var(--ivory);margin:4px 0 8px}
+.who dl{display:grid;grid-template-columns:auto 1fr;gap:5px 12px;margin:0;font-size:.84rem}
+.who dt{color:var(--muted);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;padding-top:2px}
+.who dd{margin:0;color:var(--ivory);word-break:break-word}
+.who dd a{color:var(--gold-2)}
+.pill{display:inline-block;border-radius:999px;padding:2px 9px;font-size:.72rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.pill.paid{background:rgba(95,207,151,.14);color:var(--good)}
+.pill.pend{background:rgba(224,162,74,.16);color:var(--warn)}
+.pill.free{background:var(--track);color:var(--muted)}
+@media (max-width:960px){ .seatwrap{grid-template-columns:1fr} .who{position:static} }
+@media (max-width:960px){ .kpis{grid-template-columns:repeat(2,1fr)} .two{grid-template-columns:1fr} }
+@media (max-width:560px){
+  .wrap{padding:0 14px}
+  .kpi .val{font-size:1.6rem}
+  .ttl h1{font-size:1.08rem}
+  .range{width:100%;justify-content:space-between}
+  .range button{padding:6px 8px;font-size:.78rem}
+  .bar-row{grid-template-columns:1fr auto;gap:4px 10px}
+  .bar-row .bar-track{grid-column:1 / -1;grid-row:2}
+  .top{position:static}
+  table th:nth-child(5),table td:nth-child(5){display:none}
+  td .tag{display:block;width:max-content;margin:0 0 3px}
+}
+/* Ask the data */
+.ask{background:linear-gradient(180deg,rgba(212,167,58,.08),var(--card) 60%);border:1px solid rgba(212,167,58,.35);border-radius:16px;padding:16px 18px;margin:18px 0 6px}
+.ask-head{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.ask-head h2{font-family:var(--serif);font-size:1.15rem;font-weight:600}
+.ask-head small{color:var(--muted);font-size:.8rem}
+.ask-log{display:flex;flex-direction:column;gap:10px;margin:12px 0 0;max-height:440px;overflow-y:auto}
+.ask-log:empty{display:none}
+.msg-q{align-self:flex-end;max-width:85%;background:var(--card-2);border:1px solid var(--line-2);border-radius:12px 12px 2px 12px;padding:8px 12px;color:var(--ivory)}
+.msg-a{align-self:flex-start;max-width:100%;border-left:2px solid var(--gold);padding:4px 0 4px 12px;color:var(--text);white-space:pre-wrap;line-height:1.55}
+.msg-a b{color:var(--ivory)}
+.msg-a.err{border-color:#ef8f86;color:#ef8f86}
+.msg-a.wait{color:var(--muted);font-style:italic}
+.ask-form{display:flex;gap:8px;margin-top:12px}
+.ask-form input{flex:1;min-width:0;background:#0d0d0f;border:1px solid var(--line-2);border-radius:10px;color:var(--ivory);font:500 .95rem var(--sans);padding:11px 12px}
+.ask-form input:focus{border-color:var(--gold);outline:none}
+.ask-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.ask-chips button{font-size:.78rem;padding:5px 11px}
+</style>
+</head>
+<body>
+
+<div class="gate" id="gate">
+  <form class="gate-card" id="gate-form" autocomplete="off">
+    <span class="mark">WWO</span>
+    <h1>Campaign analytics</h1>
+    <p>Infinite Rizq · Lahore 2026. Enter the access key to view the dashboard.</p>
+    <input id="key" type="password" placeholder="IR-XXXX-XXXX-XXXX" aria-label="Access key" required>
+    <label class="rem"><input type="checkbox" id="remember" checked> Remember on this device</label>
+    <button class="btn wide" type="submit">Open dashboard</button>
+    <div class="gate-err" id="gate-err" role="alert"></div>
+  </form>
+</div>
+
+<div id="app" hidden>
+  <header class="top">
+    <div class="wrap">
+      <div class="ttl">
+        <span class="mark">WWO</span>
+        <div><h1>Infinite Rizq · Campaign analytics</h1><small id="camp">infinite-rizq-lahore-2026</small></div>
+      </div>
+      <div class="range" role="group" aria-label="Date range">
+        <button type="button" data-range="today" aria-pressed="false">Today</button>
+        <button type="button" data-range="7" aria-pressed="false">7 days</button>
+        <button type="button" data-range="30" aria-pressed="false">30 days</button>
+        <button type="button" data-range="all" aria-pressed="true">All time</button>
+      </div>
+      <div class="actions">
+        <button class="ghost" type="button" id="refresh">Refresh</button>
+        <button class="ghost" type="button" id="save">Save snapshot</button>
+        <button class="ghost" type="button" id="csv">Export CSV</button>
+        <button class="ghost" type="button" id="lock">Lock</button>
+      </div>
+    </div>
+  </header>
+  <p class="status" id="status" aria-live="polite">Loading…</p>
+
+  <main class="wrap">
+    <section class="ask" aria-labelledby="ask-title">
+      <div class="ask-head"><h2 id="ask-title">Ask your data</h2><small>Live from the ticket sheet, seat system and site analytics · read only</small></div>
+      <div class="ask-log" id="ask-log" aria-live="polite"></div>
+      <form class="ask-form" id="ask-form">
+        <input id="ask-q" maxlength="1000" autocomplete="off" placeholder="e.g. Who are the paid tickets not issued yet?" aria-label="Your question">
+        <button class="btn" type="submit" id="ask-go">Ask</button>
+      </form>
+      <div class="ask-chips" id="ask-chips">
+        <button class="ghost" type="button">Who are the paid tickets not issued yet?</button>
+        <button class="ghost" type="button">Who is holding a seat without confirmed payment?</button>
+        <button class="ghost" type="button">Revenue and seats by ticket type</button>
+        <button class="ghost" type="button">Any paid buyers without a seat, or mismatched amounts?</button>
+        <button class="ghost" type="button">How many seats are left on the Sisters and Brothers sides?</button>
+      </div>
+    </section>
+
+    <h2 class="sec-title">Sales<small id="sales-src">From the ticket sheet · all time · verified payments only</small></h2>
+    <div class="grid kpis" id="sales"></div>
+
+    <h2 class="sec-title">Seats<small id="seat-src">Live from the seat system · click any seat to see who holds it</small></h2>
+    <div class="grid kpis" id="seat-kpis"></div>
+    <div class="seatwrap" style="margin-top:14px">
+      <div class="card">
+        <div class="seat-tools"><input id="seat-q" type="search" placeholder="Find a name, email, pass or seat (e.g. B-14)" aria-label="Find a seat holder"></div>
+        <div class="legend">
+          <span><i style="background:#5fcf97"></i>Paid</span>
+          <span><i style="background:#e0a24a"></i>Held, payment not confirmed</span>
+          <span><i style="border:1.5px solid #d4a73a;background:rgba(212,167,58,.12)"></i>Free: Inner (Row A)</span>
+          <span><i style="border:1.5px solid #8a857b"></i>Free: General and Pair (B to G)</span>
+          <span><i style="border:1.5px solid #5a5650"></i>Free: Back Rows (H and I)</span>
+          <span><i style="background:#1e1e22"></i>Reserved</span>
+        </div>
+        <div class="hall" id="seatmap"></div>
+      </div>
+      <div class="card who" id="who"><div class="empty">Click a seat to see who holds it.</div></div>
+    </div>
+    <div class="card" style="margin-top:14px">
+      <h2>Buyers without a seat</h2>
+      <p class="sub">People in the seat system who hold no seat. Paid ones must be seated before the event; send them infiniterizq.com/my-seat.</p>
+      <div class="tbl-wrap"><table>
+        <thead><tr><th>Name</th><th>Pass</th><th>Ticket</th><th>Status</th><th>Email</th><th>WhatsApp</th></tr></thead>
+        <tbody id="unseated"></tbody>
+      </table></div>
+    </div>
+
+    <h2 class="sec-title">Funnel<small>Selected date range</small></h2>
+    <div class="grid kpis" id="kpis"></div>
+
+    <h2 class="sec-title">Traffic over time</h2>
+    <div class="card">
+      <h2>Unique visitors per day</h2>
+      <p class="sub">Pakistan time. Hover a day for VSL plays, card checkouts, paid and applications.</p>
+      <div class="chart" id="daily"></div>
+    </div>
+
+    <h2 class="sec-title">Conversion</h2>
+    <div class="grid two">
+      <div class="card">
+        <h2>Funnel</h2>
+        <p class="sub">Unique visitors who reached each step, as a share of everyone who landed.</p>
+        <div class="bars" id="funnel"></div>
+      </div>
+      <div class="card">
+        <h2>Card checkout by ticket</h2>
+        <p class="sub">Clicks on the Stripe button for each tier.</p>
+        <div class="bars" id="tiers"></div>
+        <h2 style="margin-top:22px">Mastermind applications</h2>
+        <p class="sub">Answer to “If accepted, are you ready to commit?”</p>
+        <div class="bars" id="commit"></div>
+      </div>
+    </div>
+
+    <h2 class="sec-title">Page engagement</h2>
+    <div class="grid two">
+      <div class="card">
+        <h2>Section reach</h2>
+        <p class="sub">Share of visitors who saw each part of the landing page, in page order.</p>
+        <div class="bars" id="sections"></div>
+      </div>
+      <div class="card">
+        <h2>Scroll depth</h2>
+        <p class="sub">How far down the page visitors scrolled.</p>
+        <div class="bars" id="scroll"></div>
+        <h2 style="margin-top:22px">VSL retention</h2>
+        <p class="sub">Visitors who reached each point of the video, of those who pressed play.</p>
+        <div class="bars" id="vsl"></div>
+      </div>
+    </div>
+
+    <h2 class="sec-title">Audience</h2>
+    <div class="grid two">
+      <div class="card">
+        <h2>Most-opened FAQs</h2>
+        <p class="sub">The questions people need answered before paying.</p>
+        <div class="bars" id="faq"></div>
+      </div>
+      <div class="card">
+        <h2>Traffic sources</h2>
+        <p class="sub">UTM source, or the referring site. “direct” is typed URLs and apps that hide the referrer.</p>
+        <div class="bars" id="sources"></div>
+      </div>
+      <div class="card">
+        <h2>Devices</h2>
+        <p class="sub">Unique visitors by device type.</p>
+        <div class="bars" id="devices"></div>
+      </div>
+      <div class="card">
+        <h2>Countries</h2>
+        <p class="sub">Unique visitors by country.</p>
+        <div class="bars" id="countries"></div>
+      </div>
+    </div>
+
+    <p class="foot">
+      How this is measured: a visitor is one browser (a random ID, no personal data). “Paid” counts visitors who reached the thank-you page, which Stripe only sends people to after a successful card payment; bank and JazzCash buyers are recorded in the attendee sheet instead.
+      Tag ad links with <code>?utm_source=meta&amp;utm_medium=paid&amp;utm_campaign=lahore-oct</code> so they show up under Traffic sources.
+      Use <b>Save snapshot</b> at the end of the campaign to keep a permanent record for the next launch.
+    </p>
+  </main>
+</div>
+
+<div class="tip" id="tip" role="tooltip"></div>
+
+<script>
+(function(){
+var KEY_STORE = 'ir_dash_key', state = { key: '', range: 'all', data: null };
+var $ = function(id){ return document.getElementById(id); };
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }
+function fmt(n){ return Number(n || 0).toLocaleString('en-US'); }
+function pct(a, b){ return b ? Math.round(a / b * 1000) / 10 : 0; }
+function pctTxt(a, b){ return b ? pct(a, b) + '%' : '·'; }
+function dur(s){ s = Math.round(s || 0); return Math.floor(s / 60) + 'm ' + ('0' + s % 60).slice(-2) + 's'; }
+
+var SECTION_NAMES = { hero: 'Hero + VSL', why: 'Why this room is rare', problem: 'Blockages + rizq visual', experience: 'Inside the room', guide: 'About Shahrez', 'for': 'Who it’s for', details: 'Event details (where / when / what)', tickets: 'Tickets + payment', reserve: 'Final call to action', faq: 'FAQ' };
+var SECTION_ORDER = ['hero', 'why', 'problem', 'experience', 'guide', 'for', 'details', 'tickets', 'reserve', 'faq'];
+var EVENT_NAMES = {
+  cta_click: 'Button click', checkout_stripe: 'Card checkout (Stripe)', whatsapp_click: 'WhatsApp coordinator',
+  payment_copy: 'Copied payment details', vsl_start: 'Played main VSL', vsl_complete: 'Finished main VSL',
+  rizq_visual_toggle: 'Before/after toggle', faq_open: 'Opened FAQ', upsell_vsl_start: 'Played mastermind VSL',
+  application_start: 'Started application', application_submit: 'Submitted application'
+};
+var LABEL_NAMES = {
+  cta_hero: 'Hero: Reserve your seat', cta_nav: 'Top bar: Reserve', cta_sticky_mobile: 'Mobile sticky bar',
+  cta_final: 'Final section: Reserve', cta_details: 'Details: See ticket options', details_map: 'Details: Open map', details_calendar: 'Details: Add to calendar', cta_vsl_end: 'End of VSL: Reserve', cta_ticket_general: 'Ticket card: General',
+  cta_ticket_pair: 'Ticket card: Pair Pass', cta_ticket_inner: 'Ticket card: Inner Table',
+  cta_whatsapp_faq: 'FAQ: WhatsApp', cta_whatsapp_payment: 'Payment box: WhatsApp',
+  general: 'General · PKR 11,111', pair: 'Pair Pass · PKR 15,555', inner: 'Inner Table · PKR 33,333',
+  blocked: 'Before the room', open: 'After the room',
+  yes: 'Yes, ready to commit', 'yes-discuss': 'Yes, wants to discuss', 'not-now': 'Not right now'
+};
+var PAGE_NAMES = { lp: 'Landing page', 'thank-you': 'Thank-you page' };
+function lbl(v){ return LABEL_NAMES[v] || v || ''; }
+
+// ---------- Access ----------
+function remembered(){ try { return localStorage.getItem(KEY_STORE) || sessionStorage.getItem(KEY_STORE) || ''; } catch (e) { return ''; } }
+function rememberKey(k, persist){ try { (persist ? localStorage : sessionStorage).setItem(KEY_STORE, k); } catch (e) {} }
+function forget(){ try { localStorage.removeItem(KEY_STORE); sessionStorage.removeItem(KEY_STORE); } catch (e) {} }
+
+$('gate-form').addEventListener('submit', function(e){
+  e.preventDefault();
+  var k = $('key').value.trim().toUpperCase();
+  $('gate-err').textContent = '';
+  load(k).then(function(ok){
+    if (ok) rememberKey(k, $('remember').checked);
+    else $('gate-err').textContent = 'That key didn’t work. Check it and try again.';
+  });
+});
+$('lock').addEventListener('click', function(){ forget(); location.reload(); });
+
+// ---------- Ask your data ----------
+var askHistory = [];
+function askLine(cls, html){ var d = document.createElement('div'); d.className = cls; d.innerHTML = html; $('ask-log').appendChild(d); $('ask-log').scrollTop = 1e9; return d; }
+function fmtAnswer(t){ return esc(t).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>'); }
+function ask(q){
+  q = (q || '').trim(); if (!q || $('ask-go').disabled) return;
+  $('ask-q').value = ''; $('ask-go').disabled = true;
+  askLine('msg-q', esc(q));
+  var wait = askLine('msg-a wait', 'Reading the latest data…');
+  fetch('/api/ask', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key: state.key, question: q, history: askHistory }) })
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if (!j.ok) { wait.className = 'msg-a err'; wait.textContent = j.error || 'Could not answer. Try again.'; return; }
+      wait.className = 'msg-a'; wait.innerHTML = fmtAnswer(j.answer) + (j.partial ? '\n…(answer cut short, ask for the rest)' : '');
+      askHistory.push({ role: 'user', content: q }, { role: 'assistant', content: j.answer });
+      askHistory = askHistory.slice(-8);
+    })
+    .catch(function(){ wait.className = 'msg-a err'; wait.textContent = 'Network error. Try again.'; })
+    .then(function(){ $('ask-go').disabled = false; $('ask-q').focus(); });
+}
+$('ask-form').addEventListener('submit', function(e){ e.preventDefault(); ask($('ask-q').value); });
+document.querySelectorAll('#ask-chips button').forEach(function(b){ b.addEventListener('click', function(){ ask(b.textContent); }); });
+
+// ---------- Data ----------
+function rangeBounds(r){
+  var now = new Date();
+  if (r === 'today') { var d = new Date(); d.setHours(0, 0, 0, 0); return { from: d.toISOString() }; }
+  if (r === '7' || r === '30') return { from: new Date(now.getTime() - Number(r) * 864e5).toISOString() };
+  return {};
+}
+function load(key){
+  var b = rangeBounds(state.range);
+  $('status').textContent = 'Loading…';
+  return fetch('/api/stats', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ key: key, from: b.from || null, to: null }) })
+    .then(function(r){ return r.json().then(function(j){ return { status: r.status, body: j }; }); })
+    .then(function(res){
+      if (res.status === 401) { if (!$('app').hidden) { forget(); location.reload(); } return false; }
+      if (!res.body.ok) { $('status').textContent = res.body.error || 'Could not load analytics.'; return true; }
+      state.key = key; state.data = res.body.data; state.sales = res.body.sales || null; state.seats = res.body.seats || null;
+      $('gate').hidden = true; $('app').hidden = false;
+      render(state.data);
+      return true;
+    })
+    .catch(function(){ $('status').textContent = 'Network error. Try Refresh.'; return !$('app').hidden; });
+}
+
+document.querySelectorAll('[data-range]').forEach(function(b){
+  b.addEventListener('click', function(){
+    state.range = b.getAttribute('data-range');
+    document.querySelectorAll('[data-range]').forEach(function(x){ x.setAttribute('aria-pressed', String(x === b)); });
+    load(state.key);
+  });
+});
+$('refresh').addEventListener('click', function(){ load(state.key); });
+
+// ---------- Rendering ----------
+function kpi(label, value, ctx, hl){
+  return '<div class="card kpi' + (hl === 'warn' ? ' warn' : hl ? ' hl' : '') + '"><div class="lbl">' + label + '</div><div class="val tnum">' + value + '</div><div class="ctx">' + (ctx || '&nbsp;') + '</div></div>';
+}
+function bars(el, rows, opts){
+  opts = opts || {};
+  if (!rows.length) { el.innerHTML = '<div class="empty">No data yet for this range.</div>'; return; }
+  var max = opts.max || Math.max.apply(null, rows.map(function(r){ return r.value; })) || 1;
+  el.innerHTML = rows.map(function(r){
+    var w = Math.max(0, Math.min(100, r.value / max * 100));
+    var tip = r.tip || (r.name + ': ' + fmt(r.value));
+    return '<div class="bar-row" data-tip="' + esc(tip) + '">' +
+      '<div class="name">' + esc(r.name) + (r.note ? '<small>' + esc(r.note) + '</small>' : '') + '</div>' +
+      '<div class="bar-track"><div class="bar-fill" style="width:' + w.toFixed(1) + '%"></div></div>' +
+      '<div class="num tnum">' + fmt(r.value) + (r.share != null ? '<small>' + r.share + '</small>' : '') + '</div></div>';
+  }).join('');
+}
+
+var CAPACITY = { seats: 198, inner: 16 };
+function renderSales(s){
+  if (!s) {
+    $('sales').innerHTML = '<div class="card empty" style="grid-column:1/-1">Sales numbers are not available right now. Try Refresh in a minute.</div>';
+    return;
+  }
+  $('sales-src').textContent = (s.source === 'live' ? 'Live from the ticket sheet' : 'Ticket sheet, as of ' + new Date(s.asOf).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })) + ' · all time · verified payments only';
+  var tr = s.tiers || {}, g = tr['General'] || {}, p = tr['Pair Pass'] || {}, inn = tr['Inner Table'] || {}, bk = tr['Back Rows'] || {};
+  var innerSold = inn.seats || 0;
+  $('sales').innerHTML = [
+    kpi('Seats sold', fmt(s.seats), '<b>' + fmt(Math.max(0, CAPACITY.seats - s.seats)) + '</b> left of ' + CAPACITY.seats + ' · ' + fmt(s.bookings) + ' bookings · ' + fmt(s.checkedIn || 0) + ' checked in', true),
+    kpi('Revenue verified', 'PKR ' + fmt(s.revenue), 'payments marked Verified in the sheet', true),
+    kpi('Ticket not issued yet', fmt(s.notIssued), s.notIssued ? 'paid and verified, still waiting for a ticket' : 'every verified buyer has a ticket', s.notIssued > 0 ? 'warn' : false),
+    kpi('Pending verification', fmt(s.pending), s.pending ? 'payments to confirm before issuing' : 'nothing waiting', s.pending > 0 ? 'warn' : false),
+    kpi('General', fmt(g.bookings || 0), fmt(g.seats || 0) + ' seats · PKR ' + fmt(g.revenue || 0)),
+    kpi('Pair Pass', fmt(p.bookings || 0), fmt(p.seats || 0) + ' seats · PKR ' + fmt(p.revenue || 0)),
+    kpi('Inner Table', fmt(innerSold) + ' / ' + CAPACITY.inner, '<b>' + fmt(Math.max(0, CAPACITY.inner - innerSold)) + '</b> left · PKR ' + fmt(inn.revenue || 0)),
+    kpi('Back Rows', fmt(bk.bookings || 0), fmt(bk.seats || 0) + ' seats · PKR ' + fmt(bk.revenue || 0))
+  ].join('');
+}
+
+// ---------- Seats ----------
+var TIER_NAME = { inner: 'Inner Table', general: 'General', pair: 'Pair Pass', back: 'Back Rows' };
+var seatSel = null;
+function seatColor(s){
+  if (s.pass) return s.status === 'verified' ? { fill: '#5fcf97', stroke: 'none' } : { fill: '#e0a24a', stroke: 'none' };
+  if (s.zone === 'reserved') return { fill: '#1e1e22', stroke: 'none' };
+  if (s.zone === 'inner') return { fill: 'rgba(212,167,58,.12)', stroke: '#d4a73a' };
+  if (s.zone === 'back') return { fill: 'transparent', stroke: '#5a5650' };
+  return { fill: 'transparent', stroke: '#8a857b' };
+}
+function renderSeats(data){
+  if (!data || !data.seats) {
+    $('seat-kpis').innerHTML = '<div class="card empty" style="grid-column:1/-1">Seat data is not available right now. Try Refresh.</div>';
+    $('seatmap').innerHTML = ''; $('unseated').innerHTML = ''; return;
+  }
+  var seats = data.seats, paid = 0, pend = 0, free = { inner: 0, mid: 0, back: 0 }, paidPeople = {}, pendPeople = {};
+  seats.forEach(function(s){
+    if (s.pass) { if (s.status === 'verified') { paid++; paidPeople[s.pass] = 1; } else { pend++; pendPeople[s.pass] = 1; } }
+    else if (free[s.zone] != null) free[s.zone]++;
+  });
+  var unseatedPaid = (data.unseated || []).filter(function(u){ return u.status === 'verified'; }).length;
+  $('seat-kpis').innerHTML = [
+    kpi('Seats taken (paid)', fmt(paid), fmt(Object.keys(paidPeople).length) + ' paid passes', true),
+    kpi('Held, not confirmed', fmt(pend), pend ? 'tap an orange seat to confirm' : 'nothing waiting', pend > 0 ? 'warn' : false),
+    kpi('Paid but no seat', fmt(unseatedPaid), unseatedPaid ? 'see the list below' : 'everyone paid is seated', unseatedPaid > 0 ? 'warn' : false),
+    kpi('Free seats', fmt(free.inner + free.mid + free.back), 'Inner ' + free.inner + ' · General/Pair ' + free.mid + ' · Back ' + free.back)
+  ].join('');
+  $('seat-src').textContent = 'Live from the seat system · updated ' + new Date(data.generated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) + ' · click any seat to see who holds it';
+  drawSeatMap(seats);
+  var un = data.unseated || [];
+  $('unseated').innerHTML = un.length ? un.map(function(u){
+    return '<tr><td>' + esc(u.name) + '</td><td>' + esc(u.pass) + (u.ref ? ' · ' + esc(u.ref) : '') + '</td><td>' + esc(TIER_NAME[u.tier] || u.tier) + '</td>' +
+      '<td><span class="pill ' + (u.status === 'verified' ? 'paid">Paid' : 'pend">Pending') + '</span></td><td>' + esc(u.email) + '</td><td>' + esc(u.phone || '') + '</td></tr>';
+  }).join('') : '<tr><td colspan="6" class="empty">Everyone in the seat system has a seat.</td></tr>';
+  if (seatSel) showSeat(seatSel);
+}
+function drawSeatMap(seats){
+  var ROWS = 'ABCDEFGHI'.split(''), W = 700, step = 25, sw = 20, sh = 18, aisle = 26, x0 = (W - (22 * step - 5 + 2 * aisle)) / 2, y0 = 92, rowStep = 34, curve = 20 / 90000;
+  function sx(n){ return x0 + (n - 1) * step + (n > 5 ? aisle : 0) + (n > 17 ? aisle : 0); }
+  function sy(r, n){ var dx = sx(n) + sw / 2 - W / 2; return y0 + r * rowStep - curve * dx * dx; }
+  var q = ($('seat-q').value || '').trim().toLowerCase();
+  var svg = '<svg viewBox="0 0 ' + W + ' 420" role="img" aria-label="Auditorium seat map">' +
+    '<path d="M150 18 Q350 64 550 18 L550 6 L150 6 Z" fill="rgba(212,167,58,.14)" stroke="rgba(212,167,58,.55)"/>' +
+    '<text x="350" y="32" text-anchor="middle" fill="#e8c66a" font-family="Playfair Display, Georgia, serif" font-size="13" letter-spacing="4">STAGE</text>';
+  ROWS.forEach(function(r, ri){
+    svg += '<text x="' + (x0 - 14) + '" y="' + (sy(ri, 1) + 13) + '" text-anchor="middle" fill="#8a857b" font-size="11" font-weight="600">' + r + '</text>' +
+           '<text x="' + (sx(22) + sw + 14) + '" y="' + (sy(ri, 22) + 13) + '" text-anchor="middle" fill="#8a857b" font-size="11" font-weight="600">' + r + '</text>';
+  });
+  seats.forEach(function(s){
+    var ri = ROWS.indexOf(s.row), x = sx(s.num), y = sy(ri, s.num), c = seatColor(s);
+    var hay = [s.id, s.name, s.email, s.pass, s.ref, s.phone].join(' ').toLowerCase();
+    var dim = q && hay.indexOf(q) < 0;
+    svg += '<g class="st' + (dim ? ' dim' : '') + (seatSel === s.id ? ' sel' : '') + '" data-id="' + s.id + '" tabindex="0" role="button" aria-label="' + esc(s.id + (s.name ? ', ' + s.name : ', free')) + '">' +
+      '<rect x="' + x + '" y="' + y + '" width="' + sw + '" height="' + sh + '" rx="4" fill="' + c.fill + '" stroke="' + c.stroke + '" stroke-width="1.5"/></g>';
+  });
+  svg += '<text x="350" y="412" text-anchor="middle" fill="#8a857b" font-size="10" letter-spacing="2">ENTRANCE FROM LOBBY</text></svg>';
+  $('seatmap').innerHTML = svg;
+}
+function showSeat(id){
+  var data = state.seats; if (!data) return;
+  var s = null; data.seats.forEach(function(x){ if (x.id === id) s = x; });
+  if (!s) return;
+  seatSel = id;
+  document.querySelectorAll('#seatmap .st').forEach(function(g){ g.classList.toggle('sel', g.getAttribute('data-id') === id); });
+  var zoneTxt = { inner: 'Inner Table zone (Row A)', mid: 'General and Pair zone (Rows B to G)', back: 'Back Rows zone (Rows H and I)', reserved: 'Reserved' }[s.zone] || s.zone;
+  if (!s.pass) {
+    $('who').innerHTML = '<div class="k">Seat</div><div class="big">' + esc(s.id) + '</div><span class="pill free">' + (s.zone === 'reserved' ? 'Reserved' : 'Free') + '</span><p class="note">' + esc(zoneTxt) + '</p>';
+    return;
+  }
+  var mates = data.seats.filter(function(x){ return x.pass === s.pass; }).map(function(x){ return x.id; });
+  var wa = (s.phone || '').replace(/\D/g, '').replace(/^0(?=3)/, '92');
+  $('who').innerHTML = '<div class="k">Seat ' + esc(mates.join(' + ')) + '</div><div class="big">' + esc(s.name || '') + '</div>' +
+    '<span class="pill ' + (s.status === 'verified' ? 'paid">Paid' : 'pend">Held, payment not confirmed') + '</span>' +
+    '<dl style="margin-top:12px">' +
+      '<dt>Pass</dt><dd>' + esc(s.pass) + '</dd>' +
+      (s.ref ? '<dt>Ticket</dt><dd>' + esc(s.ref) + '</dd>' : '') +
+      '<dt>Type</dt><dd>' + esc(TIER_NAME[s.tier] || s.tier) + (mates.length === 2 ? ' (2 seats)' : '') + '</dd>' +
+      '<dt>Email</dt><dd>' + (s.email ? '<a href="mailto:' + esc(s.email) + '">' + esc(s.email) + '</a>' : '<span style="color:var(--muted)">none</span>') + '</dd>' +
+      '<dt>WhatsApp</dt><dd>' + (wa ? '<a href="https://wa.me/' + esc(wa) + '" target="_blank" rel="noopener">' + esc(s.phone) + '</a>' : '<span style="color:var(--muted)">none</span>') + '</dd>' +
+      (s.at ? '<dt>Seated</dt><dd>' + new Date(s.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + '</dd>' : '') +
+    '</dl>' +
+    (s.status === 'verified' ? '' :
+      '<button type="button" class="btn wide" id="approve" data-pass="' + esc(s.pass) + '" style="margin-top:16px">Confirm payment</button>' +
+      '<p class="note" id="approve-msg">Only after the money is in your account. Same as choosing Paid in the sheet: confirms the seat, adds them to Tickets and emails the seat pass.</p>');
+}
+// Confirm payment from the seat card (phone friendly); the sheet script runs the same Paid flow as the Seat Passes tab.
+$('who').addEventListener('click', function(e){
+  var b = e.target.closest && e.target.closest('#approve');
+  if (!b || b.disabled) return;
+  var pass = b.getAttribute('data-pass'), s = null;
+  (state.seats.seats || []).forEach(function(x){ if (x.pass === pass && !s) s = x; });
+  var price = { inner: '33,333', general: '11,111', pair: '15,555', back: '5,555' }[s && s.tier] || '';
+  if (!confirm('Confirm payment received from ' + ((s && s.name) || pass) + (price ? ' (PKR ' + price + ')' : '') + '?\n\nThis emails their seat pass and cannot be undone here.')) return;
+  var msg = $('approve-msg');
+  b.disabled = true; b.textContent = 'Confirming…';
+  fetch('/api/approve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ key: state.key, pass: pass }) })
+    .then(function(r){ return r.json().catch(function(){ return { ok: false, error: 'No answer. Check the Seat Passes tab before trying again.' }; }); })
+    .then(function(j){
+      if (j.ok) { b.textContent = 'Confirmed'; msg.textContent = j.message || 'Confirmed.'; msg.style.color = 'var(--good)'; setTimeout(function(){ load(state.key); }, 1200); }
+      else { b.disabled = false; b.textContent = 'Confirm payment'; msg.textContent = j.error || 'Could not confirm. Try again.'; msg.style.color = 'var(--warn)'; }
+    })
+    .catch(function(){ b.disabled = false; b.textContent = 'Confirm payment'; msg.textContent = 'No connection. Check the Seat Passes tab before trying again.'; msg.style.color = 'var(--warn)'; });
+});
+$('seatmap').addEventListener('click', function(e){ var g = e.target.closest && e.target.closest('.st'); if (g) showSeat(g.getAttribute('data-id')); });
+$('seatmap').addEventListener('keydown', function(e){ if (e.key !== 'Enter' && e.key !== ' ') return; var g = e.target.closest && e.target.closest('.st'); if (g) { e.preventDefault(); showSeat(g.getAttribute('data-id')); } });
+$('seat-q').addEventListener('input', function(){
+  if (!state.seats) return;
+  drawSeatMap(state.seats.seats);
+  var q = this.value.trim().toLowerCase(), hit = null;
+  if (q) state.seats.seats.forEach(function(s){ if (!hit && s.pass && [s.id, s.name, s.email, s.pass, s.ref, s.phone].join(' ').toLowerCase().indexOf(q) >= 0) hit = s.id; });
+  if (hit) showSeat(hit);
+});
+
+function render(d){
+  renderSales(state.sales);
+  renderSeats(state.seats);
+  var t = d.totals || {}, v = t.visitors || 0;
+  $('camp').textContent = d.campaign || '';
+  var since = d.first_event ? new Date(d.first_event).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : null;
+  $('status').textContent = 'Updated ' + new Date(d.generated_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) +
+    (since ? ' · data since ' + since : ' · no events in this range yet') + ' · ' + fmt(t.total_events) + ' events';
+
+  $('kpis').innerHTML = [
+    kpi('Unique visitors', fmt(v), fmt(t.sessions) + ' sessions · ' + fmt(t.pageviews) + ' page views'),
+    kpi('VSL play rate', pctTxt(t.vsl_starts, v), fmt(t.vsl_starts) + ' played · <b>' + pctTxt(t.vsl_completes, t.vsl_starts) + '</b> finished'),
+    kpi('Checkout click rate', pctTxt(t.checkout_visitors, v), fmt(t.checkout_visitors) + ' visitors · ' + fmt(t.checkout_clicks) + ' clicks'),
+    kpi('Paid by card', fmt(t.thankyou_visitors), '<b>' + pctTxt(t.thankyou_visitors, v) + '</b> of visitors converted', true),
+    kpi('Avg engaged time', dur(t.avg_engaged_sec), 'per session on the landing page'),
+    kpi('Bank / JazzCash intent', fmt(t.whatsapp_clicks + t.payment_copies), fmt(t.whatsapp_clicks) + ' WhatsApp · ' + fmt(t.payment_copies) + ' copied details'),
+    kpi('Button clicks', fmt(t.cta_clicks), 'all “Reserve” and ticket buttons'),
+    kpi('Mastermind applications', fmt(t.app_submits), '<b>' + pctTxt(t.app_submits, t.thankyou_visitors) + '</b> of buyers · ' + fmt(t.app_starts) + ' started', true)
+  ].join('');
+
+  renderDaily(d.daily || []);
+
+  var landed = (d.funnel && d.funnel[0] && d.funnel[0].n) || 0, prev = null;
+  bars($('funnel'), (d.funnel || []).map(function(s){
+    var row = { name: s.step, value: s.n, share: pctTxt(s.n, landed),
+      note: prev != null && prev > 0 && s.n <= prev ? 'keeps ' + pct(s.n, prev) + '% of previous step' : null,
+      tip: s.step + ': ' + fmt(s.n) + ' visitors (' + pctTxt(s.n, landed) + ' of landed)' };
+    prev = s.n; return row;
+  }), { max: landed || 1 });
+
+  bars($('tiers'), (d.checkout_tiers || []).map(function(r){ return { name: lbl(r.label), value: r.clicks, share: fmt(r.visitors) + ' ppl' }; }));
+  bars($('commit'), (d.commit || []).map(function(r){ return { name: lbl(r.label), value: r.n }; }));
+
+  var secMap = {}; (d.sections || []).forEach(function(s){ secMap[s.label] = s.visitors; });
+  var secKeys = SECTION_ORDER.filter(function(k){ return secMap[k] != null; }).concat(Object.keys(secMap).filter(function(k){ return SECTION_ORDER.indexOf(k) < 0; }));
+  bars($('sections'), secKeys.map(function(k){ return { name: SECTION_NAMES[k] || k, value: secMap[k], share: pctTxt(secMap[k], v) }; }), { max: v || 1 });
+
+  var sc = {}; (d.scroll || []).forEach(function(s){ sc[s.label] = s.visitors; });
+  bars($('scroll'), ['25', '50', '75', '100'].filter(function(k){ return sc[k] != null; }).map(function(k){ return { name: k === '100' ? 'Reached the bottom' : 'Scrolled ' + k + '%', value: sc[k], share: pctTxt(sc[k], v) }; }), { max: v || 1 });
+
+  var vp = {}; (d.vsl_progress || []).forEach(function(s){ vp[s.label] = s.visitors; });
+  var vs = t.vsl_starts || 0;
+  bars($('vsl'), vs ? [{ name: 'Pressed play', value: vs, share: '100%' }].concat(['25', '50', '75', '100'].map(function(k){ return { name: k === '100' ? 'Watched to the end' : 'Watched ' + k + '%', value: vp[k] || 0, share: pctTxt(vp[k] || 0, vs) }; })) : [], { max: vs || 1 });
+
+  bars($('faq'), (d.faq || []).map(function(r){ return { name: r.label, value: r.opens }; }));
+  bars($('sources'), (d.sources || []).map(function(r){ return { name: r.label, value: r.visitors, share: pctTxt(r.visitors, v) }; }));
+  bars($('devices'), (d.devices || []).map(function(r){ return { name: r.label.charAt(0).toUpperCase() + r.label.slice(1), value: r.visitors, share: pctTxt(r.visitors, v) }; }));
+  bars($('countries'), (d.countries || []).map(function(r){ return { name: r.label === '??' ? 'Unknown' : r.label, value: r.visitors, share: pctTxt(r.visitors, v) }; }));
+}
+
+function renderDaily(days){
+  var el = $('daily');
+  if (!days.length) { el.innerHTML = '<div class="empty">No visits yet for this range.</div>'; return; }
+  var W = 1000, H = 220, L = 34, B = 26, T = 8, n = days.length;
+  var max = Math.max(1, Math.max.apply(null, days.map(function(x){ return x.visitors; })));
+  var step = Math.pow(10, Math.floor(Math.log10(max))); var top = Math.ceil(max / step) * step; if (top / step < 3) { step = step / 2; }
+  var slot = (W - L) / n, bw = Math.max(2, Math.min(42, slot - 4));
+  var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img" aria-label="Unique visitors per day">';
+  for (var g = 0; g <= top; g += step) {
+    var gy = T + (H - B - T) * (1 - g / top);
+    svg += '<line class="grid-line" x1="' + L + '" x2="' + W + '" y1="' + gy + '" y2="' + gy + '"/><text class="axis" x="' + (L - 6) + '" y="' + (gy + 4) + '" text-anchor="end">' + g + '</text>';
+  }
+  var every = Math.ceil(n / 10);
+  days.forEach(function(x, i){
+    var h = (H - B - T) * (x.visitors / top), cx = L + slot * i + slot / 2, y = H - B - h;
+    var r = Math.min(4, bw / 2, h);
+    svg += '<path class="col" data-i="' + i + '" d="M' + (cx - bw / 2) + ' ' + (H - B) + 'V' + (y + r) + 'Q' + (cx - bw / 2) + ' ' + y + ' ' + (cx - bw / 2 + r) + ' ' + y + 'H' + (cx + bw / 2 - r) + 'Q' + (cx + bw / 2) + ' ' + y + ' ' + (cx + bw / 2) + ' ' + (y + r) + 'V' + (H - B) + 'Z"/>';
+    svg += '<rect class="hit" data-i="' + i + '" x="' + (L + slot * i) + '" y="' + T + '" width="' + slot + '" height="' + (H - T) + '"/>';
+    if (i % every === 0) svg += '<text class="axis" x="' + cx + '" y="' + (H - 8) + '" text-anchor="middle">' + new Date(x.day + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + '</text>';
+  });
+  el.innerHTML = svg + '</svg>';
+  var cols = el.querySelectorAll('.col');
+  el.querySelectorAll('.hit').forEach(function(h){
+    var i = +h.getAttribute('data-i'), x = days[i];
+    h.addEventListener('mousemove', function(e){
+      cols.forEach(function(c){ c.classList.toggle('on', +c.getAttribute('data-i') === i); });
+      showTip(e, '<b>' + new Date(x.day + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' }) + '</b>' +
+        '<div class="tr"><span>Visitors</span><b>' + fmt(x.visitors) + '</b></div><div class="tr"><span>Played VSL</span><b>' + fmt(x.vsl) + '</b></div>' +
+        '<div class="tr"><span>Card checkouts</span><b>' + fmt(x.checkouts) + '</b></div><div class="tr"><span>Paid</span><b>' + fmt(x.purchases) + '</b></div>' +
+        '<div class="tr"><span>Applications</span><b>' + fmt(x.applications) + '</b></div>');
+    });
+    h.addEventListener('mouseleave', function(){ cols.forEach(function(c){ c.classList.remove('on'); }); hideTip(); });
+  });
+}
+
+// ---------- Tooltip for bar rows ----------
+var tip = $('tip');
+function showTip(e, html){ tip.innerHTML = html; tip.classList.add('on');
+  var x = e.clientX + 14, y = e.clientY + 14, r = tip.getBoundingClientRect();
+  if (x + r.width > innerWidth - 8) x = e.clientX - r.width - 14; if (y + r.height > innerHeight - 8) y = e.clientY - r.height - 14;
+  tip.style.left = x + 'px'; tip.style.top = y + 'px'; }
+function hideTip(){ tip.classList.remove('on'); }
+document.addEventListener('mousemove', function(e){
+  var row = e.target.closest && e.target.closest('.bar-row');
+  if (row) showTip(e, esc(row.getAttribute('data-tip'))); else if (!e.target.closest('.chart')) hideTip();
+});
+
+// ---------- Save / export ----------
+function download(name, text, type){
+  var a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: type }));
+  a.download = name; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+function stamp(){ return new Date().toISOString().slice(0, 10); }
+$('save').addEventListener('click', function(){
+  if (!state.data) return;
+  download('infinite-rizq-snapshot-' + state.range + '-' + stamp() + '.json',
+    JSON.stringify({ range: state.range, saved_at: new Date().toISOString(), data: state.data }, null, 2), 'application/json');
+});
+$('csv').addEventListener('click', function(){
+  if (!state.data) return;
+  var d = state.data, t = d.totals || {}, lines = [['section', 'metric', 'detail', 'value', 'unique_visitors']];
+  Object.keys(t).forEach(function(k){ lines.push(['kpi', k, '', t[k], '']); });
+  (d.funnel || []).forEach(function(s){ lines.push(['funnel', s.step, '', s.n, s.n]); });
+  (d.sections || []).forEach(function(s){ lines.push(['section_reach', SECTION_NAMES[s.label] || s.label, '', s.visitors, s.visitors]); });
+  (d.interactions || []).forEach(function(r){ lines.push(['interaction', EVENT_NAMES[r.event] || r.event, (PAGE_NAMES[r.page] || r.page) + ': ' + lbl(r.label), r.count, r.visitors]); });
+  (d.daily || []).forEach(function(x){ lines.push(['daily', x.day, 'visitors/vsl/checkouts/paid/applications', [x.visitors, x.vsl, x.checkouts, x.purchases, x.applications].join(' / '), x.visitors]); });
+  (d.sources || []).forEach(function(r){ lines.push(['source', r.label, '', r.visitors, r.visitors]); });
+  var csv = lines.map(function(row){ return row.map(function(c){ c = String(c == null ? '' : c); return /[",\n]/.test(c) ? '"' + c.replace(/"/g, '""') + '"' : c; }).join(','); }).join('\n');
+  download('infinite-rizq-metrics-' + state.range + '-' + stamp() + '.csv', csv, 'text/csv');
+});
+
+// Auto-open with a remembered key
+var saved = remembered();
+if (saved) { $('key').value = saved; load(saved).then(function(ok){ if (!ok) { forget(); $('gate-err').textContent = 'Please enter the access key.'; } }); }
+setInterval(function(){ if (state.key && document.visibilityState === 'visible') load(state.key); }, 120000);
+})();
+</script>
+</body>
+</html>

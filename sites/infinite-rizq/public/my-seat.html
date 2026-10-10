@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Find My Seat | Infinite Rizq</title>
+<meta name="description" content="See your seat pass for Infinite Rizq, Auditorium 2, Expo Center Lahore.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0a0a0b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!--
+  FIND MY SEAT: infiniterizq.com/my-seat
+  A buyer enters the email they paid with and their name. ir_find_pass() matches the email exactly
+  and at least one word of the name on the ticket, then we send them to their private pass page
+  (/seats?t=<token>): their seat pass if they have one, or the seat map for their ticket if not.
+-->
+<style>
+:root{
+  --bg:#0a0a0b;--card:#16161a;--line-2:rgba(255,255,255,.14);
+  --ivory:#f3ede1;--text:#c9c3b6;--muted:#8a857b;--gold:#d4a73a;--gold-2:#e8c66a;--red:#e0736b;
+  --serif:'Playfair Display',Georgia,serif;--sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html{color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+:focus-visible{outline:2px solid var(--gold-2);outline-offset:3px}
+.wrap{max-width:860px;margin:0 auto;padding:0 16px}
+.mark{width:40px;height:40px;border-radius:50%;display:inline-grid;place-items:center;background:#1a1a1e;border:1px solid var(--line-2);font:600 .76rem var(--serif);color:var(--ivory)}
+header{display:flex;align-items:center;gap:12px;padding:18px 0 6px}
+header small{display:block;color:var(--muted);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase}
+header b{color:var(--ivory);font-family:var(--serif);font-weight:600;font-size:1.05rem}
+.intro{padding:34px 0 8px;text-align:center}
+h1{font-family:var(--serif);font-weight:600;color:var(--ivory);line-height:1.15;margin:0;font-size:clamp(1.7rem,4.6vw,2.4rem)}
+h1 em{font-style:italic;color:var(--gold-2);font-weight:500}
+.intro p{margin:10px auto 0;max-width:520px;font-size:.98rem}
+form{max-width:440px;margin:26px auto 0;background:var(--card);border:1px solid rgba(212,167,58,.35);border-radius:18px;padding:22px 20px}
+label{display:block;font-size:.74rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-top:14px}
+label:first-child{margin-top:0}
+input{width:100%;margin-top:4px;background:#0d0d0f;border:1px solid var(--line-2);border-radius:10px;color:var(--ivory);font:500 .95rem var(--sans);padding:12px}
+input:focus{border-color:var(--gold)}
+.btn{display:flex;width:100%;align-items:center;justify-content:center;margin-top:18px;background:linear-gradient(180deg,var(--gold-2),var(--gold));color:#141005;font:700 .98rem var(--sans);padding:14px 22px;border-radius:12px;border:0;cursor:pointer}
+.btn[disabled]{opacity:.5;cursor:wait}
+.msg{margin:12px 0 0;font-size:.88rem;min-height:1.3em}
+.msg.err{color:var(--red)}
+.alt{text-align:center;margin-top:18px;font-size:.88rem;color:var(--muted)}
+.alt a,footer a{color:var(--gold-2)}
+footer{color:var(--muted);font-size:.8rem;text-align:center;padding:40px 0 60px}
+</style>
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1574207957215946');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="mark">WWO</span>
+    <div><b>Infinite Rizq</b><small>Auditorium 2 · Expo Center Lahore</small></div>
+  </header>
+
+  <main>
+    <section class="intro">
+      <h1>Find your <em>seat.</em></h1>
+      <p>Already bought your ticket? Enter the email you paid with and your name to see your seat pass, or to pick your seat if you have not yet.</p>
+    </section>
+
+    <form id="find" novalidate>
+      <label for="f-email">Email used to pay</label>
+      <input id="f-email" type="email" autocomplete="email" maxlength="160" required>
+      <label for="f-name">Your name</label>
+      <input id="f-name" autocomplete="name" maxlength="120" required>
+      <button class="btn" type="submit" id="go">Show my seat</button>
+      <p class="msg" id="msg" role="status" aria-live="polite"></p>
+    </form>
+
+    <p class="alt">New here and have not chosen a seat? <a href="/seats">Pick your seat</a></p>
+  </main>
+
+  <footer>Saturday 17 October 2026 · 12 PM to 4 PM · Questions? WhatsApp Wali Anwaar, <a href="https://wa.me/13322332380">+1 (332) 233-2380</a></footer>
+</div>
+
+<script>
+(function(){
+var $ = function(id){ return document.getElementById(id); };
+$('find').addEventListener('submit', function(e){
+  e.preventDefault();
+  var email = $('f-email').value.trim(), name = $('f-name').value.trim();
+  function bad(t){ $('msg').textContent = t; $('msg').className = 'msg err'; }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return bad('Please enter the email you paid with.');
+  if (name.length < 2) return bad('Please enter your name.');
+  $('go').disabled = true; $('msg').className = 'msg'; $('msg').textContent = 'Looking up your seat…';
+  fetch('/api/seats', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ find: true, email: email, name: name }) })
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if (j.ok && j.data && j.data.token) { location.href = '/seats?t=' + encodeURIComponent(j.data.token); return; }
+      $('go').disabled = false; bad(j.error || 'Could not find your seat. Please try again.');
+    })
+    .catch(function(){ $('go').disabled = false; bad('Network error. Please try again.'); });
+});
+})();
+</script>
+</body>
+</html>
