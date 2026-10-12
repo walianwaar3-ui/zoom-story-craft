@@ -675,7 +675,7 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
 <div class="strip" role="note">
   <div class="wrap">
     <span class="dot-live" aria-hidden="true"></span>
-    <span>Lahore · Sat 17 Oct · <b data-live-strip>200 seats. One date. No replay.</b></span>
+    <span>Lahore · Sat 17 Oct · <b>200 seats. One date. No replay.</b></span>
     <span data-seats-strip hidden>· <b data-seats-left></b> left</span>
     <span>· Starts in <span class="cd-inline" data-cd-inline>…</span></span>
   </div>
@@ -747,7 +747,7 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
       <li><svg aria-hidden="true"><use href="#cal"/></svg>Saturday, 17 October 2026</li>
       <li><svg aria-hidden="true"><use href="#clock"/></svg><span data-time-label>12 PM to 4 PM</span></li>
       <li><svg aria-hidden="true"><use href="#pin"/></svg><span data-venue-label>Lahore, Pakistan</span></li>
-      <li><svg aria-hidden="true"><use href="#users"/></svg><span data-live-meta>200 seats only</span></li>
+      <li><svg aria-hidden="true"><use href="#users"/></svg>200 seats only</li>
     </ul>
     <a href="#tickets" class="btn" data-track="cta_hero">Reserve your seat <svg aria-hidden="true"><use href="#arrow"/></svg></a>
     <p class="fine">In person only. No recording. No second date.</p>
@@ -1042,7 +1042,7 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
       </article>
 
       <article class="tier rv">
-        <span class="flag">Only <span data-inner-seats>15</span> seats</span>
+        <span class="flag" data-inner-flag>Only <span data-inner-seats>15</span> seats</span>
         <h3>The Inner Table</h3>
         <p class="for">Direct access after the room empties.</p>
         <div class="price"><small>PKR</small><span data-price="inner">33,333</span></div>
@@ -1203,7 +1203,7 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
 <!-- Mobile sticky CTA -->
 <div class="mbar" data-mbar>
   <div class="in">
-    <div class="txt"><b><span class="dot-live" aria-hidden="true"></span><span data-mbar-seats>Limited seats · Lahore, 17 Oct</span></b><span>Doors open in <span class="mcd" data-mbar-cd>…</span></span></div>
+    <div class="txt"><b><span class="dot-live" aria-hidden="true"></span><span>Infinite Rizq · Lahore, 17 Oct</span></b><span>Doors open in <span class="mcd" data-mbar-cd>…</span></span></div>
     <a href="#tickets" class="btn" data-track="cta_sticky_mobile">Reserve seat</a>
   </div>
 </div>
@@ -1392,27 +1392,13 @@ $all('[data-track]').forEach(function(el){
   el.addEventListener('click', function(){ track('cta_click', { location: el.getAttribute('data-track') }); });
 });
 
-// Live seat counter from the seat system: taken seats (sold plus privately held) out of the seats in the hall.
+// Inner Table flag: the only seat count shown publicly. Honest wording from the live seat system.
 (function(){
   fetch('/api/seats').then(function(r){ return r.json(); }).then(function(j){
     var seats = j && j.ok && j.data && j.data.seats; if (!seats) return;
-    var total = 0, taken = 0, bt = 0, bk = 0;
-    seats.forEach(function(x){
-      if (x.zone === 'reserved') return;
-      total++; if (x.taken) taken++;
-      if (x.zone === 'back') { bk++; if (x.taken) bt++; }
-    });
-    if (!total) return;
-    var left = total - taken, pct = Math.floor(100 * taken / total), backPct = bk ? Math.floor(100 * bt / bk) : 0;
-    var head = pct >= 50 ? pct + '% of seats taken' : taken + ' of ' + total + ' seats already taken';
-    $all('[data-live-strip]').forEach(function(el){ el.textContent = head + (backPct >= 60 ? ' · Back Rows ' + backPct + '% gone' : '') + '.'; });
-    $all('[data-live-meta]').forEach(function(el){ el.textContent = left + ' of ' + total + ' seats left'; });
-    $all('[data-seats-total]').forEach(function(el){ el.textContent = total; });
-    $all('[data-seats-left]').forEach(function(el){ el.textContent = left; });
-    $all('[data-seats-block]').forEach(function(el){ el.hidden = false; });
-    $all('[data-mbar-seats]').forEach(function(el){ el.textContent = 'Only ' + left + ' of ' + total + ' seats left'; });
-    var bar = document.querySelector('[data-seats-bar]');
-    if (bar) setTimeout(function(){ bar.style.width = pct + '%'; }, 300);
+    var free = seats.filter(function(x){ return x.zone === 'inner' && !x.taken; }).length;
+    var txt = free <= 0 ? 'Sold out' : free < 6 ? 'Less than 6 left' : free < 10 ? 'Fewer than 10 left' : null;
+    if (txt) $all('[data-inner-flag]').forEach(function(el){ el.textContent = txt; });
   }).catch(function(){});
 })();
 

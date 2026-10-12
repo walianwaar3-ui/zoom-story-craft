@@ -1097,7 +1097,7 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
       </article>
 
       <article class="tier rv">
-        <span class="flag">Only <span data-inner-seats>15</span> seats</span>
+        <span class="flag" data-inner-flag>Only <span data-inner-seats>15</span> seats</span>
         <h3>The Inner Table</h3>
         <p class="for">Direct access after the room empties.</p>
         <div class="price"><small>PKR</small><span data-price="inner">33,333</span></div>
@@ -1453,6 +1453,16 @@ if (CONFIG.seatsRemaining !== null && CONFIG.seatsRemaining !== undefined) {
   var bar = document.querySelector('[data-seats-bar]');
   if (bar) setTimeout(function(){ bar.style.width = (100 * (CONFIG.seatsTotal - left) / CONFIG.seatsTotal) + '%'; }, 300);
 }
+
+// Inner Table flag: the only seat count shown publicly. Honest wording from the live seat system.
+(function(){
+  fetch('/api/seats').then(function(r){ return r.json(); }).then(function(j){
+    var seats = j && j.ok && j.data && j.data.seats; if (!seats) return;
+    var free = seats.filter(function(x){ return x.zone === 'inner' && !x.taken; }).length;
+    var txt = free <= 0 ? 'Sold out' : free < 6 ? 'Less than 6 left' : free < 10 ? 'Fewer than 10 left' : null;
+    if (txt) $all('[data-inner-flag]').forEach(function(el){ el.textContent = txt; });
+  }).catch(function(){});
+})();
 
 // Countdown to the real event start
 (function(){
