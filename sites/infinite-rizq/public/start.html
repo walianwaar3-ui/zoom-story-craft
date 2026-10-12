@@ -513,6 +513,10 @@ footer .row{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-betw
 .mbar .txt{flex:1;min-width:0;font-size:.78rem;line-height:1.35;color:var(--muted)}
 .mbar .txt b{display:block;color:var(--ivory);font-size:.88rem;font-weight:600}
 .mbar .btn{padding:13px 18px;font-size:.92rem;white-space:nowrap}
+.mbar{display:block}
+.mbar .in{max-width:880px;margin:0 auto}
+.mbar .txt b{display:flex;align-items:center;gap:8px;color:var(--gold-2)}
+.mbar .mcd{font-variant-numeric:tabular-nums;font-weight:600;color:var(--ivory)}
 
 /* ---------- Reveal ---------- */
 .js .rv{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease}
@@ -1200,7 +1204,7 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
 <!-- Mobile sticky CTA -->
 <div class="mbar" data-mbar>
   <div class="in">
-    <div class="txt"><b>Infinite Rizq · 17 Oct</b><span data-mbar-sub>200 seats · Lahore</span></div>
+    <div class="txt"><b><span class="dot-live" aria-hidden="true"></span><span data-mbar-seats>Limited seats · Lahore, 17 Oct</span></b><span>Doors open in <span class="mcd" data-mbar-cd>…</span></span></div>
     <a href="#tickets" class="btn" data-track="cta_sticky_mobile">Reserve seat</a>
   </div>
 </div>
@@ -1407,7 +1411,7 @@ $all('[data-track]').forEach(function(el){
     $all('[data-seats-total]').forEach(function(el){ el.textContent = total; });
     $all('[data-seats-left]').forEach(function(el){ el.textContent = left; });
     $all('[data-seats-block]').forEach(function(el){ el.hidden = false; });
-    $all('[data-mbar-sub]').forEach(function(el){ el.textContent = left + ' of ' + total + ' seats left'; });
+    $all('[data-mbar-seats]').forEach(function(el){ el.textContent = 'Only ' + left + ' of ' + total + ' seats left'; });
     var bar = document.querySelector('[data-seats-bar]');
     if (bar) setTimeout(function(){ bar.style.width = pct + '%'; }, 300);
   }).catch(function(){});
@@ -1454,6 +1458,7 @@ document.querySelectorAll('[data-story]').forEach(function(b){
         mm = Math.floor(diff / 6e4) % 60, ss = Math.floor(diff / 1e3) % 60;
     d.textContent = pad(dd); h.textContent = pad(hh); m.textContent = pad(mm); s.textContent = pad(ss);
     inline.textContent = diff ? dd + 'd ' + pad(hh) + 'h ' + pad(mm) + 'm' : 'today';
+    $all('[data-mbar-cd]').forEach(function(el){ el.textContent = diff ? dd + 'd ' + pad(hh) + 'h ' + pad(mm) + 'm ' + pad(ss) + 's' : 'today'; });
   }
   tick(); setInterval(tick, 1000);
 })();
@@ -1613,7 +1618,7 @@ document.querySelectorAll('[data-story]').forEach(function(b){
   });
 })();
 
-// Mobile sticky CTA: show after the hero, hide while the ticket section is on screen
+// Sticky bar (all screens): show after the hero, hide while the ticket section is on screen
 (function(){
   var bar = document.querySelector('[data-mbar]');
   var hero = document.querySelector('.hero'), tickets = document.getElementById('tickets');
