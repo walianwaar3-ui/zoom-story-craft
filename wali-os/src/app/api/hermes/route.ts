@@ -18,6 +18,7 @@ export const GET = handler(async () =>
       "GET /api/hermes/:resource/:id": "One record.",
       "POST /api/hermes/:resource": "Create (approvals are always created pending).",
       "PATCH /api/hermes/:resource/:id": "Change allowed fields.",
+      "DELETE /api/hermes/clients/:id": "Permanently delete a client (its services go with it).",
       "POST /api/hermes/threads/:id/inbound {body}": "Log an email the contact sent.",
       "POST /api/hermes/threads/:id/submit-reply {body}": "Queue a reply for approval.",
       "POST /api/hermes/threads/:id/sent": "Record that the approved reply was sent.",
