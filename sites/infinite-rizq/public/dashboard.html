@@ -17,10 +17,10 @@
   visitors are random IDs, never names, emails or phone numbers.
 -->
 <script>
-// Theme: remembered choice on this device, else the phone's own light/dark setting.
+// Theme: dark by default; the Light/Dark button at the top switches it and is remembered on this device.
 (function(){
   var t = null; try { t = localStorage.getItem('ir_dash_theme'); } catch (e) {}
-  if (t !== 'light' && t !== 'dark') t = window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  if (t !== 'light') t = 'dark';
   document.documentElement.setAttribute('data-theme', t);
 })();
 </script>
