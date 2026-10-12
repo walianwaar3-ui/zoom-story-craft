@@ -16,16 +16,34 @@
   /api/stats with the dashboard access key. Nothing personal is stored:
   visitors are random IDs, never names, emails or phone numbers.
 -->
+<script>
+// Theme: remembered choice on this device, else the phone's own light/dark setting.
+(function(){
+  var t = null; try { t = localStorage.getItem('ir_dash_theme'); } catch (e) {}
+  if (t !== 'light' && t !== 'dark') t = window.matchMedia && matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  document.documentElement.setAttribute('data-theme', t);
+})();
+</script>
 <style>
 :root{
   --bg:#0a0a0b;--card:#141417;--card-2:#1a1a1e;--line:rgba(255,255,255,.08);--line-2:rgba(255,255,255,.14);
   --ivory:#f3ede1;--text:#c9c3b6;--muted:#8a857b;--gold:#d4a73a;--gold-2:#e8c66a;--gold-soft:rgba(212,167,58,.16);
   --track:rgba(255,255,255,.06);--good:#5fcf97;--warn:#e0a24a;
+  --input:#0d0d0f;--top-bg:rgba(10,10,11,.92);--grid:rgba(255,255,255,.07);--shadow:rgba(0,0,0,.5);--err:#ef8f86;--on-gold:#141005;
+  --seat-paid:#5fcf97;--seat-held:#e0a24a;--seat-res:#1e1e22;--seat-gen:#8a857b;--seat-back:#5a5650;
   --serif:'Playfair Display',Georgia,serif;--sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
 }
 *{box-sizing:border-box}
 [hidden]{display:none!important}
 html{color-scheme:dark}
+:root[data-theme="light"]{
+  color-scheme:light;
+  --bg:#f6f3ec;--card:#ffffff;--card-2:#f1ede4;--line:rgba(30,25,15,.10);--line-2:rgba(30,25,15,.18);
+  --ivory:#1d1a14;--text:#3b372f;--muted:#6f685b;--gold:#a87c16;--gold-2:#c99a2e;--gold-soft:rgba(168,124,22,.14);
+  --track:rgba(30,25,15,.07);--good:#1f8a57;--warn:#b86e12;
+  --input:#ffffff;--top-bg:rgba(246,243,236,.94);--grid:rgba(30,25,15,.09);--shadow:rgba(30,25,15,.16);--err:#c0392b;
+  --seat-paid:#2fa36b;--seat-held:#e08a1e;--seat-res:#cfc9bd;--seat-gen:#8a8273;--seat-back:#b5ad9e;
+}
 body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
 h1,h2,h3{color:var(--ivory);margin:0}
 button{font:inherit}
@@ -38,25 +56,25 @@ button{font:inherit}
 .gate-card{width:100%;max-width:400px;background:var(--card);border:1px solid var(--line-2);border-radius:18px;padding:30px 26px;text-align:center}
 .gate-card h1{font-family:var(--serif);font-size:1.6rem;font-weight:600;margin:10px 0 6px}
 .gate-card p{color:var(--muted);font-size:.9rem;margin:0 0 20px}
-.gate-card input[type=password]{width:100%;background:#0d0d0f;border:1px solid var(--line-2);border-radius:10px;color:var(--ivory);font:500 1rem var(--sans);padding:13px 14px;letter-spacing:.06em;text-align:center}
+.gate-card input[type=password]{width:100%;background:var(--input);border:1px solid var(--line-2);border-radius:10px;color:var(--ivory);font:500 1rem var(--sans);padding:13px 14px;letter-spacing:.06em;text-align:center}
 .gate-card label.rem input{accent-color:var(--gold)}
 .gate-card label.rem{display:flex;gap:8px;align-items:center;justify-content:center;font-size:.82rem;color:var(--muted);margin:12px 0 16px}
-.gate-err{color:#ef8f86;font-size:.85rem;min-height:1.2em;margin-top:10px}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(180deg,var(--gold-2),var(--gold));color:#141005;font-weight:700;border:0;border-radius:10px;padding:12px 20px;cursor:pointer}
+.gate-err{color:var(--err);font-size:.85rem;min-height:1.2em;margin-top:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:linear-gradient(180deg,var(--gold-2),var(--gold));color:var(--on-gold);font-weight:700;border:0;border-radius:10px;padding:12px 20px;cursor:pointer}
 .btn.wide{width:100%}
 .ghost{background:transparent;border:1px solid var(--line-2);color:var(--text);border-radius:999px;padding:7px 14px;font-size:.84rem;font-weight:600;cursor:pointer}
 .ghost:hover{border-color:var(--gold);color:var(--ivory)}
-.mark{width:42px;height:42px;border-radius:50%;display:inline-grid;place-items:center;background:#1a1a1e;border:1px solid var(--line-2);font:600 .8rem var(--serif);color:var(--ivory)}
+.mark{width:42px;height:42px;border-radius:50%;display:inline-grid;place-items:center;background:var(--card-2);border:1px solid var(--line-2);font:600 .8rem var(--serif);color:var(--ivory)}
 
 /* Header + filters */
-.top{position:sticky;top:0;z-index:5;background:rgba(10,10,11,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top{position:sticky;top:0;z-index:5;background:var(--top-bg);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
 .top .wrap{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-top:14px;padding-bottom:14px}
 .ttl{display:flex;align-items:center;gap:12px;margin-right:auto;min-width:0}
 .ttl h1{font-family:var(--serif);font-size:1.25rem;font-weight:600;line-height:1.2}
 .ttl small{display:block;color:var(--muted);font-size:.74rem;letter-spacing:.12em;text-transform:uppercase}
 .range{display:flex;gap:4px;background:var(--card);border:1px solid var(--line-2);border-radius:999px;padding:4px}
 .range button{background:transparent;border:0;color:var(--muted);font-size:.82rem;font-weight:600;padding:6px 12px;border-radius:999px;cursor:pointer}
-.range button[aria-pressed="true"]{background:linear-gradient(180deg,var(--gold-2),var(--gold));color:#141005}
+.range button[aria-pressed="true"]{background:linear-gradient(180deg,var(--gold-2),var(--gold));color:var(--on-gold)}
 .actions{display:flex;gap:8px;flex-wrap:wrap}
 .status{color:var(--muted);font-size:.78rem;padding:10px 20px 0;max-width:1180px;margin:0 auto}
 
@@ -96,11 +114,11 @@ main{padding:18px 0 60px}
 .chart{position:relative;height:220px}
 .chart svg{width:100%;height:100%;display:block;overflow:visible}
 .chart .axis{fill:var(--muted);font-size:11px;font-family:var(--sans)}
-.chart .grid-line{stroke:rgba(255,255,255,.07);stroke-width:1}
+.chart .grid-line{stroke:var(--grid);stroke-width:1}
 .chart .col{fill:var(--gold)}
 .chart .col.on{fill:var(--gold-2)}
 .chart .hit{fill:transparent;cursor:crosshair}
-.tip{position:fixed;z-index:20;pointer-events:none;background:#0d0d0f;border:1px solid var(--line-2);border-radius:10px;padding:10px 12px;font-size:.8rem;color:var(--text);box-shadow:0 12px 30px rgba(0,0,0,.5);min-width:170px;opacity:0;transition:opacity .12s}
+.tip{position:fixed;z-index:20;pointer-events:none;background:var(--input);border:1px solid var(--line-2);border-radius:10px;padding:10px 12px;font-size:.8rem;color:var(--text);box-shadow:0 12px 30px var(--shadow);min-width:170px;opacity:0;transition:opacity .12s}
 .tip.on{opacity:1}
 .tip b{color:var(--ivory)}
 .tip .tr{display:flex;justify-content:space-between;gap:16px}
@@ -124,12 +142,12 @@ td:first-child{color:var(--ivory)}
 .hall{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .hall svg{display:block;width:100%;min-width:560px;height:auto}
 .hall .st{cursor:pointer}
-.hall .st:hover rect,.hall .st.sel rect{stroke:var(--ivory);stroke-width:2}
+.hall .st:hover rect,.hall .st.sel rect{stroke:var(--ivory)!important;stroke-width:2}
 .hall .st.dim{opacity:.18}
 .legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.78rem;color:var(--muted);margin:0 0 10px}
 .legend i{display:inline-block;width:12px;height:11px;border-radius:3px;margin-right:6px;vertical-align:-1px}
 .seat-tools{display:flex;gap:8px;margin-bottom:10px}
-.seat-tools input{flex:1;background:#0d0d0f;border:1px solid var(--line-2);border-radius:10px;color:var(--ivory);font:500 .88rem var(--sans);padding:9px 12px}
+.seat-tools input{flex:1;background:var(--input);border:1px solid var(--line-2);border-radius:10px;color:var(--ivory);font:500 .88rem var(--sans);padding:9px 12px}
 .who{position:sticky;top:84px}
 .who .k{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);font-weight:600}
 .who .big{font-family:var(--serif);font-size:1.6rem;color:var(--ivory);margin:4px 0 8px}
@@ -165,10 +183,10 @@ td:first-child{color:var(--ivory)}
 .msg-q{align-self:flex-end;max-width:85%;background:var(--card-2);border:1px solid var(--line-2);border-radius:12px 12px 2px 12px;padding:8px 12px;color:var(--ivory)}
 .msg-a{align-self:flex-start;max-width:100%;border-left:2px solid var(--gold);padding:4px 0 4px 12px;color:var(--text);white-space:pre-wrap;line-height:1.55}
 .msg-a b{color:var(--ivory)}
-.msg-a.err{border-color:#ef8f86;color:#ef8f86}
+.msg-a.err{border-color:var(--err);color:var(--err)}
 .msg-a.wait{color:var(--muted);font-style:italic}
 .ask-form{display:flex;gap:8px;margin-top:12px}
-.ask-form input{flex:1;min-width:0;background:#0d0d0f;border:1px solid var(--line-2);border-radius:10px;color:var(--ivory);font:500 .95rem var(--sans);padding:11px 12px}
+.ask-form input{flex:1;min-width:0;background:var(--input);border:1px solid var(--line-2);border-radius:10px;color:var(--ivory);font:500 .95rem var(--sans);padding:11px 12px}
 .ask-form input:focus{border-color:var(--gold);outline:none}
 .ask-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .ask-chips button{font-size:.78rem;padding:5px 11px}
@@ -202,6 +220,7 @@ td:first-child{color:var(--ivory)}
         <button type="button" data-range="all" aria-pressed="true">All time</button>
       </div>
       <div class="actions">
+        <button class="ghost" type="button" id="theme">Light theme</button>
         <button class="ghost" type="button" id="refresh">Refresh</button>
         <button class="ghost" type="button" id="save">Save snapshot</button>
         <button class="ghost" type="button" id="csv">Export CSV</button>
@@ -237,12 +256,12 @@ td:first-child{color:var(--ivory)}
       <div class="card">
         <div class="seat-tools"><input id="seat-q" type="search" placeholder="Find a name, email, pass or seat (e.g. B-14)" aria-label="Find a seat holder"></div>
         <div class="legend">
-          <span><i style="background:#5fcf97"></i>Paid</span>
-          <span><i style="background:#e0a24a"></i>Held, payment not confirmed</span>
-          <span><i style="border:1.5px solid #d4a73a;background:rgba(212,167,58,.12)"></i>Free: Inner (Row A)</span>
-          <span><i style="border:1.5px solid #8a857b"></i>Free: General and Pair (B to G)</span>
-          <span><i style="border:1.5px solid #5a5650"></i>Free: Back Rows (H and I)</span>
-          <span><i style="background:#1e1e22"></i>Reserved</span>
+          <span><i style="background:var(--seat-paid)"></i>Paid</span>
+          <span><i style="background:var(--seat-held)"></i>Held, payment not confirmed</span>
+          <span><i style="border:1.5px solid var(--gold);background:var(--gold-soft)"></i>Free: Inner (Row A)</span>
+          <span><i style="border:1.5px solid var(--seat-gen)"></i>Free: General and Pair (B to G)</span>
+          <span><i style="border:1.5px solid var(--seat-back)"></i>Free: Back Rows (H and I)</span>
+          <span><i style="background:var(--seat-res)"></i>Reserved</span>
         </div>
         <div class="hall" id="seatmap"></div>
       </div>
@@ -389,6 +408,16 @@ $('gate-form').addEventListener('submit', function(e){
   });
 });
 $('lock').addEventListener('click', function(){ forget(); location.reload(); });
+function applyTheme(t){
+  document.documentElement.setAttribute('data-theme', t);
+  $('theme').textContent = t === 'light' ? 'Dark theme' : 'Light theme';
+  var m = document.querySelector('meta[name="theme-color"]'); if (m) m.setAttribute('content', t === 'light' ? '#f6f3ec' : '#0a0a0b');
+}
+applyTheme(document.documentElement.getAttribute('data-theme') || 'dark');
+$('theme').addEventListener('click', function(){
+  var t = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+  applyTheme(t); try { localStorage.setItem('ir_dash_theme', t); } catch (e) {}
+});
 
 // ---------- Ask your data ----------
 var askHistory = [];
@@ -490,11 +519,11 @@ function renderSales(s){
 var TIER_NAME = { inner: 'Inner Table', general: 'General', pair: 'Pair Pass', back: 'Back Rows' };
 var seatSel = null;
 function seatColor(s){
-  if (s.pass) return s.status === 'verified' ? { fill: '#5fcf97', stroke: 'none' } : { fill: '#e0a24a', stroke: 'none' };
-  if (s.zone === 'reserved') return { fill: '#1e1e22', stroke: 'none' };
-  if (s.zone === 'inner') return { fill: 'rgba(212,167,58,.12)', stroke: '#d4a73a' };
-  if (s.zone === 'back') return { fill: 'transparent', stroke: '#5a5650' };
-  return { fill: 'transparent', stroke: '#8a857b' };
+  if (s.pass) return s.status === 'verified' ? { fill: 'var(--seat-paid)', stroke: 'none' } : { fill: 'var(--seat-held)', stroke: 'none' };
+  if (s.zone === 'reserved') return { fill: 'var(--seat-res)', stroke: 'none' };
+  if (s.zone === 'inner') return { fill: 'var(--gold-soft)', stroke: 'var(--gold)' };
+  if (s.zone === 'back') return { fill: 'transparent', stroke: 'var(--seat-back)' };
+  return { fill: 'transparent', stroke: 'var(--seat-gen)' };
 }
 function renderSeats(data){
   if (!data || !data.seats) {
@@ -528,20 +557,20 @@ function drawSeatMap(seats){
   function sy(r, n){ var dx = sx(n) + sw / 2 - W / 2; return y0 + r * rowStep - curve * dx * dx; }
   var q = ($('seat-q').value || '').trim().toLowerCase();
   var svg = '<svg viewBox="0 0 ' + W + ' 420" role="img" aria-label="Auditorium seat map">' +
-    '<path d="M150 18 Q350 64 550 18 L550 6 L150 6 Z" fill="rgba(212,167,58,.14)" stroke="rgba(212,167,58,.55)"/>' +
-    '<text x="350" y="32" text-anchor="middle" fill="#e8c66a" font-family="Playfair Display, Georgia, serif" font-size="13" letter-spacing="4">STAGE</text>';
+    '<path d="M150 18 Q350 64 550 18 L550 6 L150 6 Z" style="fill:var(--gold-soft);stroke:var(--gold)"/>' +
+    '<text x="350" y="32" text-anchor="middle" style="fill:var(--gold-2)" font-family="Playfair Display, Georgia, serif" font-size="13" letter-spacing="4">STAGE</text>';
   ROWS.forEach(function(r, ri){
-    svg += '<text x="' + (x0 - 14) + '" y="' + (sy(ri, 1) + 13) + '" text-anchor="middle" fill="#8a857b" font-size="11" font-weight="600">' + r + '</text>' +
-           '<text x="' + (sx(22) + sw + 14) + '" y="' + (sy(ri, 22) + 13) + '" text-anchor="middle" fill="#8a857b" font-size="11" font-weight="600">' + r + '</text>';
+    svg += '<text x="' + (x0 - 14) + '" y="' + (sy(ri, 1) + 13) + '" text-anchor="middle" style="fill:var(--muted)" font-size="11" font-weight="600">' + r + '</text>' +
+           '<text x="' + (sx(22) + sw + 14) + '" y="' + (sy(ri, 22) + 13) + '" text-anchor="middle" style="fill:var(--muted)" font-size="11" font-weight="600">' + r + '</text>';
   });
   seats.forEach(function(s){
     var ri = ROWS.indexOf(s.row), x = sx(s.num), y = sy(ri, s.num), c = seatColor(s);
     var hay = [s.id, s.name, s.email, s.pass, s.ref, s.phone].join(' ').toLowerCase();
     var dim = q && hay.indexOf(q) < 0;
     svg += '<g class="st' + (dim ? ' dim' : '') + (seatSel === s.id ? ' sel' : '') + '" data-id="' + s.id + '" tabindex="0" role="button" aria-label="' + esc(s.id + (s.name ? ', ' + s.name : ', free')) + '">' +
-      '<rect x="' + x + '" y="' + y + '" width="' + sw + '" height="' + sh + '" rx="4" fill="' + c.fill + '" stroke="' + c.stroke + '" stroke-width="1.5"/></g>';
+      '<rect x="' + x + '" y="' + y + '" width="' + sw + '" height="' + sh + '" rx="4" style="fill:' + c.fill + ';stroke:' + c.stroke + '" stroke-width="1.5"/></g>';
   });
-  svg += '<text x="350" y="412" text-anchor="middle" fill="#8a857b" font-size="10" letter-spacing="2">ENTRANCE FROM LOBBY</text></svg>';
+  svg += '<text x="350" y="412" text-anchor="middle" style="fill:var(--muted)" font-size="10" letter-spacing="2">ENTRANCE FROM LOBBY</text></svg>';
   $('seatmap').innerHTML = svg;
 }
 function showSeat(id){
