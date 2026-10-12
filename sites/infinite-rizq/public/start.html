@@ -594,6 +594,13 @@ footer .row{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-betw
 .cost .close{font-style:italic;color:var(--gold-2);margin-top:18px}
 .likely{margin:26px 0 0;padding:18px 20px;border-left:3px solid var(--gold);background:rgba(212,167,58,.05);border-radius:0 12px 12px 0;color:var(--ivory)}
 .likely b{color:var(--gold-2)}
+.ig-row{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:36px;align-items:start}
+.ig-card{min-width:0}
+.ig-card iframe,.ig-card .instagram-media{border-radius:12px!important}
+.ig-fallback{display:block;padding:120px 16px;text-align:center;color:#3897f0;font-family:Arial,sans-serif;font-size:14px;text-decoration:none}
+.ig-follow{margin-top:22px}
+.ig-follow a{color:var(--gold-2);font-weight:600;text-decoration:none}
+@media (max-width:980px){.ig-row{display:flex;overflow-x:auto;scroll-snap-type:x mandatory;gap:12px;margin-left:-16px;margin-right:-16px;padding:0 16px 8px}.ig-card{flex:0 0 84%;scroll-snap-align:center}}
 .story{margin-top:56px;text-align:center}
 .story h3{font-family:var(--serif);font-size:clamp(1.3rem,3vw,1.7rem);color:var(--ivory);margin:0 0 8px}
 .story-play,.story-frame{position:relative;display:block;width:100%;aspect-ratio:16/9;margin:22px 0 0;border-radius:16px;overflow:hidden;border:1px solid rgba(212,167,58,.3);background:#000;padding:0;cursor:pointer}
@@ -881,6 +888,23 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
       <img src="https://i.ytimg.com/vi/5Ht9Q-MHJyc/hqdefault.jpg" alt="" loading="lazy" decoding="async" width="480" height="360">
       <span class="play"><svg><use href="#play"/></svg></span>
     </button>
+  </div>
+</section>
+
+<!-- ===================== INSTAGRAM ===================== -->
+<section class="sec" id="instagram">
+  <div class="wrap">
+    <div class="narrow center rv">
+      <span class="eyebrow">Before you decide</span>
+      <h2>Spend three minutes <em>with Shahrez.</em></h2>
+      <p class="lead">This is how most people in the room first met him: on Instagram, one reel at a time. Watch a few. If they speak to you, the room will speak louder.</p>
+    </div>
+    <div class="ig-row" data-ig-row>
+      <div class="ig-card"><blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/reel/DVdGXCxjSns/" data-instgrm-version="14" style="background:#FFF;border:0;border-radius:12px;margin:0;max-width:540px;min-width:280px;padding:0;width:100%"><a href="https://www.instagram.com/reel/DVdGXCxjSns/" target="_blank" rel="noopener" class="ig-fallback">Watch on Instagram →</a></blockquote></div>
+      <div class="ig-card"><blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/reel/Dbtb6H-pH-R/" data-instgrm-version="14" style="background:#FFF;border:0;border-radius:12px;margin:0;max-width:540px;min-width:280px;padding:0;width:100%"><a href="https://www.instagram.com/reel/Dbtb6H-pH-R/" target="_blank" rel="noopener" class="ig-fallback">Watch on Instagram →</a></blockquote></div>
+      <div class="ig-card"><blockquote class="instagram-media" data-instgrm-permalink="https://www.instagram.com/reel/Dbn9pnZtYfj/" data-instgrm-version="14" style="background:#FFF;border:0;border-radius:12px;margin:0;max-width:540px;min-width:280px;padding:0;width:100%"><a href="https://www.instagram.com/reel/Dbn9pnZtYfj/" target="_blank" rel="noopener" class="ig-fallback">Watch on Instagram →</a></blockquote></div>
+    </div>
+    <p class="center ig-follow"><a href="https://www.instagram.com/shahrez.muslim/" target="_blank" rel="noopener" data-track="instagram_profile">See more on Instagram: @shahrez.muslim →</a></p>
   </div>
 </section>
 
@@ -1396,6 +1420,23 @@ document.querySelectorAll('[data-story]').forEach(function(b){
     track('story_video_play', { location: 'guide' });
   });
 });
+
+// Instagram reels: load Instagram's embed script only when the section comes near the screen
+(function(){
+  var row = document.querySelector('[data-ig-row]'); if (!row) return;
+  var done = false;
+  function load(){
+    if (done) return; done = true;
+    var sc = document.createElement('script'); sc.async = true; sc.src = 'https://www.instagram.com/embed.js';
+    sc.onload = function(){ if (window.instgrm) window.instgrm.Embeds.process(); };
+    document.body.appendChild(sc);
+    track('instagram_section_view', { location: 'start' });
+  }
+  if ('IntersectionObserver' in window) {
+    var io = new IntersectionObserver(function(es){ if (es.some(function(e){ return e.isIntersecting; })) { load(); io.disconnect(); } }, { rootMargin: '600px 0px' });
+    io.observe(row);
+  } else load();
+})();
 
 // Countdown to the real event start
 (function(){
