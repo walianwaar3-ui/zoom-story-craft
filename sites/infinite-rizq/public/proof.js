@@ -29,10 +29,16 @@
   function fmt(n){ return Number(n).toLocaleString('en-US'); }
 
   function build(d){
-    var out = [], buyers = (d.buyers || []).filter(function(b){ return b.first && b.at && Date.now() - new Date(b.at).getTime() < 7 * 864e5; });
+    var out = [], seen = {}, recent = (d.buyers || []).filter(function(b){
+      if (!b.first || !b.at || Date.now() - new Date(b.at).getTime() > 7 * 864e5 || seen[b.first]) return false;
+      return (seen[b.first] = true);
+    });
+    // Alternate Sisters and Brothers so both sides of the hall show up, starting with a sister.
+    var sis = recent.filter(function(b){ return b.section === 'sisters'; }), bro = recent.filter(function(b){ return b.section !== 'sisters'; });
+    var buyers = [];
+    for (var n = 0; n < Math.max(sis.length, bro.length); n++) { if (sis[n]) buyers.push(sis[n]); if (bro[n]) buyers.push(bro[n]); }
     var stats = [];
     if (d.visitors_24h >= 50) stats.push({ ic: '👁', h: '<b>' + fmt(d.visitors_24h) + ' people</b> looked at this event in the last 24 hours', s: 'Infinite Rizq · Lahore, 17 Oct' });
-    if (d.paid_seats >= 20) stats.push({ ic: '✓', h: '<b>' + fmt(d.paid_seats) + ' seats</b> already confirmed', s: 'Paid and seated for 17 Oct' });
     if (d.live_15m >= 5) stats.push({ ic: '●', h: '<b>' + fmt(d.live_15m) + ' people</b> are viewing this page right now', s: 'Live' });
     // Buyers first (the strongest signal), with a stat after every two.
     var bi = 0, si = 0;
