@@ -86,6 +86,7 @@ and `campaign_created`. Use it for the end-of-day summary instead of re-reading 
 | `GET /api/hermes/:resource/:id` | One record. Threads include `messages`. |
 | `POST /api/hermes/:resource` | Create. Body: JSON with allowed fields. |
 | `PATCH /api/hermes/:resource/:id` | Change allowed fields. |
+| `DELETE /api/hermes/clients/:id` | Permanently delete a client. Returns `{deleted: true, id}`, or `404` if no such client. The client's services/projects are deleted with it; tasks, emails, approvals and meetings are kept but unlinked. Only clients can be deleted (`405` for anything else). |
 | `POST /api/hermes/threads/:id/inbound` `{ "body" }` | Log an email the contact sent. |
 | `POST /api/hermes/threads/:id/submit-reply` `{ "body", "requested_by"? }` | Put a reply in the approval queue. |
 | `POST /api/hermes/threads/:id/sent` | After sending an **approved** reply: logs the approved text, marks the thread replied and the approval carried out. |

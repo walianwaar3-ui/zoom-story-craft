@@ -33,3 +33,21 @@ export const PATCH = handler<Ctx>(async (db, req, ctx) => {
   }
   return json({ data: updated });
 });
+
+/** Resources Hermes may delete. Everything else stays delete-proof. */
+const DELETABLE = new Set(["clients"]);
+
+/**
+ * DELETE /api/hermes/clients/:id — permanently delete a client.
+ * The client's services/projects are deleted with it (database cascade);
+ * tasks, emails, approvals and meetings are kept and unlinked.
+ */
+export const DELETE = handler<Ctx>(async (db, _req, ctx) => {
+  const { resource: name, id } = await ctx.params;
+  const r = resource(name);
+  if (!DELETABLE.has(name)) throw new ApiError(405, `Deleting ${name} is not allowed`);
+  requireId(id);
+  const deleted = check(await db.from(r.table).delete().eq("id", id).select("id").maybeSingle());
+  if (!deleted) throw new ApiError(404, "Not found");
+  return json({ deleted: true, id });
+});

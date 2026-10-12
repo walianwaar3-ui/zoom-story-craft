@@ -1,7 +1,8 @@
 /**
  * What the Hermes API exposes, and what Hermes may change.
  *
- * Hermes never deletes, never decides approvals, and never changes an agent's
+ * Hermes deletes nothing but clients (DELETE /api/hermes/clients/:id), never
+ * decides approvals, and never changes an agent's
  * on/off status or its "requires approval" guardrail (those stay with you), nor
  * the workspace settings. Email status changes go through the action endpoints
  * so the approval rule can't be skipped.
