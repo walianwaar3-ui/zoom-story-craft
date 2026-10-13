@@ -14,13 +14,14 @@
   TICKET PAGE: infiniterizq.com/seats (open) or /seats?t=<pass token>
   Since the move to Grand Ballroom D, Nishat Hotel, buyers no longer pick seats: they choose ticket and
   section, and ir_claim_seat() assigns a placeholder spot on their side (capacity ledger only). The
-  ticket shows rows only (front 3 rows or main hall); the real seat is given on arrival.
+  ticket shows rows only; the real seat is given on arrival. Grand Ballroom D: 10 rows x 20 seats,
+  seats 1-10 Sisters, 11-20 Brothers. Row A Inner Table (sofas), B Pair Pass, C-D General, E-J Main Hall.
   The notes below describe the original Expo Center layout that the ledger still uses:
   Each paid ticket gets a private link (a row in Supabase ir_seat_passes). The page shows
   Auditorium 2 (9 rows x 22 seats = 198) and lets the holder pick seats in their tier's zone:
   Inner Table = Row A (16 seats, 6 reserved at the ends), General + Pair Pass = Rows B to G,
   Back tier = Rows H and I. After the ticket comes the section: Sisters sit on the left half of the hall
-  (seats 1 to 11 of every row), Brothers on the right half (seats 12 to 22). Rules are enforced by
+  (originally seats 1 to 11 / 12 to 22; now 1 to 10 / 11 to 20). Rules are enforced by
   ir_claim_seat() in the database.
   Confirming issues the seat pass instantly and it is final: changes go through the coordinator on WhatsApp.
 -->
@@ -154,10 +155,10 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
 
     <div id="choose" hidden>
       <div class="tiers">
-        <button class="tier" type="button" data-tier="general"><b>General Admission</b><span class="pr">PKR 11,111</span><small>1 ticket · Front 3 rows</small></button>
-        <button class="tier" type="button" data-tier="pair"><b>Pair Pass</b><span class="pr">PKR 15,555</span><small>2 people, seated together · Front 3 rows</small></button>
-        <button class="tier" type="button" data-tier="inner"><b>Inner Table</b><span class="pr">PKR 33,333</span><small>1 ticket · Front 3 rows + private buffet</small></button>
-        <button class="tier" type="button" data-tier="back"><b>Main Hall</b><span class="pr">PKR 5,555</span><small>1 ticket · Main hall, behind the front 3 rows</small></button>
+        <button class="tier" type="button" data-tier="general"><b>General Admission</b><span class="pr">PKR 11,111</span><small>1 ticket · Rows 3 and 4</small></button>
+        <button class="tier" type="button" data-tier="pair"><b>Pair Pass</b><span class="pr">PKR 15,555</span><small>2 people, seated together · Row 2</small></button>
+        <button class="tier" type="button" data-tier="inner"><b>Inner Table</b><span class="pr">PKR 33,333</span><small>1 ticket · Front row sofas + private buffet</small></button>
+        <button class="tier" type="button" data-tier="back"><b>Main Hall</b><span class="pr">PKR 5,555</span><small>1 ticket · Rows 5 to 10</small></button>
       </div>
       <a class="btn ghost already" href="/my-seat">Already have your ticket? See it here</a>
     </div>
@@ -219,7 +220,7 @@ var token = new URLSearchParams(location.search).get('t') || '';
 var ROWS = ['A','B','C','D','E','F','G','H','I'];
 var TIER = { inner: 'Inner Table', general: 'General Admission', pair: 'Pair Pass', back: 'Main Hall' };
 // Nishat Hotel: no seat picking. A ticket names its rows; the exact seat is given on arrival.
-var ROWS_OF = { inner: 'Front 3 rows', general: 'Front 3 rows', pair: 'Front 3 rows, seated together', back: 'Main hall' };
+var ROWS_OF = { inner: 'Front row, sofa seating', general: 'Rows 3 and 4', pair: 'Row 2, seated together', back: 'Rows 5 to 10' };
 var ZONE_OF = { inner: 'inner', general: 'mid', pair: 'mid', back: 'back' };
 var ZONE_TEXT = { inner: 'Row A, the front row nearest the stage', mid: 'Rows B to G', back: 'Rows H and I' };
 var OPEN = !token;
@@ -229,7 +230,7 @@ var WA = '13322332380';
 var state = { pass: null, seats: [], mine: [], picked: [], locked: false, section: null };
 // One vertical line down the middle of the hall: seats 1-11 of every row are the Sisters' side, 12-22 the Brothers'.
 var SECTION = { sisters: 'Sisters', brothers: 'Brothers' };
-function sideOf(num){ return num <= 11 ? 'sisters' : 'brothers'; }
+function sideOf(num){ return num <= 10 ? 'sisters' : 'brothers'; }
 
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }
 function label(id){ var p = id.split('-'); return 'Row ' + p[0] + ', Seat ' + Number(p[1]); }
@@ -279,7 +280,7 @@ function render(){
   $('pass').innerHTML = (p.ticket_id ? '<span class="chip">Ticket <b>' + esc(p.ticket_id) + '</b></span>' : '') + '<span class="chip">' + esc(TIER[p.tier] || p.tier) + '</span>' +
     (n === 2 ? '<span class="chip">2 seats, side by side</span>' : '');
   $('intro-copy').textContent = (p.name ? p.name.split(' ')[0] + ', your ' : 'Your ') + (TIER[p.tier] || 'ticket') +
-    ' ticket is for the ' + ROWS_OF[p.tier].toLowerCase() + '. Add your details and your ticket is issued instantly. Your exact seat is given to you on arrival.';
+    ' ticket seats you in ' + ROWS_OF[p.tier].replace(/^R/, 'r').replace(/^F/, 'the f') + '. Add your details and your ticket is issued instantly. Your exact seat is given to you on arrival.';
   if (!$('f-name').value) $('f-name').value = p.name || '';
   if (!$('f-email').value) $('f-email').value = p.email || '';
   if (!$('f-phone').value) $('f-phone').value = p.phone || '';

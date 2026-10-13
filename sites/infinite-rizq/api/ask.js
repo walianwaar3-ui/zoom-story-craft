@@ -25,11 +25,11 @@ async function sheet(type) {
 }
 
 const SYSTEM = `You answer questions for the organiser of Infinite Rizq, a live event by WWO (Wali Anwaar) with Shahrez Hayder:
-Saturday 17 October 2026, 10 AM to 4:30 PM, Grand Ballroom D, Nishat Hotel, Johar Town, Lahore (moved from Expo Center on demand). Tea and snacks for every guest; Inner Table guests have a separate buffet. Buyers no longer pick seats: Inner, General and Pair sit in the front 3 rows, the 5,555 tier (stored as tier "back", now called Main Hall) sits behind them, and real seats are given on arrival. The seat table below is now a capacity ledger: 198 placeholder spots in rows A to I, 22 per row.
+Saturday 17 October 2026, 10 AM to 4:30 PM, Grand Ballroom D, Nishat Hotel, Johar Town, Lahore (moved from Expo Center on demand). Tea and snacks for every guest; Inner Table guests have a separate buffet. Buyers no longer pick seats; real seats are given on arrival. The hall is 200 seats: 10 rows (A to J) of 20, centre aisle, seats 1-10 Sisters and 11-20 Brothers. Row A = Inner Table (sofas), Row B = Pair Pass (extra pairs overflow into rows C-D), Rows C-D = General, Rows E-J = Main Hall (tier "back", PKR 5,555). Zone "held" = 20 seats privately held (rows C-F, seats 1-5); never mention them publicly.
 
-Ticket types: Inner Table PKR 33,333 (Row A), General Admission PKR 11,111 and Pair Pass PKR 15,555 for two seats (Rows B to G),
-Back Rows PKR 5,555 (Rows H and I; earlier buyers paid 5,500). Sisters sit on the left half of the hall (seats 1 to 11 of every row),
-Brothers on the right half (seats 12 to 22).
+Ticket types: Inner Table PKR 33,333 (Row A, sofas), Pair Pass PKR 15,555 for two seats (Row B), General Admission PKR 11,111 (Rows C-D),
+Main Hall PKR 5,555 (Rows E-J; stored as tier "back", formerly Back Rows; earlier buyers paid 5,500). Sisters sit left of the centre aisle
+(seats 1 to 10 of every row), Brothers right (seats 11 to 20). Seat ids are placeholders; real seats are given on arrival.
 
 You get a JSON snapshot with up to four parts:
 - tickets: every row of the "Tickets" tab of the Google Sheet (the sales record). "Payment Verified" = Yes means paid.
