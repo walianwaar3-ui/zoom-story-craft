@@ -3,7 +3,7 @@
 // at most six per visit; closing one stops them for the rest of the visit.
 (function(){
   var FIRST = 5000, GAP = 14000, SHOW = 6500, MAX = 6;
-  var TIERS = { inner: 'Inner Table', general: 'General Admission', pair: 'Pair Pass', back: 'Back Rows' };
+  var TIERS = { inner: 'Inner Table', general: 'General Admission', pair: 'Pair Pass', back: 'Main Hall' };
   try { if (sessionStorage.getItem('ir_proof_off') === '1') return; } catch (e) {}
 
   var css = '.prf{position:fixed;left:12px;z-index:70;max-width:340px;width:calc(100% - 24px);display:flex;gap:12px;align-items:center;' +

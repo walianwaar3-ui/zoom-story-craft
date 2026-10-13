@@ -7,23 +7,24 @@ import { purchaseEvent, sendEvents } from './_meta.js';
 
 const MESSAGES = {
   invalid: 'This seat link is not valid. Please use the link from your confirmation message.',
-  locked: 'Seats are now final for the printed seating list. Message the coordinator if something is wrong.',
-  final: 'Your seat pass is already issued and is final. For an urgent change, WhatsApp the coordinator with your pass number.',
+  locked: 'Ticket issuing is closed. Message the coordinator on WhatsApp for help.',
+  final: 'Your ticket is already issued. For any change, WhatsApp the coordinator with your pass number.',
+  sold_out: 'That section is full for this ticket type. Please WhatsApp the coordinator and we will find you a place.',
   wrong_count: 'Please pick the number of seats your ticket includes.',
   wrong_zone: 'That seat is outside the zone for your ticket.',
   not_together: 'Pair Pass seats must be side by side in the same block.',
-  already_chosen: 'A seat pass is already issued for this email. Seats are final; for an urgent change, WhatsApp the coordinator.',
+  already_chosen: 'A ticket is already issued for this email. Use Find my ticket to see it, or WhatsApp the coordinator.',
   need_name: 'Please enter your full name.',
   need_email: 'Please enter a valid email.',
   need_phone: 'Please enter your WhatsApp number.',
   need_section: 'Please choose the Sisters or Brothers section first.',
   wrong_section: 'That seat is outside your section. Sisters sit on the left half, Brothers on the right half.',
   paid_locked: 'Not released: this person is Paid, so their seat is protected. Ask Claude or the coordinator to move or cancel a paid seat.',
-  no_seat: 'Not confirmed: this person has no seat yet. Ask them to pick one at infiniterizq.com/my-seat, then choose Paid again.',
+  no_seat: 'Not confirmed: this person has no ticket yet. Ask them to get one at infiniterizq.com/seats, then choose Paid again.',
   not_found: 'We could not find a seat pass for that name and email. Use the email you paid with, or WhatsApp the coordinator.',
   bad_tier: 'Please choose your ticket type.',
 };
-const TIER_NAMES = { inner: 'Inner Table', general: 'General Admission', pair: 'Pair Pass', back: 'Back Rows' };
+const TIER_NAMES = { inner: 'Inner Table', general: 'General Admission', pair: 'Pair Pass', back: 'Main Hall' };
 
 // Best effort: the database is the record of truth, so a sheet failure never fails the seat pass.
 async function sendSeatToSheet(tok) {

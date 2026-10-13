@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Find My Seat | Infinite Rizq</title>
-<meta name="description" content="See your seat pass for Infinite Rizq, Auditorium 2, Expo Center Lahore.">
+<title>Find My Ticket | Infinite Rizq</title>
+<meta name="description" content="See your ticket for Infinite Rizq, Grand Ballroom D, Nishat Hotel Johar Town, Lahore.">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0a0a0b">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -70,13 +70,13 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
 <div class="wrap">
   <header>
     <span class="mark">WWO</span>
-    <div><b>Infinite Rizq</b><small>Auditorium 2 · Expo Center Lahore</small></div>
+    <div><b>Infinite Rizq</b><small>Grand Ballroom D · Nishat Hotel, Johar Town</small></div>
   </header>
 
   <main>
     <section class="intro">
-      <h1>Find your <em>seat.</em></h1>
-      <p>Already bought your ticket? Enter the email you paid with and your name to see your seat pass, or to pick your seat if you have not yet.</p>
+      <h1>Find your <em>ticket.</em></h1>
+      <p>Already bought your ticket? Enter the email you paid with and your name to see your ticket. Your exact seat is given to you on arrival.</p>
     </section>
 
     <form id="find" novalidate>
@@ -84,14 +84,14 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
       <input id="f-email" type="email" autocomplete="email" maxlength="160" required>
       <label for="f-name">Your name</label>
       <input id="f-name" autocomplete="name" maxlength="120" required>
-      <button class="btn" type="submit" id="go">Show my seat</button>
+      <button class="btn" type="submit" id="go">Show my ticket</button>
       <p class="msg" id="msg" role="status" aria-live="polite"></p>
     </form>
 
-    <p class="alt">New here and have not chosen a seat? <a href="/seats">Pick your seat</a></p>
+    <p class="alt">Paid but have no ticket yet? <a href="/seats">Get your ticket</a></p>
   </main>
 
-  <footer>Saturday 17 October 2026 · 12 PM to 4 PM · Questions? WhatsApp Wali Anwaar, <a href="https://wa.me/13322332380">+1 (332) 233-2380</a></footer>
+  <footer>Saturday 17 October 2026 · 10 AM to 4:30 PM · Questions? WhatsApp Wali Anwaar, <a href="https://wa.me/13322332380">+1 (332) 233-2380</a></footer>
 </div>
 
 <script>
@@ -103,13 +103,13 @@ $('find').addEventListener('submit', function(e){
   function bad(t){ $('msg').textContent = t; $('msg').className = 'msg err'; }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return bad('Please enter the email you paid with.');
   if (name.length < 2) return bad('Please enter your name.');
-  $('go').disabled = true; $('msg').className = 'msg'; $('msg').textContent = 'Looking up your seat…';
+  $('go').disabled = true; $('msg').className = 'msg'; $('msg').textContent = 'Looking up your ticket…';
   fetch('/api/seats', { method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ find: true, email: email, name: name }) })
     .then(function(r){ return r.json(); })
     .then(function(j){
       if (j.ok && j.data && j.data.token) { location.href = '/seats?t=' + encodeURIComponent(j.data.token); return; }
-      $('go').disabled = false; bad(j.error || 'Could not find your seat. Please try again.');
+      $('go').disabled = false; bad(j.error || 'Could not find your ticket. Please try again.');
     })
     .catch(function(){ $('go').disabled = false; bad('Network error. Please try again.'); });
 });

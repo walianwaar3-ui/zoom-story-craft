@@ -25,7 +25,7 @@ async function sheet(type) {
 }
 
 const SYSTEM = `You answer questions for the organiser of Infinite Rizq, a live event by WWO (Wali Anwaar) with Shahrez Hayder:
-Saturday 17 October 2026, 12 PM to 4 PM, Auditorium 2, Expo Center Lahore. 198 seats in rows A to I, 22 seats per row.
+Saturday 17 October 2026, 10 AM to 4:30 PM, Grand Ballroom D, Nishat Hotel, Johar Town, Lahore (moved from Expo Center on demand). Tea and snacks for every guest; Inner Table guests have a separate buffet. Buyers no longer pick seats: Inner, General and Pair sit in the front 3 rows, the 5,555 tier (stored as tier "back", now called Main Hall) sits behind them, and real seats are given on arrival. The seat table below is now a capacity ledger: 198 placeholder spots in rows A to I, 22 per row.
 
 Ticket types: Inner Table PKR 33,333 (Row A), General Admission PKR 11,111 and Pair Pass PKR 15,555 for two seats (Rows B to G),
 Back Rows PKR 5,555 (Rows H and I; earlier buyers paid 5,500). Sisters sit on the left half of the hall (seats 1 to 11 of every row),

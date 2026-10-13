@@ -3,15 +3,19 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Choose Your Seat | Infinite Rizq</title>
-<meta name="description" content="Choose your seat for Infinite Rizq, Auditorium 2, Expo Center Lahore.">
+<title>Your Ticket | Infinite Rizq</title>
+<meta name="description" content="Get your ticket for Infinite Rizq, Grand Ballroom D, Nishat Hotel Johar Town, Lahore.">
 <meta name="robots" content="noindex, nofollow">
 <meta name="theme-color" content="#0a0a0b">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <!--
-  SEAT PICKER: infiniterizq.com/seats?t=<pass token>
+  TICKET PAGE: infiniterizq.com/seats (open) or /seats?t=<pass token>
+  Since the move to Grand Ballroom D, Nishat Hotel, buyers no longer pick seats: they choose ticket and
+  section, and ir_claim_seat() assigns a placeholder spot on their side (capacity ledger only). The
+  ticket shows rows only (front 3 rows or main hall); the real seat is given on arrival.
+  The notes below describe the original Expo Center layout that the ledger still uses:
   Each paid ticket gets a private link (a row in Supabase ir_seat_passes). The page shows
   Auditorium 2 (9 rows x 22 seats = 198) and lets the holder pick seats in their tier's zone:
   Inner Table = Row A (16 seats, 6 reserved at the ends), General + Pair Pass = Rows B to G,
@@ -134,28 +138,28 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
 <div class="wrap">
   <header>
     <span class="mark">WWO</span>
-    <div><b>Infinite Rizq</b><small>Auditorium 2 · Expo Center Lahore</small></div>
+    <div><b>Infinite Rizq</b><small>Grand Ballroom D · Nishat Hotel, Johar Town</small></div>
   </header>
 
   <div class="redirect" id="redirect" role="status" aria-live="polite" hidden></div>
-  <p class="center-msg" id="loading">Loading your seat map…</p>
+  <p class="center-msg" id="loading">Loading…</p>
   <p class="center-msg" id="fatal" hidden></p>
 
   <main id="app" hidden>
     <section class="intro">
-      <h1 id="h1">Choose your <em>seat.</em></h1>
+      <h1 id="h1">Get your <em>ticket.</em></h1>
       <p id="intro-copy"></p>
       <div class="pass" id="pass"></div>
     </section>
 
     <div id="choose" hidden>
       <div class="tiers">
-        <button class="tier" type="button" data-tier="general"><b>General Admission</b><span class="pr">PKR 11,111</span><small>1 seat · Rows B to G</small></button>
-        <button class="tier" type="button" data-tier="pair"><b>Pair Pass</b><span class="pr">PKR 15,555</span><small>2 seats side by side · Rows B to G</small></button>
-        <button class="tier" type="button" data-tier="inner"><b>Inner Table</b><span class="pr">PKR 33,333</span><small>1 seat · Row A, front row</small></button>
-        <button class="tier" type="button" data-tier="back"><b>Back Rows</b><span class="pr">PKR 5,555</span><small>1 seat · Rows H and I</small></button>
+        <button class="tier" type="button" data-tier="general"><b>General Admission</b><span class="pr">PKR 11,111</span><small>1 ticket · Front 3 rows</small></button>
+        <button class="tier" type="button" data-tier="pair"><b>Pair Pass</b><span class="pr">PKR 15,555</span><small>2 people, seated together · Front 3 rows</small></button>
+        <button class="tier" type="button" data-tier="inner"><b>Inner Table</b><span class="pr">PKR 33,333</span><small>1 ticket · Front 3 rows + private buffet</small></button>
+        <button class="tier" type="button" data-tier="back"><b>Main Hall</b><span class="pr">PKR 5,555</span><small>1 ticket · Main hall, behind the front 3 rows</small></button>
       </div>
-      <a class="btn ghost already" href="/my-seat">Already picked your seat? See your seat pass</a>
+      <a class="btn ghost already" href="/my-seat">Already have your ticket? See it here</a>
     </div>
 
     <div class="gender" id="gender" hidden>
@@ -167,7 +171,7 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
     </div>
 
     <div class="done" id="done" hidden>
-      <div class="k" id="done-k">Seat pass issued</div>
+      <div class="k" id="done-k">Ticket issued</div>
       <div class="seatbig" id="done-seat"></div>
       <div class="spass" id="spass"></div>
       <p id="done-copy"></p>
@@ -192,20 +196,20 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
       <form class="panel" id="panel" novalidate>
         <div class="row">
           <div class="picked" id="picked">Tap a gold seat to pick it.</div>
-          <button class="btn" type="submit" id="confirm" disabled>Issue my seat pass</button>
+          <button class="btn" type="submit" id="confirm" disabled>Issue my ticket</button>
         </div>
         <div class="fields" id="fields" hidden>
           <div><label for="f-name">Full name</label><input id="f-name" autocomplete="name" maxlength="120"></div>
           <div><label for="f-email">Email used to pay</label><input id="f-email" type="email" autocomplete="email" maxlength="160"></div>
           <div id="phone-wrap"><label for="f-phone">WhatsApp number</label><input id="f-phone" type="tel" autocomplete="tel" maxlength="40" placeholder="+92 300 1234567"></div>
         </div>
-        <p class="note" id="final-note" hidden>Your seat pass is issued the moment you confirm and <b>cannot be changed</b> afterwards. Please check your seat before you confirm.</p>
+        <p class="note" id="final-note" hidden>Your ticket is issued the moment you confirm. Your exact seat is given to you on arrival.</p>
         <p class="msg" id="msg" role="status" aria-live="polite"></p>
       </form>
     </div>
   </main>
 
-  <footer>Saturday 17 October 2026 · 12 PM to 4 PM · Questions? WhatsApp Wali Anwaar, <a href="https://wa.me/13322332380">+1 (332) 233-2380</a></footer>
+  <footer>Saturday 17 October 2026 · 10 AM to 4:30 PM · Questions? WhatsApp Wali Anwaar, <a href="https://wa.me/13322332380">+1 (332) 233-2380</a></footer>
 </div>
 
 <script>
@@ -213,7 +217,9 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
 var $ = function(id){ return document.getElementById(id); };
 var token = new URLSearchParams(location.search).get('t') || '';
 var ROWS = ['A','B','C','D','E','F','G','H','I'];
-var TIER = { inner: 'Inner Table', general: 'General Admission', pair: 'Pair Pass', back: 'Back Rows' };
+var TIER = { inner: 'Inner Table', general: 'General Admission', pair: 'Pair Pass', back: 'Main Hall' };
+// Nishat Hotel: no seat picking. A ticket names its rows; the exact seat is given on arrival.
+var ROWS_OF = { inner: 'Front 3 rows', general: 'Front 3 rows', pair: 'Front 3 rows, seated together', back: 'Main hall' };
 var ZONE_OF = { inner: 'inner', general: 'mid', pair: 'mid', back: 'back' };
 var ZONE_TEXT = { inner: 'Row A, the front row nearest the stage', mid: 'Rows B to G', back: 'Rows H and I' };
 var OPEN = !token;
@@ -263,8 +269,8 @@ function render(){
   $('fields').className = 'fields three';
   if (OPEN && !state.pass) {
     $('choose').hidden = false; $('picker').hidden = true; $('done').hidden = true; $('gender').hidden = true; $('pass').innerHTML = '';
-    $('h1').innerHTML = 'Choose your <em>seat.</em>';
-    $('intro-copy').textContent = state.locked ? 'Seat choice is now closed for the printed seating list. WhatsApp the coordinator below for help.' : 'Which ticket did you buy? Choose it, then pick your seat in that section of the hall.';
+    $('h1').innerHTML = 'Get your <em>ticket.</em>';
+    $('intro-copy').textContent = state.locked ? 'Ticket issuing is closed. WhatsApp the coordinator below for help.' : 'Which ticket did you buy? Choose it, tell us your section, and your ticket is issued straight away.';
     if (state.locked) $('choose').hidden = true;
     return;
   }
@@ -273,7 +279,7 @@ function render(){
   $('pass').innerHTML = (p.ticket_id ? '<span class="chip">Ticket <b>' + esc(p.ticket_id) + '</b></span>' : '') + '<span class="chip">' + esc(TIER[p.tier] || p.tier) + '</span>' +
     (n === 2 ? '<span class="chip">2 seats, side by side</span>' : '');
   $('intro-copy').textContent = (p.name ? p.name.split(' ')[0] + ', your ' : 'Your ') + (TIER[p.tier] || 'ticket') +
-    (n === 2 ? ' seats are in ' : ' seat is in ') + ZONE_TEXT[ZONE_OF[p.tier]] + '. Gold seats are free for you. Pick ' + (n === 2 ? 'two seats together' : 'one') + ', add your details, and your seat pass is issued instantly.';
+    ' ticket is for the ' + ROWS_OF[p.tier].toLowerCase() + '. Add your details and your ticket is issued instantly. Your exact seat is given to you on arrival.';
   if (!$('f-name').value) $('f-name').value = p.name || '';
   if (!$('f-email').value) $('f-email').value = p.email || '';
   if (!$('f-phone').value) $('f-phone').value = p.phone || '';
@@ -284,7 +290,7 @@ function render(){
   $('gender').hidden = !askSection;
   $('picker').hidden = !!showDone || askSection;
   $('gender-back').hidden = !OPEN;
-  $('h1').innerHTML = 'Choose your <em>seat.</em>';
+  $('h1').innerHTML = 'Get your <em>ticket.</em>';
   if (askSection) {
     $('h1').textContent = 'Are you a Brother or Sister?';
     $('intro-copy').textContent = 'To maintain separate seating arrangements, please select your seating section.';
@@ -292,33 +298,34 @@ function render(){
   }
   if (!showDone) {
     $('pass').innerHTML += '<span class="chip"><b>' + SECTION[state.section] + '</b> · ' + (state.section === 'sisters' ? 'left' : 'right') + ' half</span>';
-    $('intro-copy').textContent = $('intro-copy').textContent.replace('. Gold seats', ', on the ' + (state.section === 'sisters' ? 'left' : 'right') + ' half of the hall. Gold seats');
+    $('intro-copy').textContent = $('intro-copy').textContent.replace('. Add your details', ', on the ' + SECTION[state.section] + "' side. Add your details");
   }
   if (showDone) {
-    var pending = p.status === 'pending', seatText = labels(state.mine);
-    $('intro-copy').textContent = (p.name ? p.name.split(' ')[0] + ', your ' : 'Your ') + 'seat pass is issued. Take a screenshot and show it at the door.';
-    $('pass').innerHTML = ''; $('h1').innerHTML = 'Your seat <em>pass.</em>';
-    $('done-k').textContent = 'Seat pass issued';
+    var pending = p.status === 'pending', seatText = ROWS_OF[p.tier] || '';
+    $('intro-copy').textContent = (p.name ? p.name.split(' ')[0] + ', your ' : 'Your ') + 'ticket is issued. Take a screenshot and show it at the door.';
+    $('pass').innerHTML = ''; $('h1').innerHTML = 'Your <em>ticket.</em>';
+    $('done-k').textContent = 'Ticket issued';
     $('done-seat').textContent = seatText;
     $('spass').innerHTML = '<div class="who">' + esc(p.name || 'Guest') + '</div><dl>' +
       '<dt>Pass</dt><dd>' + esc(p.ticket_id) + '</dd>' +
       '<dt>Ticket</dt><dd>' + esc(TIER[p.tier] || p.tier) + (n === 2 ? ' (admits two)' : '') + '</dd>' +
-      '<dt>Seat' + (n === 2 ? 's' : '') + '</dt><dd>' + esc(state.mine.join(', ')) + '</dd>' +
+      '<dt>Seating</dt><dd>' + esc(seatText) + ' · seat given on arrival</dd>' +
       (p.section ? '<dt>Section</dt><dd>' + esc(SECTION[p.section] || p.section) + '</dd>' : '') +
-      '<dt>When</dt><dd>Saturday 17 October 2026, 12 PM to 4 PM</dd>' +
-      '<dt>Where</dt><dd>Auditorium 2, Expo Center Lahore</dd>' +
+      '<dt>When</dt><dd>Saturday 17 October 2026, 10 AM to 4:30 PM</dd>' +
+      '<dt>Where</dt><dd>Grand Ballroom D, Nishat Hotel, Johar Town, Lahore</dd>' +
       (p.issued_at ? '<dt>Issued</dt><dd>' + esc(fmtDate(p.issued_at)) + '</dd>' : '') + '</dl>' +
-      '<span class="final' + (pending ? ' wait' : '') + '">' + (pending ? 'Final seat · payment being matched' : 'Final seat · confirmed') + '</span>';
+      '<span class="final' + (pending ? ' wait' : '') + '">' + (pending ? 'Ticket issued · payment being matched' : 'Ticket confirmed') + '</span>';
     $('done-copy').innerHTML = (pending
-      ? 'We are matching your payment to <b>' + esc(p.email) + '</b> (within 12 to 24 hours). If no payment is found for this email, the seat is released.'
-      : 'Ushers will guide you to your seat on the day.') +
-      '<br>This seat is final. For an urgent change, WhatsApp our Event Coordinator with your pass number.' +
+      ? 'We are matching your payment to <b>' + esc(p.email) + '</b> (within 12 to 24 hours). If no payment is found for this email, the ticket is cancelled.'
+      : 'Ushers will give you your seat on arrival.') +
+      '<br>Tea and snacks are served for every guest. For any change, WhatsApp our Event Coordinator with your pass number.' +
       '<div class="keep">Bookmark this page to see your pass again.</div>';
-    $('wa-change').href = 'https://wa.me/' + WA + '?text=' + encodeURIComponent('Assalam o Alaikum Wali, I need help with my Infinite Rizq seat. Pass ' + p.ticket_id + ', ' + seatText + ', ' + (p.name || '') + '.');
+    $('wa-change').href = 'https://wa.me/' + WA + '?text=' + encodeURIComponent('Assalam o Alaikum Wali, I need help with my Infinite Rizq ticket. Pass ' + p.ticket_id + ', ' + seatText + ', ' + (p.name || '') + '.');
     if (justIssued) startRedirect();
     return;
   }
-  drawHall();
+  $('hall').hidden = true; $('hint').hidden = true; $('close').hidden = true;
+  document.querySelector('#picker .legend').hidden = true;
   updatePanel();
 }
 
@@ -328,7 +335,7 @@ function startRedirect(){
   try { history.replaceState(null, '', '/seats?t=' + encodeURIComponent(token)); } catch (e) {}
   var left = 5, bar = $('redirect');
   function tick(){
-    bar.innerHTML = 'Seat pass issued. Wait, you will be redirected to an <b>important announcement</b> in <b>' + left + '</b>…<a href="/thank-you">Go now</a>';
+    bar.innerHTML = 'Ticket issued. Wait, you will be redirected to an <b>important announcement</b> in <b>' + left + '</b>…<a href="/thank-you">Go now</a>';
     if (left-- <= 0) { location.href = '/thank-you'; return; }
     setTimeout(tick, 1000);
   }
@@ -403,12 +410,12 @@ function fbIds(){
   return { fbp: c('_fbp'), fbc: c('_fbc') };
 }
 function updatePanel(){
-  var need = state.pass.seats, ok = state.picked.length === need;
-  $('picked').innerHTML = ok ? 'Selected: <b>' + esc(labels(state.picked)) + '</b>' : 'Tap a gold seat to pick ' + (need === 2 ? 'your two seats.' : 'it.');
-  $('confirm').disabled = !ok;
-  $('fields').hidden = !ok;
-  $('final-note').hidden = !ok;
-  $('confirm').textContent = 'Issue my seat pass';
+  // No seat picking: the database assigns a place on the buyer's side; the real seat is given on arrival.
+  $('picked').innerHTML = '<b>' + esc(TIER[state.pass.tier] || '') + '</b> · ' + esc(ROWS_OF[state.pass.tier] || '') + ' · ' + esc(SECTION[state.section] || '');
+  $('confirm').disabled = false;
+  $('fields').hidden = false;
+  $('final-note').hidden = false;
+  $('confirm').textContent = 'Issue my ticket';
 }
 
 $('hall').addEventListener('click', function(e){ var g = e.target.closest && e.target.closest('.seat.av'); if (g) pick(g.getAttribute('data-id')); });
@@ -441,20 +448,19 @@ $('close').addEventListener('click', function(){
 
 $('panel').addEventListener('submit', function(e){
   e.preventDefault();
-  if (state.picked.length !== state.pass.seats) return;
   var email = $('f-email').value.trim(), name = $('f-name').value.trim(), phone = $('f-phone').value.trim();
   function bad(t){ $('msg').textContent = t; $('msg').className = 'msg err'; }
   if (!name) return bad('Please enter your full name.');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return bad('Please enter the email you paid with.');
   if (phone.replace(/\D/g, '').length < 10) return bad('Please enter your WhatsApp number.');
-  $('confirm').disabled = true; $('msg').className = 'msg'; $('msg').textContent = 'Issuing your seat pass…';
+  $('confirm').disabled = true; $('msg').className = 'msg'; $('msg').textContent = 'Issuing your ticket…';
   fetch('/api/seats', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(Object.assign(OPEN ? { tier: state.pass.tier, seats: state.picked, name: name, email: email, phone: phone }
-                              : { t: token, seats: state.picked, name: name, email: email, phone: phone }, { section: state.section }, fbIds())) })
+    body: JSON.stringify(Object.assign(OPEN ? { tier: state.pass.tier, seats: [], name: name, email: email, phone: phone }
+                              : { t: token, seats: [], name: name, email: email, phone: phone }, { section: state.section }, fbIds())) })
     .then(function(r){ return r.json(); })
     .then(function(j){
       if (j.ok) {
-        if (typeof window.fbq === 'function') window.fbq('track', 'CompleteRegistration', { content_name: 'Seat pass ' + state.pass.tier });
+        if (typeof window.fbq === 'function') window.fbq('track', 'CompleteRegistration', { content_name: 'Ticket ' + state.pass.tier });
         if (OPEN && j.data && j.data.token) { setTimeout(function(){ location.replace('/seats?t=' + j.data.token + '&new=1'); }, 300); return; }
         justIssued = true; state.picked = []; $('msg').textContent = ''; return load();
       }
