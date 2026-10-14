@@ -286,10 +286,10 @@ td:first-child{color:var(--ivory)}
       <div class="chart" id="daily"></div>
     </div>
 
-    <h2 class="sec-title">Page test<small>Main page (warm) vs /start (cold audience) · selected date range</small></h2>
+    <h2 class="sec-title">Page test<small>Main page (warm) vs /start (cold) vs /students · selected date range</small></h2>
     <div class="card">
       <div class="tbl-wrap"><table>
-        <thead><tr><th>Page</th><th>Visitors</th><th>Played VSL</th><th>Reached tickets</th><th>Clicked to pay (card)</th><th>WhatsApp</th></tr></thead>
+        <thead><tr><th>Page</th><th>Visitors</th><th>Played VSL</th><th>Reached tickets</th><th>Clicked to pay</th><th>WhatsApp</th></tr></thead>
         <tbody id="pages"></tbody>
       </table></div>
       <p class="sub" style="margin-top:10px">Sales per page show in Meta Ads Manager per ad, since each campaign points at one page.</p>
@@ -657,7 +657,7 @@ function render(d){
 
   renderDaily(d.daily || []);
 
-  var PAGE_NAMES = { lp: 'Main page (infiniterizq.com)', start: 'Cold page (/start)' };
+  var PAGE_NAMES = { lp: 'Main page (infiniterizq.com)', start: 'Cold page (/start)', students: 'Student page (/students)' };
   $('pages').innerHTML = (d.pages || []).length ? d.pages.map(function(p){
     var cell = function(n){ return fmt(n) + (p.visitors ? ' <span style="color:var(--muted)">(' + pctTxt(n, p.visitors) + ')</span>' : ''); };
     return '<tr><td>' + esc(PAGE_NAMES[p.page] || p.page) + '</td><td>' + fmt(p.visitors) + '</td><td>' + cell(p.vsl) + '</td><td>' + cell(p.tickets) + '</td><td>' + cell(p.checkouts) + '</td><td>' + cell(p.whatsapp) + '</td></tr>';
