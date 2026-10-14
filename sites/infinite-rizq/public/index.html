@@ -1110,7 +1110,7 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
         <ul class="checks">
           <li><svg><use href="#check"/></svg>Everything in General Admission</li>
           <li><svg><use href="#check"/></svg>Separate buffet in a private sitting inside Nishat Hotel</li>
-          <li><svg><use href="#check"/></svg>Front-row sofa seating</li>
+          <li><svg><use href="#check"/></svg>Front-row seating, ahead of the main hall</li>
         </ul>
         <a href="#tickets" class="btn btn-ghost btn-block" data-checkout="inner" data-track="cta_ticket_inner">Claim an Inner Table seat</a>
         <p class="alt-pay" data-alt-pay="inner" hidden>Secure card payment via Stripe · <a href="#pay" data-alt-tier="inner">or pay by bank / JazzCash</a></p>
@@ -1475,8 +1475,10 @@ $all('[data-track]').forEach(function(el){
 (function(){
   fetch('/api/seats').then(function(r){ return r.json(); }).then(function(j){
     var seats = j && j.ok && j.data && j.data.seats; if (!seats) return;
-    var free = seats.filter(function(x){ return x.zone === 'inner' && !x.taken; }).length;
-    var txt = free <= 0 ? 'Sold out' : free < 6 ? 'Less than 6 left' : free < 10 ? 'Fewer than 10 left' : null;
+    var open = seats.filter(function(x){ return x.zone === 'inner' && !x.taken; }), free = open.length;
+    var sis = open.filter(function(x){ return x.num <= 5; }).length, bro = free - sis;
+    var sides = [sis ? sis + ' Sister' : '', bro ? bro + ' Brother' : ''].filter(Boolean).join(' · ');
+    var txt = free <= 0 ? 'Sold out' : free <= 3 ? (free === 1 ? 'Last seat: ' : 'Last ' + free + ' seats: ') + sides : free < 6 ? 'Less than 6 left' : free < 10 ? 'Fewer than 10 left' : null;
     if (txt) $all('[data-inner-flag]').forEach(function(el){ el.textContent = txt; });
     if (free <= 0) $all('[data-checkout="inner"]').forEach(function(el){
       var b = document.createElement('span'); b.className = el.className; b.setAttribute('aria-disabled', 'true');
