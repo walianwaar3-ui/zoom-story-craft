@@ -119,7 +119,7 @@ export default async function handler(req, res) {
       if (!body) return res.status(400).json({ ok: false, error: 'Bad request' });
       const t = body.t ? token(body.t) : null;
       if (body.t && !t) return res.status(404).json({ ok: false, code: 'invalid', error: MESSAGES.invalid });
-      const seats = Array.isArray(body.seats) ? body.seats.filter(s => typeof s === 'string' && /^[A-I]-\d{2}$/.test(s)).slice(0, 2) : [];
+      const seats = Array.isArray(body.seats) ? body.seats.filter(s => typeof s === 'string' && /^[A-T]-\d{2}$/.test(s)).slice(0, 2) : [];
       const str = (v, max) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
       const email = str(body.email, 160);
       if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ ok: false, error: 'Please enter a valid email.' });

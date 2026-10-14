@@ -1370,11 +1370,11 @@ $all('[data-track]').forEach(function(el){
   el.addEventListener('click', function(){ track('cta_click', { location: el.getAttribute('data-track') }); });
 });
 
-// Seats left: live from the seat system (sellable seats only, no total shown)
+// Seats left: live count of free seats in the student rows (Q to T)
 (function(){
   fetch('/api/seats').then(function(r){ return r.json(); }).then(function(j){
     var seats = j && j.ok && j.data && j.data.seats; if (!seats) return;
-    var left = seats.filter(function(x){ return /^(inner|pair|mid|back)$/.test(x.zone) && !x.taken; }).length;
+    var left = seats.filter(function(x){ return x.zone === 'student' && !x.taken; }).length;
     $all('[data-seats-left]').forEach(function(el){ el.textContent = left; });
     $all('[data-seats-strip],[data-seats-block]').forEach(function(el){ el.hidden = false; });
     $all('[data-mbar-sub]').forEach(function(el){ el.textContent = left + ' seats left · Lahore'; });

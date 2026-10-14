@@ -59,6 +59,7 @@ header b{color:var(--ivory);font-family:var(--serif);font-weight:600;font-size:1
 .sw.na{background:#1e1e22;border:1px solid #2a2a2f}
 .hall{margin:10px -16px 0;overflow-x:auto;-webkit-overflow-scrolling:touch;padding:0 8px}
 .hall svg{display:block;width:100%;min-width:540px;height:auto}
+.hall svg.grid{min-width:0;max-width:440px;margin:0 auto}
 .seat{cursor:default}
 .seat.av{cursor:pointer}
 .seat.av:not(.pk):hover rect,.seat.av:not(.pk):focus-visible rect{fill:rgba(232,198,106,.35)}
@@ -223,8 +224,8 @@ var token = new URLSearchParams(location.search).get('t') || '';
 var ROWS = ['A','B','C','D','E','F','G','H','I'];
 var TIER = { inner: 'Inner Table', general: 'General Admission', pair: 'Pair Pass', back: 'Main Hall', student: 'Student Pair Pass' };
 // Nishat Hotel: no seat picking. A ticket names its rows; the exact seat is given on arrival.
-var ROWS_OF = { inner: 'Front row, sofa seating', general: 'Rows 5 to 7', pair: 'Rows 2 to 4, seated together', back: 'Back rows', student: 'Back rows, seated together' };
-var ZONE_OF = { inner: 'inner', general: 'mid', pair: 'mid', back: 'back', student: 'back' };
+var ROWS_OF = { inner: 'Front row, sofa seating', general: 'Rows 5 to 7', pair: 'Rows 2 to 4, seated together', back: 'Back rows', student: 'the student rows (Q to T), seated together' };
+var ZONE_OF = { inner: 'inner', general: 'mid', pair: 'mid', back: 'back', student: 'student' };
 var ZONE_TEXT = { inner: 'Row A, the front row nearest the stage', mid: 'Rows B to G', back: 'Rows H and I' };
 var OPEN = !token;
 // /student-ticket: the post-checkout page for students. Only the Student Pair Pass is offered there,
@@ -318,6 +319,8 @@ function render(){
   }
   if (showDone) {
     var pending = p.status === 'pending', seatText = ROWS_OF[p.tier] || '';
+    var picks = p.tier === 'student' && state.mine.length ? labels(state.mine) : '';
+    if (picks) seatText = picks;
     $('intro-copy').textContent = (p.name ? p.name.split(' ')[0] + ', your ' : 'Your ') + 'ticket is issued. Take a screenshot and show it at the door.';
     $('pass').innerHTML = ''; $('h1').innerHTML = 'Your <em>ticket.</em>';
     $('done-k').textContent = 'Ticket issued';
@@ -325,7 +328,7 @@ function render(){
     $('spass').innerHTML = '<div class="who">' + esc(p.name || 'Guest') + '</div><dl>' +
       '<dt>Pass</dt><dd>' + esc(p.ticket_id) + '</dd>' +
       '<dt>Ticket</dt><dd>' + esc(TIER[p.tier] || p.tier) + (n === 2 ? ' (admits two)' : '') + '</dd>' +
-      '<dt>Seating</dt><dd>' + esc(seatText) + ' · seat given on arrival</dd>' +
+      '<dt>Seating</dt><dd>' + esc(seatText) + (picks ? ', seated together' : ' · seat given on arrival') + '</dd>' +
       (p.section ? '<dt>Section</dt><dd>' + esc(SECTION[p.section] || p.section) + '</dd>' : '') +
       (p.tier === 'student' ? '<dt>Condition</dt><dd>Both students must show a valid student card at the door, or the student pass is cancelled</dd>' : '') +
       '<dt>When</dt><dd>Saturday 17 October 2026, 10 AM to 4:30 PM</dd>' +
@@ -334,16 +337,61 @@ function render(){
       '<span class="final' + (pending ? ' wait' : '') + '">' + (pending ? 'Ticket issued · payment being matched' : 'Ticket confirmed') + '</span>';
     $('done-copy').innerHTML = (pending
       ? 'We are matching your payment to <b>' + esc(p.email) + '</b> (within 12 to 24 hours). If no payment is found for this email, the ticket is cancelled.'
-      : 'Ushers will give you your seat on arrival.') +
+      : (picks ? 'Ushers will show you to your seats.' : 'Ushers will give you your seat on arrival.')) +
       '<br>Tea and snacks are served for every guest. For any change, WhatsApp our Event Coordinator with your pass number.' +
       '<div class="keep">Bookmark this page to see your pass again.</div>';
     $('wa-change').href = 'https://wa.me/' + WA + '?text=' + encodeURIComponent('Assalam o Alaikum Wali, I need help with my Infinite Rizq ticket. Pass ' + p.ticket_id + ', ' + seatText + ', ' + (p.name || '') + '.');
     if (justIssued) startRedirect();
     return;
   }
+  if (p.tier === 'student') {
+    // The form sits under the map (not stuck over it) so the student rows stay visible on a phone.
+    $('panel').style.position = 'static';
+    $('final-note').textContent = 'Your ticket is issued the moment you confirm. These two seats are yours.';
+    $('intro-copy').textContent = $('intro-copy').textContent.replace(' Your exact seat is given to you on arrival.', ' Pick your two seats below.');
+    var na = document.querySelector('#picker .legend .sw.na'); if (na) na.parentNode.hidden = true;
+    $('hall').hidden = false; $('hint').hidden = false; $('close').hidden = true;
+    document.querySelector('#picker .legend').hidden = false;
+    drawGrid(); updatePanel(); return;
+  }
   $('hall').hidden = true; $('hint').hidden = true; $('close').hidden = true;
   document.querySelector('#picker .legend').hidden = true;
   updatePanel();
+}
+
+// Student map: Grand Ballroom D, 20 rows (A to T) of 10, aisle after seat 5. Only the student rows (Q to T)
+// on the buyer's own side can be picked; every other seat is drawn as booked.
+function drawGrid(){
+  var GR = 'ABCDEFGHIJKLMNOPQRST'.split(''), step = 30, sw = 24, sh = 20, aisle = 26, x0 = 36, y0 = 70, rowStep = 27;
+  var W = x0 * 2 + 10 * step - (step - sw) + aisle, H = y0 + GR.length * rowStep + 34;
+  function sx(n){ return x0 + (n - 1) * step + (n > 5 ? aisle : 0); }
+  var mid = sx(5) + sw + (aisle + step - sw) / 2, mySide = state.section;
+  var svg = '<svg class="grid" viewBox="0 0 ' + W + ' ' + H + '" role="group" aria-label="Seat map, stage at the top">' +
+    '<rect x="' + (W / 2 - 110) + '" y="8" width="220" height="26" rx="6" fill="rgba(212,167,58,.14)" stroke="rgba(212,167,58,.55)"/>' +
+    '<text x="' + (W / 2) + '" y="26" text-anchor="middle" fill="#e8c66a" font-family="Playfair Display, Georgia, serif" font-size="13" letter-spacing="4">STAGE</text>' +
+    '<text x="' + (sx(3) + sw / 2) + '" y="56" text-anchor="middle" font-size="10" letter-spacing="2.5" font-weight="600" fill="' + (mySide === 'sisters' ? '#e8c66a' : '#5a5650') + '">SISTERS</text>' +
+    '<text x="' + (sx(8) + sw / 2) + '" y="56" text-anchor="middle" font-size="10" letter-spacing="2.5" font-weight="600" fill="' + (mySide === 'brothers' ? '#e8c66a' : '#5a5650') + '">BROTHERS</text>' +
+    '<line x1="' + mid + '" y1="44" x2="' + mid + '" y2="' + (H - 26) + '" stroke="rgba(212,167,58,.35)" stroke-dasharray="3 4"/>';
+  GR.forEach(function(r, ri){
+    var y = y0 + ri * rowStep + 14, hot = ri >= 16;
+    svg += '<text x="' + (x0 - 16) + '" y="' + y + '" text-anchor="middle" font-size="11" font-weight="600" fill="' + (hot ? '#e8c66a' : '#5a5650') + '">' + r + '</text>' +
+           '<text x="' + (W - x0 + 16) + '" y="' + y + '" text-anchor="middle" font-size="11" font-weight="600" fill="' + (hot ? '#e8c66a' : '#5a5650') + '">' + r + '</text>';
+  });
+  state.seats.forEach(function(s){
+    var ri = GR.indexOf(s.row); if (ri < 0) return;
+    var x = sx(s.num), y = y0 + ri * rowStep, picked = state.picked.indexOf(s.id) >= 0, avail = freeForMe(s);
+    var fill = '#2c2c31', stroke = 'none', w = 0, cls = 'seat';
+    if (picked) { fill = '#e8c66a'; cls += ' av pk'; }
+    else if (avail) { fill = 'rgba(212,167,58,.14)'; stroke = '#d4a73a'; w = 1.5; cls += ' av'; }
+    svg += '<g class="' + cls + '" data-id="' + s.id + '"' + (avail || picked ? ' role="button" tabindex="0"' : '') +
+      ' aria-label="Row ' + s.row + ' seat ' + s.num + ', ' + (picked ? 'your pick' : avail ? 'available' : 'booked') + '">' +
+      '<rect x="' + x + '" y="' + y + '" width="' + sw + '" height="' + sh + '" rx="4" fill="' + fill + '" stroke="' + stroke + '" stroke-width="' + w + '"/>' +
+      (picked ? '<path d="M' + (x + 7) + ' ' + (y + 10) + 'l3 3l6 -6" fill="none" stroke="#141005" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>' : '') + '</g>';
+  });
+  svg += '<text x="' + (W / 2) + '" y="' + (H - 8) + '" text-anchor="middle" fill="#8a857b" font-size="10" letter-spacing="2">ENTRANCE</text></svg>';
+  $('hall').innerHTML = svg;
+  var left = state.seats.filter(freeForMe).length;
+  $('hint').textContent = left ? 'Tap a gold seat in the student rows (Q to T). Your partner gets the seat beside it.' : 'The student rows on your side are full. WhatsApp the coordinator below.';
 }
 
 // Only once, straight after issuing: drop ?new=1 so a bookmark or refresh just shows the pass.
@@ -401,7 +449,7 @@ function drawHall(){
 }
 
 function seatAt(row, num){ return byId(row + '-' + (num < 10 ? '0' : '') + num); }
-function blockOf(n){ return n <= 5 ? 'L' : n <= 17 ? 'C' : 'R'; }
+function blockOf(n){ return n <= 5 ? 'L' : 'R'; }
 function freeForMe(s){ return s && s.zone === ZONE_OF[state.pass.tier] && sideOf(s.num) === state.section && !s.taken; }
 
 function pick(id){
@@ -418,7 +466,8 @@ function pick(id){
       else state.picked = [s.id, mate.id].sort();
     }
   }
-  drawHall(); updatePanel();
+  if (state.pass.tier === 'student') drawGrid(); else drawHall();
+  updatePanel();
 }
 
 // Meta's browser cookies, sent with the pass so the server-side Purchase (when payment is confirmed) matches the ad click.
@@ -427,6 +476,13 @@ function fbIds(){
   return { fbp: c('_fbp'), fbc: c('_fbc') };
 }
 function updatePanel(){
+  if (state.pass.tier === 'student') {
+    var got = state.picked.length === 2;
+    $('picked').innerHTML = got ? '<b>' + esc(labels(state.picked)) + '</b> · ' + esc(SECTION[state.section] || '') : 'Tap a gold seat to pick your two seats.';
+    $('confirm').disabled = !got; $('fields').hidden = !got; $('final-note').hidden = !got;
+    $('confirm').textContent = 'Issue my ticket';
+    return;
+  }
   // No seat picking: the database assigns a place on the buyer's side; the real seat is given on arrival.
   $('picked').innerHTML = '<b>' + esc(TIER[state.pass.tier] || '') + '</b> · ' + esc(ROWS_OF[state.pass.tier] || '') + ' · ' + esc(SECTION[state.section] || '');
   $('confirm').disabled = false;
@@ -478,8 +534,8 @@ $('panel').addEventListener('submit', function(e){
   if (stu) name = name + ' & ' + name2;
   $('confirm').disabled = true; $('msg').className = 'msg'; $('msg').textContent = 'Issuing your ticket…';
   fetch('/api/seats', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(Object.assign(OPEN ? { tier: state.pass.tier, seats: [], name: name, email: email, phone: phone }
-                              : { t: token, seats: [], name: name, email: email, phone: phone }, { section: state.section }, stu ? { student2: { name: name2, phone: phone2 } } : {}, fbIds())) })
+    body: JSON.stringify(Object.assign(OPEN ? { tier: state.pass.tier, seats: stu ? state.picked : [], name: name, email: email, phone: phone }
+                              : { t: token, seats: stu ? state.picked : [], name, email: email, phone: phone }, { section: state.section }, stu ? { student2: { name: name2, phone: phone2 } } : {}, fbIds())) })
     .then(function(r){ return r.json(); })
     .then(function(j){
       if (j.ok) {
