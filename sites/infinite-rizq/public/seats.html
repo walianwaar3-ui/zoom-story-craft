@@ -159,6 +159,7 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
         <button class="tier" type="button" data-tier="pair"><b>Pair Pass</b><span class="pr">PKR 15,555</span><small>2 people, seated together · Rows 2 to 4</small></button>
         <button class="tier" type="button" data-tier="inner"><b>Inner Table</b><span class="pr">PKR 33,333</span><small>1 ticket · Front row sofas + private buffet</small></button>
         <button class="tier" type="button" data-tier="back"><b>Main Hall</b><span class="pr">PKR 5,555</span><small>1 ticket · Back rows</small></button>
+        <button class="tier" type="button" data-tier="student" style="grid-column:1/-1"><b>Student Pair Pass</b><span class="pr">PKR 5,500</span><small>2 students, seated together · Back rows · Student card required at the door</small></button>
       </div>
       <a class="btn ghost already" href="/my-seat">Already have your ticket? See it here</a>
     </div>
@@ -218,10 +219,10 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
 var $ = function(id){ return document.getElementById(id); };
 var token = new URLSearchParams(location.search).get('t') || '';
 var ROWS = ['A','B','C','D','E','F','G','H','I'];
-var TIER = { inner: 'Inner Table', general: 'General Admission', pair: 'Pair Pass', back: 'Main Hall' };
+var TIER = { inner: 'Inner Table', general: 'General Admission', pair: 'Pair Pass', back: 'Main Hall', student: 'Student Pair Pass' };
 // Nishat Hotel: no seat picking. A ticket names its rows; the exact seat is given on arrival.
-var ROWS_OF = { inner: 'Front row, sofa seating', general: 'Rows 5 to 7', pair: 'Rows 2 to 4, seated together', back: 'Back rows' };
-var ZONE_OF = { inner: 'inner', general: 'mid', pair: 'mid', back: 'back' };
+var ROWS_OF = { inner: 'Front row, sofa seating', general: 'Rows 5 to 7', pair: 'Rows 2 to 4, seated together', back: 'Back rows', student: 'Back rows, seated together' };
+var ZONE_OF = { inner: 'inner', general: 'mid', pair: 'mid', back: 'back', student: 'back' };
 var ZONE_TEXT = { inner: 'Row A, the front row nearest the stage', mid: 'Rows B to G', back: 'Rows H and I' };
 var OPEN = !token;
 // Set right after a seat pass is issued: show the pass, then count down to the announcement on /thank-you.
@@ -280,7 +281,8 @@ function render(){
   $('pass').innerHTML = (p.ticket_id ? '<span class="chip">Ticket <b>' + esc(p.ticket_id) + '</b></span>' : '') + '<span class="chip">' + esc(TIER[p.tier] || p.tier) + '</span>' +
     (n === 2 ? '<span class="chip">2 seats, side by side</span>' : '');
   $('intro-copy').textContent = (p.name ? p.name.split(' ')[0] + ', your ' : 'Your ') + (TIER[p.tier] || 'ticket') +
-    ' ticket seats you in ' + ROWS_OF[p.tier].replace(/^R/, 'r').replace(/^F/, 'the f') + '. Add your details and your ticket is issued instantly. Your exact seat is given to you on arrival.';
+    ' ticket seats you in ' + ROWS_OF[p.tier].replace(/^R/, 'r').replace(/^B/, 'the b').replace(/^F/, 'the f') + '. Add your details and your ticket is issued instantly. Your exact seat is given to you on arrival.' +
+    (p.tier === 'student' ? ' Both students must show a valid student card at the door, or the student pass is cancelled.' : '');
   if (!$('f-name').value) $('f-name').value = p.name || '';
   if (!$('f-email').value) $('f-email').value = p.email || '';
   if (!$('f-phone').value) $('f-phone').value = p.phone || '';
@@ -312,6 +314,7 @@ function render(){
       '<dt>Ticket</dt><dd>' + esc(TIER[p.tier] || p.tier) + (n === 2 ? ' (admits two)' : '') + '</dd>' +
       '<dt>Seating</dt><dd>' + esc(seatText) + ' · seat given on arrival</dd>' +
       (p.section ? '<dt>Section</dt><dd>' + esc(SECTION[p.section] || p.section) + '</dd>' : '') +
+      (p.tier === 'student' ? '<dt>Condition</dt><dd>Both students must show a valid student card at the door, or the student pass is cancelled</dd>' : '') +
       '<dt>When</dt><dd>Saturday 17 October 2026, 10 AM to 4:30 PM</dd>' +
       '<dt>Where</dt><dd>Grand Ballroom D, Nishat Hotel, Johar Town, Lahore</dd>' +
       (p.issued_at ? '<dt>Issued</dt><dd>' + esc(fmtDate(p.issued_at)) + '</dd>' : '') + '</dl>' +
@@ -427,7 +430,7 @@ $('hall').addEventListener('keydown', function(e){
 document.querySelectorAll('[data-tier]').forEach(function(b){
   b.addEventListener('click', function(){
     var t = b.getAttribute('data-tier');
-    state.pass = { tier: t, seats: t === 'pair' ? 2 : 1, ticket_id: '', name: '', email: '', changes: 0, locked: state.locked, status: 'pending' };
+    state.pass = { tier: t, seats: (t === 'pair' || t === 'student') ? 2 : 1, ticket_id: '', name: '', email: '', changes: 0, locked: state.locked, status: 'pending' };
     state.picked = []; $('msg').textContent = ''; render(); window.scrollTo({ top: 0, behavior: 'smooth' });
   });
 });

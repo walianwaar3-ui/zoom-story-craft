@@ -24,7 +24,7 @@ const MESSAGES = {
   not_found: 'We could not find a seat pass for that name and email. Use the email you paid with, or WhatsApp the coordinator.',
   bad_tier: 'Please choose your ticket type.',
 };
-const TIER_NAMES = { inner: 'Inner Table', general: 'General Admission', pair: 'Pair Pass', back: 'Main Hall' };
+const TIER_NAMES = { inner: 'Inner Table', general: 'General Admission', pair: 'Pair Pass', back: 'Main Hall', student: 'Student Pair Pass' };
 
 // Best effort: the database is the record of truth, so a sheet failure never fails the seat pass.
 async function sendSeatToSheet(tok) {

@@ -516,7 +516,7 @@ function renderSales(s){
 }
 
 // ---------- Seats ----------
-var TIER_NAME = { inner: 'Inner Table', general: 'General', pair: 'Pair Pass', back: 'Main Hall' };
+var TIER_NAME = { inner: 'Inner Table', general: 'General', pair: 'Pair Pass', back: 'Main Hall', student: 'Student Pair Pass' };
 var seatSel = null;
 function seatColor(s){
   if (s.pass) return s.status === 'verified' ? { fill: 'var(--seat-paid)', stroke: 'none' } : { fill: 'var(--seat-held)', stroke: 'none' };
@@ -613,7 +613,7 @@ $('who').addEventListener('click', function(e){
   if (!b || b.disabled) return;
   var pass = b.getAttribute('data-pass'), s = null;
   (state.seats.seats || []).forEach(function(x){ if (x.pass === pass && !s) s = x; });
-  var price = { inner: '33,333', general: '11,111', pair: '15,555', back: '5,555' }[s && s.tier] || '';
+  var price = { inner: '33,333', general: '11,111', pair: '15,555', back: '5,555', student: '5,500' }[s && s.tier] || '';
   if (!confirm('Confirm payment received from ' + ((s && s.name) || pass) + (price ? ' (PKR ' + price + ')' : '') + '?\n\nThis emails their seat pass and cannot be undone here.')) return;
   var msg = $('approve-msg');
   b.disabled = true; b.textContent = 'Confirming…';
