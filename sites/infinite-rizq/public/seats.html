@@ -227,6 +227,9 @@ var ROWS_OF = { inner: 'Front row, sofa seating', general: 'Rows 5 to 7', pair: 
 var ZONE_OF = { inner: 'inner', general: 'mid', pair: 'mid', back: 'back', student: 'back' };
 var ZONE_TEXT = { inner: 'Row A, the front row nearest the stage', mid: 'Rows B to G', back: 'Rows H and I' };
 var OPEN = !token;
+// /student-ticket: the post-checkout page for students. Only the Student Pair Pass is offered there,
+// and the standard /seats page does not show it.
+var STUDENT = /^\/student-ticket\/?$/.test(location.pathname);
 // Set right after a seat pass is issued: show the pass, then count down to the announcement on /thank-you.
 var justIssued = new URLSearchParams(location.search).get('new') === '1';
 var WA = '13322332380';
@@ -271,6 +274,8 @@ function fmtDate(iso){ try { return new Date(iso).toLocaleDateString('en-GB', { 
 
 function render(){
   $('fields').className = 'fields three';
+  if (OPEN && !state.pass && STUDENT && !state.locked)
+    state.pass = { tier: 'student', seats: 2, ticket_id: '', name: '', email: '', changes: 0, locked: false, status: 'pending' };
   if (OPEN && !state.pass) {
     $('choose').hidden = false; $('picker').hidden = true; $('done').hidden = true; $('gender').hidden = true; $('pass').innerHTML = '';
     $('h1').innerHTML = 'Get your <em>ticket.</em>';
@@ -278,7 +283,7 @@ function render(){
     if (state.locked) $('choose').hidden = true;
     return;
   }
-  $('choose').hidden = true; $('switch').hidden = !OPEN;
+  $('choose').hidden = true; $('switch').hidden = !OPEN || STUDENT;
   var p = state.pass, n = p.seats;
   $('pass').innerHTML = (p.ticket_id ? '<span class="chip">Ticket <b>' + esc(p.ticket_id) + '</b></span>' : '') + '<span class="chip">' + esc(TIER[p.tier] || p.tier) + '</span>' +
     (n === 2 ? '<span class="chip">2 seats, side by side</span>' : '');
@@ -299,8 +304,9 @@ function render(){
   $('done').hidden = !showDone;
   $('gender').hidden = !askSection;
   $('picker').hidden = !!showDone || askSection;
-  $('gender-back').hidden = !OPEN;
+  $('gender-back').hidden = !OPEN || STUDENT;
   $('h1').innerHTML = 'Get your <em>ticket.</em>';
+  if (STUDENT && !showDone) $('h1').innerHTML = 'Get your <em>student ticket.</em>';
   if (askSection) {
     $('h1').textContent = 'Are you a Brother or Sister?';
     $('intro-copy').textContent = 'To maintain separate seating arrangements, please select your seating section.';
@@ -434,6 +440,7 @@ $('hall').addEventListener('keydown', function(e){
   if (e.key !== 'Enter' && e.key !== ' ') return;
   var g = e.target.closest && e.target.closest('.seat.av'); if (g) { e.preventDefault(); pick(g.getAttribute('data-id')); }
 });
+if (!STUDENT) document.querySelectorAll('[data-tier="student"]').forEach(function(b){ b.remove(); });
 document.querySelectorAll('[data-tier]').forEach(function(b){
   b.addEventListener('click', function(){
     var t = b.getAttribute('data-tier');
@@ -477,7 +484,7 @@ $('panel').addEventListener('submit', function(e){
     .then(function(j){
       if (j.ok) {
         if (typeof window.fbq === 'function') window.fbq('track', 'CompleteRegistration', { content_name: 'Ticket ' + state.pass.tier });
-        if (OPEN && j.data && j.data.token) { setTimeout(function(){ location.replace('/seats?t=' + j.data.token + '&new=1'); }, 300); return; }
+        if (OPEN && j.data && j.data.token) { setTimeout(function(){ location.replace((STUDENT ? '/student-ticket' : '/seats') + '?t=' + j.data.token + '&new=1'); }, 300); return; }
         justIssued = true; state.picked = []; $('msg').textContent = ''; return load();
       }
       $('msg').textContent = j.error || 'Could not save. Please try again.'; $('msg').className = 'msg err';
