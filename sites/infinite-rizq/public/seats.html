@@ -158,7 +158,7 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
         <button class="tier" type="button" data-tier="general"><b>General Admission</b><span class="pr">PKR 11,111</span><small>1 ticket · Rows 5 to 7</small></button>
         <button class="tier" type="button" data-tier="pair"><b>Pair Pass</b><span class="pr">PKR 15,555</span><small>2 people, seated together · Rows 2 to 4</small></button>
         <button class="tier" type="button" data-tier="inner"><b>Inner Table</b><span class="pr">PKR 33,333</span><small>1 ticket · Front row sofas + private buffet</small></button>
-        <button class="tier" type="button" data-tier="back"><b>Main Hall</b><span class="pr">PKR 5,555</span><small>1 ticket · Rows 8 to 20</small></button>
+        <button class="tier" type="button" data-tier="back"><b>Main Hall</b><span class="pr">PKR 5,555</span><small>1 ticket · Rows 8 to 15</small></button>
       </div>
       <a class="btn ghost already" href="/my-seat">Already have your ticket? See it here</a>
     </div>
@@ -220,7 +220,7 @@ var token = new URLSearchParams(location.search).get('t') || '';
 var ROWS = ['A','B','C','D','E','F','G','H','I'];
 var TIER = { inner: 'Inner Table', general: 'General Admission', pair: 'Pair Pass', back: 'Main Hall' };
 // Nishat Hotel: no seat picking. A ticket names its rows; the exact seat is given on arrival.
-var ROWS_OF = { inner: 'Front row, sofa seating', general: 'Rows 5 to 7', pair: 'Rows 2 to 4, seated together', back: 'Rows 8 to 20' };
+var ROWS_OF = { inner: 'Front row, sofa seating', general: 'Rows 5 to 7', pair: 'Rows 2 to 4, seated together', back: 'Rows 8 to 15' };
 var ZONE_OF = { inner: 'inner', general: 'mid', pair: 'mid', back: 'back' };
 var ZONE_TEXT = { inner: 'Row A, the front row nearest the stage', mid: 'Rows B to G', back: 'Rows H and I' };
 var OPEN = !token;

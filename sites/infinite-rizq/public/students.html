@@ -44,8 +44,7 @@
   "eventStatus": "https://schema.org/EventScheduled",
   "location": { "@type": "Place", "name": "Grand Ballroom D, Nishat Hotel Johar Town", "address": { "@type": "PostalAddress", "streetAddress": "Johar Town", "addressLocality": "Lahore", "addressCountry": "PK" } },
   "organizer": { "@type": "Organization", "name": "World Wealth Organization" },
-  "performer": { "@type": "Person", "name": "Shahrez Hayder" },
-  "maximumAttendeeCapacity": 200
+  "performer": { "@type": "Person", "name": "Shahrez Hayder" }
 }
 </script>
 
@@ -730,7 +729,7 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
     <p class="subtitle">Soul · Mind · Heart, back in one direction</p>
 
     <h1>One day worth more than <em>your university degree.</em></h1>
-    <p class="lead">Your degree teaches you how to earn a living. It never teaches you why your soul, mind and heart pull in three directions. Your soul wants one thing. Your mind chases another. Your heart is tired of both. On <b>Saturday 17 October, 10 AM to 4:30 PM, at Nishat Hotel, Johar Town</b>, Shahrez Hayder takes <b>200 people</b> through the private process he uses to bring soul, mind and heart back into one direction. He went from homeless to millionaire in 14 months, and then discovered money wasn’t the answer.</p>
+    <p class="lead">Your degree teaches you how to earn a living. It never teaches you why your soul, mind and heart pull in three directions. Your soul wants one thing. Your mind chases another. Your heart is tired of both. On <b>Saturday 17 October, 10 AM to 4:30 PM, at Nishat Hotel, Johar Town</b>, Shahrez Hayder takes <b>one room</b> through the private process he uses to bring soul, mind and heart back into one direction. He went from homeless to millionaire in 14 months, and then discovered money wasn’t the answer.</p>
 
     <!-- VSL -->
     <div class="vsl" id="vsl">
@@ -932,7 +931,7 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
       <div class="access">
         <p class="first">For the first time, in one room.</p>
         <p>That access normally lives inside private engagements valued at up to <b>$1,000,000 a year</b>.<sup>*</sup></p>
-        <p>On 17 October it opens to <b>200 people</b>, for <b>a full day</b>, in one room in Lahore, with <b>199 others</b> who are done living divided.</p>
+        <p>On 17 October it opens to <b>one room</b>, for <b>a full day</b>, in one room in Lahore, with <b>199 others</b> who are done living divided.</p>
         <p class="close">One room. One full day. No recording. No second date.</p>
         <p class="fine"><sup>*</sup> Refers to the value of certain private engagements with Shahrez. It is not the ticket price, and not a promise of equivalent results.</p>
       </div>
@@ -946,7 +945,7 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
     <div class="narrow center rv">
       <span class="eyebrow">Read this before you book</span>
       <h2>This room will be uncomfortable. <em>That’s the point.</em></h2>
-      <p class="lead">200 seats means every seat matters. If you take one, take it seriously.</p>
+      <p class="lead">Every seat matters. If you take one, take it seriously.</p>
     </div>
     <div class="qual">
       <div class="qcard no rv">
@@ -1013,8 +1012,8 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
       <h2>One pass. Two students. <em>Then show up.</em></h2>
       <p class="lead">A student price for one reason: the earlier you fix the direction, the less of your life you spend going the wrong way. The Student Pair Pass gives two students the full day, plus tea and snacks, seated together in the back rows of the Main Hall. Sisters sit on the left of the centre aisle, Brothers on the right. Your exact seats are given to you on arrival.</p>
       <div class="seats" data-seats-block hidden>
-        <div class="seats-row"><span>Seats claimed</span><span><b data-seats-left></b> of <span data-seats-total>200</span> left</span></div>
-        <div class="bar"><i data-seats-bar></i></div>
+        <div class="seats-row"><span>Seats left right now</span><span><b data-seats-left></b></span></div>
+        
       </div>
     </div>
 
@@ -1157,7 +1156,7 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
       </details>
       <details>
         <summary>What if I can’t attend after booking?<span class="pm" aria-hidden="true"></span></summary>
-        <div class="ans"><p>With only 200 seats, tickets are non-refundable. You can transfer your pass to another student. Just message our Event Coordinator, Wali Anwaar, on WhatsApp (+1 (332) 233-2380) before the event and we’ll update the name.</p></div>
+        <div class="ans"><p>With limited seats, tickets are non-refundable. You can transfer your pass to another student. Just message our Event Coordinator, Wali Anwaar, on WhatsApp (+1 (332) 233-2380) before the event and we’ll update the name.</p></div>
       </details>
     </div>
   </div>
@@ -1370,6 +1369,17 @@ $all('[data-track]').forEach(function(el){
   el.addEventListener('click', function(){ track('cta_click', { location: el.getAttribute('data-track') }); });
 });
 
+// Seats left: live from the seat system (sellable seats only, no total shown)
+(function(){
+  fetch('/api/seats').then(function(r){ return r.json(); }).then(function(j){
+    var seats = j && j.ok && j.data && j.data.seats; if (!seats) return;
+    var left = seats.filter(function(x){ return /^(inner|pair|mid|back)$/.test(x.zone) && !x.taken; }).length;
+    $all('[data-seats-left]').forEach(function(el){ el.textContent = left; });
+    $all('[data-seats-strip],[data-seats-block]').forEach(function(el){ el.hidden = false; });
+    $all('[data-mbar-sub]').forEach(function(el){ el.textContent = left + ' seats left · Lahore'; });
+  }).catch(function(){});
+})();
+
 // Inner Table flag: the only seat count shown publicly. Honest wording from the live seat system.
 (function(){
   fetch('/api/seats').then(function(r){ return r.json(); }).then(function(j){
@@ -1377,6 +1387,12 @@ $all('[data-track]').forEach(function(el){
     var free = seats.filter(function(x){ return x.zone === 'inner' && !x.taken; }).length;
     var txt = free <= 0 ? 'Sold out' : free < 6 ? 'Less than 6 left' : free < 10 ? 'Fewer than 10 left' : null;
     if (txt) $all('[data-inner-flag]').forEach(function(el){ el.textContent = txt; });
+    if (free <= 0) $all('[data-checkout="inner"]').forEach(function(el){
+      var b = document.createElement('span'); b.className = el.className; b.setAttribute('aria-disabled', 'true');
+      b.style.opacity = '.55'; b.style.pointerEvents = 'none'; b.textContent = 'Sold out';
+      el.replaceWith(b);
+      var alt = document.querySelector('[data-alt-pay="inner"]'); if (alt) alt.remove();
+    });
   }).catch(function(){});
 })();
 
