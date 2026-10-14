@@ -601,6 +601,7 @@ function showSeat(id){
       '<dt>Type</dt><dd>' + esc(TIER_NAME[s.tier] || s.tier) + (mates.length === 2 ? ' (2 seats)' : '') + '</dd>' +
       '<dt>Email</dt><dd>' + (s.email ? '<a href="mailto:' + esc(s.email) + '">' + esc(s.email) + '</a>' : '<span style="color:var(--muted)">none</span>') + '</dd>' +
       '<dt>WhatsApp</dt><dd>' + (wa ? '<a href="https://wa.me/' + esc(wa) + '" target="_blank" rel="noopener">' + esc(s.phone) + '</a>' : '<span style="color:var(--muted)">none</span>') + '</dd>' +
+      (s.phone2 ? '<dt>Student 2</dt><dd><a href="https://wa.me/' + esc(s.phone2.replace(/\D/g, '').replace(/^0(?=3)/, '92')) + '" target="_blank" rel="noopener">' + esc(s.phone2) + '</a></dd>' : '') +
       (s.at ? '<dt>Seated</dt><dd>' + new Date(s.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + '</dd>' : '') +
     '</dl>' +
     (s.status === 'verified' ? '' :

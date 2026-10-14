@@ -201,9 +201,11 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
           <button class="btn" type="submit" id="confirm" disabled>Issue my ticket</button>
         </div>
         <div class="fields" id="fields" hidden>
-          <div><label for="f-name">Full name</label><input id="f-name" autocomplete="name" maxlength="120"></div>
+          <div><label for="f-name" id="l-name">Full name</label><input id="f-name" autocomplete="name" maxlength="120"></div>
           <div><label for="f-email">Email used to pay</label><input id="f-email" type="email" autocomplete="email" maxlength="160"></div>
-          <div id="phone-wrap"><label for="f-phone">WhatsApp number</label><input id="f-phone" type="tel" autocomplete="tel" maxlength="40" placeholder="+92 300 1234567"></div>
+          <div id="phone-wrap"><label for="f-phone" id="l-phone">WhatsApp number</label><input id="f-phone" type="tel" autocomplete="tel" maxlength="40" placeholder="+92 300 1234567"></div>
+          <div class="s2" hidden><label for="f-name2">Student 2 full name</label><input id="f-name2" maxlength="58"></div>
+          <div class="s2" hidden><label for="f-phone2">Student 2 WhatsApp</label><input id="f-phone2" type="tel" maxlength="40" placeholder="+92 300 1234567"></div>
         </div>
         <p class="note" id="final-note" hidden>Your ticket is issued the moment you confirm. Your exact seat is given to you on arrival.</p>
         <p class="msg" id="msg" role="status" aria-live="polite"></p>
@@ -283,6 +285,11 @@ function render(){
   $('intro-copy').textContent = (p.name ? p.name.split(' ')[0] + ', your ' : 'Your ') + (TIER[p.tier] || 'ticket') +
     ' ticket seats you in ' + ROWS_OF[p.tier].replace(/^R/, 'r').replace(/^B/, 'the b').replace(/^F/, 'the f') + '. Add your details and your ticket is issued instantly. Your exact seat is given to you on arrival.' +
     (p.tier === 'student' ? ' Both students must show a valid student card at the door, or the student pass is cancelled.' : '');
+  var stu = p.tier === 'student';
+  $('l-name').textContent = stu ? 'Student 1 full name' : 'Full name';
+  $('l-phone').textContent = stu ? 'Student 1 WhatsApp' : 'WhatsApp number';
+  $('f-name').maxLength = stu ? 58 : 120;
+  document.querySelectorAll('.s2').forEach(function(el){ el.hidden = !stu; });
   if (!$('f-name').value) $('f-name').value = p.name || '';
   if (!$('f-email').value) $('f-email').value = p.email || '';
   if (!$('f-phone').value) $('f-phone').value = p.phone || '';
@@ -454,13 +461,18 @@ $('panel').addEventListener('submit', function(e){
   e.preventDefault();
   var email = $('f-email').value.trim(), name = $('f-name').value.trim(), phone = $('f-phone').value.trim();
   function bad(t){ $('msg').textContent = t; $('msg').className = 'msg err'; }
-  if (!name) return bad('Please enter your full name.');
+  var stu = state.pass.tier === 'student', name2 = $('f-name2').value.trim(), phone2 = $('f-phone2').value.trim();
+  if (!name) return bad(stu ? 'Please enter the full name of student 1.' : 'Please enter your full name.');
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return bad('Please enter the email you paid with.');
-  if (phone.replace(/\D/g, '').length < 10) return bad('Please enter your WhatsApp number.');
+  if (phone.replace(/\D/g, '').length < 10) return bad(stu ? 'Please enter the WhatsApp number of student 1.' : 'Please enter your WhatsApp number.');
+  if (stu && !name2) return bad('Please enter the full name of student 2.');
+  if (stu && phone2.replace(/\D/g, '').length < 10) return bad('Please enter the WhatsApp number of student 2.');
+  // Both students go on the one ticket: the names are joined, student 2's WhatsApp is kept with the pass.
+  if (stu) name = name + ' & ' + name2;
   $('confirm').disabled = true; $('msg').className = 'msg'; $('msg').textContent = 'Issuing your ticket…';
   fetch('/api/seats', { method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(Object.assign(OPEN ? { tier: state.pass.tier, seats: [], name: name, email: email, phone: phone }
-                              : { t: token, seats: [], name: name, email: email, phone: phone }, { section: state.section }, fbIds())) })
+                              : { t: token, seats: [], name: name, email: email, phone: phone }, { section: state.section }, stu ? { student2: { name: name2, phone: phone2 } } : {}, fbIds())) })
     .then(function(r){ return r.json(); })
     .then(function(j){
       if (j.ok) {
