@@ -121,7 +121,7 @@ function seatText(seats, short) {
 
 // Nishat Hotel: tickets name their rows only; the exact seat is given on arrival.
 function rowsFor(tier) {
-  return { inner: 'Front row, sofa seating', pair: 'Rows 2 to 4, seated together', general: 'Rows 5 to 7', back: 'Rows 8 to 15' }[tier] || 'Seat given on arrival';
+  return { inner: 'Front row, sofa seating', pair: 'Rows 2 to 4, seated together', general: 'Rows 5 to 7', back: 'Back rows' }[tier] || 'Seat given on arrival';
 }
 
 function confirmEmailNishat(p) {
