@@ -259,8 +259,8 @@ td:first-child{color:var(--ivory)}
           <span><i style="background:var(--seat-paid)"></i>Paid</span>
           <span><i style="background:var(--seat-held)"></i>Held, payment not confirmed</span>
           <span><i style="border:1.5px solid var(--gold);background:var(--gold-soft)"></i>Free: Inner Table (Row A, sofas)</span>
-          <span><i style="border:1.5px solid var(--seat-gen)"></i>Free: Pair (Row B) and General (C, D)</span>
-          <span><i style="border:1.5px solid var(--seat-back)"></i>Free: Main Hall (E to J)</span>
+          <span><i style="border:1.5px solid var(--seat-gen)"></i>Free: Pair (Rows B to D) and General (E to G)</span>
+          <span><i style="border:1.5px solid var(--seat-back)"></i>Free: Main Hall (J to T)</span>
           <span><i style="background:var(--seat-res)"></i>Reserved</span>
         </div>
         <div class="hall" id="seatmap"></div>
@@ -494,7 +494,7 @@ function bars(el, rows, opts){
   }).join('');
 }
 
-var CAPACITY = { seats: 198, inner: 16 };
+var CAPACITY = { seats: 200, inner: 10 };
 function renderSales(s){
   if (!s) {
     $('sales').innerHTML = '<div class="card empty" style="grid-column:1/-1">Sales numbers are not available right now. Try Refresh in a minute.</div>';
@@ -511,7 +511,7 @@ function renderSales(s){
     kpi('General', fmt(g.bookings || 0), fmt(g.seats || 0) + ' seats · PKR ' + fmt(g.revenue || 0)),
     kpi('Pair Pass', fmt(p.bookings || 0), fmt(p.seats || 0) + ' seats · PKR ' + fmt(p.revenue || 0)),
     kpi('Inner Table', fmt(innerSold) + ' / ' + CAPACITY.inner, '<b>' + fmt(Math.max(0, CAPACITY.inner - innerSold)) + '</b> left · PKR ' + fmt(inn.revenue || 0)),
-    kpi('Back Rows', fmt(bk.bookings || 0), fmt(bk.seats || 0) + ' seats · PKR ' + fmt(bk.revenue || 0))
+    kpi('Main Hall', fmt(bk.bookings || 0), fmt(bk.seats || 0) + ' seats · PKR ' + fmt(bk.revenue || 0))
   ].join('');
 }
 
@@ -551,23 +551,23 @@ function renderSeats(data){
   }).join('') : '<tr><td colspan="6" class="empty">Everyone in the seat system has a seat.</td></tr>';
   if (seatSel) showSeat(seatSel);
 }
-// Grand Ballroom D, Nishat Hotel: 10 rows (A-J) x 20 seats, centre aisle. Seats 1-10 Sisters, 11-20 Brothers.
-// Row A Inner Table (sofas), B Pair Pass, C-D General, E-J Main Hall. Seat ids are a capacity ledger; real seats are given on arrival.
+// Grand Ballroom D, Nishat Hotel: 20 rows (A-T) x 10 seats, centre aisle. Seats 1-5 Sisters, 6-10 Brothers.
+// Row A Inner Table (sofas), B-D Pair Pass, E-G General, H-I held, J-T Main Hall. Seat ids are a capacity ledger; real seats are given on arrival.
 function drawSeatMap(seats){
-  var ROWS = 'ABCDEFGHIJ'.split(''), W = 700, step = 25, sw = 20, sh = 18, aisle = 34, x0 = (W - (20 * step - 5 + aisle)) / 2, y0 = 92, rowStep = 34;
-  function sx(n){ return x0 + (n - 1) * step + (n > 10 ? aisle : 0); }
+  var ROWS = 'ABCDEFGHIJKLMNOPQRST'.split(''), W = 700, step = 36, sw = 30, sh = 16, aisle = 48, x0 = (W - (10 * step - 6 + aisle)) / 2, y0 = 92, rowStep = 22;
+  function sx(n){ return x0 + (n - 1) * step + (n > 5 ? aisle : 0); }
   function sy(r){ return y0 + r * rowStep; }
-  var midX = sx(10) + sw + (aisle + step - sw) / 2;
+  var midX = sx(5) + sw + (aisle + step - sw) / 2;
   var q = ($('seat-q').value || '').trim().toLowerCase();
-  var svg = '<svg viewBox="0 0 ' + W + ' 470" role="img" aria-label="Ballroom seat map">' +
+  var svg = '<svg viewBox="0 0 ' + W + ' 560" role="img" aria-label="Ballroom seat map">' +
     '<path d="M150 18 Q350 64 550 18 L550 6 L150 6 Z" style="fill:var(--gold-soft);stroke:var(--gold)"/>' +
     '<text x="350" y="32" text-anchor="middle" style="fill:var(--gold-2)" font-family="Playfair Display, Georgia, serif" font-size="13" letter-spacing="4">STAGE</text>' +
-    '<text x="' + (midX - 130) + '" y="80" text-anchor="middle" style="fill:var(--muted)" font-size="10" font-weight="600" letter-spacing="2.5">SISTERS</text>' +
-    '<text x="' + (midX + 130) + '" y="80" text-anchor="middle" style="fill:var(--muted)" font-size="10" font-weight="600" letter-spacing="2.5">BROTHERS</text>' +
-    '<line x1="' + midX + '" y1="88" x2="' + midX + '" y2="436" style="stroke:var(--line-2)" stroke-dasharray="3 4"/>';
+    '<text x="' + (midX - 100) + '" y="80" text-anchor="middle" style="fill:var(--muted)" font-size="10" font-weight="600" letter-spacing="2.5">SISTERS</text>' +
+    '<text x="' + (midX + 100) + '" y="80" text-anchor="middle" style="fill:var(--muted)" font-size="10" font-weight="600" letter-spacing="2.5">BROTHERS</text>' +
+    '<line x1="' + midX + '" y1="88" x2="' + midX + '" y2="528" style="stroke:var(--line-2)" stroke-dasharray="3 4"/>';
   ROWS.forEach(function(r, ri){
     svg += '<text x="' + (x0 - 14) + '" y="' + (sy(ri) + 13) + '" text-anchor="middle" style="fill:var(--muted)" font-size="11" font-weight="600">' + r + '</text>' +
-           '<text x="' + (sx(20) + sw + 14) + '" y="' + (sy(ri) + 13) + '" text-anchor="middle" style="fill:var(--muted)" font-size="11" font-weight="600">' + r + '</text>';
+           '<text x="' + (sx(10) + sw + 14) + '" y="' + (sy(ri) + 13) + '" text-anchor="middle" style="fill:var(--muted)" font-size="11" font-weight="600">' + r + '</text>';
   });
   seats.forEach(function(s){
     var ri = ROWS.indexOf(s.row); if (ri < 0) return;
@@ -577,7 +577,7 @@ function drawSeatMap(seats){
     svg += '<g class="st' + (dim ? ' dim' : '') + (seatSel === s.id ? ' sel' : '') + '" data-id="' + s.id + '" tabindex="0" role="button" aria-label="' + esc(s.id + (s.name ? ', ' + s.name : ', free')) + '">' +
       '<rect x="' + x + '" y="' + y + '" width="' + sw + '" height="' + sh + '" rx="4" style="fill:' + c.fill + ';stroke:' + c.stroke + '" stroke-width="1.5"/></g>';
   });
-  svg += '<text x="350" y="462" text-anchor="middle" style="fill:var(--muted)" font-size="10" letter-spacing="2">ENTRANCE</text></svg>';
+  svg += '<text x="350" y="552" text-anchor="middle" style="fill:var(--muted)" font-size="10" letter-spacing="2">ENTRANCE</text></svg>';
   $('seatmap').innerHTML = svg;
 }
 function showSeat(id){
@@ -586,7 +586,7 @@ function showSeat(id){
   if (!s) return;
   seatSel = id;
   document.querySelectorAll('#seatmap .st').forEach(function(g){ g.classList.toggle('sel', g.getAttribute('data-id') === id); });
-  var zoneTxt = { inner: 'Inner Table zone (Row A)', mid: 'General and Pair zone (Rows B to G)', back: 'Back Rows zone (Rows H and I)', reserved: 'Reserved' }[s.zone] || s.zone;
+  var zoneTxt = { inner: 'Inner Table (Row A, sofas)', pair: 'Pair Pass (Rows B to D)', mid: 'General (Rows E to G)', held: 'Held (Rows H and I)', back: 'Main Hall (Rows J to T)', reserved: 'Reserved' }[s.zone] || s.zone;
   if (!s.pass) {
     $('who').innerHTML = '<div class="k">Seat</div><div class="big">' + esc(s.id) + '</div><span class="pill free">' + (s.zone === 'reserved' ? 'Reserved' : 'Free') + '</span><p class="note">' + esc(zoneTxt) + '</p>';
     return;
