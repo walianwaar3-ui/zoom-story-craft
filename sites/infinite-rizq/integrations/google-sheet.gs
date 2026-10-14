@@ -243,4 +243,4 @@ function seatText(seats, short) {
   return seats.map(function (s) { return 'Row ' + s[0] + ', Seat ' + Number(s.slice(2)); }).join(' + ');
 }
 
-// The confirmation email lives in NishatEmail.gs (confirmEmailNishat).
+// The confirmation email (confirmEmailNishat) is at the end of Seats.gs.
