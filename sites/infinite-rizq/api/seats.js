@@ -137,7 +137,7 @@ export default async function handler(req, res) {
         return f.ok ? res.status(200).json({ ok: true, data: { token: f.data.token, hasSeat: f.data.has_seat } }) : failure(res, f);
       }
       // Sisters sit on the left half of the hall, Brothers on the right; the database checks every seat against the section.
-      const section = body.section === 'sisters' || body.section === 'brothers' ? body.section : '';
+      const section = ['sisters', 'brothers', 'mixed'].includes(body.section) ? body.section : '';
       const r = t
         ? await rpc('ir_claim_seat', { p_token: t, p_seats: seats, p_name: str(body.name, 120), p_email: email, p_phone: str(body.phone, 40), p_section: section })
         // Open flow: anyone picks their ticket type; the email links them to a paid ticket, or the seat is held pending verification.

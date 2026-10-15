@@ -169,6 +169,7 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
       <div class="tiers">
         <button class="tier" type="button" data-section="sisters"><b>Sisters</b><small>Women's Seating Section</small></button>
         <button class="tier" type="button" data-section="brothers"><b>Brothers</b><small>Men's Seating Section</small></button>
+        <button class="tier" type="button" data-section="mixed" hidden style="grid-column:1/-1"><b>Brother &amp; Sister</b><small>One seat on the Sisters' side, one on the Brothers' side</small></button>
       </div>
       <button class="switch" type="button" id="gender-back" hidden>Change ticket type</button>
     </div>
@@ -236,7 +237,7 @@ var justIssued = new URLSearchParams(location.search).get('new') === '1';
 var WA = '13322332380';
 var state = { pass: null, seats: [], mine: [], picked: [], locked: false, section: null };
 // One vertical line down the middle of the hall: seats 1-11 of every row are the Sisters' side, 12-22 the Brothers'.
-var SECTION = { sisters: 'Sisters', brothers: 'Brothers' };
+var SECTION = { sisters: 'Sisters', brothers: 'Brothers', mixed: 'Brother & Sister' };
 function sideOf(num){ return num <= 5 ? 'sisters' : 'brothers'; }
 
 function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return { '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]; }); }
@@ -308,14 +309,21 @@ function render(){
   $('gender-back').hidden = !OPEN || STUDENT;
   $('h1').innerHTML = 'Get your <em>ticket.</em>';
   if (STUDENT && !showDone) $('h1').innerHTML = 'Get your <em>student ticket.</em>';
+  // Student pairs can be two sisters, two brothers, or a brother and sister (one seat each side of the aisle).
+  document.querySelector('[data-section="mixed"]').hidden = p.tier !== 'student';
   if (askSection) {
-    $('h1').textContent = 'Are you a Brother or Sister?';
-    $('intro-copy').textContent = 'To maintain separate seating arrangements, please select your seating section.';
+    $('h1').textContent = p.tier === 'student' ? 'Who is coming?' : 'Are you a Brother or Sister?';
+    $('intro-copy').textContent = p.tier === 'student'
+      ? 'Two sisters, two brothers, or a brother and sister? Seating stays separate: sisters on the left of the aisle, brothers on the right.'
+      : 'To maintain separate seating arrangements, please select your seating section.';
     return;
   }
   if (!showDone) {
-    $('pass').innerHTML += '<span class="chip"><b>' + SECTION[state.section] + '</b> · ' + (state.section === 'sisters' ? 'left' : 'right') + ' half</span>';
-    $('intro-copy').textContent = $('intro-copy').textContent.replace('. Add your details', ', on the ' + SECTION[state.section] + "' side. Add your details");
+    $('pass').innerHTML += '<span class="chip"><b>' + SECTION[state.section] + '</b> · ' + (state.section === 'mixed' ? 'one seat each side' : (state.section === 'sisters' ? 'left' : 'right') + ' half') + '</span>';
+    if (state.section === 'mixed') $('pass').innerHTML = $('pass').innerHTML.replace('2 seats, side by side', '2 seats, one each side');
+    $('intro-copy').textContent = $('intro-copy').textContent.replace(state.section === 'mixed' ? ', seated together' : '#', '').replace('. Add your details', state.section === 'mixed'
+      ? ', one seat on the Sisters\' side and one on the Brothers\' side. Add your details'
+      : ', on the ' + SECTION[state.section] + "' side. Add your details");
   }
   if (showDone) {
     var pending = p.status === 'pending', seatText = ROWS_OF[p.tier] || '';
@@ -328,7 +336,7 @@ function render(){
     $('spass').innerHTML = '<div class="who">' + esc(p.name || 'Guest') + '</div><dl>' +
       '<dt>Pass</dt><dd>' + esc(p.ticket_id) + '</dd>' +
       '<dt>Ticket</dt><dd>' + esc(TIER[p.tier] || p.tier) + (n === 2 ? ' (admits two)' : '') + '</dd>' +
-      '<dt>Seating</dt><dd>' + esc(seatText) + (picks ? ', seated together' : ' · seat given on arrival') + '</dd>' +
+      '<dt>Seating</dt><dd>' + esc(seatText) + (picks ? (p.section === 'mixed' ? ', one each side of the aisle' : ', seated together') : ' · seat given on arrival') + '</dd>' +
       (p.section ? '<dt>Section</dt><dd>' + esc(SECTION[p.section] || p.section) + '</dd>' : '') +
       (p.tier === 'student' ? '<dt>Condition</dt><dd>Both students must show a valid student card at the door, or the student pass is cancelled</dd>' : '') +
       '<dt>When</dt><dd>Saturday 17 October 2026, 10 AM to 4:30 PM</dd>' +
@@ -369,8 +377,8 @@ function drawGrid(){
   var svg = '<svg class="grid" viewBox="0 0 ' + W + ' ' + H + '" role="group" aria-label="Seat map, stage at the top">' +
     '<rect x="' + (W / 2 - 110) + '" y="8" width="220" height="26" rx="6" fill="rgba(212,167,58,.14)" stroke="rgba(212,167,58,.55)"/>' +
     '<text x="' + (W / 2) + '" y="26" text-anchor="middle" fill="#e8c66a" font-family="Playfair Display, Georgia, serif" font-size="13" letter-spacing="4">STAGE</text>' +
-    '<text x="' + (sx(3) + sw / 2) + '" y="56" text-anchor="middle" font-size="10" letter-spacing="2.5" font-weight="600" fill="' + (mySide === 'sisters' ? '#e8c66a' : '#5a5650') + '">SISTERS</text>' +
-    '<text x="' + (sx(8) + sw / 2) + '" y="56" text-anchor="middle" font-size="10" letter-spacing="2.5" font-weight="600" fill="' + (mySide === 'brothers' ? '#e8c66a' : '#5a5650') + '">BROTHERS</text>' +
+    '<text x="' + (sx(3) + sw / 2) + '" y="56" text-anchor="middle" font-size="10" letter-spacing="2.5" font-weight="600" fill="' + (mySide !== 'brothers' ? '#e8c66a' : '#5a5650') + '">SISTERS</text>' +
+    '<text x="' + (sx(8) + sw / 2) + '" y="56" text-anchor="middle" font-size="10" letter-spacing="2.5" font-weight="600" fill="' + (mySide !== 'sisters' ? '#e8c66a' : '#5a5650') + '">BROTHERS</text>' +
     '<line x1="' + mid + '" y1="44" x2="' + mid + '" y2="' + (H - 26) + '" stroke="rgba(212,167,58,.35)" stroke-dasharray="3 4"/>';
   GR.forEach(function(r, ri){
     var y = y0 + ri * rowStep + 14, hot = ri >= 16;
@@ -391,7 +399,9 @@ function drawGrid(){
   svg += '<text x="' + (W / 2) + '" y="' + (H - 8) + '" text-anchor="middle" fill="#8a857b" font-size="10" letter-spacing="2">ENTRANCE</text></svg>';
   $('hall').innerHTML = svg;
   var left = state.seats.filter(freeForMe).length;
-  $('hint').textContent = left ? 'Tap a gold seat in the student rows (Q to T). Your partner gets the seat beside it.' : 'The student rows on your side are full. WhatsApp the coordinator below.';
+  $('hint').textContent = !left ? 'The student rows on your side are full. WhatsApp the coordinator below.'
+    : mySide === 'mixed' ? 'Tap one gold seat on the Sisters\' side (left) and one on the Brothers\' side (right), in the student rows Q to T.'
+    : 'Tap a gold seat in the student rows (Q to T). Your partner gets the seat beside it.';
 }
 
 // Only once, straight after issuing: drop ?new=1 so a bookmark or refresh just shows the pass.
@@ -450,12 +460,17 @@ function drawHall(){
 
 function seatAt(row, num){ return byId(row + '-' + (num < 10 ? '0' : '') + num); }
 function blockOf(n){ return n <= 5 ? 'L' : 'R'; }
-function freeForMe(s){ return s && s.zone === ZONE_OF[state.pass.tier] && sideOf(s.num) === state.section && !s.taken; }
+function freeForMe(s){ return s && s.zone === ZONE_OF[state.pass.tier] && (state.section === 'mixed' || sideOf(s.num) === state.section) && !s.taken; }
 
 function pick(id){
   var s = byId(id); if (!s) return;
   $('msg').textContent = ''; $('msg').className = 'msg';
   if (state.pass.seats === 1) { state.picked = state.picked[0] === id ? [] : [id]; }
+  else if (state.section === 'mixed') {
+    // One seat per side: tapping a seat replaces any earlier pick on the same side; tapping a pick removes it.
+    if (state.picked.indexOf(id) >= 0) state.picked = state.picked.filter(function(x){ return x !== id; });
+    else state.picked = state.picked.filter(function(x){ return sideOf(byId(x).num) !== sideOf(s.num); }).concat([id]).sort();
+  }
   else {
     if (state.picked.indexOf(id) >= 0) { state.picked = []; }
     else {
@@ -478,7 +493,10 @@ function fbIds(){
 function updatePanel(){
   if (state.pass.tier === 'student') {
     var got = state.picked.length === 2;
-    $('picked').innerHTML = got ? '<b>' + esc(labels(state.picked)) + '</b> · ' + esc(SECTION[state.section] || '') : 'Tap a gold seat to pick your two seats.';
+    $('picked').innerHTML = got ? '<b>' + esc(labels(state.picked)) + '</b> · ' + esc(SECTION[state.section] || '')
+      : state.section === 'mixed' && state.picked.length === 1
+        ? 'Now tap a seat on the ' + (sideOf(byId(state.picked[0]).num) === 'sisters' ? 'Brothers\' side (right).' : 'Sisters\' side (left).')
+        : state.section === 'mixed' ? 'Tap one seat on each side of the aisle.' : 'Tap a gold seat to pick your two seats.';
     $('confirm').disabled = !got; $('fields').hidden = !got; $('final-note').hidden = !got;
     $('confirm').textContent = 'Issue my ticket';
     return;
