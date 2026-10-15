@@ -225,7 +225,7 @@ var token = new URLSearchParams(location.search).get('t') || '';
 var ROWS = ['A','B','C','D','E','F','G','H','I'];
 var TIER = { inner: 'Inner Table', general: 'General Admission', pair: 'Pair Pass', back: 'Main Hall', student: 'Student Pair Pass' };
 // Nishat Hotel: no seat picking. A ticket names its rows; the exact seat is given on arrival.
-var ROWS_OF = { inner: 'Front row, sofa seating', general: 'Rows 5 to 7', pair: 'Rows 2 to 4, seated together', back: 'Back rows', student: 'the student rows (Q to T), seated together' };
+var ROWS_OF = { inner: 'Front row, sofa seating', general: 'Rows 5 to 7', pair: 'Rows 2 to 4, seated together', back: 'Back rows', student: 'the student rows, seated together' };
 var ZONE_OF = { inner: 'inner', general: 'mid', pair: 'mid', back: 'back', student: 'student' };
 var ZONE_TEXT = { inner: 'Row A, the front row nearest the stage', mid: 'Rows B to G', back: 'Rows H and I' };
 var OPEN = !token;
@@ -334,7 +334,7 @@ function render(){
   }
   if (showDone) {
     var pending = p.status === 'pending', seatText = ROWS_OF[p.tier] || '';
-    var picks = p.tier === 'student' && state.mine.length ? labels(state.mine) : '';
+    var picks = ''; // exact seats are not shown publicly; the team allocates them
     if (picks) seatText = picks;
     $('intro-copy').textContent = (p.name ? p.name.split(' ')[0] + ', your ' : 'Your ') + 'ticket is issued. Take a screenshot and show it at the door.';
     $('pass').innerHTML = ''; $('h1').innerHTML = 'Your <em>ticket.</em>';
@@ -359,8 +359,7 @@ function render(){
     if (justIssued) startRedirect();
     return;
   }
-  if (p.tier === 'student') {
-    // The form sits under the map (not stuck over it) so the student rows stay visible on a phone.
+  if (false) { // Seat picking switched off: the team allocates every seat in the back end.
     $('panel').style.position = 'static';
     $('final-note').textContent = 'Your ticket is issued the moment you confirm. These two seats are yours.';
     $('intro-copy').textContent = $('intro-copy').textContent.replace(' Your exact seat is given to you on arrival.', ' Pick your two seats below.');
@@ -504,7 +503,7 @@ function fbIds(){
   return { fbp: c('_fbp'), fbc: c('_fbc') };
 }
 function updatePanel(){
-  if (state.pass.tier === 'student') {
+  if (false) {
     var got = state.picked.length === 2;
     $('picked').innerHTML = got ? '<b>' + esc(labels(state.picked)) + '</b> · ' + esc(SECTION[state.section] || '')
       : state.section === 'mixed' && state.picked.length === 1
@@ -565,8 +564,8 @@ $('panel').addEventListener('submit', function(e){
   if (stu) name = name + ' & ' + name2;
   $('confirm').disabled = true; $('msg').className = 'msg'; $('msg').textContent = 'Issuing your ticket…';
   fetch('/api/seats', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(Object.assign(OPEN ? { tier: state.pass.tier, seats: stu ? state.picked : [], name: name, email: email, phone: phone }
-                              : { t: token, seats: stu ? state.picked : [], name, email: email, phone: phone }, { section: state.section }, stu ? { student2: { name: name2, phone: phone2 } } : {}, fbIds())) })
+    body: JSON.stringify(Object.assign(OPEN ? { tier: state.pass.tier, seats: [], name: name, email: email, phone: phone }
+                              : { t: token, seats: [], name, email: email, phone: phone }, { section: state.section }, stu ? { student2: { name: name2, phone: phone2 } } : {}, fbIds())) })
     .then(function(r){ return r.json(); })
     .then(function(j){
       if (j.ok) {
