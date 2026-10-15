@@ -67,6 +67,14 @@ export default async function handler(req, res) {
   if (!question) return res.status(400).json({ ok: false, error: 'Type a question first.' });
   if (!process.env.ANTHROPIC_API_KEY) return res.status(503).json({ ok: false, error: 'The assistant is not set up yet: add ANTHROPIC_API_KEY in Vercel.' });
 
+  // Staff keys (ticket desk) cannot use this.
+  const who = await rpc('ir_key_role', { p_key: key }).catch(() => null);
+  if (!who || !who.ok) {
+    const bad = who && who.data && who.data.message === 'unauthorized';
+    return res.status(bad ? 401 : 502).json({ ok: false, error: bad ? 'Wrong access key' : 'Try again.' });
+  }
+  if (who.data !== 'owner') return res.status(403).json({ ok: false, error: 'The Ask box is for the founder only.' });
+
   try {
     const [seats, analytics, sales, tickets] = await Promise.all([
       rpc('ir_admin_seats', { p_key: key }),

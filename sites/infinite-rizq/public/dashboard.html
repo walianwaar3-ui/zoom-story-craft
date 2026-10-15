@@ -190,6 +190,7 @@ td:first-child{color:var(--ivory)}
 .ask-form input:focus{border-color:var(--gold);outline:none}
 .ask-chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
 .ask-chips button{font-size:.78rem;padding:5px 11px}
+.staff .owner{display:none!important}
 </style>
 </head>
 <body>
@@ -211,9 +212,9 @@ td:first-child{color:var(--ivory)}
     <div class="wrap">
       <div class="ttl">
         <span class="mark">WWO</span>
-        <div><h1>Infinite Rizq · Campaign analytics</h1><small id="camp">infinite-rizq-lahore-2026</small></div>
+        <div><h1 id="app-title">Infinite Rizq · Campaign analytics</h1><small id="camp">infinite-rizq-lahore-2026</small></div>
       </div>
-      <div class="range" role="group" aria-label="Date range">
+      <div class="range owner" role="group" aria-label="Date range">
         <button type="button" data-range="today" aria-pressed="false">Today</button>
         <button type="button" data-range="7" aria-pressed="false">7 days</button>
         <button type="button" data-range="30" aria-pressed="false">30 days</button>
@@ -222,8 +223,8 @@ td:first-child{color:var(--ivory)}
       <div class="actions">
         <button class="ghost" type="button" id="theme">Light theme</button>
         <button class="ghost" type="button" id="refresh">Refresh</button>
-        <button class="ghost" type="button" id="save">Save snapshot</button>
-        <button class="ghost" type="button" id="csv">Export CSV</button>
+        <button class="ghost owner" type="button" id="save">Save snapshot</button>
+        <button class="ghost owner" type="button" id="csv">Export CSV</button>
         <button class="ghost" type="button" id="lock">Lock</button>
       </div>
     </div>
@@ -231,7 +232,7 @@ td:first-child{color:var(--ivory)}
   <p class="status" id="status" aria-live="polite">Loading…</p>
 
   <main class="wrap">
-    <section class="ask" aria-labelledby="ask-title">
+    <section class="ask owner" aria-labelledby="ask-title">
       <div class="ask-head"><h2 id="ask-title">Ask your data</h2><small>Live from the ticket sheet, seat system and site analytics · read only</small></div>
       <div class="ask-log" id="ask-log" aria-live="polite"></div>
       <form class="ask-form" id="ask-form">
@@ -247,8 +248,8 @@ td:first-child{color:var(--ivory)}
       </div>
     </section>
 
-    <h2 class="sec-title">Sales<small id="sales-src">From the ticket sheet · all time · verified payments only</small></h2>
-    <div class="grid kpis" id="sales"></div>
+    <h2 class="sec-title owner">Sales<small id="sales-src">From the ticket sheet · all time · verified payments only</small></h2>
+    <div class="grid kpis owner" id="sales"></div>
 
     <h2 class="sec-title">Seats<small id="seat-src">Live from the seat system · click any seat to see who holds it</small></h2>
     <div class="grid kpis" id="seat-kpis"></div>
@@ -276,6 +277,7 @@ td:first-child{color:var(--ivory)}
       </table></div>
     </div>
 
+    <div class="owner">
     <h2 class="sec-title">Funnel<small>Selected date range</small></h2>
     <div class="grid kpis" id="kpis"></div>
 
@@ -358,6 +360,7 @@ td:first-child{color:var(--ivory)}
       Tag ad links with <code>?utm_source=meta&amp;utm_medium=paid&amp;utm_campaign=lahore-oct</code> so they show up under Traffic sources.
       Use <b>Save snapshot</b> at the end of the campaign to keep a permanent record for the next launch.
     </p>
+    </div>
   </main>
 </div>
 
@@ -460,8 +463,15 @@ function load(key){
       if (res.status === 401) { if (!$('app').hidden) { forget(); location.reload(); } return false; }
       if (!res.body.ok) { $('status').textContent = res.body.error || 'Could not load analytics.'; return true; }
       state.key = key; state.data = res.body.data; state.sales = res.body.sales || null; state.seats = res.body.seats || null;
+      state.role = res.body.role === 'staff' ? 'staff' : 'owner';
       $('gate').hidden = true; $('app').hidden = false;
-      render(state.data);
+      if (state.role === 'staff') {
+        // Ticket desk login: seats and holders only, no money, analytics or payment confirmation.
+        document.body.classList.add('staff');
+        $('app-title').textContent = 'Infinite Rizq · Ticket desk';
+        renderSeats(state.seats);
+        $('status').textContent = 'Ticket desk · updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      } else render(state.data);
       return true;
     })
     .catch(function(){ $('status').textContent = 'Network error. Try Refresh.'; return !$('app').hidden; });
@@ -539,7 +549,7 @@ function renderSeats(data){
   var unseatedPaid = (data.unseated || []).filter(function(u){ return u.status === 'verified'; }).length;
   $('seat-kpis').innerHTML = [
     kpi('Seats taken (paid)', fmt(paid), fmt(Object.keys(paidPeople).length) + ' paid passes', true),
-    kpi('Held, not confirmed', fmt(pend), pend ? 'tap an orange seat to confirm' : 'nothing waiting', pend > 0 ? 'warn' : false),
+    kpi('Held, not confirmed', fmt(pend), pend ? (state.role === 'staff' ? 'Wali confirms these' : 'tap an orange seat to confirm') : 'nothing waiting', pend > 0 ? 'warn' : false),
     kpi('Paid but no seat', fmt(unseatedPaid), unseatedPaid ? 'see the list below' : 'everyone paid is seated', unseatedPaid > 0 ? 'warn' : false),
     kpi('Free seats', fmt(free.inner + free.pair + free.mid + free.back), 'Inner ' + free.inner + ' · Pair ' + free.pair + ' · General ' + free.mid + ' · Main Hall ' + free.back + ' · Students ' + free.student)
   ].join('');
@@ -605,7 +615,7 @@ function showSeat(id){
       (s.phone2 ? '<dt>Student 2</dt><dd><a href="https://wa.me/' + esc(s.phone2.replace(/\D/g, '').replace(/^0(?=3)/, '92')) + '" target="_blank" rel="noopener">' + esc(s.phone2) + '</a></dd>' : '') +
       (s.at ? '<dt>Seated</dt><dd>' + new Date(s.at).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) + '</dd>' : '') +
     '</dl>' +
-    (s.status === 'verified' ? '' :
+    (s.status === 'verified' ? '' : state.role === 'staff' ? '<p class="note" style="margin-top:16px">Payment not confirmed yet. Send the buyer\'s screenshot and pass number to Wali; only he confirms payments.</p>' :
       '<button type="button" class="btn wide" id="approve" data-pass="' + esc(s.pass) + '" style="margin-top:16px">Confirm payment</button>' +
       '<p class="note" id="approve-msg">Only after the money is in your account. Same as choosing Paid in the sheet: confirms the seat, adds them to Tickets and emails the seat pass.</p>');
 }

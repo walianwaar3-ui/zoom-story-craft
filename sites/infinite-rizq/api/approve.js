@@ -20,6 +20,14 @@ export default async function handler(req, res) {
   const url = process.env.SHEET_WEBHOOK_URL, secret = process.env.SHEET_WEBHOOK_SECRET;
   if (!url || !secret) return res.status(503).json({ ok: false, error: 'The sheet is not connected.' });
 
+  // Staff keys (ticket desk) cannot use this.
+  const who = await rpc('ir_key_role', { p_key: key }).catch(() => null);
+  if (!who || !who.ok) {
+    const bad = who && who.data && who.data.message === 'unauthorized';
+    return res.status(bad ? 401 : 502).json({ ok: false, error: bad ? 'Wrong access key' : 'Try again.' });
+  }
+  if (who.data !== 'owner') return res.status(403).json({ ok: false, error: 'Only the founder can confirm payments.' });
+
   try {
     const s = await rpc('ir_admin_seats', { p_key: key });
     if (!s.ok) {
