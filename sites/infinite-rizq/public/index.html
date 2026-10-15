@@ -1489,6 +1489,35 @@ $all('[data-track]').forEach(function(el){
   }).catch(function(){});
 })();
 
+// Side availability: Sisters sit left of the aisle (seats 1-5), Brothers right (6-10). When one side of a
+// ticket is full, say so on its card so nobody pays for a seat that does not exist on their side.
+(function(){
+  fetch('/api/seats').then(function(r){ return r.json(); }).then(function(j){
+    var seats = j && j.ok && j.data && j.data.seats; if (!seats) return;
+    var ZONES = { inner: ['inner'], pair: ['pair', 'mid'], general: ['mid'], back: ['back'] };
+    function free(tier, side){
+      var open = seats.filter(function(x){ return ZONES[tier].indexOf(x.zone) >= 0 && !x.taken && (side === 'sisters' ? x.num <= 5 : x.num >= 6); });
+      if (tier !== 'pair') return open.length;
+      var ids = {}; open.forEach(function(x){ ids[x.id] = 1; });
+      return open.filter(function(x){ return ids[x.row + '-' + (x.num < 9 ? '0' : '') + (x.num + 1)] && (x.num !== 5); }).length;
+    }
+    Object.keys(ZONES).forEach(function(tier){
+      var s = free(tier, 'sisters'), b = free(tier, 'brothers'), txt = null;
+      if (s && !b) txt = 'Sisters only · Sold out for Brothers';
+      else if (b && !s) txt = 'Brothers only · Sold out for Sisters';
+      if (!txt) return;
+      $all('[data-checkout="' + tier + '"], [data-alt-tier="' + tier + '"]').forEach(function(el){
+        var card = el.closest('article') || el.parentNode;
+        if (!card || card.querySelector('.side-note')) return;
+        var n = document.createElement('p'); n.className = 'side-note'; n.textContent = txt;
+        n.style.cssText = 'margin:0 0 10px;padding:7px 10px;border-radius:8px;border:1px solid rgba(232,198,106,.45);color:#e8c66a;font-size:.82rem;font-weight:600;text-align:center';
+        var btn = card.querySelector('[data-checkout="' + tier + '"]') || el;
+        btn.parentNode.insertBefore(n, btn);
+      });
+    });
+  }).catch(function(){});
+})();
+
 // Countdown to the real event start
 (function(){
   var target = new Date(CONFIG.eventStart).getTime();
