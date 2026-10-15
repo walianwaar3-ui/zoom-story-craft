@@ -1465,8 +1465,8 @@ document.querySelectorAll('[data-story]').forEach(function(b){
   } else load();
 })();
 
-// Side availability: Sisters sit left of the aisle (seats 1-5), Brothers right (6-10). When one side of a
-// ticket is full, say so on its card so nobody pays for a seat that does not exist on their side.
+// Side availability, live: each ticket card shows what is left for Sisters (seats 1-8) and Brothers (9-16).
+// Pair Pass counts whole pairs (two free seats side by side). Checkout blocks a sold-out side, so card and checkout agree.
 (function(){
   fetch('/api/seats').then(function(r){ return r.json(); }).then(function(j){
     var seats = j && j.ok && j.data && j.data.seats; if (!seats) return;
@@ -1475,19 +1475,27 @@ document.querySelectorAll('[data-story]').forEach(function(b){
       var open = seats.filter(function(x){ return ZONES[tier].indexOf(x.zone) >= 0 && !x.taken && (side === 'sisters' ? x.num <= 8 : x.num >= 9); });
       if (tier !== 'pair') return open.length;
       var ids = {}; open.forEach(function(x){ ids[x.id] = 1; });
-      return open.filter(function(x){ return ids[x.row + '-' + (x.num < 9 ? '0' : '') + (x.num + 1)] && (x.num !== 8); }).length;
+      var used = {}, pairs = 0;
+      open.sort(function(a, b){ return a.row < b.row ? -1 : a.row > b.row ? 1 : a.num - b.num; }).forEach(function(x){
+        var next = x.row + '-' + (x.num < 9 ? '0' : '') + (x.num + 1);
+        if (x.num !== 8 && !used[x.id] && ids[next] && !used[next]) { used[x.id] = used[next] = 1; pairs++; }
+      });
+      return pairs;
+    }
+    function say(n, tier){
+      if (!n) return '<b style="color:#e0736b">Sold out</b>';
+      if (n > 10) return 'Open';
+      return '<b>' + n + '</b> ' + (tier === 'pair' ? (n === 1 ? 'pair' : 'pairs') : (n === 1 ? 'seat' : 'seats')) + ' left';
     }
     Object.keys(ZONES).forEach(function(tier){
-      var s = free(tier, 'sisters'), b = free(tier, 'brothers'), txt = null;
-      if (s && !b) txt = 'Sisters only · Sold out for Brothers';
-      else if (b && !s) txt = 'Brothers only · Sold out for Sisters';
-      if (!txt) return;
+      var s = free(tier, 'sisters'), b = free(tier, 'brothers');
+      var html = 'Sisters: ' + say(s, tier) + ' &nbsp;·&nbsp; Brothers: ' + say(b, tier);
       $all('[data-checkout="' + tier + '"], [data-alt-tier="' + tier + '"]').forEach(function(el){
         var card = el.closest('article') || el.parentNode;
         if (!card || card.querySelector('.side-note')) return;
-        var n = document.createElement('p'); n.className = 'side-note'; n.textContent = txt;
-        n.style.cssText = 'margin:0 0 10px;padding:7px 10px;border-radius:8px;border:1px solid rgba(232,198,106,.45);color:#e8c66a;font-size:.82rem;font-weight:600;text-align:center';
-        var btn = card.querySelector('[data-checkout="' + tier + '"]') || el;
+        var n = document.createElement('p'); n.className = 'side-note'; n.innerHTML = html;
+        n.style.cssText = 'margin:0 0 10px;padding:7px 10px;border-radius:8px;border:1px solid rgba(232,198,106,.45);color:#e8c66a;font-size:.82rem;font-weight:500;text-align:center';
+        var btn = card.querySelector('[data-checkout="' + tier + '"], [data-stripe-tier="' + tier + '"]') || el;
         btn.parentNode.insertBefore(n, btn);
       });
     });
