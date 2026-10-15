@@ -505,6 +505,15 @@ function bars(el, rows, opts){
 }
 
 var CAPACITY = { seats: 170, inner: 12 }; // 186 seats (A: 10 sofas + B-L: 11 x 16) minus 16 held (row G)
+// Seats left, counted live from the seat map (rows A to L only; held rows excluded), so it can never exceed the real hall.
+function hallLine(s){
+  var seats = state.seats && state.seats.seats;
+  if (!seats) return '<b>' + fmt(Math.max(0, CAPACITY.seats - s.seats)) + '</b> left of ' + CAPACITY.seats;
+  var hall = seats.filter(function(x){ return x.row <= 'L'; });
+  var sellable = hall.filter(function(x){ return x.zone !== 'reserved'; });
+  var free = sellable.filter(function(x){ return !x.pass; }).length;
+  return '<b>' + fmt(free) + '</b> left of ' + fmt(sellable.length) + ' (' + fmt(hall.length) + '-seat hall)';
+}
 function renderSales(s){
   if (!s) {
     $('sales').innerHTML = '<div class="card empty" style="grid-column:1/-1">Sales numbers are not available right now. Try Refresh in a minute.</div>';
@@ -514,7 +523,7 @@ function renderSales(s){
   var tr = s.tiers || {}, g = tr['General'] || {}, p = tr['Pair Pass'] || {}, inn = tr['Inner Table'] || {}, bk = tr['Back Rows'] || {};
   var innerSold = inn.seats || 0;
   $('sales').innerHTML = [
-    kpi('Seats sold', fmt(s.seats), '<b>' + fmt(Math.max(0, CAPACITY.seats - s.seats)) + '</b> left of ' + CAPACITY.seats + ' · ' + fmt(s.bookings) + ' bookings · ' + fmt(s.checkedIn || 0) + ' checked in', true),
+    kpi('Seats sold', fmt(s.seats), hallLine(s) + ' · ' + fmt(s.bookings) + ' bookings · ' + fmt(s.checkedIn || 0) + ' checked in', true),
     kpi('Revenue verified', 'PKR ' + fmt(s.revenue), 'payments marked Verified in the sheet', true),
     kpi('Ticket not issued yet', fmt(s.notIssued), s.notIssued ? 'paid and verified, still waiting for a ticket' : 'every verified buyer has a ticket', s.notIssued > 0 ? 'warn' : false),
     kpi('Pending verification', fmt(s.pending), s.pending ? 'payments to confirm before issuing' : 'nothing waiting', s.pending > 0 ? 'warn' : false),

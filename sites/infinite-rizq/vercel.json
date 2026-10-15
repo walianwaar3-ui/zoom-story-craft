@@ -3,5 +3,8 @@
   "trailingSlash": false,
   "rewrites": [
     { "source": "/student-ticket", "destination": "/seats" }
+  ],
+  "headers": [
+    { "source": "/dashboard", "headers": [{ "key": "Cache-Control", "value": "no-store" }] }
   ]
 }
