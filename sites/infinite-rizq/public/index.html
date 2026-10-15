@@ -1237,7 +1237,7 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
       </details>
       <details>
         <summary>Do I choose my seat?<span class="pm" aria-hidden="true"></span></summary>
-        <div class="ans"><p>No. Your ticket names your rows: the Inner Table has the front row on sofas, the Pair Pass sits in rows 2 to 4, General Admission in rows 5 to 7, and the Main Hall in the back rows. The hall is set out in rows of 10, split by a centre aisle with 5 seats on each side: Sisters on the left, Brothers on the right. Your exact seat is given to you on arrival, and Pair Pass holders are seated together.</p></div>
+        <div class="ans"><p>No. Your ticket names your rows: the Inner Table has the front row on sofas, the Pair Pass sits in rows 2 to 4, General Admission in rows 5 to 7, and the Main Hall in the back rows. The front row has 10 sofas; every other row has 16 seats, split by a centre aisle with 8 on each side: Sisters on the left, Brothers on the right. Your exact seat is given to you on arrival, and Pair Pass holders are seated together.</p></div>
       </details>
       <details>
         <summary>How much are tickets?<span class="pm" aria-hidden="true"></span></summary>
@@ -1476,7 +1476,7 @@ $all('[data-track]').forEach(function(el){
   fetch('/api/seats').then(function(r){ return r.json(); }).then(function(j){
     var seats = j && j.ok && j.data && j.data.seats; if (!seats) return;
     var open = seats.filter(function(x){ return x.zone === 'inner' && !x.taken; }), free = open.length;
-    var sis = open.filter(function(x){ return x.num <= 5; }).length, bro = free - sis;
+    var sis = open.filter(function(x){ return x.num <= 8; }).length, bro = free - sis;
     var sides = [sis ? sis + ' Sister' : '', bro ? bro + ' Brother' : ''].filter(Boolean).join(' · ');
     var txt = free <= 0 ? 'Sold out' : free <= 3 ? (free === 1 ? 'Last seat: ' : 'Last ' + free + ' seats: ') + sides : free < 6 ? 'Less than 6 left' : free < 10 ? 'Fewer than 10 left' : null;
     if (txt) $all('[data-inner-flag]').forEach(function(el){ el.textContent = txt; });
@@ -1496,10 +1496,10 @@ $all('[data-track]').forEach(function(el){
     var seats = j && j.ok && j.data && j.data.seats; if (!seats) return;
     var ZONES = { inner: ['inner'], pair: ['pair', 'mid'], general: ['mid'], back: ['back'] };
     function free(tier, side){
-      var open = seats.filter(function(x){ return ZONES[tier].indexOf(x.zone) >= 0 && !x.taken && (side === 'sisters' ? x.num <= 5 : x.num >= 6); });
+      var open = seats.filter(function(x){ return ZONES[tier].indexOf(x.zone) >= 0 && !x.taken && (side === 'sisters' ? x.num <= 8 : x.num >= 9); });
       if (tier !== 'pair') return open.length;
       var ids = {}; open.forEach(function(x){ ids[x.id] = 1; });
-      return open.filter(function(x){ return ids[x.row + '-' + (x.num < 9 ? '0' : '') + (x.num + 1)] && (x.num !== 5); }).length;
+      return open.filter(function(x){ return ids[x.row + '-' + (x.num < 9 ? '0' : '') + (x.num + 1)] && (x.num !== 8); }).length;
     }
     Object.keys(ZONES).forEach(function(tier){
       var s = free(tier, 'sisters'), b = free(tier, 'brothers'), txt = null;
