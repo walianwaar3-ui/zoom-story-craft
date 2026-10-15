@@ -1006,10 +1006,6 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
       <span class="eyebrow">Tickets</span>
       <h2>Choose your ticket. <em>Then show up.</em></h2>
       <p class="lead">Every ticket includes the full-day transformation session, plus tea and snacks. The front row is sofa seating for the Inner Table, rows 2 to 4 are for Pair Pass holders, rows 5 to 7 are General Admission, and the back rows are the Main Hall at one fully discounted price. Sisters sit on the left of the centre aisle, Brothers on the right. Your ticket names your rows, and your exact seat is given to you on arrival.</p>
-      <div class="seats" data-seats-block hidden>
-        <div class="seats-row"><span>Seats left right now</span><span><b data-seats-left></b></span></div>
-        
-      </div>
     </div>
 
     <div class="tiers">
@@ -1408,16 +1404,6 @@ $all('[data-track]').forEach(function(el){
   el.addEventListener('click', function(){ track('cta_click', { location: el.getAttribute('data-track') }); });
 });
 
-// Seats left: live from the seat system (sellable seats only, no total shown)
-(function(){
-  fetch('/api/seats').then(function(r){ return r.json(); }).then(function(j){
-    var seats = j && j.ok && j.data && j.data.seats; if (!seats) return;
-    var left = seats.filter(function(x){ return /^(inner|pair|mid|back)$/.test(x.zone) && !x.taken; }).length;
-    $all('[data-seats-left]').forEach(function(el){ el.textContent = left; });
-    $all('[data-seats-strip],[data-seats-block]').forEach(function(el){ el.hidden = false; });
-    $all('[data-mbar-sub]').forEach(function(el){ el.textContent = left + ' seats left · Lahore'; });
-  }).catch(function(){});
-})();
 
 // Inner Table flag: the only seat count shown publicly. Honest wording from the live seat system.
 (function(){
