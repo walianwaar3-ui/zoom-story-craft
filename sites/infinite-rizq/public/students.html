@@ -113,6 +113,7 @@ p{margin:0 0 1.1em}
 
 /* ---------- Urgency strip ---------- */
 .strip{
+  position:sticky;top:0;z-index:45;
   background:linear-gradient(90deg,#1a1408,#211808,#1a1408);
   border-bottom:1px solid rgba(212,167,58,.25);
   color:var(--ivory);font-size:.84rem;
@@ -121,10 +122,11 @@ p{margin:0 0 1.1em}
 .strip b{color:var(--gold-2);font-weight:600}
 .dot-live{width:8px;height:8px;border-radius:50%;background:var(--red);box-shadow:0 0 0 0 rgba(224,115,107,.6);animation:ping 1.8s infinite;flex:0 0 8px}
 @keyframes ping{0%{box-shadow:0 0 0 0 rgba(224,115,107,.6)}80%,100%{box-shadow:0 0 0 9px rgba(224,115,107,0)}}
-.strip .cd-inline{font-variant-numeric:tabular-nums;font-weight:600;color:var(--gold-2)}
+.strip .cd-inline{font-variant-numeric:tabular-nums;font-weight:700;color:var(--gold-2);font-size:1.12rem;letter-spacing:.02em}
+.strip .cd-label{font-weight:600;color:var(--ivory);order:-1;flex-basis:100%}
 
 /* ---------- Nav ---------- */
-.nav{position:sticky;top:0;z-index:40;background:rgba(10,10,11,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.nav{position:relative;z-index:40;background:rgba(10,10,11,.82);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
 .nav .wrap{display:flex;align-items:center;justify-content:space-between;height:66px;gap:16px}
 .brand{display:flex;align-items:center;gap:12px;text-decoration:none}
 .brand-mark{
@@ -683,8 +685,7 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
   <div class="wrap">
     <span class="dot-live" aria-hidden="true"></span>
     <span><b>Students only:</b> two seats for PKR 5,500 · Nishat Hotel, Johar Town · Sat 17 Oct</span>
-    <span data-seats-strip hidden>· <b data-seats-left></b> left</span>
-    <span>· Starts in <span class="cd-inline" data-cd-inline>…</span></span>
+    <span class="cd-label">Starts in <span class="cd-inline" data-cd-inline>…</span></span>
   </div>
 </div>
 
@@ -1368,21 +1369,6 @@ $all('[data-track]').forEach(function(el){
 });
 
 
-// Inner Table flag: the only seat count shown publicly. Honest wording from the live seat system.
-(function(){
-  fetch('/api/seats').then(function(r){ return r.json(); }).then(function(j){
-    var seats = j && j.ok && j.data && j.data.seats; if (!seats) return;
-    var free = seats.filter(function(x){ return x.zone === 'inner' && !x.taken; }).length;
-    var txt = free <= 0 ? 'Sold out' : free < 6 ? 'Less than 6 left' : free < 10 ? 'Fewer than 10 left' : null;
-    if (txt) $all('[data-inner-flag]').forEach(function(el){ el.textContent = txt; });
-    if (free <= 0) $all('[data-checkout="inner"]').forEach(function(el){
-      var b = document.createElement('span'); b.className = el.className; b.setAttribute('aria-disabled', 'true');
-      b.style.opacity = '.55'; b.style.pointerEvents = 'none'; b.textContent = 'Sold out';
-      el.replaceWith(b);
-      var alt = document.querySelector('[data-alt-pay="inner"]'); if (alt) alt.remove();
-    });
-  }).catch(function(){});
-})();
 
 // Shahrez's story (YouTube): loads only when tapped, so the page stays fast
 document.querySelectorAll('[data-story]').forEach(function(b){
@@ -1424,7 +1410,9 @@ document.querySelectorAll('[data-story]').forEach(function(b){
     var dd = Math.floor(diff / 864e5), hh = Math.floor(diff / 36e5) % 24,
         mm = Math.floor(diff / 6e4) % 60, ss = Math.floor(diff / 1e3) % 60;
     d.textContent = pad(dd); h.textContent = pad(hh); m.textContent = pad(mm); s.textContent = pad(ss);
-    inline.textContent = diff ? dd + 'd ' + pad(hh) + 'h ' + pad(mm) + 'm' : 'today';
+    var txt = diff ? (dd ? dd + 'd ' : '') + pad(hh) + 'h ' + pad(mm) + 'm ' + pad(ss) + 's' : 'now, doors are open';
+    inline.textContent = txt;
+    $all('[data-mbar-sub]').forEach(function(el){ el.textContent = diff ? 'Starts in ' + txt : 'Happening now · Nishat Hotel'; });
     $all('[data-mbar-cd]').forEach(function(el){ el.textContent = diff ? dd + 'd ' + pad(hh) + 'h ' + pad(mm) + 'm ' + pad(ss) + 's' : 'today'; });
   }
   tick(); setInterval(tick, 1000);
