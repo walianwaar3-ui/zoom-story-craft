@@ -9,7 +9,7 @@ const MESSAGES = {
   invalid: 'This seat link is not valid. Please use the link from your confirmation message.',
   locked: 'Ticket issuing is closed. Message the coordinator on WhatsApp for help.',
   final: 'Your ticket is already issued. For any change, WhatsApp the coordinator with your pass number.',
-  sold_out: 'That section is full for this ticket type. Please WhatsApp the coordinator and we will find you a place.',
+  sold_out: 'Please WhatsApp the coordinator to complete your ticket.',
   wrong_count: 'Please pick the number of seats your ticket includes.',
   wrong_zone: 'That seat is outside the zone for your ticket.',
   not_together: 'Pair Pass seats must be side by side in the same block.',
