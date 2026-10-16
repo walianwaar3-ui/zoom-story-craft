@@ -504,7 +504,7 @@ function bars(el, rows, opts){
   }).join('');
 }
 
-var CAPACITY = { seats: 170, inner: 12 }; // 186 seats (A: 10 sofas + B-L: 11 x 16) minus 16 held (row G)
+var CAPACITY = { seats: 176, inner: 16 }; // 192 seats (A: 16 sofas + B-L: 11 x 16) minus 16 held (row G)
 // Seats left, counted live from the seat map (rows A to L only; held rows excluded), so it can never exceed the real hall.
 function hallLine(s){
   var seats = state.seats && state.seats.seats;
@@ -571,7 +571,7 @@ function renderSeats(data){
   }).join('') : '<tr><td colspan="6" class="empty">Everyone in the seat system has a seat.</td></tr>';
   if (seatSel) showSeat(seatSel);
 }
-// Grand Ballroom D, Nishat Hotel: 186 seats. Row A = 10 VIP sofas (seats 4-13); rows B-L = 16 seats. Seats 1-8 Sisters, 9-16 Brothers.
+// Grand Ballroom D, Nishat Hotel: 192 seats. Row A = 16 VIP sofas (8 sisters, 8 brothers); rows B-L = 16 seats. Seats 1-8 Sisters, 9-16 Brothers.
 // Row A Inner Table (sofas), B-D Pair Pass, E-F General, G held, H-K Main Hall, L Students. Seat ids are a capacity ledger; real seats are given on arrival.
 function drawSeatMap(seats){
   var ROWS = 'ABCDEFGHIJKL'.split(''), W = 700, step = 36, sw = 30, sh = 16, aisle = 48, x0 = (W - (16 * step - (step - sw) + aisle)) / 2, y0 = 92, rowStep = 22;
