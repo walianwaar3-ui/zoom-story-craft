@@ -581,6 +581,24 @@ footer .row{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-betw
   *,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}
   .js .rv{opacity:1;transform:none}
 }
+
+/* ---------- Event-day sticky note (links to /info) ---------- */
+.mbar{display:none!important}
+.snote{position:fixed;right:18px;bottom:18px;z-index:80;width:290px;background:#f7dc6f;color:#2a2107;border-radius:4px 4px 14px 4px;padding:16px 16px 14px;box-shadow:0 14px 34px rgba(0,0,0,.45),0 2px 0 rgba(0,0,0,.08) inset;transform:rotate(-1.6deg);font-family:var(--sans);line-height:1.4}
+.snote:before{content:"";position:absolute;top:-9px;left:50%;width:84px;height:20px;margin-left:-42px;background:rgba(255,255,255,.45);transform:rotate(2deg);border-radius:2px}
+.snote .sn-k{font-size:.68rem;letter-spacing:.16em;text-transform:uppercase;font-weight:700;color:#6b5410}
+.snote .sn-t{font-family:var(--serif);font-weight:600;font-size:1.2rem;margin:4px 0 6px;color:#1d1704}
+.snote .sn-d{font-size:.84rem;margin:0 0 12px}
+.snote .sn-d b{font-weight:700}
+.snote .sn-b{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.snote .sn-b a{display:block;text-align:center;text-decoration:none;border-radius:9px;padding:10px 6px;font-weight:700;font-size:.85rem}
+.snote .sn-p{background:#1d1704;color:#f7dc6f}
+.snote .sn-g{border:1.5px solid #1d1704;color:#1d1704}
+.snote .sn-x{position:absolute;top:6px;right:8px;border:0;background:none;font-size:1.25rem;line-height:1;color:#6b5410;cursor:pointer;padding:4px}
+.snote.min{width:auto;padding:10px 14px;cursor:pointer;transform:rotate(-1.6deg)}
+.snote.min>*:not(.sn-k){display:none}
+.snote.min .sn-k{font-size:.78rem}
+@media (max-width:640px){.snote{left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom));width:auto;transform:rotate(-.8deg)}.snote.min{left:auto}}
 </style>
 <!-- Meta Pixel Code -->
 <script>
@@ -641,7 +659,7 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
 <div class="strip" role="note">
   <div class="wrap">
     <span class="dot-live" aria-hidden="true"></span>
-    <span><b>Venue upgraded:</b> Nishat Hotel, Johar Town · Sat 17 Oct · <b>One date. No replay.</b></span>
+    <span><b>Today:</b> Grand Ballroom D, Nishat Hotel · Doors 10:00 AM · <a href="/info" style="color:var(--gold-2);font-weight:700">Venue &amp; agenda &rarr;</a></span>
     <span class="cd-label">Starts in <span class="cd-inline" data-cd-inline>…</span></span>
   </div>
 </div>
@@ -1638,5 +1656,22 @@ $all('[data-track]').forEach(function(el){
 track('lp_view', { page: 'infinite_rizq' });
 </script>
 <script src="/proof.js" defer></script>
+
+<!-- Event-day sticky note: points everyone to /info and /my-seat -->
+<aside class="snote" id="snote" aria-label="Event day information">
+  <div class="sn-k">📌 Event day · Sat 17 Oct</div>
+  <div class="sn-t">Coming today?</div>
+  <p class="sn-d"><b>Grand Ballroom D, Nishat Hotel</b>, Johar Town, Lahore. Doors <b>10:00 AM</b>, please arrive by 10:15.</p>
+  <div class="sn-b"><a class="sn-p" href="/info" data-track="snote_info">Venue &amp; agenda</a><a class="sn-g" href="/my-seat" data-track="snote_ticket">Find my ticket</a></div>
+  <button class="sn-x" type="button" aria-label="Minimise">&times;</button>
+</aside>
+<script>
+(function(){
+  var n = document.getElementById('snote'); if (!n) return;
+  try { if (sessionStorage.getItem('snote-min') === '1') n.classList.add('min'); } catch(e) {}
+  n.querySelector('.sn-x').addEventListener('click', function(e){ e.stopPropagation(); n.classList.add('min'); try { sessionStorage.setItem('snote-min','1'); } catch(e) {} });
+  n.addEventListener('click', function(){ if (n.classList.contains('min')) { n.classList.remove('min'); try { sessionStorage.removeItem('snote-min'); } catch(e) {} } });
+})();
+</script>
 </body>
 </html>
