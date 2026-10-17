@@ -74,8 +74,11 @@ async function savePassMeta(tok, req, body) {
   const ua = String(req.headers['user-agent'] || '').slice(0, 400) || undefined;
   const s2 = body.student2 && typeof body.student2 === 'object' ? body.student2 : null;
   const student2 = s2 ? { name: String(s2.name || '').trim().slice(0, 60), phone: String(s2.phone || '').trim().slice(0, 40) } : undefined;
+  // /paid form: what the guest says they paid and how, checked against the money at the door.
+  const pd = body.paid && typeof body.paid === 'object' ? body.paid : null;
+  const paid = pd ? { method: String(pd.method || '').trim().slice(0, 30), ref: String(pd.ref || '').trim().slice(0, 60), via: 'paid-form', at: new Date().toISOString() } : undefined;
   try {
-    await rpc('ir_pass_meta', { p_token: tok, p_meta: { fbp: fb(body.fbp), fbc: fb(body.fbc), ip, ua, student2 } });
+    await rpc('ir_pass_meta', { p_token: tok, p_meta: { fbp: fb(body.fbp), fbc: fb(body.fbc), ip, ua, student2, paid } });
   } catch (err) {
     console.error('Could not save pass meta', err);
   }
