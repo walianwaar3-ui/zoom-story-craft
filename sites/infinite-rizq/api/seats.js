@@ -21,7 +21,7 @@ const MESSAGES = {
   wrong_section: 'That seat is outside your section. Sisters sit on the left half, Brothers on the right half.',
   paid_locked: 'Not released: this person is Paid, so their seat is protected. Ask Claude or the coordinator to move or cancel a paid seat.',
   no_seat: 'Not confirmed: this person has no ticket yet. Ask them to get one at infiniterizq.com/seats, then choose Paid again.',
-  not_found: 'We could not find a seat pass for that name and email. Use the email you paid with, or WhatsApp the coordinator.',
+  not_found: 'No problem. Our team is at the event today. If you have paid, your name is on the guest list: come to Nishat Hotel with your payment screenshot and we will get you in.',
   bad_tier: 'Please choose your ticket type.',
 };
 const TIER_NAMES = { inner: 'Inner Table', general: 'General Admission', pair: 'Pair Pass', back: 'Main Hall', student: 'Student Pair Pass' };

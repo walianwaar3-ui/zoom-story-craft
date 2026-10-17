@@ -44,6 +44,10 @@ input:focus{border-color:var(--gold)}
 .btn[disabled]{opacity:.5;cursor:wait}
 .msg{margin:12px 0 0;font-size:.88rem;min-height:1.3em}
 .msg.err{color:var(--red)}
+.help{margin:14px 0 0;padding:16px;border:1px solid var(--gold);border-radius:12px;background:rgba(212,167,58,.1);color:var(--ivory);font-size:.95rem;line-height:1.55}
+.help b{color:var(--gold-2)}
+.help p{margin:0 0 10px}
+.help a.hb{display:inline-block;margin-top:4px;padding:10px 14px;border-radius:10px;background:var(--gold);color:#141005;font-weight:700;text-decoration:none}
 .alt{text-align:center;margin-top:18px;font-size:.88rem;color:var(--muted)}
 .alt a,footer a{color:var(--gold-2)}
 footer{color:var(--muted);font-size:.8rem;text-align:center;padding:40px 0 60px}
@@ -86,9 +90,15 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
       <input id="f-name" autocomplete="name" maxlength="120" required>
       <button class="btn" type="submit" id="go">Show my ticket</button>
       <p class="msg" id="msg" role="status" aria-live="polite"></p>
+      <div class="help" id="help" hidden>
+        <p><b>No problem, just come to the venue.</b></p>
+        <p>Our whole team is at the event today, so the online ticket desk is closed. If you have paid, your name is already on the guest list at reception.</p>
+        <p>Come to <b>Grand Ballroom D, Nishat Hotel, Johar Town</b> and show your <b>payment screenshot</b> at the check-in desk. We will get you in.</p>
+        <a class="hb" href="/info">Venue &amp; timings</a>
+      </div>
     </form>
 
-    <p class="alt">Paid but have no ticket yet? <a href="/seats">Get your ticket</a></p>
+    <p class="alt">Paid but have no ticket? Just come with your payment screenshot. <a href="/info">Venue &amp; timings</a></p>
   </main>
 
   <footer>Saturday 17 October 2026 · 10 AM to 4:30 PM · Questions? WhatsApp Wali Anwaar, <a href="https://wa.me/13322332380">+1 (332) 233-2380</a></footer>
@@ -100,7 +110,8 @@ var $ = function(id){ return document.getElementById(id); };
 $('find').addEventListener('submit', function(e){
   e.preventDefault();
   var email = $('f-email').value.trim(), name = $('f-name').value.trim();
-  function bad(t){ $('msg').textContent = t; $('msg').className = 'msg err'; }
+  function bad(t){ $('msg').textContent = t; $('msg').className = 'msg err'; $('help').hidden = true; }
+  function help(){ $('go').disabled = false; $('msg').textContent = ''; $('msg').className = 'msg'; $('help').hidden = false; }
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return bad('Please enter the email you paid with.');
   if (name.length < 2) return bad('Please enter your name.');
   $('go').disabled = true; $('msg').className = 'msg'; $('msg').textContent = 'Looking up your ticket…';
@@ -109,9 +120,9 @@ $('find').addEventListener('submit', function(e){
     .then(function(r){ return r.json(); })
     .then(function(j){
       if (j.ok && j.data && j.data.token) { location.href = '/seats?t=' + encodeURIComponent(j.data.token); return; }
-      $('go').disabled = false; bad(j.error || 'Could not find your ticket. Please try again.');
+      help();
     })
-    .catch(function(){ $('go').disabled = false; bad('Network error. Please try again.'); });
+    .catch(help);
 });
 })();
 </script>
