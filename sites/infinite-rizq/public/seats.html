@@ -255,7 +255,7 @@ function load(){
   if (OPEN) {
     return fetch('/api/seats', { cache: 'no-store' }).then(function(r){ return r.json(); }).then(function(j){
       if (!j.ok) return fatal(j.error || 'Could not load the seat map.');
-      state.seats = j.data.seats || []; state.locked = !!j.data.locked; state.picked = state.picked.filter(function(id){ var s = byId(id); return s && !s.taken; });
+      state.seats = j.data.seats || []; state.locked = true; // Sold out: the open booking link no longer issues tickets. Pass links (?t=) still work. state.picked = state.picked.filter(function(id){ var s = byId(id); return s && !s.taken; });
       $('loading').hidden = true; $('app').hidden = false; render();
     }).catch(function(){ fatal('Network error. Please check your connection and reload.'); });
   }
@@ -282,8 +282,8 @@ function render(){
   if (OPEN && !state.pass) {
     $('choose').hidden = false; $('picker').hidden = true; $('done').hidden = true; $('gender').hidden = true; $('pass').innerHTML = '';
     $('h1').innerHTML = 'Get your <em>ticket.</em>';
-    $('intro-copy').textContent = state.locked ? 'Ticket issuing is closed. WhatsApp the coordinator below for help.' : 'Which ticket did you buy? Choose it, tell us your section, and your ticket is issued straight away.';
-    if (state.locked) $('choose').hidden = true;
+    $('intro-copy').textContent = state.locked ? 'All tickets are sold out. Already paid? WhatsApp the coordinator below with your payment screenshot.' : 'Which ticket did you buy? Choose it, tell us your section, and your ticket is issued straight away.';
+    if (state.locked) { $('choose').hidden = true; $('h1').innerHTML = 'Sold <em>out.</em>'; }
     return;
   }
   $('choose').hidden = true; $('switch').hidden = !OPEN || STUDENT;
