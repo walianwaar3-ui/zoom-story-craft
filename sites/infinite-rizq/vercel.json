@@ -3,6 +3,10 @@
   "trailingSlash": false,
   "rewrites": [
     {
+      "source": "/uet",
+      "destination": "/"
+    },
+    {
       "source": "/student-ticket",
       "destination": "/seats"
     },
