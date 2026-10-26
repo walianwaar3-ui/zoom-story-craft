@@ -30,7 +30,7 @@ export function LoginScreen() {
   return (
     <div className="grid min-h-svh place-items-center bg-muted/40 p-4">
       <div className="w-full max-w-sm space-y-6">
-        <Logo className="justify-center" subtitle="Operating system" />
+        <Logo className="justify-center" subtitle="tawakkulgrowth.com" />
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">

@@ -83,7 +83,7 @@ function SidebarBody({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
   return (
     <div className="flex h-full flex-col">
       <div className={cn("flex h-14 items-center border-b border-sidebar-border px-3", collapsed && "justify-center px-0")}>
-        <Logo collapsed={collapsed} subtitle={db.settings.businessName || "Operating system"} />
+        <Logo collapsed={collapsed} subtitle="tawakkulgrowth.com" />
       </div>
 
       <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-4 scrollbar-thin" aria-label="Main">
