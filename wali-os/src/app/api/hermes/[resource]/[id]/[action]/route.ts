@@ -8,7 +8,7 @@ type Body = Record<string, unknown>;
 type Thread = { id: string; contact_name: string; contact_email: string; subject: string; client_id: string | null; status: string; approval_id: string | null };
 
 /**
- * Workflow actions. They follow the same rules as Tawakkull Growth OS (src/lib/workflows.ts):
+ * Workflow actions. They follow the same rules as Tawakkul Growth OS (src/lib/workflows.ts):
  *   needs-reply → submit-reply → awaiting-approval → (you approve) → ready-to-send → sent → replied
  */
 const ACTIONS: Record<string, Record<string, (db: SupabaseClient, id: string, body: Body) => Promise<unknown>>> = {

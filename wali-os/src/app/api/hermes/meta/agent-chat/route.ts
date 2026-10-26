@@ -2,7 +2,7 @@
  * POST /api/hermes/meta/agent-chat {message, history?}
  * → {reply, images: [{url, prompt}], approvals: [{id, title, ad?}], tools_used: [...]}
  *
- * Chat with the "Ads Planner" agent (its instructions come from Tawakkull Growth OS → Agents).
+ * Chat with the "Ads Planner" agent (its instructions come from Tawakkul Growth OS → Agents).
  * It can use tools:
  *   - get_account_overview / get_breakdown / get_ad_details: read Meta Ads data and
  *     ad creatives (read-only)
@@ -13,7 +13,7 @@
  *   - propose_change: put any other change to the ad account in Approvals.
  * It never changes the ad account itself; approved changes are carried out by Hermes.
  *
- * Auth: the Hermes key, or a signed-in Tawakkull Growth OS user.
+ * Auth: the Hermes key, or a signed-in Tawakkul Growth OS user.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -210,8 +210,8 @@ type Agent = { id: string; name: string; role: string; instructions: string; sta
 async function findAdsAgent(db: SupabaseClient): Promise<Agent> {
   const rows = check(await db.from("agents").select("id, name, role, instructions, status, requires_approval").ilike("name", "%ads%")) as Agent[];
   const agent = rows.find((a) => /ads planner/i.test(a.name)) ?? rows[0];
-  if (!agent) throw new ApiError(404, 'No "Ads Planner" agent in Tawakkull Growth OS. Create one in Agents (or have Hermes create it).');
-  if (agent.status !== "active") throw new ApiError(409, `${agent.name} is paused. Switch it on in Tawakkull Growth OS → Agents.`);
+  if (!agent) throw new ApiError(404, 'No "Ads Planner" agent in Tawakkul Growth OS. Create one in Agents (or have Hermes create it).');
+  if (agent.status !== "active") throw new ApiError(409, `${agent.name} is paused. Switch it on in Tawakkul Growth OS → Agents.`);
   return agent;
 }
 
@@ -407,7 +407,7 @@ export const POST = handler(
               .single()
           ) as { id: string; title: string };
           approvals.push(row);
-          return { approval_id: row.id, status: "pending", note: "Waiting for Wali's approval in Tawakkull Growth OS → Approvals. Nothing has changed yet." };
+          return { approval_id: row.id, status: "pending", note: "Waiting for Wali's approval in Tawakkul Growth OS → Approvals. Nothing has changed yet." };
         }
         default:
           return { error: `Unknown tool ${name}` };
@@ -417,7 +417,7 @@ export const POST = handler(
     const system = [
       agent.instructions || `You are ${agent.name}. ${agent.role}.`,
       "",
-      `You are "${agent.name}" inside Tawakkull Growth OS, chatting with Wali on the Campaigns page.`,
+      `You are "${agent.name}" inside Tawakkul Growth OS, chatting with Wali on the Campaigns page.`,
       "Use the tools to look at real Meta Ads data before answering; never invent numbers.",
       "You cannot change the ad account yourself. New ads: create_ad (files a launch-ready approval). Anything else (pause, resume, budgets, new campaigns): propose_change. Both go to Approvals and Hermes carries them out after Wali approves.",
       "Generated images and ad creatives you look up appear below your reply automatically; refer to them briefly, don't paste URLs.",
@@ -451,7 +451,7 @@ export const POST = handler(
           "Content-Type": "application/json",
           Authorization: `Bearer ${orKey}`,
           "HTTP-Referer": "https://wali-os.vercel.app",
-          "X-Title": "Tawakkull Growth OS",
+          "X-Title": "Tawakkul Growth OS",
         },
         body: JSON.stringify({ model: MODEL, messages, tools: TOOLS, tool_choice: "auto", stream: false }),
       });

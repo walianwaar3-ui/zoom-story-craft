@@ -108,7 +108,7 @@ export function ThreadStatusBadge({ status, className }: { status: ThreadStatus;
 const priorityMap: Record<Priority, { label: string; className: string }> = {
   urgent: { label: "Urgent", className: "text-danger" },
   high: { label: "High", className: "text-warning [&>span>span]:bg-brand-highlight" },
-  medium: { label: "Medium", className: "text-primary dark:text-brand-tag" },
+  medium: { label: "Medium", className: "text-brand-tag" },
   low: { label: "Low", className: "text-muted-foreground" },
 };
 

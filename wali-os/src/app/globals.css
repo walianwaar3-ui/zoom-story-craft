@@ -7,7 +7,7 @@
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-heading: var(--font-inter-tight), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-fraunces), Georgia, serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -45,7 +45,7 @@
   --color-warning-border: var(--warning-border);
   --color-danger: var(--danger);
   --color-danger-bg: var(--danger-bg);
-  /* Brand (Systems of Change) */
+  /* Brand (Tawakkul Growth) */
   --color-brand-deep: var(--brand-deep);
   --color-brand-deep-2: var(--brand-deep-2);
   --color-brand-action: var(--brand-action);
@@ -67,120 +67,124 @@
 }
 
 /*
- * Design tokens: the single source of colour. Brand palette first, then the
- * shadcn semantic tokens mapped onto it. No hex values belong anywhere else.
+ * Design tokens: the single source of colour. Brand palette first (Tawakkul
+ * Growth brand book: deep green and gold, flat), then the shadcn semantic
+ * tokens mapped onto it. No hex values belong anywhere else.
+ * Light = the brand's "Paper" theme, dark = its default "Deep green".
  */
 :root {
-  /* Brand palette */
-  --brand-deep: #0b2e59;
-  --brand-deep-2: #0a2342;
-  --brand-action: #0a93d6; /* fills: glow, progress, active bar, icons */
-  --brand-action-text: #0874a9; /* same blue, 4.5:1 safe: white-on-blue and blue text */
-  --brand-emphasis: #1590b8;
-  --brand-highlight: #ffc23d; /* never as text on white */
-  --brand-tint: #e5f5fa;
-  --brand-bg: #f7fbfd;
-  --brand-border: #d7e9f6;
-  --brand-ink: #1d3350;
-  --brand-body: #3b4a5e;
-  --brand-muted: #4a5b70;
-  --brand-tag: #0975ab; /* eyebrow labels, 4.5:1 safe on white and tint */
-  --brand-hero: linear-gradient(160deg, #e8f6f9 0%, #d3eef4 45%, #6fbaca 85%, #2a8697 100%);
+  /* Brand palette (Paper) */
+  --brand-deep: #0b1f1a; /* ink: headlines and body copy */
+  --brand-deep-2: #0b1f1a; /* deep green surfaces: accent stat card, tooltips */
+  --brand-action: #d4af37; /* gold fills: buttons, active bar, progress, the logo */
+  --brand-action-text: #1a1405; /* text on gold fills (on-gold) */
+  --brand-emphasis: #e8c75a; /* gold-2: light end of the button gradient */
+  --brand-highlight: #e8c75a; /* gold-2 for small fills and dots; never text on Paper */
+  --brand-tint: #e3ebe5; /* bg-2: muted and hover surfaces */
+  --brand-bg: #eef3ef; /* Paper ground */
+  --brand-border: #ced5d1; /* line hairline, flattened onto Paper */
+  --brand-ink: #0b1f1a;
+  --brand-body: #0b1f1a;
+  --brand-muted: #4a6157;
+  --brand-tag: #7a5f0e; /* gold-text: eyebrows, links, gold words (5:1+ on Paper) */
+  --brand-hero: var(--brand-tint); /* the brand is flat: no gradients behind headers */
   --white: #ffffff;
-  --brand-glow: 0 10px 28px rgb(10 147 214 / 0.42), inset 0 -2px 0 rgb(0 0 0 / 0.12);
-  --brand-glow-hover: 0 14px 34px rgb(10 147 214 / 0.5), inset 0 -2px 0 rgb(0 0 0 / 0.12);
-  --brand-glow-sm: 0 4px 12px rgb(10 147 214 / 0.3), inset 0 -2px 0 rgb(0 0 0 / 0.12);
-  --card-shadow: 0 6px 22px rgb(11 46 89 / 0.07);
-  --card-shadow-inner: 0 4px 14px rgb(11 46 89 / 0.05);
+  /* Flat brand: the only shadow is the gold glow on a hovered button. */
+  --brand-glow: none;
+  --brand-glow-hover: 0 8px 24px rgb(212 175 55 / 0.25);
+  --brand-glow-sm: none;
+  --card-shadow: none;
+  --card-shadow-inner: none;
 
-  /* Status */
-  --success: #145a32;
-  --success-bg: #e6f4ec;
-  --danger: #8a1c1c;
-  --danger-bg: #fdecec;
-  --warning: #6b4200;
-  --warning-bg: #fff1cc;
-  --warning-border: #e9c66a;
+  /* Status: the brand's gain (yes) and reduce (no), plus a neutral warning */
+  --success: #1b6b41;
+  --success-bg: #e2f0e7;
+  --danger: #b0412b;
+  --danger-bg: #f8e7e3;
+  --warning: #6b4f00;
+  --warning-bg: #f6edcf;
+  --warning-border: #d4af37;
 
   /* shadcn semantic tokens */
-  --radius: 12px;
+  --radius: 14px;
   --background: var(--brand-bg);
-  --foreground: var(--brand-deep);
+  --foreground: var(--brand-ink);
   --card: var(--white);
-  --card-foreground: var(--brand-deep);
+  --card-foreground: var(--brand-ink);
   --popover: var(--white);
-  --popover-foreground: var(--brand-deep);
-  --primary: var(--brand-action-text);
-  --primary-foreground: var(--white);
+  --popover-foreground: var(--brand-ink);
+  --primary: var(--brand-action);
+  --primary-foreground: var(--brand-action-text);
   --secondary: var(--brand-tint);
-  --secondary-foreground: var(--brand-deep);
+  --secondary-foreground: var(--brand-ink);
   --muted: var(--brand-tint);
   --muted-foreground: var(--brand-muted);
   --accent: var(--brand-tint);
-  --accent-foreground: var(--brand-deep);
+  --accent-foreground: var(--brand-ink);
   --destructive: var(--danger);
   --border: var(--brand-border);
   --input: var(--brand-border);
-  --ring: var(--brand-highlight);
+  --ring: var(--brand-ink);
   --chart-1: var(--brand-action);
-  --chart-2: var(--brand-emphasis);
-  --chart-3: var(--brand-highlight);
-  --chart-4: var(--brand-deep);
-  --chart-5: #7fd0f5;
+  --chart-2: var(--brand-muted);
+  --chart-3: var(--brand-emphasis);
+  --chart-4: var(--brand-ink);
+  --chart-5: #7a5f0e;
   --sidebar: var(--white);
   --sidebar-foreground: var(--brand-body);
   --sidebar-primary: var(--brand-action);
-  --sidebar-primary-foreground: var(--white);
+  --sidebar-primary-foreground: var(--brand-action-text);
   --sidebar-accent: var(--brand-tint);
-  --sidebar-accent-foreground: var(--brand-deep);
+  --sidebar-accent-foreground: var(--brand-ink);
   --sidebar-border: var(--brand-border);
-  --sidebar-ring: var(--brand-highlight);
+  --sidebar-ring: var(--brand-ink);
 }
 
 .dark {
-  --brand-tint: #123a66;
-  --brand-bg: #0a2342;
-  --brand-border: #1f4470;
-  --brand-muted: #9fb6cc;
-  --brand-body: color-mix(in srgb, var(--white) 70%, #9fb6cc);
-  --brand-ink: var(--white);
-  --brand-tag: var(--chart-5);
-  --brand-hero: linear-gradient(160deg, var(--brand-tint) 0%, var(--brand-deep) 60%, var(--brand-deep-2) 100%);
-  --card-shadow: 0 6px 22px rgb(0 0 0 / 0.25);
-  --card-shadow-inner: 0 4px 14px rgb(0 0 0 / 0.2);
-  /* Status text, lightened from the same pair so it reads on navy */
-  --success: color-mix(in srgb, #e6f4ec 80%, #145a32);
-  --success-bg: color-mix(in srgb, #145a32 55%, var(--brand-deep));
-  --danger: color-mix(in srgb, #fdecec 80%, #8a1c1c);
-  --danger-bg: color-mix(in srgb, #8a1c1c 50%, var(--brand-deep));
-  --warning: #fff1cc;
-  --warning-bg: color-mix(in srgb, #6b4200 60%, var(--brand-deep));
-  --warning-border: #6b4200;
+  /* Deep green, the brand's default theme */
+  --brand-deep-2: #10291f;
+  --brand-tint: #10291f; /* bg-2 */
+  --brand-bg: #0b1f1a;
+  --brand-border: #2f391f; /* gold line at 18%, flattened onto deep green */
+  --brand-muted: #a9bdb2;
+  --brand-body: #eef3ef;
+  --brand-ink: #eef3ef;
+  --brand-tag: #d4af37; /* gold reads as text on deep green (6:1+) */
+  --success: #7fd1a0;
+  --success-bg: #163a2a;
+  --danger: #e8907f;
+  --danger-bg: #3a2420;
+  --warning: #e8c75a;
+  --warning-bg: #2c2a14;
+  --warning-border: #6b5a1c;
 
-  --background: var(--brand-deep-2);
-  --foreground: var(--white);
-  --card: var(--brand-deep);
-  --card-foreground: var(--white);
-  --popover: var(--brand-deep);
-  --popover-foreground: var(--white);
-  /* On navy, the light brand blue keeps buttons and blue text above 4.5:1 */
-  --primary: var(--chart-5);
-  --primary-foreground: var(--brand-deep-2);
+  --background: var(--brand-bg);
+  --foreground: var(--brand-ink);
+  --card: #143428;
+  --card-foreground: var(--brand-ink);
+  --popover: #143428;
+  --popover-foreground: var(--brand-ink);
+  --primary: var(--brand-action);
+  --primary-foreground: var(--brand-action-text);
   --secondary: var(--brand-tint);
-  --secondary-foreground: var(--white);
+  --secondary-foreground: var(--brand-ink);
   --muted: var(--brand-tint);
   --muted-foreground: var(--brand-muted);
-  --accent: var(--brand-tint);
-  --accent-foreground: var(--white);
+  --accent: #1a3f31;
+  --accent-foreground: var(--brand-ink);
   --destructive: var(--danger);
   --border: var(--brand-border);
   --input: var(--brand-border);
-  --ring: var(--brand-highlight);
-  --sidebar: var(--brand-deep-2);
+  --ring: var(--brand-ink);
+  --chart-2: var(--brand-muted);
+  --chart-4: var(--brand-ink);
+  --chart-5: #e8c75a;
+  --sidebar: #0b1f1a;
   --sidebar-foreground: var(--brand-body);
   --sidebar-accent: var(--brand-tint);
-  --sidebar-accent-foreground: var(--white);
+  --sidebar-accent-foreground: var(--brand-ink);
   --sidebar-border: var(--brand-border);
+  --sidebar-ring: var(--brand-ink);
 }
 
 @layer base {
@@ -200,7 +204,7 @@
   [data-slot="sheet-title"] {
     font-family: var(--font-heading);
     font-weight: 700;
-    letter-spacing: -0.02em;
+    letter-spacing: -0.01em;
     line-height: 1.15;
     text-wrap: balance;
     color: var(--foreground);
@@ -262,8 +266,9 @@
   }
 }
 
-/* Gold focus ring for keyboard users. Unlayered so no component style can hide it. */
+/* Focus ring for keyboard users, per the brand: a 2px text-colour outline offset 3px.
+   Unlayered so no component style can hide it. */
 :focus-visible {
-  outline: 3px solid var(--brand-highlight);
-  outline-offset: 2px;
+  outline: 2px solid var(--foreground);
+  outline-offset: 3px;
 }

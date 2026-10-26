@@ -1,4 +1,4 @@
-# Tawakkull Growth OS
+# Tawakkul Growth OS
 
 Internal operating dashboard for a global growth-consulting business: clients, email, campaigns, delivery, approvals and agent playbooks in one place.
 
@@ -38,7 +38,7 @@ Internal operating dashboard for a global growth-consulting business: clients, e
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`: the **anon / publishable** key (never the service_role key)
 5. Redeploy. The app now asks you to sign in. If you used the browser-only version first, go to **Settings → Data & backup → Copy to cloud** to bring that data across.
 
-Hermes connects through the Tawakkull Growth OS API (`/api/hermes/*`) with its own key. It gets a live snapshot, an activity feed of every change, and can create and update records, while approvals stay with you. Follow [`docs/HERMES.md`](docs/HERMES.md).
+Hermes connects through the Tawakkul Growth OS API (`/api/hermes/*`) with its own key. It gets a live snapshot, an activity feed of every change, and can create and update records, while approvals stay with you. Follow [`docs/HERMES.md`](docs/HERMES.md).
 
 ### Where the data lives
 
@@ -110,7 +110,7 @@ Search indexing is disabled (`robots: noindex`). With Supabase connected, the ap
 - **Netlify**, **Cloudflare Pages** (via OpenNext) and **Railway** all work too. Set the base directory to `wali-os`.
 - **Self-host** with `npm run build && npm start` behind Nginx/Caddy on any VPS.
 
-### Optional: give Tawakkull Growth OS its own repository
+### Optional: give Tawakkul Growth OS its own repository
 
 The app is fully self-contained in `wali-os/`. To split it into its own repo with history:
 

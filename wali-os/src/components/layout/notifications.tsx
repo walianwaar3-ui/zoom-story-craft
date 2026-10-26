@@ -23,7 +23,7 @@ export function Notifications() {
   const overdue = db.tasks.filter((t) => t.status !== "done" && dueLabel(t.due).tone === "overdue").length;
 
   const items = [
-    { show: pending > 0, icon: CheckCheck, tone: "text-primary", title: `${pending} approval${pending === 1 ? "" : "s"} waiting`, href: "/approvals" },
+    { show: pending > 0, icon: CheckCheck, tone: "text-brand-tag", title: `${pending} approval${pending === 1 ? "" : "s"} waiting`, href: "/approvals" },
     { show: readyToSend > 0, icon: Send, tone: "text-success", title: `${readyToSend} approved repl${readyToSend === 1 ? "y" : "ies"} ready to send`, href: "/inbox" },
     { show: needsReply > 0, icon: Mail, tone: "text-warning", title: `${needsReply} email${needsReply === 1 ? "" : "s"} need a reply`, href: "/inbox" },
     { show: overdue > 0, icon: ListTodo, tone: "text-destructive", title: `${overdue} overdue task${overdue === 1 ? "" : "s"}`, href: "/tasks" },

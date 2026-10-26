@@ -89,7 +89,7 @@ export function useAgentRuns(agents: Agent[]) {
 
   const queue = React.useCallback(async (agent: Agent, instruction: string) => {
     const token = (await getSupabase()?.auth.getSession())?.data.session?.access_token;
-    if (!token) throw new Error("Sign in to Tawakkull Growth OS cloud mode to run agents.");
+    if (!token) throw new Error("Sign in to Tawakkul Growth OS cloud mode to run agents.");
     const res = await fetch(`/api/agents/${encodeURIComponent(agent.id)}/run`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -122,7 +122,7 @@ export function useAgentRuns(agents: Agent[]) {
 
 const STATUS: Record<RunStatus, { label: string; icon: React.ElementType; className: string }> = {
   queued: { label: "Queued for Hermes", icon: Clock, className: "text-muted-foreground" },
-  running: { label: "Running", icon: Loader2, className: "text-primary" },
+  running: { label: "Running", icon: Loader2, className: "text-brand-tag" },
   done: { label: "Done", icon: CheckCircle2, className: "text-success" },
   failed: { label: "Failed", icon: XCircle, className: "text-destructive" },
   cancelled: { label: "Cancelled", icon: XCircle, className: "text-muted-foreground" },

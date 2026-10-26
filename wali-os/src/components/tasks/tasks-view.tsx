@@ -32,7 +32,7 @@ import { TaskFormDialog, taskColumns } from "./task-form";
 
 const columnMeta: Record<TaskStatus, { icon: React.ComponentType<{ className?: string }>; tone: string }> = {
   todo: { icon: Circle, tone: "text-muted-foreground" },
-  "in-progress": { icon: CircleDashed, tone: "text-primary" },
+  "in-progress": { icon: CircleDashed, tone: "text-brand-tag" },
   review: { icon: CircleDot, tone: "text-warning" },
   done: { icon: CircleCheck, tone: "text-success" },
 };

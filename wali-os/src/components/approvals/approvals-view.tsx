@@ -133,7 +133,7 @@ function Detail({
           ) : (
             <div className="rounded-md border bg-muted/40 p-3 text-sm leading-relaxed whitespace-pre-wrap">{item.content || "—"}</div>
           )}
-          {edited && <p className="text-xs text-primary">Edited. Your version will be the one approved.</p>}
+          {edited && <p className="text-xs text-brand-tag">Edited. Your version will be the one approved.</p>}
         </div>
         {pending ? (
           <div className="space-y-2">
@@ -156,7 +156,7 @@ function Detail({
               <CheckCheck className="size-4 text-success" /> Approved. Send it to {thread.contactEmail}
             </p>
             <div className="flex flex-wrap gap-2">
-              <Button asChild size="sm" className="bg-success text-white hover:bg-success/90">
+              <Button asChild size="sm" className="bg-success text-white hover:bg-success/90 dark:text-background">
                 <a href={mailtoHref(thread.contactEmail, thread.subject, item.content)}>
                   <ExternalLink /> Open in email app
                 </a>

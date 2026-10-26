@@ -5,20 +5,20 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-lg font-heading text-sm font-bold transition-all outline-none disabled:pointer-events-none disabled:opacity-80 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 focus-visible:outline-solid focus-visible:outline-3 focus-visible:outline-offset-3 focus-visible:outline-brand-highlight aria-invalid:border-destructive aria-invalid:ring-destructive/20",
+  "inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-full font-sans text-sm font-bold transition-all outline-none disabled:pointer-events-none disabled:opacity-80 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4 focus-visible:outline-solid focus-visible:outline-2 focus-visible:outline-offset-3 focus-visible:outline-foreground aria-invalid:border-destructive aria-invalid:ring-destructive/20",
   {
     variants: {
       variant: {
-        // Glowing primary (Systems of Change); hover lifts unless disabled.
+        // The brand's one action: a gold pill (gold → gold-2) with on-gold text; hover lifts 1px with the gold glow.
         default:
-          "bg-primary text-primary-foreground shadow-glow hover:brightness-110 hover:-translate-y-px hover:[box-shadow:var(--brand-glow-hover)] disabled:translate-y-0",
+          "bg-[linear-gradient(135deg,var(--brand-action),var(--brand-emphasis))] text-primary-foreground hover:-translate-y-px hover:[box-shadow:var(--brand-glow-hover)] disabled:translate-y-0",
         destructive:
           "bg-danger text-white shadow-xs hover:brightness-110 dark:bg-danger-bg dark:text-danger",
         outline:
           "border bg-card text-foreground shadow-xs hover:bg-accent hover:text-accent-foreground",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground dark:hover:bg-accent/50",
-        link: "font-sans font-semibold text-primary underline-offset-4 hover:underline dark:text-brand-tag",
+        link: "font-sans font-semibold text-brand-tag underline-offset-4 hover:underline",
       },
       size: {
         default: "h-9 px-4 py-2 has-[>svg]:px-3",
@@ -28,10 +28,7 @@ const buttonVariants = cva(
         "icon-sm": "size-8",
       },
     },
-    // Dense contexts (small sizes): reduced glow.
-    compoundVariants: [
-      { variant: "default", size: ["sm", "icon", "icon-sm"], class: "shadow-glow-sm hover:[box-shadow:var(--brand-glow-sm)]" },
-    ],
+    compoundVariants: [],
     defaultVariants: { variant: "default", size: "default" },
   }
 );

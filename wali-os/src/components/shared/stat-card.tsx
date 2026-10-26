@@ -33,7 +33,7 @@ export function StatCard({
     <Card className={cn("gap-3 py-4", accent && "border-brand-deep-2 bg-brand-deep-2 text-white dark:border-brand-action/40 dark:bg-brand-tint")}>
       <div className="flex items-start justify-between gap-2 px-4 sm:px-5">
         <span className={cn("text-xs leading-snug font-medium sm:text-[13px]", accent ? "text-white/80" : "text-muted-foreground")}>{label}</span>
-        <span className={cn("hidden size-8 shrink-0 place-items-center rounded-lg sm:grid", accent ? "bg-white/10 text-brand-highlight" : "bg-brand-tint text-brand-action")}>
+        <span className={cn("hidden size-8 shrink-0 place-items-center rounded-lg sm:grid", accent ? "bg-white/10 text-brand-highlight" : "bg-brand-tint text-brand-tag")}>
           <Icon className="size-4" />
         </span>
       </div>

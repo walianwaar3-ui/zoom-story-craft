@@ -80,7 +80,7 @@ function copy(text: string) {
 function SendPanel({ thread, body, onSent }: { thread: EmailThread; body: string; onSent: () => void }) {
   return (
     <div className="flex flex-wrap gap-2">
-      <Button asChild className="bg-success text-white hover:bg-success/90">
+      <Button asChild className="bg-success text-white hover:bg-success/90 dark:text-background">
         <a href={mailtoHref(thread.contactEmail, thread.subject, body)}>
           <ExternalLink /> Open in email app
         </a>
@@ -107,7 +107,7 @@ function PendingReply({ item, onCancel, onRetry }: { item: OutboxItem; onCancel:
           </>
         ) : (
           <>
-            <Loader2 className="size-4 animate-spin text-primary" /> {item.status === "sending" ? "Hermes is sending it from Gmail…" : "Queued for Hermes to send from Gmail"}
+            <Loader2 className="size-4 animate-spin text-brand-tag" /> {item.status === "sending" ? "Hermes is sending it from Gmail…" : "Queued for Hermes to send from Gmail"}
           </>
         )}
       </p>
@@ -371,7 +371,7 @@ export function InboxView() {
                 />
               ) : active.status === "awaiting-approval" ? (
                 <div className="flex flex-col gap-3 rounded-lg border border-primary/30 bg-primary/5 p-4 text-sm sm:flex-row sm:items-center">
-                  <ShieldCheck className="size-5 shrink-0 text-primary" />
+                  <ShieldCheck className="size-5 shrink-0 text-brand-tag" />
                   <div className="min-w-0 flex-1">
                     <p className="font-medium">Reply is waiting for approval</p>
                     {approval && <p className="line-clamp-2 text-muted-foreground">{approval.content}</p>}
@@ -454,7 +454,7 @@ export function InboxView() {
         <aside className="hidden w-80 shrink-0 flex-col overflow-y-auto border-l bg-card scrollbar-thin 2xl:flex">
           <div className="flex flex-col items-center gap-2 border-b p-6 text-center">
             <Avatar className="size-14">
-              <AvatarFallback className="bg-primary/15 text-lg text-primary">{initials(active.contactName || active.contactEmail)}</AvatarFallback>
+              <AvatarFallback className="bg-primary/15 text-lg text-brand-tag">{initials(active.contactName || active.contactEmail)}</AvatarFallback>
             </Avatar>
             <p className="font-semibold">{active.contactName || active.contactEmail}</p>
             <p className="text-xs text-muted-foreground">{active.contactEmail}</p>

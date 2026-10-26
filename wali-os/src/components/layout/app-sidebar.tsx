@@ -44,7 +44,7 @@ function NavLink({ item, collapsed, onNavigate }: { item: NavItem; collapsed: bo
       {active && (
         <span className="absolute top-1.5 bottom-1.5 left-0 w-[3px] rounded-full bg-brand-action" aria-hidden />
       )}
-      <Icon className={cn("size-4 shrink-0", active ? "text-brand-action" : "text-muted-foreground group-hover:text-sidebar-accent-foreground")} />
+      <Icon className={cn("size-4 shrink-0", active ? "text-brand-tag" : "text-muted-foreground group-hover:text-sidebar-accent-foreground")} />
       {!collapsed && <span className="truncate">{item.title}</span>}
       {!collapsed && badge?.count ? (
         <span
@@ -114,8 +114,8 @@ function SidebarBody({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
               )}
             >
               <Avatar className="size-7">
-                <AvatarFallback className="bg-primary/15 text-[11px] text-primary">
-                  {initials(db.settings.ownerName || "Tawakkull Growth OS")}
+                <AvatarFallback className="bg-primary/15 text-[11px] text-brand-tag">
+                  {initials(db.settings.ownerName || "Tawakkul Growth OS")}
                 </AvatarFallback>
               </Avatar>
               {!collapsed && (
@@ -132,7 +132,7 @@ function SidebarBody({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
           <DropdownMenuContent side="top" align="start" className="w-56">
             <DropdownMenuLabel className="font-normal">
               <p className="text-sm font-medium">{name}</p>
-              <p className="text-xs text-muted-foreground">{db.settings.businessName || "Tawakkull Growth OS"}</p>
+              <p className="text-xs text-muted-foreground">{db.settings.businessName || "Tawakkul Growth OS"}</p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
