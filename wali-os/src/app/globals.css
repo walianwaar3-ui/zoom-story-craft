@@ -125,7 +125,7 @@
   --border: var(--brand-border);
   --input: var(--brand-border);
   --ring: var(--brand-ink);
-  --chart-1: var(--brand-action);
+  --chart-1: #9a7a12; /* bars and lines: 3:1+ on Paper cards (validated) */
   --chart-2: var(--brand-muted);
   --chart-3: var(--brand-emphasis);
   --chart-4: var(--brand-ink);
@@ -176,6 +176,7 @@
   --border: var(--brand-border);
   --input: var(--brand-border);
   --ring: var(--brand-ink);
+  --chart-1: #b08c28; /* 3:1+ on Deep green cards (validated) */
   --chart-2: var(--brand-muted);
   --chart-4: var(--brand-ink);
   --chart-5: #e8c75a;
