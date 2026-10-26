@@ -1,5 +1,6 @@
 import {
   Bot,
+  ChartColumn,
   CheckCheck,
   LayoutDashboard,
   ListTodo,
@@ -31,6 +32,7 @@ export const navMain: NavItem[] = [
     description: "Client and lead emails, replies via approval",
     badge: (db) => ({ count: db.threads.filter((t) => t.status === "needs-reply" || t.status === "ready-to-send").length, highlight: true }),
   },
+  { title: "Website", href: "/analytics", icon: ChartColumn, description: "tawakkulgrowth.com visitors, funnel and bookings" },
   { title: "Campaigns", href: "/campaigns", icon: Megaphone, description: "Acquisition performance" },
   {
     title: "Tasks",
