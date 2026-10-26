@@ -112,7 +112,7 @@ export function AdsPlannerChat() {
                           href="/approvals"
                           className="flex items-center gap-2 rounded-md border bg-background px-2.5 py-1.5 text-xs hover:bg-muted"
                         >
-                          <ShieldCheck className="size-3.5 shrink-0 text-primary" />
+                          <ShieldCheck className="size-3.5 shrink-0 text-brand-tag" />
                           <span className="truncate">
                             Waiting for your approval: <span className="font-medium">{a.title}</span>
                           </span>

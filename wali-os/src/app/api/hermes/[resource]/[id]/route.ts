@@ -24,7 +24,7 @@ export const PATCH = handler<Ctx>(async (db, req, ctx) => {
   if (name === "threads") changes.updated_at = new Date().toISOString();
 
   let q = db.from(r.table).update(changes).eq("id", id);
-  // Conditional update, so a decision made in Tawakkull Growth OS meanwhile can't be overwritten.
+  // Conditional update, so a decision made in Tawakkul Growth OS meanwhile can't be overwritten.
   if (name === "approvals") q = q.eq("status", "pending");
   const updated = check(await q.select().maybeSingle());
   if (!updated) {

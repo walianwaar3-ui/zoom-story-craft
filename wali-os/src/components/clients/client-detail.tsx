@@ -44,7 +44,7 @@ export function ClientDetail({ client, onEdit, onDelete }: { client: Client; onE
       <SheetHeader className="gap-4 border-b pr-12">
         <div className="flex items-center gap-3">
           <Avatar className="size-12">
-            <AvatarFallback className="bg-primary/15 text-base text-primary">{initials(client.name)}</AvatarFallback>
+            <AvatarFallback className="bg-primary/15 text-base text-brand-tag">{initials(client.name)}</AvatarFallback>
           </Avatar>
           <div className="min-w-0">
             <SheetTitle className="text-lg">{client.name}</SheetTitle>
@@ -103,7 +103,7 @@ export function ClientDetail({ client, onEdit, onDelete }: { client: Client; onE
 
         {client.nextAction && (
           <div className="rounded-lg border border-primary/30 bg-primary/5 p-3">
-            <p className="text-xs font-medium text-primary">Next action</p>
+            <p className="text-xs font-medium text-brand-tag">Next action</p>
             <p className="mt-1 text-sm">{client.nextAction}</p>
           </div>
         )}

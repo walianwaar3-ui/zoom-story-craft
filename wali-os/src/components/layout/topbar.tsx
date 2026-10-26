@@ -39,7 +39,7 @@ export function Topbar() {
       </Button>
 
       <div className="flex min-w-0 items-center gap-2 text-sm">
-        <span className="hidden text-muted-foreground sm:inline">Tawakkull Growth OS</span>
+        <span className="hidden text-muted-foreground sm:inline">Tawakkul Growth OS</span>
         <span className="hidden text-muted-foreground/50 sm:inline">/</span>
         <span className="truncate font-medium">{current?.title ?? "Dashboard"}</span>
       </div>

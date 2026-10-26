@@ -30,7 +30,7 @@ export interface ActivityEntry {
   client_name: string | null;
   at: string;
   detail: string;
-  /** Where it lives in Tawakkull Growth OS. */
+  /** Where it lives in Tawakkul Growth OS. */
   link: string;
 }
 

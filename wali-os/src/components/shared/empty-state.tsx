@@ -21,7 +21,7 @@ export function EmptyState({
 }) {
   return (
     <div className={cn("flex flex-col items-center justify-center gap-3 px-6 py-14 text-center", className)}>
-      <span className="grid size-10 place-items-center rounded-xl bg-brand-tint text-brand-action">
+      <span className="grid size-10 place-items-center rounded-xl bg-brand-tint text-brand-tag">
         <Icon className="size-5" />
       </span>
       <div className="space-y-1">

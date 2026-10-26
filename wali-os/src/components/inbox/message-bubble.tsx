@@ -22,7 +22,7 @@ export function MessageBubble({ message, contactName, contactEmail, ownerName }:
   return (
     <article className={cn("flex gap-3", out ? "flex-row-reverse pl-6 sm:pl-16" : "pr-6 sm:pr-16")}>
       <Avatar className="mt-1 size-8 shrink-0">
-        <AvatarFallback className={cn("text-xs", out ? "bg-primary text-primary-foreground" : "bg-primary/15 text-primary")}>{initials(name)}</AvatarFallback>
+        <AvatarFallback className={cn("text-xs", out ? "bg-primary text-primary-foreground" : "bg-primary/15 text-brand-tag")}>{initials(name)}</AvatarFallback>
       </Avatar>
       <div className={cn("min-w-0 flex-1 rounded-xl border p-4 shadow-xs", out ? "border-primary/25 bg-primary/5" : "bg-card")}>
         <header className="mb-2 flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">

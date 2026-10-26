@@ -1,6 +1,6 @@
 /**
  * Gmail sync through Hermes. Hermes holds the Gmail credentials and runs the
- * mailbox; Tawakkull Growth OS is the record. Server only.
+ * mailbox; Tawakkul Growth OS is the record. Server only.
  *
  *   in:  POST /api/hermes/gmail/inbox   Hermes pushes Gmail messages (full bodies, Gmail ids)
  *   out: GET  /api/hermes/gmail/send    replies waiting in the outbox
@@ -96,7 +96,7 @@ export async function ownEmails(db: SupabaseClient) {
 type Result = { gmail_thread_id: string; thread_id: string; client_id: string | null; created: boolean; new_messages: number; upgraded_snippets: number };
 
 /**
- * Save Gmail messages. Idempotent: the same Gmail thread is one Tawakkull Growth OS thread,
+ * Save Gmail messages. Idempotent: the same Gmail thread is one Tawakkul Growth OS thread,
  * the same Gmail message is stored once (a stored snippet is upgraded to the
  * full body). Threads Hermes logged before Gmail ids are adopted, and their
  * duplicates closed.

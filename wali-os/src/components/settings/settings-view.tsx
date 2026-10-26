@@ -168,7 +168,7 @@ function TeamTab() {
         <div className="divide-y rounded-lg border">
           <div className="flex items-center gap-3 px-3 py-3">
             <Avatar className="size-9">
-              <AvatarFallback className="bg-primary/15 text-primary">{initials(db.settings.ownerName || "Me")}</AvatarFallback>
+              <AvatarFallback className="bg-primary/15 text-brand-tag">{initials(db.settings.ownerName || "Me")}</AvatarFallback>
             </Avatar>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium">{db.settings.ownerName || "You"}</p>
@@ -269,7 +269,7 @@ function DataTab() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `tawakkull-growth-os-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `tawakkul-growth-os-backup-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
     toast.success("Backup downloaded");
@@ -282,7 +282,7 @@ function DataTab() {
       replaceAll(normalizeDb(parsed));
       toast.success("Backup restored");
     } catch {
-      toast.error("That file isn't a Tawakkull Growth OS backup");
+      toast.error("That file isn't a Tawakkul Growth OS backup");
     }
   };
 
@@ -350,7 +350,7 @@ function DataTab() {
       <ConfirmDialog
         open={resetOpen}
         onOpenChange={setResetOpen}
-        title={cloud ? "Erase the entire cloud workspace?" : "Erase all Tawakkull Growth OS data in this browser?"}
+        title={cloud ? "Erase the entire cloud workspace?" : "Erase all Tawakkul Growth OS data in this browser?"}
         description="This can't be undone unless you have a backup file."
         confirmLabel="Erase everything"
         onConfirm={() => {
