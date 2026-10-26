@@ -49,7 +49,7 @@ export function AgentChatSheet({ agent, open, onOpenChange }: { agent?: Agent; o
     setBusy(true);
     try {
       const token = (await getSupabase()?.auth.getSession())?.data.session?.access_token;
-      if (!token) throw new Error("Sign in to Wali OS cloud mode to chat with agents.");
+      if (!token) throw new Error("Sign in to Tawakkull Growth OS cloud mode to chat with agents.");
       const res = await fetch(`/api/agents/${encodeURIComponent(agent.id)}/chat`, {
         method: "POST",
         headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -81,7 +81,7 @@ export function AgentChatSheet({ agent, open, onOpenChange }: { agent?: Agent; o
             <div className="flex-1 space-y-3 overflow-y-auto p-5" aria-live="polite">
               {messages.length === 0 && (
                 <p className="rounded-md bg-muted/50 p-3 text-sm text-muted-foreground">
-                  {agent.name} sees your live Wali OS data (clients, tasks, approvals, emails, campaigns). Ask for a status, a plan or a draft. It advises
+                  {agent.name} sees your live Tawakkull Growth OS data (clients, tasks, approvals, emails, campaigns). Ask for a status, a plan or a draft. It advises
                   and drafts here; actions still go through Approvals.
                 </p>
               )}

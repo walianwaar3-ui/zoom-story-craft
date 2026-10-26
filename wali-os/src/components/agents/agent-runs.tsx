@@ -89,7 +89,7 @@ export function useAgentRuns(agents: Agent[]) {
 
   const queue = React.useCallback(async (agent: Agent, instruction: string) => {
     const token = (await getSupabase()?.auth.getSession())?.data.session?.access_token;
-    if (!token) throw new Error("Sign in to Wali OS cloud mode to run agents.");
+    if (!token) throw new Error("Sign in to Tawakkull Growth OS cloud mode to run agents.");
     const res = await fetch(`/api/agents/${encodeURIComponent(agent.id)}/run`, {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },

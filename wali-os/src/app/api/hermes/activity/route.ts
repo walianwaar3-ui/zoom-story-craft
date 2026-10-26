@@ -4,7 +4,7 @@ import { ApiError, check, handler, json } from "@/lib/hermes/server";
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
- * Two views of what's happening in Wali OS:
+ * Two views of what's happening in Tawakkull Growth OS:
  *
  * GET /api/hermes/activity?days=1   (or ?from=<ISO>&to=<ISO>)
  *   The daily feed: one merged timeline of emails, tasks created and done,
@@ -13,11 +13,11 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  *   detail, link}. `days` (1–30) is a rolling window back from now.
  *
  * GET /api/hermes/activity?since=<id>&limit=100
- *   Every raw change to Wali OS data, oldest first after `since`. Poll with the
+ *   Every raw change to Tawakkull Growth OS data, oldest first after `since`. Poll with the
  *   last `id` you saw to follow what's happening. `actor` is "hermes" for your
  *   own writes, otherwise the signed-in user's email.
  *
- * Auth: the Hermes key, or a signed-in Wali OS user (the Dashboard feed).
+ * Auth: the Hermes key, or a signed-in Tawakkull Growth OS user (the Dashboard feed).
  */
 export const GET = handler(
   async (db, req) => {

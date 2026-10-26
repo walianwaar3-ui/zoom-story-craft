@@ -269,7 +269,7 @@ function DataTab() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `wali-os-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `tawakkull-growth-os-backup-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(url);
     toast.success("Backup downloaded");
@@ -282,7 +282,7 @@ function DataTab() {
       replaceAll(normalizeDb(parsed));
       toast.success("Backup restored");
     } catch {
-      toast.error("That file isn't a Wali OS backup");
+      toast.error("That file isn't a Tawakkull Growth OS backup");
     }
   };
 
@@ -350,7 +350,7 @@ function DataTab() {
       <ConfirmDialog
         open={resetOpen}
         onOpenChange={setResetOpen}
-        title={cloud ? "Erase the entire cloud workspace?" : "Erase all Wali OS data in this browser?"}
+        title={cloud ? "Erase the entire cloud workspace?" : "Erase all Tawakkull Growth OS data in this browser?"}
         description="This can't be undone unless you have a backup file."
         confirmLabel="Erase everything"
         onConfirm={() => {

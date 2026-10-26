@@ -44,7 +44,7 @@ export const RESOURCES: Record<string, Resource> = {
   campaigns: { table: "campaigns", create: CAMPAIGN_COLS, update: CAMPAIGN_COLS, filters: ["status", "channel", "market"], order: "created_at" },
   approvals: {
     table: "approvals",
-    // Always created as "pending"; only you approve or reject (in Wali OS).
+    // Always created as "pending"; only you approve or reject (in Tawakkull Growth OS).
     create: ["type", "title", "summary", "content", "requested_by", "client_id", "thread_id", "value", "risk"],
     update: ["title", "summary", "content", "value", "risk"],
     filters: ["status", "type", "client_id", "thread_id", "requested_by"],

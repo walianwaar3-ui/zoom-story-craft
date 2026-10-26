@@ -23,7 +23,7 @@ Numbered, most important first, each with the expected effect. Budget or creativ
 /**
  * GET /api/hermes/meta/report?date_preset=last_7d
  * AI-written Markdown report on the Meta account, grounded in /meta/kpis data.
- * Auth: the Hermes key, or a signed-in Wali OS user.
+ * Auth: the Hermes key, or a signed-in Tawakkull Growth OS user.
  */
 export const GET = handler(
   async (_db, req) => {
@@ -37,7 +37,7 @@ export const GET = handler(
         "Content-Type": "application/json",
         Authorization: `Bearer ${key}`,
         "HTTP-Referer": "https://wali-os.vercel.app",
-        "X-Title": "Wali OS",
+        "X-Title": "Tawakkull Growth OS",
       },
       body: JSON.stringify({
         model: MODEL,

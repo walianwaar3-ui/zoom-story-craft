@@ -1,12 +1,12 @@
-# Connecting Hermes to Wali OS
+# Connecting Hermes to Tawakkull Growth OS
 
-Wali OS is the face; Supabase is the shared memory; Hermes is the operator.
+Tawakkull Growth OS is the face; Supabase is the shared memory; Hermes is the operator.
 
 ```
-Hermes (your VPS) ──HTTPS + HERMES_API_KEY──▶ Wali OS API (Vercel) ──▶ Supabase ◀── Wali OS app (you, signed in)
+Hermes (your VPS) ──HTTPS + HERMES_API_KEY──▶ Tawakkull Growth OS API (Vercel) ──▶ Supabase ◀── Tawakkull Growth OS app (you, signed in)
 ```
 
-Hermes calls the Wali OS API. Nothing on your VPS is exposed: Hermes only makes outgoing requests.
+Hermes calls the Tawakkull Growth OS API. Nothing on your VPS is exposed: Hermes only makes outgoing requests.
 Everything Hermes writes appears in your open app within a second, and every change (yours or
 Hermes's) lands in the activity feed.
 
@@ -80,7 +80,7 @@ and `campaign_created`. Use it for the end-of-day summary instead of re-reading 
 | `GET /api/hermes/activity?days=1` | The daily feed: emails, tasks, meetings, client updates, approvals and ads in one timeline, newest first. |
 | `GET /api/hermes/meta/kpis?date_preset=last_7d` | Meta ad account KPIs (spend, impressions, reach, clicks, CTR, CPC, leads, cost per lead) and active campaigns with their KPIs. Presets: today, yesterday, last_7d, last_14d, last_30d, this_month, last_month. Cached 5 min; `&fresh=1` bypasses. |
 | `GET /api/hermes/meta/report?date_preset=last_7d` | AI-written Markdown report on that data (`report`). |
-| `POST /api/hermes/meta/agent-chat` `{ "message", "history"? }` | Chat with the Ads Planner agent. Tools: read Meta data and ad creatives (`get_ad_details`: copy, CTA, link, image), reuse the winning ad's real image for new concepts (`reuse_ad_image`, returns `image_hash`), generate AI images (GPT Image 2 via Fal `openai/gpt-image-2`, quality high; override with `FAL_IMAGE_MODEL` / `FAL_IMAGE_QUALITY`; built on the winning ad's photo as a visual reference via `openai/gpt-image-2/edit` `image_urls`: `reference_ad_id`, else the ad with the lowest cost per lead over the last 14 days) only when Wali's message explicitly asks for them (enforced server-side; every image must show real people as the main subject: empty desks, offices and objects-only scenes are rejected server-side, see `src/lib/hermes/ad-image-rules.ts`), `create_ad` (copy is checked server-side first: visceral hook of max 14 words that isn't a question, no em dashes, emoji, hashtags or AI buzzwords, headline max 40 characters, body 40 to 120 words, plus a required `tension` line; failing copy goes back to the agent to rewrite) (when Wali asks for an ad, the agent must deliver ONE finished ad per request, enforced server-side: it reuses the winner's image and ad set and files a **"Launch ad: …" approval** whose content ends with a JSON spec: `source.adset_id`, `source.page_id` (always a real Facebook Page id: read from the winner's creative via `object_story_spec.page_id`, `actor_id` or its post id, else `META_PAGE_ID`, else the account's first promotable Page; use it exactly, never `0`), `source.instagram_user_id`, `image.image_hash`, `copy.*` (when `copy.lead_form_id` is set it is a lead ad: the CTA is `{type, value: {lead_gen_form_id}}`; Wali OS sets it from `META_LEAD_FORM_ID` only for ad sets that collect leads with Instant Forms; `source.page_id` comes from `META_PAGE_ID` first), `status` PAUSED/ACTIVE; after Wali approves, create the ad creative with `object_story_spec.link_data` from that spec, then the ad in `source.adset_id` with `status`, then call `/executed`), and `propose_change` for every other change; in the Wali OS chat a new ad shows as a feed-style preview card with Approve / Reject, and `approvals[].ad` in the response carries that preview, which creates a **Campaign approval** (requested_by = the agent). It never changes the ad account; after Wali approves, you carry the change out and call `/executed`. Returns `{reply, images, approvals, tools_used}`. |
+| `POST /api/hermes/meta/agent-chat` `{ "message", "history"? }` | Chat with the Ads Planner agent. Tools: read Meta data and ad creatives (`get_ad_details`: copy, CTA, link, image), reuse the winning ad's real image for new concepts (`reuse_ad_image`, returns `image_hash`), generate AI images (GPT Image 2 via Fal `openai/gpt-image-2`, quality high; override with `FAL_IMAGE_MODEL` / `FAL_IMAGE_QUALITY`; built on the winning ad's photo as a visual reference via `openai/gpt-image-2/edit` `image_urls`: `reference_ad_id`, else the ad with the lowest cost per lead over the last 14 days) only when Wali's message explicitly asks for them (enforced server-side; every image must show real people as the main subject: empty desks, offices and objects-only scenes are rejected server-side, see `src/lib/hermes/ad-image-rules.ts`), `create_ad` (copy is checked server-side first: visceral hook of max 14 words that isn't a question, no em dashes, emoji, hashtags or AI buzzwords, headline max 40 characters, body 40 to 120 words, plus a required `tension` line; failing copy goes back to the agent to rewrite) (when Wali asks for an ad, the agent must deliver ONE finished ad per request, enforced server-side: it reuses the winner's image and ad set and files a **"Launch ad: …" approval** whose content ends with a JSON spec: `source.adset_id`, `source.page_id` (always a real Facebook Page id: read from the winner's creative via `object_story_spec.page_id`, `actor_id` or its post id, else `META_PAGE_ID`, else the account's first promotable Page; use it exactly, never `0`), `source.instagram_user_id`, `image.image_hash`, `copy.*` (when `copy.lead_form_id` is set it is a lead ad: the CTA is `{type, value: {lead_gen_form_id}}`; Tawakkull Growth OS sets it from `META_LEAD_FORM_ID` only for ad sets that collect leads with Instant Forms; `source.page_id` comes from `META_PAGE_ID` first), `status` PAUSED/ACTIVE; after Wali approves, create the ad creative with `object_story_spec.link_data` from that spec, then the ad in `source.adset_id` with `status`, then call `/executed`), and `propose_change` for every other change; in the Tawakkull Growth OS chat a new ad shows as a feed-style preview card with Approve / Reject, and `approvals[].ad` in the response carries that preview, which creates a **Campaign approval** (requested_by = the agent). It never changes the ad account; after Wali approves, you carry the change out and call `/executed`. Returns `{reply, images, approvals, tools_used}`. |
 | `GET /api/hermes/agent-stats` | Per agent: tasks (todo / in_progress incl. review / done), approvals pending and last 24h, `last_active`. Tasks count when `assignee` names the agent, approvals when `requested_by` does (whole word, any case). |
 | `GET /api/hermes/:resource?<filter>=<value>&limit=100` | List, newest first. |
 | `GET /api/hermes/:resource/:id` | One record. Threads include `messages`. |
@@ -116,23 +116,23 @@ Dates are `YYYY-MM-DD`, timestamps ISO 8601, ids UUIDs.
 Responses are `{ "data": … }`; errors are `{ "error": "…" }` with `400` (bad field or value), `401`
 (key), `403` (read only), `404`, `409` (wrong state, e.g. approval already decided).
 
-### Agents: you run them, Wali OS shows them
+### Agents: you run them, Tawakkull Growth OS shows them
 
-Agents live in Wali OS (`agents` table) and show on the **Agents** page with their photo. You own their
+Agents live in Tawakkull Growth OS (`agents` table) and show on the **Agents** page with their photo. You own their
 definitions: create them with `POST /api/hermes/agents`, keep `instructions` current with `PATCH`, and
 upload a photo with `/avatar`. Wali controls whether each one is **active** and whether its work
 **requires approval**. Check `context.agents` before acting as an agent: skip paused ones.
 
 Chat: `GET /api/agents`, `GET /api/agents/:agent` (id or name, e.g. `coo`) and
 `POST /api/agents/:agent/chat` `{ "messages": [{ "role": "user", "content": "…" }] }` answer as that agent
-via OpenRouter (`OPENROUTER_API_KEY`, model `AGENT_MODEL`), using its `instructions` from Wali OS plus the
+via OpenRouter (`OPENROUTER_API_KEY`, model `AGENT_MODEL`), using its `instructions` from Tawakkull Growth OS plus the
 live context. Same `Authorization: Bearer $WALI_OS_API_KEY` (or a signed-in user's Supabase access
 token). Only `user`/`assistant` messages are accepted. Wali chats with them from the Agents page.
 
 ### Runs: Wali presses Run, you do the work
 
 When Wali presses **Run** on an agent card (optionally with an instruction), a row is queued in
-`agent_runs`. Nothing is executed by Wali OS: **you** do the work, with your real tools, as that agent.
+`agent_runs`. Nothing is executed by Tawakkull Growth OS: **you** do the work, with your real tools, as that agent.
 
 1. Poll `GET /api/hermes/runs?status=queued` every 30–60 s (also listed in `context.agent_runs_open`).
    Each run includes `agent` (name, role, instructions, scopes, status, requires_approval).
@@ -157,13 +157,13 @@ Every client has a file: what they bought, what was said in meetings, and the la
 | `GET /api/hermes/clients/:id/context` | **The client file for AI work**: the client, `value` (monthly, `lifetime_paid`, `open`, `proposed`, `engagements`, `returning`), services, the last 5 meetings (summaries, decisions, action items), the latest meeting's transcript (trimmed to 12,000 characters; `?transcript_chars=` and `?meetings=` to change), the last 5 email threads with their latest 8 messages, open tasks and pending approvals. Read this before drafting anything for a client. |
 | `GET/POST/PATCH /api/hermes/services` | A client's projects and retainers: `client_id`, `name`, `kind` (`one-time` or `monthly`), `status` (`proposed`, `in-progress`, `delivered`, `paid`, `cancelled`), `amount`, `start_date`, `end_date`, `paid_date`, `notes`. Log one-time projects here so returning clients keep one record and a lifetime value. |
 
-Email threads link to the client with the same email address automatically, in either order (thread first or client first). `GET /api/hermes/context` now includes each client's `lifetime_paid`, `engagements`, `open_services` and `last_meeting_at`, plus `recent_meetings`. Agent chats in Wali OS attach the full client file whenever a client is named.
+Email threads link to the client with the same email address automatically, in either order (thread first or client first). `GET /api/hermes/context` now includes each client's `lifetime_paid`, `engagements`, `open_services` and `last_meeting_at`, plus `recent_meetings`. Agent chats in Tawakkull Growth OS attach the full client file whenever a client is named.
 
 **Meeting analyser (Fathom, every 30 minutes):** for each new meeting, `POST /api/hermes/meetings` with `external_id` = the Fathom recording id, the transcript and your extracted summary, decisions, action items and risks, plus the attendee emails. Then create tasks and approvals as before, with the same `client_id` the meeting response returned.
 
 ### Gmail: inbox in, replies out
 
-Hermes runs Gmail; Wali OS is the record. Your Gmail credentials never leave the VPS.
+Hermes runs Gmail; Tawakkull Growth OS is the record. Your Gmail credentials never leave the VPS.
 
 **Inbox.** `POST /api/hermes/gmail/inbox` with up to 100 messages per call:
 
@@ -180,7 +180,7 @@ Hermes runs Gmail; Wali OS is the record. Your Gmail credentials never leave the
 }] }
 ```
 
-- Safe to re-send: one Gmail thread is one Wali OS thread, and one Gmail message is stored once. A stored snippet is upgraded to the full body.
+- Safe to re-send: one Gmail thread is one Tawakkull Growth OS thread, and one Gmail message is stored once. A stored snippet is upgraded to the full body.
 - Threads logged before Gmail ids existed are adopted by contact and subject, and their duplicates are closed.
 - The contact is linked to the client with the same email address automatically.
 - The response lists `thread_id` and `client_id` for each Gmail thread.
@@ -189,7 +189,7 @@ Hermes runs Gmail; Wali OS is the record. Your Gmail credentials never leave the
 
 `GET /api/hermes/gmail/inbox?client_id=…` returns threads with full messages.
 
-**Sending.** Replies Wali sends from Wali OS (or approves) wait in the outbox.
+**Sending.** Replies Wali sends from Tawakkull Growth OS (or approves) wait in the outbox.
 
 1. `GET /api/hermes/gmail/send`: queued replies, each with `to_email`, `subject`, `body`, `gmail_thread_id` and `in_reply_to_gmail_message_id`. Use those as `threadId` and `In-Reply-To`/`References`, so the reply lands in the same Gmail conversation.
 2. `POST /api/hermes/gmail/send/:id/claim` **before** sending. Only one caller wins; a `409` means another loop has it, so skip it. A claim older than 10 minutes can be retaken.
@@ -201,9 +201,9 @@ Hermes runs Gmail; Wali OS is the record. Your Gmail credentials never leave the
 ## 4. What the API won't let Hermes do
 
 - Delete anything.
-- Approve or reject an approval, or edit one that's already decided. Only the human does that, in Wali OS.
+- Approve or reject an approval, or edit one that's already decided. Only the human does that, in Tawakkull Growth OS.
 - Mark an email reply as ready to send, or log a sent reply that wasn't approved.
-- Switch an agent on/off or turn off its "requires approval" guardrail (Wali does that in Wali OS).
+- Switch an agent on/off or turn off its "requires approval" guardrail (Wali does that in Tawakkull Growth OS).
 - Change the team or workspace settings.
 
 ## 5. The rules Hermes must follow
@@ -253,7 +253,7 @@ curl -s "${H[@]}" -X PATCH "$WALI_OS_URL/api/hermes/clients/<client id>" \
   -d '{"health":"watch","next_action":"Call about missed payment"}'
 ```
 
-If Hermes can't send email itself, skip `/sent`: the thread shows **Approved · send** in Wali OS and
+If Hermes can't send email itself, skip `/sent`: the thread shows **Approved · send** in Tawakkull Growth OS and
 the human sends it with one click.
 
 ## 7. Database tables (for reference)

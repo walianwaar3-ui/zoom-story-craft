@@ -34,7 +34,7 @@ export function authorized(req: Request): boolean {
 }
 
 /**
- * True for Hermes (API key) or a signed-in Wali OS user (their Supabase access
+ * True for Hermes (API key) or a signed-in Tawakkull Growth OS user (their Supabase access
  * token as the bearer). Use for routes the app UI and Hermes both call.
  */
 export async function hermesOrUser(req: Request): Promise<boolean> {
@@ -59,7 +59,7 @@ export const json = (data: unknown, status = 200) =>
 
 /**
  * Wraps a handler with the API key check, a configured database and uniform errors.
- * `allowUser` also admits a signed-in Wali OS user (for read-only routes the app UI calls).
+ * `allowUser` also admits a signed-in Tawakkull Growth OS user (for read-only routes the app UI calls).
  */
 export function handler<C>(fn: (db: SupabaseClient, req: Request, ctx: C) => Promise<Response>, opts: { allowUser?: boolean } = {}) {
   return async (req: Request, ctx: C) => {

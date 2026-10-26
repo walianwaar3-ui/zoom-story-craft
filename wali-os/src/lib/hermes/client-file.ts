@@ -75,7 +75,7 @@ export async function saveMeeting(db: SupabaseClient, body: Row) {
   return {
     ...saved,
     linked: Boolean(clientId),
-    note: clientId ? undefined : "Saved but not linked to a client: send client_id or client_email, or add the client's email in Wali OS. Link it later with PATCH /api/hermes/meetings/:id {client_id}.",
+    note: clientId ? undefined : "Saved but not linked to a client: send client_id or client_email, or add the client's email in Tawakkull Growth OS. Link it later with PATCH /api/hermes/meetings/:id {client_id}.",
   };
 }
 

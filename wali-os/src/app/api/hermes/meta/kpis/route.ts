@@ -5,7 +5,7 @@ import { datePreset, metaSnapshot } from "@/lib/hermes/meta";
  * GET /api/hermes/meta/kpis?date_preset=last_7d[&fresh=1]
  * Meta ad account KPIs (spend, impressions, reach, clicks, CTR, CPC, leads, cost per
  * lead) plus active campaigns with their own KPIs. Cached for 5 minutes.
- * Auth: the Hermes key, or a signed-in Wali OS user (Campaigns page).
+ * Auth: the Hermes key, or a signed-in Tawakkull Growth OS user (Campaigns page).
  */
 export const GET = handler(
   async (_db, req) => {
