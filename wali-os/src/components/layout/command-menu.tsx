@@ -89,7 +89,7 @@ export function CommandMenu({ open, onOpenChange }: { open: boolean; onOpenChang
           className="fixed top-[15vh] left-1/2 z-50 w-[calc(100%-2rem)] max-w-xl -translate-x-1/2 overflow-hidden rounded-xl border bg-popover text-popover-foreground shadow-2xl data-[state=open]:animate-in data-[state=open]:fade-in-0 data-[state=open]:zoom-in-95"
           onKeyDown={onKeyDown}
         >
-          <DialogPrimitive.Title className="sr-only">Search Wali OS</DialogPrimitive.Title>
+          <DialogPrimitive.Title className="sr-only">Search Tawakkull Growth OS</DialogPrimitive.Title>
           <DialogPrimitive.Description className="sr-only">Jump to a page, client or email</DialogPrimitive.Description>
           <div className="flex items-center gap-2 border-b px-4">
             <Search className="size-4 text-muted-foreground" />

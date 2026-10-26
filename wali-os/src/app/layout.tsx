@@ -12,7 +12,7 @@ const inter = Inter({ variable: "--font-inter", subsets: ["latin"], weight: ["40
 const interTight = Inter_Tight({ variable: "--font-inter-tight", subsets: ["latin"], weight: ["700", "800", "900"] });
 
 export const metadata: Metadata = {
-  title: { default: "Wali OS", template: "%s · Wali OS" },
+  title: { default: "Tawakkull Growth OS", template: "%s · Tawakkull Growth OS" },
   description: "Internal operating system for a global growth consulting business.",
   robots: { index: false, follow: false },
 };

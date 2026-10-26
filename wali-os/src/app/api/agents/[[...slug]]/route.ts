@@ -1,16 +1,16 @@
 /**
- * Wali OS — Agent chat (OpenRouter backend).
+ * Tawakkull Growth OS — Agent chat (OpenRouter backend).
  * Route: /api/agents/[[...slug]]
  *
- *   GET  /api/agents               list agents (from Wali OS)
+ *   GET  /api/agents               list agents (from Tawakkull Growth OS)
  *   GET  /api/agents/:agent        one agent (id, or name such as "coo")
  *   POST /api/agents/:agent/chat   {messages: [{role: "user"|"assistant", content}]} → {reply}
  *   POST /api/agents/:agent/run    {instruction?} → queues a run; Hermes picks it up, does
  *                                  the work with its real tools and reports back (agent_runs)
  *
  * Agents live in the `agents` table: Hermes creates and edits them through
- * /api/hermes/agents, you switch them on/off in Wali OS. Every call requires the
- * Hermes API key or a signed-in Wali OS user's Supabase access token as
+ * /api/hermes/agents, you switch them on/off in Tawakkull Growth OS. Every call requires the
+ * Hermes API key or a signed-in Tawakkull Growth OS user's Supabase access token as
  * `Authorization: Bearer …`, so the OpenRouter key can't be used by anyone who
  * finds the URL.
  */
@@ -87,7 +87,7 @@ function systemPrompt(agent: AgentRow, context: unknown, files: unknown[] = []) 
   return [
     agent.instructions || `You are ${agent.name}. ${agent.role}.`,
     "",
-    `You are "${agent.name}" inside Wali OS, the operating system of Wali's consulting business.`,
+    `You are "${agent.name}" inside Tawakkull Growth OS, the operating system of Wali's consulting business.`,
     `Your role: ${agent.role || "not set"}. You work on: ${agent.scopes.join(", ") || "not set"}.`,
     "In this chat you advise and draft; you cannot change data or contact anyone yourself.",
     agent.requires_approval
@@ -95,7 +95,7 @@ function systemPrompt(agent: AgentRow, context: unknown, files: unknown[] = []) 
       : "",
     "Stay within your role. Base answers on the live data below; say so when something isn't in it.",
     "",
-    `Live Wali OS data (${new Date().toISOString()}):`,
+    `Live Tawakkull Growth OS data (${new Date().toISOString()}):`,
     live,
     ...(fileText.length
       ? ["", "Client files for the clients in this conversation (services, meetings with the latest transcript, recent emails). Use them; cite the meeting or email you rely on.", ...fileText]
@@ -144,7 +144,7 @@ export async function POST(request: Request) {
   try {
     const agent = await findAgent(g.db, key);
     if (!agent) return err("Agent not found", 404);
-    if (agent.status !== "active") return err(`${agent.name} is paused. Switch it on in Wali OS → Agents.`, 409);
+    if (agent.status !== "active") return err(`${agent.name} is paused. Switch it on in Tawakkull Growth OS → Agents.`, 409);
 
     // Clients named in the recent conversation get their full file attached.
     const recentText = history.slice(-4).map((m) => m.content).join("\n");
@@ -157,7 +157,7 @@ export async function POST(request: Request) {
         "Content-Type": "application/json",
         Authorization: `Bearer ${key_}`,
         "HTTP-Referer": "https://wali-os.vercel.app",
-        "X-Title": "Wali OS",
+        "X-Title": "Tawakkull Growth OS",
       },
       body: JSON.stringify({ model: MODEL, messages, stream: false }),
     });
@@ -185,7 +185,7 @@ async function queueRun(request: Request, db: SupabaseClient, key: string) {
   try {
     const agent = await findAgent(db, key);
     if (!agent) return err("Agent not found", 404);
-    if (agent.status !== "active") return err(`${agent.name} is paused. Switch it on in Wali OS → Agents.`, 409);
+    if (agent.status !== "active") return err(`${agent.name} is paused. Switch it on in Tawakkull Growth OS → Agents.`, 409);
     const { data, error } = await db
       .from("agent_runs")
       .insert({ agent_id: agent.id, instruction: instruction || "Do your next due task.", requested_by: requestedBy || "Wali" })

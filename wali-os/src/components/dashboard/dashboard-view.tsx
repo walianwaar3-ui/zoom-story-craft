@@ -98,7 +98,7 @@ export function DashboardView() {
       {!setupDone && (
         <Card className="border-primary/30">
           <CardHeader>
-            <CardTitle>Set up Wali OS</CardTitle>
+            <CardTitle>Set up Tawakkull Growth OS</CardTitle>
             <CardDescription>
               {steps.filter((s) => s.done).length} of {steps.length} done. Your data stays in this browser, so back it up from Settings.
             </CardDescription>

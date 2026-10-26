@@ -11,7 +11,7 @@
  * (`review` is also given on its own). `last_active` is the latest change to
  * any of its tasks or approvals, or its newest approval request.
  *
- * Auth: the Hermes key, or a signed-in Wali OS user (the Agents page).
+ * Auth: the Hermes key, or a signed-in Tawakkull Growth OS user (the Agents page).
  */
 import { check, handler, json } from "@/lib/hermes/server";
 

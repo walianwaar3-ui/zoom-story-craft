@@ -115,7 +115,7 @@ function SidebarBody({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
             >
               <Avatar className="size-7">
                 <AvatarFallback className="bg-primary/15 text-[11px] text-primary">
-                  {initials(db.settings.ownerName || "Wali OS")}
+                  {initials(db.settings.ownerName || "Tawakkull Growth OS")}
                 </AvatarFallback>
               </Avatar>
               {!collapsed && (
@@ -132,7 +132,7 @@ function SidebarBody({ collapsed, onNavigate }: { collapsed: boolean; onNavigate
           <DropdownMenuContent side="top" align="start" className="w-56">
             <DropdownMenuLabel className="font-normal">
               <p className="text-sm font-medium">{name}</p>
-              <p className="text-xs text-muted-foreground">{db.settings.businessName || "Wali OS"}</p>
+              <p className="text-xs text-muted-foreground">{db.settings.businessName || "Tawakkull Growth OS"}</p>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>

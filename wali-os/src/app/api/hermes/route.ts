@@ -4,7 +4,7 @@ import { RESOURCES } from "@/lib/hermes/resources";
 /** GET /api/hermes — what this API offers. Full guide: wali-os/docs/HERMES.md */
 export const GET = handler(async () =>
   json({
-    name: "Wali OS API for Hermes",
+    name: "Tawakkull Growth OS API for Hermes",
     auth: "Authorization: Bearer <HERMES_API_KEY>",
     endpoints: {
       "GET /api/hermes/context": "Snapshot of what's going on now. Start here.",
@@ -28,14 +28,14 @@ export const GET = handler(async () =>
       "POST /api/hermes/runs/:id/finish {result}": "Report what you actually did.",
       "POST /api/hermes/runs/:id/fail {error}": "Report why it couldn't be done.",
       "POST /api/hermes/agents/:id/avatar {image_base64, content_type}": "Upload an agent's photo (max 2 MB).",
-      "POST /api/agents/:agent/chat {messages}": "Chat as an agent (uses its Wali OS instructions + live context).",
+      "POST /api/agents/:agent/chat {messages}": "Chat as an agent (uses its Tawakkull Growth OS instructions + live context).",
     },
     resources: Object.fromEntries(
       Object.entries(RESOURCES).map(([k, r]) => [k, { create: r.create ?? "read only", update: r.update ?? "read only", filters: r.filters }])
     ),
     rules: [
-      "Nothing is deleted through this API.",
-      "Only you approve or reject approvals, in Wali OS.",
+      "Only clients can be deleted (DELETE /api/hermes/clients/:id); nothing else is deleted through this API.",
+      "Only you approve or reject approvals, in Tawakkull Growth OS.",
       "Act only on approvals in approvals_to_carry_out, then call /executed.",
       "Only Wali switches agents on/off or changes 'requires approval'; skip paused agents.",
       "Runs: claim with /start, do the real work, then /finish with what you actually did (or /fail). Never report work you didn't do.",
