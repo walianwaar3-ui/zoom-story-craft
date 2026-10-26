@@ -659,15 +659,15 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
 <div class="strip" role="note">
   <div class="wrap">
     <span class="dot-live" aria-hidden="true"></span>
-    <span><b>Today:</b> Grand Ballroom D, Nishat Hotel · Doors 10:00 AM · <a href="/info" style="color:var(--gold-2);font-weight:700">Venue &amp; agenda &rarr;</a></span>
-    <span class="cd-label">Starts in <span class="cd-inline" data-cd-inline>…</span></span>
+    <span><b>This event has ended.</b> JazakAllah khair, Lahore · <a href="/events#gallery" style="color:var(--gold-2);font-weight:700">See the photos &rarr;</a> · <a href="/#waitlist" style="color:var(--gold-2);font-weight:700">Join the waiting list</a></span>
+    <span class="cd-label" hidden><span class="cd-inline" data-cd-inline>…</span></span>
   </div>
 </div>
 
 <!-- NAV -->
 <header class="nav">
   <div class="wrap">
-    <a href="#top" class="brand" aria-label="World Wealth Organization, Infinite Rizq">
+    <a href="/" class="brand" aria-label="World Wealth Organization home">
       <span class="brand-mark">WWO</span>
       <span class="brand-txt">World Wealth Organization<span>Infinite Rizq · Lahore</span></span>
     </a>
@@ -1657,21 +1657,6 @@ track('lp_view', { page: 'infinite_rizq' });
 </script>
 <script src="/proof.js" defer></script>
 
-<!-- Event-day sticky note: points everyone to /info and /my-seat -->
-<aside class="snote" id="snote" aria-label="Event day information">
-  <div class="sn-k">📌 Event day · Sat 17 Oct</div>
-  <div class="sn-t">Coming today?</div>
-  <p class="sn-d"><b>Grand Ballroom D, Nishat Hotel</b>, Johar Town, Lahore. Doors <b>10:00 AM</b>, please arrive by 10:15.</p>
-  <div class="sn-b"><a class="sn-p" href="/info" data-track="snote_info">Venue &amp; agenda</a><a class="sn-g" href="/my-seat" data-track="snote_ticket">Find my ticket</a></div>
-  <button class="sn-x" type="button" aria-label="Minimise">&times;</button>
-</aside>
-<script>
-(function(){
-  var n = document.getElementById('snote'); if (!n) return;
-  try { if (sessionStorage.getItem('snote-min') === '1') n.classList.add('min'); } catch(e) {}
-  n.querySelector('.sn-x').addEventListener('click', function(e){ e.stopPropagation(); n.classList.add('min'); try { sessionStorage.setItem('snote-min','1'); } catch(e) {} });
-  n.addEventListener('click', function(){ if (n.classList.contains('min')) { n.classList.remove('min'); try { sessionStorage.removeItem('snote-min'); } catch(e) {} } });
-})();
-</script>
+
 </body>
 </html>

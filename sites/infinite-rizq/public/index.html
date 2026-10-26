@@ -3,20 +3,18 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Join the Circle | Infinite Rizq × UET</title>
-<meta name="description" content="Were you at Infinite Rizq at UET? Join the list with your name, email and WhatsApp, and we'll add you to the group within 24 hours.">
+<title>World Wealth Organization | Shahrez Hayder · Infinite Rizq</title>
+<meta name="description" content="World Wealth Organization brings Shahrez Hayder's Infinite Rizq experience to Pakistan: live events on rizq, identity and faith. Our first Lahore event sold out. Join the waiting list or invite Shahrez to your university.">
 <meta name="theme-color" content="#0a0a0b">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Infinite Rizq × UET: join the circle">
-<meta property="og:description" content="Drop your name, email and WhatsApp. Within 24 hours you're in the group with the Infinite Rizq team.">
+<meta property="og:title" content="World Wealth Organization × Shahrez Hayder">
+<meta property="og:description" content="Rooms where rizq, identity and faith meet. Our first Lahore event sold out.">
+<meta property="og:image" content="https://www.infiniterizq.com/img/nishat-brothers.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-<!--
-  HOMEPAGE: UET opt-in (infiniterizq.com, also /uet).
-  Saves name, email, WhatsApp to Supabase ir_optins (list 'uet') via /api/optin, then sends people to /joined.
-  The 17 October event page now lives at /event.
--->
+<link rel="stylesheet" href="/site.css">
+<!-- HOMEPAGE: who we are, past and upcoming events, invite Shahrez, community and team. Waiting lists post to /api/optin. -->
 <!-- Meta Pixel Code -->
 <script>
 !function(f,b,e,v,n,t,s)
@@ -31,97 +29,213 @@ fbq('init', '1574207957215946');
 fbq('track', 'PageView');
 </script>
 <!-- End Meta Pixel Code -->
-<style>
-:root{
-  --bg:#0a0a0b;--card:#16161a;--line:rgba(255,255,255,.08);--line-2:rgba(255,255,255,.14);
-  --ivory:#f3ede1;--text:#c9c3b6;--muted:#8a857b;--gold:#d4a73a;--gold-2:#e8c66a;--gold-soft:rgba(212,167,58,.14);
-  --red:#e0736b;--serif:'Playfair Display',Georgia,serif;--sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
-}
-*{box-sizing:border-box}
-html{color-scheme:dark}
-body{margin:0;background:var(--bg) radial-gradient(ellipse 120% 60% at 50% -10%,rgba(212,167,58,.16),transparent 60%) no-repeat;color:var(--text);font-family:var(--sans);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
-a{color:var(--gold-2)}
-.wrap{max-width:560px;margin:0 auto;padding:0 16px 48px}
-header{display:flex;align-items:center;gap:12px;padding:18px 0 6px}
-.mark{width:40px;height:40px;border-radius:50%;display:inline-grid;place-items:center;background:#1a1a1e;border:1px solid var(--line-2);font:600 .76rem var(--serif);color:var(--ivory)}
-header small{display:block;color:var(--muted);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase}
-header b{color:var(--ivory);font-family:var(--serif);font-weight:600;font-size:1.05rem}
-.eyebrow{display:inline-block;margin:26px 0 0;padding:5px 12px;border:1px solid var(--gold);border-radius:999px;color:var(--gold-2);font-size:.74rem;font-weight:600;letter-spacing:.14em;text-transform:uppercase;background:var(--gold-soft)}
-h1{font-family:var(--serif);font-weight:600;color:var(--ivory);line-height:1.12;margin:16px 0 10px;font-size:clamp(2rem,8vw,2.7rem)}
-h1 em{font-style:italic;color:var(--gold-2);font-weight:500}
-.lead{margin:0 0 20px;font-size:1.02rem}
-.gets{list-style:none;margin:0 0 24px;padding:0;display:grid;gap:10px}
-.gets li{display:flex;gap:12px;align-items:flex-start}
-.gets .n{flex:0 0 26px;height:26px;border-radius:50%;display:grid;place-items:center;background:var(--gold-soft);border:1px solid var(--gold);color:var(--gold-2);font-size:.8rem;font-weight:700;margin-top:1px}
-.gets b{color:var(--ivory);font-weight:600}
-form{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 16px}
-label{display:block;color:var(--ivory);font-size:.86rem;font-weight:600;margin:0 0 6px}
-input{width:100%;background:#0f0f12;border:1px solid var(--line-2);border-radius:10px;color:var(--ivory);font:inherit;padding:13px 12px;margin:0 0 14px}
-input:focus{outline:2px solid var(--gold-2);outline-offset:1px;border-color:transparent}
-.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
-.btn{display:block;width:100%;border:0;border-radius:12px;background:linear-gradient(180deg,var(--gold-2),var(--gold));color:#141005;font:700 1.02rem var(--sans);padding:16px;cursor:pointer;margin-top:4px}
-.btn[disabled]{opacity:.6;cursor:wait}
-.msg{margin:12px 0 0;font-size:.9rem;min-height:1.2em}
-.msg.err{color:var(--red)}
-.note{color:var(--muted);font-size:.78rem;margin:12px 0 0;line-height:1.5}
-.trust{display:flex;justify-content:center;gap:8px 18px;flex-wrap:wrap;margin:16px 0 0;color:var(--muted);font-size:.8rem}
-footer{color:var(--muted);font-size:.8rem;text-align:center;margin-top:30px;line-height:1.7}
-</style>
 </head>
 <body>
-<div class="wrap">
-  <header><span class="mark">IR</span><div><small>World Wealth Organization</small><b>Infinite Rizq</b></div></header>
 
-  <span class="eyebrow">UET Lahore × Infinite Rizq</span>
-  <h1>You were in the room. <em>Now stay in the circle.</em></h1>
-  <p class="lead">Join the Infinite Rizq UET list. Drop your name, email and WhatsApp, and within 24 hours we'll add you to a private WhatsApp group with the team behind Infinite Rizq.</p>
+<header class="nav">
+  <div class="wrap">
+    <a href="/" class="brand" aria-label="World Wealth Organization home"><span class="brand-mark">WWO</span><span class="brand-txt">World Wealth Organization<small>Shahrez Hayder · Infinite Rizq</small></span></a>
+    <button class="burger" type="button" aria-label="Open menu" aria-expanded="false" aria-controls="menu"><span></span><span></span><span></span></button>
+    <ul class="menu" id="menu">
+      <li><a href="/" aria-current="page">Home</a></li>
+      <li><a href="/events">Events</a></li>
+      <li><a href="/invite">Invite Shahrez</a></li>
+      <li><a href="/#community">Community</a></li>
+      <li><a href="/#team">Team</a></li>
+      <li><a href="/#waitlist" class="btn">Join the waiting list</a></li>
+    </ul>
+  </div>
+</header>
 
-  <ul class="gets">
-    <li><span class="n">1</span><div><b>Connect with the team</b> and the students and volunteers you met at UET.</div></li>
-    <li><span class="n">2</span><div><b>Be first to know</b> about the next Infinite Rizq events and ways to get involved.</div></li>
-    <li><span class="n">3</span><div><b>One group, no spam.</b> You can leave whenever you like.</div></li>
-  </ul>
+<main>
+<!-- HERO -->
+<section class="hero center">
+  <div class="bg" style="background-image:url('/img/nishat-brothers.jpg')" aria-hidden="true"></div>
+  <div class="wrap">
+    <span class="eyebrow">World Wealth Organization × Shahrez Hayder</span>
+    <h1>Rooms where rizq, identity <em>and faith meet.</em></h1>
+    <p class="lead">We build live experiences with Shahrez Hayder that help Muslims see and remove the blocks standing between them and their rizq. Our first Lahore event sold out.</p>
+    <div class="btns">
+      <a href="#waitlist" class="btn">Join the waiting list</a>
+      <a href="/invite" class="btn ghost">Invite Shahrez to your university</a>
+    </div>
+  </div>
+</section>
 
-  <form id="f" novalidate>
-    <label for="name">Full name</label>
-    <input id="name" autocomplete="name" maxlength="120" required>
-    <label for="email">Email</label>
-    <input id="email" type="email" autocomplete="email" inputmode="email" maxlength="160" required>
-    <label for="phone">WhatsApp number</label>
-    <input id="phone" type="tel" autocomplete="tel" inputmode="tel" maxlength="40" placeholder="0300 1234567" required>
-    <div class="hp" aria-hidden="true"><label for="website">Website</label><input id="website" tabindex="-1" autocomplete="off"></div>
-    <button class="btn" type="submit" id="go">Join the group</button>
-    <p class="msg" id="msg" role="status" aria-live="polite"></p>
-    <p class="note">By joining, you agree to be added to the Infinite Rizq UET WhatsApp group and to hear from us by email or WhatsApp. We never share your details.</p>
-  </form>
-  <div class="trust"><span>Free to join</span><span>·</span><span>Added within 24 hours</span><span>·</span><span>Leave anytime</span></div>
+<!-- STATS -->
+<section class="sec" style="border-top:0;padding-top:24px">
+  <div class="wrap">
+    <div class="narrow center rv">
+      <span class="eyebrow">Infinite Rizq · Lahore · 17 October 2026</span>
+      <h2>Sold out. <em>One room, one full day.</em></h2>
+    </div>
+    <div class="stats rv">
+      <div class="stat"><b>Sold out</b><span>Every ticket category</span></div>
+      <div class="stat"><b>178</b><span>Guests booked</span></div>
+      <div class="stat"><b>20</b><span>VIP Inner Table seats</span></div>
+      <div class="stat"><b>&lt; 10 days</b><span>From launch to sold out</span></div>
+    </div>
+  </div>
+</section>
 
-  <footer>Questions? WhatsApp Wali Anwaar, <a href="https://wa.me/13322332380">+1 (332) 233-2380</a><br><a href="/event">About Infinite Rizq</a></footer>
-</div>
-<script>
-(function(){
-var $ = function(id){ return document.getElementById(id); };
-var src = (new URLSearchParams(location.search).get('utm_source') || 'uet').slice(0, 80);
-$('f').addEventListener('submit', function(e){
-  e.preventDefault();
-  var name = $('name').value.trim(), email = $('email').value.trim(), phone = $('phone').value.trim();
-  function bad(t){ $('msg').textContent = t; $('msg').className = 'msg err'; $('go').disabled = false; }
-  if (name.length < 2) return bad('Please enter your full name.');
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return bad('Please enter a valid email.');
-  if (phone.replace(/\D/g, '').length < 10) return bad('Please enter your WhatsApp number.');
-  $('go').disabled = true; $('msg').className = 'msg'; $('msg').textContent = 'Adding you to the list…';
-  fetch('/api/optin', { method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ list: 'uet', name: name, email: email, phone: phone, src: src, website: $('website').value }) })
-    .then(function(r){ return r.json(); })
-    .then(function(j){
-      if (!j.ok) return bad(j.error || 'Could not save right now. Please try again.');
-      try { if (window.fbq) fbq('track', 'Lead', { content_name: 'uet_optin' }); } catch (x) {}
-      try { sessionStorage.setItem('ir-optin-name', name.split(' ')[0]); } catch (x) {}
-      location.href = '/joined';
-    })
-    .catch(function(){ bad('Network error. Please try again.'); });
-});
-})();
-</script>
+<!-- WHO WE ARE -->
+<section class="sec" id="about">
+  <div class="wrap split">
+    <div class="rv">
+      <span class="eyebrow">Who we are</span>
+      <h2>Not another seminar. <em>A room where the work happens.</em></h2>
+      <p class="lead">World Wealth Organization, founded by Shahrez Hayder, works where business meets the soul: how people think, decide, handle fear, and trust Allah while taking action.</p>
+      <p>Infinite Rizq is that work, live and in person. Guests don’t just listen. They do the work, pen in hand, through the Reveal, Kill, Rewire and Expand processes, built on an Islamic understanding of rizq.</p>
+      <ul class="facts">
+        <li>Homeless to millionaire in 14 months</li>
+        <li>8-figure business entrepreneur</li>
+        <li>Founder, World Wealth Organization</li>
+        <li>Student of Islamic knowledge in Madinah</li>
+      </ul>
+    </div>
+    <figure class="photo rv" style="margin:0"><img src="/img/nishat-teaching.jpg" width="788" height="1400" loading="lazy" alt="Shahrez Hayder teaching on stage in front of the WWO consciousness scale"></figure>
+  </div>
+</section>
+
+<!-- PAST EVENTS -->
+<section class="sec" id="events">
+  <div class="wrap">
+    <div class="narrow center rv">
+      <span class="eyebrow">Past events</span>
+      <h2>Where we’ve <em>already been.</em></h2>
+    </div>
+    <div class="cards">
+      <article class="card rv">
+        <div class="pic" style="background-image:url('/img/nishat-sisters.jpg')"><span class="tag">Sold out</span></div>
+        <div class="body">
+          <div class="k">17 October 2026 · Lahore</div>
+          <h3>Infinite Rizq, Nishat Hotel</h3>
+          <p>A full day in Grand Ballroom D with Shahrez: the spiritual blockage breakthrough experience, a live Q&amp;A, and a private VIP dinner.</p>
+          <a href="/events#lahore" class="btn sm">See the event and photos</a>
+        </div>
+      </article>
+      <article class="card rv">
+        <div class="pic empty"><span class="tag">Free for students</span>Photos coming soon</div>
+        <div class="body">
+          <div class="k">October 2026 · Lahore</div>
+          <h3>Infinite Rizq at UET</h3>
+          <p>A free session for students and volunteers at the University of Engineering and Technology, Lahore.</p>
+          <a href="/events#uet" class="btn sm">See the event</a>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<!-- UPCOMING / WAITING LIST -->
+<section class="sec" id="waitlist">
+  <div class="wrap">
+    <div class="narrow center rv">
+      <span class="eyebrow">Upcoming events</span>
+      <h2>The next room <em>is being planned.</em></h2>
+      <p class="lead">The next city and date will be announced soon. Our last event sold out in under 10 days, so the waiting list hears first.</p>
+    </div>
+    <form class="wl rv" data-list="waitlist-events" data-done="You’ll hear about the next date before it’s announced publicly." novalidate>
+      <div class="row3">
+        <input name="name" autocomplete="name" placeholder="Full name" aria-label="Full name" maxlength="120">
+        <input name="email" type="email" autocomplete="email" placeholder="Email" aria-label="Email" maxlength="160">
+        <input name="phone" type="tel" autocomplete="tel" placeholder="WhatsApp number" aria-label="WhatsApp number" maxlength="40">
+      </div>
+      <div class="hp" aria-hidden="true"><input name="website" tabindex="-1" autocomplete="off"></div>
+      <button class="btn" type="submit">Join the waiting list</button>
+      <p class="msg" role="status" aria-live="polite"></p>
+      <small>We’ll only use your details to tell you about upcoming events.</small>
+    </form>
+  </div>
+</section>
+
+<!-- INVITE SHAHREZ -->
+<section class="sec" id="invite">
+  <div class="wrap">
+    <div class="band rv">
+      <div>
+        <span class="eyebrow">For universities</span>
+        <h2>Invite Shahrez <em>to your university.</em></h2>
+        <p class="lead" style="font-size:1rem">An interactive session for your students on rizq, identity and the spiritual side of success.</p>
+        <ul>
+          <li>Keynote, interactive workshop and live Q&amp;A</li>
+          <li>For student societies, faculty and administration</li>
+          <li>Applications reviewed within 3 working days</li>
+        </ul>
+      </div>
+      <div class="center"><a href="/invite" class="btn">Apply to host Shahrez</a></div>
+    </div>
+  </div>
+</section>
+
+<!-- COMMUNITY -->
+<section class="sec" id="community">
+  <div class="wrap">
+    <div class="narrow center rv">
+      <span class="eyebrow">Community · Opening soon</span>
+      <h2>Stay in the room <em>after the event ends.</em></h2>
+      <p class="lead">The World Wealth Organization community is opening soon: a place to keep doing the work with people who think like you. Join the waiting list to be among the first members.</p>
+    </div>
+    <form class="wl rv" data-list="waitlist-community" data-done="You’ll be among the first invited when the community opens." novalidate>
+      <div class="row3">
+        <input name="name" autocomplete="name" placeholder="Full name" aria-label="Full name" maxlength="120">
+        <input name="email" type="email" autocomplete="email" placeholder="Email" aria-label="Email" maxlength="160">
+        <input name="phone" type="tel" autocomplete="tel" placeholder="WhatsApp number" aria-label="WhatsApp number" maxlength="40">
+      </div>
+      <div class="hp" aria-hidden="true"><input name="website" tabindex="-1" autocomplete="off"></div>
+      <button class="btn" type="submit">Join the community waiting list</button>
+      <p class="msg" role="status" aria-live="polite"></p>
+      <small>Were you at UET? <a href="/uet">Join the UET group</a> instead.</small>
+    </form>
+  </div>
+</section>
+
+<!-- TEAM -->
+<section class="sec" id="team">
+  <div class="wrap">
+    <div class="narrow center rv">
+      <span class="eyebrow">The team</span>
+      <h2>The people <em>behind the room.</em></h2>
+    </div>
+    <div class="team">
+      <article class="person rv"><div class="face"><img src="/img/team-shahrez.jpg" alt="Shahrez Hayder" loading="lazy"></div><h3>Shahrez Hayder</h3><span class="role">Founder, World Wealth Organization</span><p>Speaker and creator of Infinite Rizq.</p></article>
+      <article class="person rv"><div class="face">WA</div><h3>Wali Anwaar</h3><span class="role">Growth Business Partner</span><p>Growth, marketing and the systems that fill the room.</p></article>
+      <article class="person rv"><div class="face"><img src="/img/team-omer.jpg" alt="Omer Shafiq" loading="lazy"></div><h3>Omer Shafiq</h3><span class="role">Production Business Partner</span><p>Production and the experience on the day.</p></article>
+      <article class="person rv"><div class="face"><img src="/img/team-hassnain.jpg" alt="Hassnain" loading="lazy"></div><h3>Hassnain</h3><span class="role">UK Collaboration Partner</span><p>Partnerships and collaboration in the UK.</p></article>
+    </div>
+  </div>
+</section>
+
+<!-- GALLERY PREVIEW -->
+<section class="sec" id="gallery">
+  <div class="wrap">
+    <div class="narrow center rv">
+      <span class="eyebrow">Gallery</span>
+      <h2>Inside <em>Infinite Rizq, Lahore.</em></h2>
+    </div>
+    <div class="gallery grid3 rv">
+      <button type="button"><img src="/img/nishat-brothers.jpg" loading="lazy" alt="Brothers with Shahrez Hayder at Infinite Rizq, Nishat Hotel"></button>
+      <button type="button"><img src="/img/nishat-stage.jpg" loading="lazy" alt="Shahrez Hayder speaking at the podium"></button>
+      <button type="button"><img src="/img/nishat-sisters.jpg" loading="lazy" alt="Sisters with Shahrez Hayder at Infinite Rizq"></button>
+    </div>
+    <div class="center"><a href="/events#gallery" class="btn ghost" style="margin-top:18px">See all photos</a></div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div>
+      <a href="/" class="brand"><span class="brand-mark">WWO</span><span class="brand-txt">World Wealth Organization<small>Shahrez Hayder · Infinite Rizq</small></span></a>
+      <p style="margin:14px 0 0">Questions? WhatsApp Wali Anwaar, <a href="https://wa.me/13322332380">+1 (332) 233-2380</a></p>
+    </div>
+    <div><h4>Explore</h4><ul><li><a href="/events">Events</a></li><li><a href="/events#gallery">Gallery</a></li><li><a href="/#team">Team</a></li></ul></div>
+    <div><h4>Get involved</h4><ul><li><a href="/#waitlist">Upcoming events</a></li><li><a href="/invite">Invite Shahrez</a></li><li><a href="/#community">Community</a></li><li><a href="/uet">UET group</a></li></ul></div>
+    <p class="disc">Infinite Rizq is an educational and reflective experience. It does not guarantee any financial, marital or other personal outcome. All rizq is from Allah Subhanahu wa Ta’ala. © 2026 World Wealth Organization.</p>
+  </div>
+</footer>
+
+<div class="lightbox" role="dialog" aria-label="Photo"><button type="button" aria-label="Close">&times;</button><img alt=""></div>
+<script src="/site.js"></script>
 </body>
 </html>

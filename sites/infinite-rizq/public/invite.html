@@ -594,6 +594,11 @@ footer .row{display:flex;flex-wrap:wrap;gap:12px 24px;justify-content:space-betw
 .step4 p{margin:0;font-size:.92rem}
 @media (max-width:980px){.topics,.formats{grid-template-columns:1fr}.steps4{grid-template-columns:1fr 1fr}}
 @media (max-width:640px){.apply{padding:24px 16px}.apply .grid2{grid-template-columns:1fr}.steps4{grid-template-columns:1fr}}
+.nav .wrap{gap:14px}
+.inv-menu{display:flex;gap:4px;margin-left:auto}
+.inv-menu a{color:var(--text);text-decoration:none;font-size:.92rem;padding:8px 10px;border-radius:8px}
+.inv-menu a:hover{color:var(--ivory);background:rgba(255,255,255,.05)}
+@media (max-width:760px){.inv-menu{display:none}}
 </style>
 <!-- Meta Pixel Code -->
 <script>
@@ -661,10 +666,11 @@ src="https://www.facebook.com/tr?id=1574207957215946&ev=PageView&noscript=1"
 <!-- NAV -->
 <header class="nav">
   <div class="wrap">
-    <a href="#top" class="brand" aria-label="World Wealth Organization, Shahrez Hayder university sessions">
+    <a href="/" class="brand" aria-label="World Wealth Organization home">
       <span class="brand-mark">WWO</span>
       <span class="brand-txt">World Wealth Organization<span>Shahrez Hayder · University sessions</span></span>
     </a>
+    <nav class="inv-menu" aria-label="Site"><a href="/">Home</a><a href="/events">Events</a><a href="/#community">Community</a></nav>
     <a href="#apply" class="btn btn-sm" data-track="cta_nav">Apply to host</a>
   </div>
 </header>

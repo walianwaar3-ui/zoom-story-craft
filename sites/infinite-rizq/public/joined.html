@@ -73,7 +73,7 @@ footer{color:var(--muted);font-size:.8rem;text-align:center;margin-top:26px}
 <script>
 (function(){
   try { var n = sessionStorage.getItem('ir-optin-name'); if (n) document.getElementById('hi').textContent = "You're in, " + n + '.'; } catch (e) {}
-  var b = document.getElementById('share'), url = 'https://www.infiniterizq.com/?utm_source=uet-share';
+  var b = document.getElementById('share'), url = 'https://www.infiniterizq.com/uet?utm_source=uet-share';
   b.addEventListener('click', function(){
     var data = { title: 'Infinite Rizq × UET', text: 'Were you at Infinite Rizq at UET? Join the group:', url: url };
     if (navigator.share) { navigator.share(data).catch(function(){}); return; }
