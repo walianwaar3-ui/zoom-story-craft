@@ -7,6 +7,14 @@
       "destination": "/"
     },
     {
+      "source": "/universities",
+      "destination": "/invite"
+    },
+    {
+      "source": "/speak",
+      "destination": "/invite"
+    },
+    {
       "source": "/student-ticket",
       "destination": "/seats"
     },
