@@ -514,7 +514,7 @@ function renderSales(s){
   function tier(label, k){ var t = tr[k] || {}; return kpi(label, fmt(t.seats || 0), fmt(t.bookings || 0) + ' bookings · ' + fmt(t.confirmed || 0) + ' paid'); }
   $('sales').innerHTML = [
     kpi('Seats booked', fmt(s.seats), fmt(s.bookings) + ' bookings · ' + fmt(s.confirmedSeats) + ' paid · ' + fmt(s.pendingSeats) + ' not marked paid', true),
-    kpi('Payment confirmed', fmt(s.confirmedSeats), fmt(s.confirmedBookings) + ' bookings marked paid', true),
+    kpi('Payment confirmed', fmt(s.confirmedSeats), fmt(s.confirmedBookings) + ' bookings marked paid' + (s.unclaimedSeats ? ' · incl. ' + fmt(s.unclaimedSeats) + ' sold, not claimed (name not recorded)' : ''), true),
     kpi('Not marked paid', fmt(s.pendingSeats), s.pending ? fmt(s.pending) + ' bookings still pending' : 'nothing waiting', s.pending > 0 ? 'warn' : false),
     tier('Inner Table', 'Inner Table'),
     tier('General', 'General'),
