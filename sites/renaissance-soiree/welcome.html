@@ -42,6 +42,23 @@ ul.prep li{margin:7px 0}
 .quote{font-style:italic;font-size:1.25rem;text-align:center;color:var(--ivory);margin:30px 0 0}
 footer{text-align:center;font:400 .78rem var(--sans);color:var(--muted);margin-top:28px}
 </style>
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1874556003533048');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1874556003533048&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
 </head>
 <body>
 <div class="top">
@@ -100,6 +117,19 @@ footer{text-align:center;font:400 .78rem var(--sans);color:var(--muted);margin-t
     'DESCRIPTION:Arrive 15 minutes early. Champagne Suite.','END:VEVENT','END:VCALENDAR'].join('\r\n');
   document.getElementById('cal').href = 'data:text/calendar;charset=utf-8,' + encodeURIComponent(ics);
   document.getElementById('cal').setAttribute('download', 'renaissance-soiree.ics');
+})();
+</script>
+<script>
+// Purchase fires once per buyer when Stan redirects here with ?tier=muse|icon|legacy (set per product in Stan). No tier: CompleteRegistration only.
+(function(){
+  var t = (new URLSearchParams(location.search).get('tier') || '').toLowerCase(), VAL = { muse: 997, icon: 1500, legacy: 4997 };
+  try {
+    if (VAL[t]) {
+      if (sessionStorage.getItem('rs-purchase') === t) return;
+      fbq('track', 'Purchase', { content_name: 'Renaissance Soiree: ' + t, value: VAL[t], currency: 'USD' });
+      sessionStorage.setItem('rs-purchase', t);
+    } else fbq('track', 'CompleteRegistration', { content_name: 'Renaissance Soiree' });
+  } catch (e) {}
 })();
 </script>
 </body>

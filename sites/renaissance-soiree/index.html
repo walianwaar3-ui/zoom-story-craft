@@ -66,13 +66,16 @@ h2 em,h1 em,h3 em{font-style:italic;color:var(--wine)}
 .nav .btn{padding:11px 18px;font-size:.66rem}
 
 /* hero */
-.hero{position:relative;min-height:92vh;display:flex;align-items:flex-end;color:var(--on-d);overflow:hidden;background:var(--ink)}
-.hero .bg{position:absolute;inset:0;background:url('img/suite.jpg') center/cover;transform:scale(1.04);animation:drift 22s ease-in-out infinite alternate}
-.hero::after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(20,16,12,.35) 0%,rgba(20,16,12,.55) 45%,rgba(20,16,12,.96) 100%)}
-@keyframes drift{to{transform:scale(1.12) translateY(-12px)}}
-.hero .wrap{position:relative;z-index:1;padding-top:120px;padding-bottom:72px;width:100%}
+.hero{position:relative;color:var(--on-d);overflow:hidden;background:radial-gradient(ellipse 70% 60% at 85% 30%,rgba(184,145,74,.16),transparent 70%),var(--ink)}
+.hero-grid{display:grid;grid-template-columns:1.08fr .92fr;gap:64px;align-items:center}
+.hero-art{position:relative;margin:0;aspect-ratio:4/5;border-radius:999px 999px 20px 20px;overflow:hidden;box-shadow:0 40px 80px -40px rgba(0,0,0,.8)}
+.hero-art img{width:100%;height:100%;object-fit:cover;object-position:50% 40%;transform:scale(1.03);animation:drift 24s ease-in-out infinite alternate}
+.hero-art::after{content:"";position:absolute;inset:12px;border:1px solid rgba(217,184,120,.55);border-radius:999px 999px 12px 12px;pointer-events:none}
+.hero-art figcaption{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);font:600 .6rem var(--sans);letter-spacing:.26em;text-transform:uppercase;color:#fff;background:rgba(20,16,12,.6);backdrop-filter:blur(6px);padding:8px 14px;border-radius:999px;white-space:nowrap}
+@keyframes drift{to{transform:scale(1.1)}}
+.hero .wrap{position:relative;z-index:1;padding-top:72px;padding-bottom:84px;width:100%}
 .hero .eyebrow{color:var(--gold-2)}
-.hero h1{color:var(--ivory);font-family:var(--display);font-weight:400;letter-spacing:.04em;font-size:clamp(2.6rem,9vw,6.2rem);line-height:.98;margin:18px 0 8px}
+.hero h1{color:var(--ivory);font-family:var(--display);font-weight:400;letter-spacing:.04em;font-size:clamp(2.5rem,6.4vw,5rem);line-height:1;margin:18px 0 8px}
 .hero h1 span{display:block;font-family:var(--serif);font-style:italic;font-size:.42em;letter-spacing:0;color:var(--gold-2);margin-bottom:6px}
 .hook{font-size:clamp(1.35rem,3.4vw,2rem);line-height:1.25;color:var(--ivory);max-width:780px;margin:22px 0 14px;font-style:italic}
 .hero p.sub{max-width:640px;color:var(--on-d-muted);font-size:1.12rem;margin:0}
@@ -245,7 +248,7 @@ h2 em,h1 em,h3 em{font-style:italic;color:var(--wine)}
 
 /* final */
 .final{position:relative;padding:120px 0;text-align:center;color:var(--on-d);overflow:hidden;background:var(--ink)}
-.final .bg{position:absolute;inset:0;background:url('img/palmcourt.jpg') center/cover;opacity:.28}
+.final .bg{position:absolute;inset:0;background:url('img/palmcourt.jpg') center/cover;opacity:.12;filter:grayscale(.4)}
 .final .wrap{position:relative}
 .final h2{color:var(--ivory)}
 
@@ -296,7 +299,10 @@ footer .terms{margin-top:28px;border-top:1px solid var(--line-d);padding-top:22p
   .includes{grid-template-columns:1fr}
   .gal{grid-template-columns:1fr 1fr;grid-template-rows:200px 160px 160px}
   .gal figure:first-child{grid-column:span 2;grid-row:auto}
-  .hero{min-height:88vh}
+  .hero-grid{grid-template-columns:1fr;gap:28px}
+  .hero-art{order:-1;aspect-ratio:4/3;max-height:42vh;width:100%;border-radius:200px 200px 16px 16px}
+  .hero-art::after{border-radius:190px 190px 10px 10px}
+  .hero .wrap{padding-top:22px;padding-bottom:56px}
   .nav .btn{display:none}
   .nav .wrap{height:54px}
   .strip .lbl{display:none}
@@ -304,8 +310,25 @@ footer .terms{margin-top:28px;border-top:1px solid var(--line-d);padding-top:22p
   .ag button{justify-self:start}
   .thermo{flex-direction:column;text-align:center}
 }
-@media (prefers-reduced-motion:reduce){.hero .bg{animation:none}.js .rv{opacity:1;transform:none;transition:none}}
+@media (prefers-reduced-motion:reduce){.hero-art img{animation:none}.js .rv{opacity:1;transform:none;transition:none}}
 </style>
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1874556003533048');
+fbq('track', 'PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1874556003533048&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
 </head>
 <body>
 
@@ -325,8 +348,8 @@ footer .terms{margin-top:28px;border-top:1px solid var(--line-d);padding-top:22p
 
 <main id="top">
 <section class="hero">
-  <div class="bg" aria-hidden="true"></div>
-  <div class="wrap">
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
     <span class="eyebrow">For the women who have been watching</span>
     <h1><span>The</span>Renaissance Soirée</h1>
     <p class="hook">You have watched me on your screen for months.<br>On Saturday, you sit in the room.</p>
@@ -342,6 +365,8 @@ footer .terms{margin-top:28px;border-top:1px solid var(--line-d);padding-top:22p
       <a href="#day" class="btn ghost">See the day</a>
     </div>
     <p class="note">— Sumaya · The woman who walks in will not be the woman who walks out.</p>
+    </div>
+    <figure class="hero-art"><img src="img/suite.jpg" alt="The Plaza, New York" fetchpriority="high"><figcaption>The Plaza · Fifth Avenue</figcaption></figure>
   </div>
 </section>
 
@@ -771,6 +796,20 @@ document.documentElement.classList.add('js');
   if (!('IntersectionObserver' in window)) { items.forEach(function(el){ el.classList.add('in'); }); return; }
   var io = new IntersectionObserver(function(es){ es.forEach(function(e){ if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }); }, { threshold: .08 });
   items.forEach(function(el){ io.observe(el); });
+})();
+</script>
+<script>
+// Funnel events: ViewContent on the sales page, InitiateCheckout when a tier is chosen, Lead when Legacy is opened.
+(function(){
+  function fire(n, d){ try { if (window.fbq) fbq('track', n, d); } catch (e) {} }
+  fire('ViewContent', { content_name: 'The Renaissance Soiree', content_category: 'event' });
+  var VAL = { muse: 997, icon: 1500, legacy: 4997 };
+  document.querySelectorAll('[data-tier]').forEach(function(a){
+    a.addEventListener('click', function(){
+      var t = a.getAttribute('data-tier'), d = { content_name: 'Renaissance Soiree: ' + t, value: VAL[t], currency: 'USD' };
+      fire(t === 'legacy' ? 'Lead' : 'InitiateCheckout', d);
+    });
+  });
 })();
 </script>
 </body>
