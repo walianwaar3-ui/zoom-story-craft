@@ -141,6 +141,17 @@ h2 em,h1 em,h3 em{font-style:italic;color:var(--wine)}
 .toggle{display:inline-flex;background:var(--card-d);border:1px solid var(--line-d);border-radius:999px;padding:4px;margin:20px 0 30px}
 .toggle button{border:0;background:transparent;color:var(--on-d-muted);font:600 .72rem var(--sans);letter-spacing:.16em;text-transform:uppercase;padding:11px 20px;border-radius:999px;cursor:pointer}
 .toggle button.on{background:var(--gold);color:#1a130a}
+.toggle{position:relative;transition:transform .25s}
+.toggle button{position:relative;transition:background .3s,color .3s}
+/* Until she taps it, "Walking out" glows, pulses and carries a bouncing "Tap" tag */
+.toggle.hint button[data-side=out]{color:var(--ivory);box-shadow:inset 0 0 0 1px var(--gold-2);animation:tapPulse 1.8s ease-out infinite}
+.toggle.hint button[data-side=out]::after{content:"Tap ↓";position:absolute;left:50%;bottom:calc(100% + 10px);transform:translateX(-50%);background:var(--gold-2);color:#1a130a;font:700 .62rem var(--sans);letter-spacing:.14em;padding:6px 10px;border-radius:999px;white-space:nowrap;animation:tapBob 1.1s ease-in-out infinite;box-shadow:0 8px 20px -8px rgba(217,184,120,.8)}
+.toggle.hint button[data-side=out]:hover{background:rgba(217,184,120,.18)}
+@keyframes tapPulse{0%{box-shadow:inset 0 0 0 1px var(--gold-2),0 0 0 0 rgba(217,184,120,.55)}70%{box-shadow:inset 0 0 0 1px var(--gold-2),0 0 0 14px rgba(217,184,120,0)}100%{box-shadow:inset 0 0 0 1px var(--gold-2),0 0 0 0 rgba(217,184,120,0)}}
+@keyframes tapBob{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,-5px)}}
+.shift .c{transition:border-color .4s,transform .4s}
+.shift.after .c{transform:translateY(-2px)}
+@media (prefers-reduced-motion:reduce){.toggle.hint button[data-side=out],.toggle.hint button[data-side=out]::after{animation:none}}
 .shift{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;text-align:left}
 .shift .c{background:var(--card-d);border:1px solid var(--line-d);border-radius:16px;padding:20px 20px 22px;transition:border-color .4s}
 .shift .c h4{margin:0 0 8px;font:600 .66rem var(--sans);letter-spacing:.24em;text-transform:uppercase;color:var(--gold-2)}
@@ -464,9 +475,9 @@ src="https://www.facebook.com/tr?id=1874556003533048&ev=PageView&noscript=1"
       <span class="eyebrow">When the setting changes</span>
       <h2>The woman who walks in,<br><em>and the woman who walks out.</em></h2>
       <p class="lead">A version of you built for a smaller life is running the operation. She is very good at her job. She is just working for the wrong version of you.</p>
-      <p>Tap “Walking out” to see what changes when she is replaced.</p>
+      <p>Tap <b style="color:var(--gold-2)">“Walking out”</b> to see what changes when she is replaced.</p>
     </div>
-    <div class="toggle rv" role="tablist" aria-label="Before and after the day">
+    <div class="toggle hint rv" role="tablist" aria-label="Before and after the day">
       <button type="button" class="on" data-side="in" role="tab" aria-selected="true">Walking in</button>
       <button type="button" data-side="out" role="tab" aria-selected="false">Walking out</button>
     </div>
@@ -810,6 +821,7 @@ document.documentElement.classList.add('js');
     b.addEventListener('click', function(){
       document.querySelectorAll('.toggle button').forEach(function(x){ x.classList.toggle('on', x === b); x.setAttribute('aria-selected', String(x === b)); });
       shift.classList.toggle('after', b.getAttribute('data-side') === 'out');
+      b.parentNode.classList.remove('hint');
     });
   });
 
