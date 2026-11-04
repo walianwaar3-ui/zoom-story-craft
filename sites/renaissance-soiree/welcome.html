@@ -53,7 +53,17 @@ t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window, document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
 fbq('init', '1874556003533048');
-fbq('track', 'PageView');
+window.rsTrack = function(n, d){
+  // Same event goes to the pixel and to the Conversions API (/api/capi) with one event ID, so Meta counts it once.
+  var id = n + '.' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  try { fbq('track', n, d || {}, { eventID: id }); } catch (e) {}
+  try {
+    var b = JSON.stringify({ event_name: n, event_id: id, url: location.href, data: d || {} });
+    if (!(navigator.sendBeacon && navigator.sendBeacon('/api/capi', new Blob([b], { type: 'application/json' }))))
+      fetch('/api/capi', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: b, keepalive: true });
+  } catch (e) {}
+};
+rsTrack('PageView');
 </script>
 <noscript><img height="1" width="1" style="display:none"
 src="https://www.facebook.com/tr?id=1874556003533048&ev=PageView&noscript=1"
@@ -126,9 +136,9 @@ src="https://www.facebook.com/tr?id=1874556003533048&ev=PageView&noscript=1"
   try {
     if (VAL[t]) {
       if (sessionStorage.getItem('rs-purchase') === t) return;
-      fbq('track', 'Purchase', { content_name: 'Renaissance Soiree: ' + t, value: VAL[t], currency: 'USD' });
+      rsTrack('Purchase', { content_name: 'Renaissance Soiree: ' + t, value: VAL[t], currency: 'USD' });
       sessionStorage.setItem('rs-purchase', t);
-    } else fbq('track', 'CompleteRegistration', { content_name: 'Renaissance Soiree' });
+    } else rsTrack('CompleteRegistration', { content_name: 'Renaissance Soiree' });
   } catch (e) {}
 })();
 </script>

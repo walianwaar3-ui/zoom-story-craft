@@ -242,9 +242,13 @@ h2 em,h1 em,h3 em{font-style:italic;color:var(--wine)}
 .compare .x{color:#c9bca8}
 .compare-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
 
-.help{margin:28px auto 0;max-width:720px;text-align:center;background:var(--cream);border-radius:14px;padding:14px 18px;font:400 .92rem/1.5 var(--sans);color:var(--text)}
-.help b{color:var(--ink)}
-.help a{color:var(--wine);font-weight:600}
+.help{margin:30px auto 0;max-width:760px;display:flex;align-items:center;gap:20px;justify-content:space-between;background:var(--cream);border:1px solid rgba(184,145,74,.35);border-radius:18px;padding:18px 20px;text-align:left}
+.help b{display:block;font:600 1.15rem var(--serif);color:var(--ink);margin-bottom:2px}
+.help span{display:block;font:400 .9rem/1.45 var(--sans);color:var(--text)}
+.help .btn{flex-shrink:0;background:#1f9d55;color:#fff;box-shadow:0 10px 24px -12px rgba(31,157,85,.8)}
+.wa-btn{display:inline-flex;align-items:center;gap:10px}
+.wa-btn::before{content:"";width:18px;height:18px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.6-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3z'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.6-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3z'/%3E%3C/svg%3E") center/contain no-repeat}
+@media (max-width:640px){.help{flex-direction:column;align-items:stretch;text-align:center}.help .btn{width:100%}}
 /* gallery */
 .gal{display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:240px 240px;gap:12px;margin-top:36px}
 .gal figure{margin:0;border-radius:16px;overflow:hidden;position:relative}
@@ -330,7 +334,17 @@ t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window, document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
 fbq('init', '1874556003533048');
-fbq('track', 'PageView');
+window.rsTrack = function(n, d){
+  // Same event goes to the pixel and to the Conversions API (/api/capi) with one event ID, so Meta counts it once.
+  var id = n + '.' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  try { fbq('track', n, d || {}, { eventID: id }); } catch (e) {}
+  try {
+    var b = JSON.stringify({ event_name: n, event_id: id, url: location.href, data: d || {} });
+    if (!(navigator.sendBeacon && navigator.sendBeacon('/api/capi', new Blob([b], { type: 'application/json' }))))
+      fetch('/api/capi', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: b, keepalive: true });
+  } catch (e) {}
+};
+rsTrack('PageView');
 </script>
 <noscript><img height="1" width="1" style="display:none"
 src="https://www.facebook.com/tr?id=1874556003533048&ev=PageView&noscript=1"
@@ -671,7 +685,10 @@ src="https://www.facebook.com/tr?id=1874556003533048&ev=PageView&noscript=1"
         <p class="sec-note">Apply, or <a href="https://wa.me/19179291766?text=Hi%20Sumaya%2C%20I%27d%20love%20to%20be%20considered%20for%20The%20Legacy%20at%20The%20Renaissance%20Soir%C3%A9e.%20A%20little%20about%20me%3A%20" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">WhatsApp Sumaya directly</a></p>
       </div>
     </div>
-    <div class="help rv"><b>Trouble with checkout?</b> WhatsApp the team at <a href="https://wa.me/19179291766?text=Hi%20team%2C%20I%27d%20like%20to%20book%20The%20Renaissance%20Soir%C3%A9e%20but%20I%27m%20having%20trouble%20with%20the%20checkout." target="_blank" rel="noopener">+1 (917) 929-1766</a> and we will get your seat sorted personally.</div>
+    <div class="help rv">
+      <div><b>Trouble with checkout?</b><span>Card declined, page stuck, or want to pay another way? The team will sort your seat for you personally, usually within minutes.</span></div>
+      <a class="btn wa-btn" id="wa-help" href="https://wa.me/19179291766?text=Hi%20team%2C%20I%27d%20like%20to%20book%20The%20Renaissance%20Soir%C3%A9e%20but%20I%27m%20having%20trouble%20with%20the%20checkout." target="_blank" rel="noopener">WhatsApp the team</a>
+    </div>
     <div class="compare-wrap rv">
       <table class="compare">
         <thead><tr><th>Inclusion</th><th>Muse</th><th>Icon</th><th>Legacy</th></tr></thead>
@@ -811,9 +828,10 @@ document.documentElement.classList.add('js');
 <script>
 // Funnel events: ViewContent on the sales page, InitiateCheckout when a tier is chosen, Lead when Legacy is opened.
 (function(){
-  function fire(n, d){ try { if (window.fbq) fbq('track', n, d); } catch (e) {} }
+  function fire(n, d){ try { rsTrack(n, d); } catch (e) {} }
   fire('ViewContent', { content_name: 'The Renaissance Soiree', content_category: 'event' });
   var VAL = { muse: 997, icon: 1500, legacy: 4997 };
+  var wh = document.getElementById('wa-help'); if (wh) wh.addEventListener('click', function(){ fire('Contact', { content_name: 'Checkout help WhatsApp' }); });
   document.querySelectorAll('[data-tier]').forEach(function(a){
     a.addEventListener('click', function(){
       var t = a.getAttribute('data-tier'), d = { content_name: 'Renaissance Soiree: ' + t, value: VAL[t], currency: 'USD' };
