@@ -48,13 +48,18 @@ h2 em,h1 em,h3 em{font-style:italic;color:var(--wine)}
 .rule::before,.rule::after{content:"";height:1px;width:60px;background:currentColor;opacity:.5}
 .rule span{font-size:.7rem}
 
-/* strip */
-.strip{background:var(--wine);color:#f6e7d7;font:500 .78rem/1.3 var(--sans);letter-spacing:.06em;text-align:center;padding:10px 16px}
+/* sticky top: countdown strip + nav */
+.topbar{position:sticky;top:0;z-index:40}
+.strip{background:var(--wine);color:#f6e7d7;font:500 .76rem/1.3 var(--sans);letter-spacing:.04em;padding:8px 16px;display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
 .strip b{color:#fff;font-weight:600}
-.strip .cd{font-variant-numeric:tabular-nums;white-space:nowrap}
+.timer{display:inline-flex;align-items:center;gap:4px;font-variant-numeric:tabular-nums}
+.timer span{display:inline-flex;flex-direction:column;align-items:center;min-width:38px;background:rgba(0,0,0,.28);border-radius:7px;padding:4px 5px 3px;line-height:1}
+.timer span b{font:600 1rem/1 var(--sans);color:#fff}
+.timer span i{font:500 .52rem/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;font-style:normal;color:#f1c9cf;margin-top:3px}
+.timer em{font-style:normal;color:#f1c9cf;font-weight:600}
 
 /* nav */
-.nav{position:sticky;top:0;z-index:40;background:rgba(20,16,12,.92);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line-d)}
+.nav{background:rgba(20,16,12,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line-d)}
 .nav .wrap{display:flex;align-items:center;justify-content:space-between;height:62px}
 .brand{font:500 1rem var(--display);letter-spacing:.14em;color:var(--ivory);text-decoration:none}
 .brand small{display:block;font:500 .58rem var(--sans);letter-spacing:.3em;color:var(--gold-2);text-transform:uppercase;margin-top:2px}
@@ -83,6 +88,47 @@ h2 em,h1 em,h3 em{font-style:italic;color:var(--wine)}
 .anchor{margin:34px auto 0;max-width:720px;background:var(--cream);border-radius:18px;padding:24px 26px;text-align:center}
 .anchor b{color:var(--wine);font-weight:600}
 .fine{font:400 .74rem/1.5 var(--sans);color:var(--muted);margin-top:10px}
+
+/* agree (irrefutable) */
+.agree{display:grid;gap:12px;max-width:760px;margin:36px auto 0}
+.ag{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 20px;text-align:left;transition:border-color .3s,background .3s}
+.ag p{margin:0;font-size:1.12rem;color:var(--ink)}
+.ag button{border:1px solid var(--gold);background:transparent;color:var(--ink);font:600 .68rem var(--sans);letter-spacing:.18em;text-transform:uppercase;border-radius:999px;padding:10px 16px;cursor:pointer;white-space:nowrap}
+.ag.yes{border-color:var(--gold);background:var(--cream)}
+.ag.yes button{background:var(--gold);color:#1a130a}
+.verdict{max-width:760px;margin:22px auto 0;text-align:center;font-size:1.35rem;line-height:1.4;color:var(--ink);opacity:.35;transition:opacity .5s}
+.verdict.on{opacity:1}
+.verdict em{color:var(--wine)}
+
+/* thermostat (old path vs new path) */
+.paths{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:40px}
+.path{border-radius:20px;padding:28px}
+.path.old{background:var(--card-d);border:1px solid var(--line-d)}
+.path.new{background:linear-gradient(160deg,rgba(217,184,120,.18),rgba(110,31,42,.25));border:1px solid rgba(217,184,120,.5)}
+.path h3{font:600 .7rem var(--sans);letter-spacing:.24em;text-transform:uppercase;color:var(--gold-2);margin:0 0 8px}
+.path .big{font:500 2rem/1.1 var(--serif);color:var(--ivory);margin:0 0 12px}
+.path p{margin:0 0 10px;color:var(--on-d-muted);font-size:1.04rem}
+.path ul{margin:8px 0 0;padding-left:18px;color:var(--on-d);font-size:1rem}
+.path li{margin:5px 0}
+.thermo{display:flex;align-items:center;gap:18px;justify-content:center;margin:46px auto 0;max-width:760px;text-align:left}
+.dial{flex-shrink:0;width:96px;height:96px;border-radius:50%;border:2px solid var(--gold);display:grid;place-items:center;font:500 1.7rem var(--serif);color:var(--gold-2);position:relative}
+.dial small{position:absolute;bottom:16px;font:600 .5rem var(--sans);letter-spacing:.2em;color:var(--on-d-muted)}
+.thermo p{margin:0;color:var(--on-d);font-size:1.1rem}
+
+/* consequences */
+.years{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:40px}
+.yr{border-radius:18px;padding:24px;background:#fff;border:1px solid var(--line)}
+.yr b{display:block;font:400 2.4rem/1 var(--display);color:var(--wine);margin-bottom:10px}
+.yr p{margin:0;font-size:1.04rem}
+.gut{max-width:820px;margin:44px auto 0;background:var(--ink);color:var(--on-d);border-radius:22px;padding:34px 30px;font-size:1.25rem;line-height:1.5;text-align:center}
+.gut em{color:var(--gold-2)}
+
+/* three things */
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:36px}
+.th{border-top:2px solid var(--gold);padding-top:16px}
+.th .n{font:400 2.4rem/1 var(--display);color:var(--gold)}
+.th h3{font-size:1.4rem;margin:8px 0 6px}
+.th p{margin:0;color:var(--muted);font-size:1.02rem}
 
 /* toggle */
 .toggle{display:inline-flex;background:var(--card-d);border:1px solid var(--line-d);border-radius:999px;padding:4px;margin:20px 0 30px}
@@ -235,6 +281,7 @@ footer .terms{margin-top:28px;border-top:1px solid var(--line-d);padding-top:22p
   .tier.feat{transform:none}
   .includes{grid-template-columns:1fr 1fr}
   .mbar{display:flex}
+  .paths,.years,.three{grid-template-columns:1fr}
 }
 @media (max-width:640px){
   body{font-size:18px}
@@ -251,20 +298,30 @@ footer .terms{margin-top:28px;border-top:1px solid var(--line-d);padding-top:22p
   .gal figure:first-child{grid-column:span 2;grid-row:auto}
   .hero{min-height:88vh}
   .nav .btn{display:none}
+  .nav .wrap{height:54px}
+  .strip .lbl{display:none}
+  .ag{grid-template-columns:1fr;gap:10px}
+  .ag button{justify-self:start}
+  .thermo{flex-direction:column;text-align:center}
 }
 @media (prefers-reduced-motion:reduce){.hero .bg{animation:none}.js .rv{opacity:1;transform:none;transition:none}}
 </style>
 </head>
 <body>
 
-<div class="strip">Saturday, November 7th · The Plaza, New York · <b>The Icon and The Legacy: 2 spots each</b> · <span class="cd" data-cd>Doors open soon</span></div>
-
-<header class="nav">
-  <div class="wrap">
-    <a href="#top" class="brand">MindfullySumaya<small>The Renaissance Soirée</small></a>
-    <a href="#tiers" class="btn">Choose your tier</a>
+<div class="topbar">
+  <div class="strip">
+    <span class="lbl">Doors open at The Plaza in</span>
+    <span class="timer" data-timer aria-live="off"><span><b data-d>0</b><i>days</i></span><span><b data-h>00</b><i>hrs</i></span><span><b data-m>00</b><i>min</i></span><span><b data-s>00</b><i>sec</i></span></span>
+    <b class="lbl">Icon and Legacy: 2 spots each</b>
   </div>
-</header>
+  <header class="nav">
+    <div class="wrap">
+      <a href="#top" class="brand">MindfullySumaya<small>The Renaissance Soirée</small></a>
+      <a href="#tiers" class="btn">Choose your tier</a>
+    </div>
+  </header>
+</div>
 
 <main id="top">
 <section class="hero">
@@ -272,8 +329,8 @@ footer .terms{margin-top:28px;border-top:1px solid var(--line-d);padding-top:22p
   <div class="wrap">
     <span class="eyebrow">MindfullySumaya presents</span>
     <h1><span>The</span>Renaissance Soirée</h1>
-    <p class="hook">On paper, you are winning.<br>So why does more still feel like something you have to hold up?</p>
-    <p class="sub">One full day inside the Champagne Suite at The Plaza. Sumaya Ahmed takes a room of high achieving women into the identity running underneath the success, and rewires it, in person, in a single sitting.</p>
+    <p class="hook">On paper, you are winning.<br>So why does every new level quietly shrink back to the old one?</p>
+    <p class="sub">One full day inside the Champagne Suite at The Plaza. Sumaya Ahmed helps high achieving women stop pulling their own success back down, by resetting the identity running underneath it. In person, in a single sitting.</p>
     <div class="chips">
       <span>Saturday, November 7th, 2026</span>
       <span>10am to 4pm, then the evening</span>
@@ -288,7 +345,52 @@ footer .terms{margin-top:28px;border-top:1px solid var(--line-d);padding-top:22p
   </div>
 </section>
 
-<section class="sec" id="why" style="border-top:0">
+<section class="sec" id="agree" style="border-top:0">
+  <div class="wrap">
+    <div class="narrow center rv">
+      <span class="eyebrow">Be honest for a moment</span>
+      <h2>Four questions.<br><em>Tap the ones that are true.</em></h2>
+      <p class="lead">No one is watching. Just you and the truth.</p>
+    </div>
+    <div class="agree">
+      <div class="ag rv"><p>You know women with less talent, fewer degrees and half your work ethic who earn more, rest more and get chosen more.</p><button type="button">That’s true</button></div>
+      <div class="ag rv"><p>You have read the books, saved the posts and bought the courses. If information were the answer, you would already be there.</p><button type="button">That’s true</button></div>
+      <div class="ag rv"><p>You have had a breakthrough year, and then watched yourself quietly bring it back down to the size you are used to.</p><button type="button">That’s true</button></div>
+      <div class="ag rv"><p>You stand up straighter, speak slower and feel more expensive in a five star lobby than you do in a fluorescent office.</p><button type="button">That’s true</button></div>
+    </div>
+    <p class="verdict rv" id="verdict">Then it was never a discipline problem, and never an information problem.<br><em>It is the setting you are running on.</em></p>
+  </div>
+</section>
+
+<section class="sec dark" id="root">
+  <div class="wrap">
+    <div class="narrow center rv">
+      <span class="eyebrow">The real root</span>
+      <h2>You are not stuck.<br><em>You are set.</em></h2>
+      <p class="lead">Think of the thermostat in your home. Open every window, run every fan, and the room still drifts back to the number on the wall. Not because the fans failed. Because the setting decides.</p>
+      <p>Your identity is that setting. It decides how much money feels safe, how visible you are allowed to be and how much love you let in. Push past it with effort and it quietly brings you back.</p>
+    </div>
+    <div class="paths">
+      <div class="path old rv">
+        <h3>The old path</h3>
+        <p class="big">More strategy.</p>
+        <p>What high achieving women are taught to try:</p>
+        <ul><li>Another course, another coach, another framework</li><li>More hours and more discipline</li><li>Waiting to feel ready, then waiting longer</li></ul>
+        <p style="margin-top:14px">It works, until it hits the setting. Then it stops.</p>
+      </div>
+      <div class="path new rv">
+        <h3>The new path</h3>
+        <p class="big">Change the setting.</p>
+        <p>Identity recalibration: reset the subconscious normal, so a bigger life stops registering as a threat.</p>
+        <ul><li>See the pattern that keeps pulling you back</li><li>Release it at the root, in the body</li><li>Rise into the identity that can hold more</li></ul>
+        <p style="margin-top:14px">Your strategy finally has room to work.</p>
+      </div>
+    </div>
+    <div class="thermo rv"><div class="dial">68°<small>SET</small></div><p>You cannot out-work a thermostat. You change the number. That is what the Renaissance Soirée is for: one day to reset the number, inside a room that shows your body what the new one feels like.</p></div>
+  </div>
+</section>
+
+<section class="sec" id="why">
   <div class="wrap">
     <div class="narrow center rv">
       <span class="eyebrow">Why this room is rare</span>
@@ -312,10 +414,10 @@ footer .terms{margin-top:28px;border-top:1px solid var(--line-d);padding-top:22p
 <section class="sec dark" id="problem">
   <div class="wrap center">
     <div class="narrow rv">
-      <span class="eyebrow">The real problem</span>
-      <h2>You are not undisciplined.<br><em>You are calibrated for less.</em></h2>
-      <p class="lead">You have the degrees, the title and the track record. You have more discipline than anyone you know. That is exactly how you got here, and exactly why the next level is not coming from more effort.</p>
-      <p>A version of you built for a smaller life is running the operation, and she is very good at her job. Every time money, love or visibility gets bigger, she quietly brings you back down. That is what self sabotage actually is.</p>
+      <span class="eyebrow">When the setting changes</span>
+      <h2>The woman who walks in,<br><em>and the woman who walks out.</em></h2>
+      <p class="lead">A version of you built for a smaller life is running the operation. She is very good at her job. She is just working for the wrong version of you.</p>
+      <p>Tap “Walking out” to see what changes when she is replaced.</p>
     </div>
     <div class="toggle rv" role="tablist" aria-label="Before and after the day">
       <button type="button" class="on" data-side="in" role="tab" aria-selected="true">Walking in</button>
@@ -332,6 +434,22 @@ footer .terms{margin-top:28px;border-top:1px solid var(--line-d);padding-top:22p
       <div class="c"><h4>People pleasing</h4><p class="in">Saying yes while her whole body says no, then resenting it quietly.</p><p class="out">She disappoints people and survives it. Her yes means something now.</p></div>
       <div class="c"><h4>Capacity</h4><p class="in">Settling at the size that feels comfortable, because more sounds exhausting.</p><p class="out">Built to hold more money, love and visibility without shrinking it back down.</p></div>
     </div>
+  </div>
+</section>
+
+<section class="sec" id="cost">
+  <div class="wrap">
+    <div class="narrow center rv">
+      <span class="eyebrow">What it costs to wait</span>
+      <h2>If the setting stays the same,<br><em>so does the ceiling.</em></h2>
+      <p class="lead">Nothing dramatic happens. That is the danger. Life just stays exactly this size.</p>
+    </div>
+    <div class="years">
+      <div class="yr rv"><b>1 year</b><p>Another strong year on paper. The same number, the same knot in your stomach, and one more plan you talked yourself out of.</p></div>
+      <div class="yr rv"><b>5 years</b><p>More titles, more responsibility, the same ceiling. You are the most capable woman in every room and still softening your voice in it.</p></div>
+      <div class="yr rv"><b>10 years</b><p>The women who started beside you went bigger. Not because they were better. Because they stopped holding themselves back first.</p></div>
+    </div>
+    <p class="gut rv">One day you look up and realise you spent your best decade being <em>the most impressive woman in the room</em>, and the least free one. The work was never the problem. You just never changed the setting.</p>
   </div>
 </section>
 
@@ -437,6 +555,21 @@ footer .terms{margin-top:28px;border-top:1px solid var(--line-d);padding-top:22p
           <li><b>You are ready to change in a single sitting.</b>One day at The Plaza, not years of slow progress.</li>
         </ul>
       </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec dark" id="three">
+  <div class="wrap">
+    <div class="narrow center rv">
+      <span class="eyebrow">Before you leave The Plaza</span>
+      <h2>Three things happen<br><em>in one day.</em></h2>
+      <p class="lead">Not homework for later. In the room, before you walk back out onto Fifth Avenue.</p>
+    </div>
+    <div class="three">
+      <div class="th rv"><span class="n">I</span><h3>You name the pattern</h3><p>The exact one that has been pulling your money, your visibility or your love back to the old size. Seen clearly, maybe for the first time.</p></div>
+      <div class="th rv"><span class="n">II</span><h3>You reset it at the root</h3><p>Live group hypnosis and nervous system work in the Champagne Suite, so the new normal lands in your body, not just your notebook.</p></div>
+      <div class="th rv"><span class="n">III</span><h3>You make the decision</h3><p>The one you have been circling for months. You leave having decided it, as the woman who no longer audits it afterwards.</p></div>
     </div>
   </div>
 </section>
@@ -557,6 +690,7 @@ footer .terms{margin-top:28px;border-top:1px solid var(--line-d);padding-top:22p
     <div class="center rv"><span class="eyebrow">Before you decide</span><h2>Questions, <em>answered.</em></h2></div>
     <div class="faq rv">
       <details><summary>Who is this for?</summary><p>High achieving women in every field: entrepreneurs and founders, physicians and attorneys, executives, artists, professors, women in finance and tech. Women who are winning on paper and quietly exhausted by how hard they work to hold it up.</p></details>
+      <details><summary>Why not just take another course or hire a coach?</summary><p>Because you already have the strategy. Courses and coaches add information, and information runs on top of the setting. If the setting stays the same, the new strategy gets pulled back to the old size. This day is for the setting itself.</p></details>
       <details><summary>Is this therapy?</summary><p>No. The Renaissance Soirée is a personal development experience. It is not therapy, medical treatment or mental health care, and not a substitute for them. No specific financial or personal outcome is guaranteed.</p></details>
       <details><summary>Is there a recording or a virtual seat?</summary><p>No. The day exists only for the women in the room at The Plaza.</p></details>
       <details><summary>Which tier should I choose?</summary><p>The Muse is the full day. The Icon adds the private dinner and hot seats with Sumaya, where most of the personal work on your business and patterns happens. The Legacy is the full immersion: the night in the presidential suite, Sunday brunch and integration support after. It is by application.</p></details>
@@ -596,8 +730,27 @@ document.documentElement.classList.add('js');
     }
     document.querySelectorAll('[data-cd]').forEach(function(el){ el.textContent = txt; });
     document.querySelectorAll('[data-cd-long]').forEach(function(el){ el.textContent = long; });
+    // Sticky timer boxes, ticking every second
+    var t = Math.max(0, ms), pad = function(n){ return (n < 10 ? '0' : '') + n; };
+    document.querySelectorAll('[data-timer]').forEach(function(el){
+      if (ms <= 0) { el.innerHTML = '<em>The room is open</em>'; return; }
+      el.querySelector('[data-d]').textContent = Math.floor(t / 864e5);
+      el.querySelector('[data-h]').textContent = pad(Math.floor(t % 864e5 / 36e5));
+      el.querySelector('[data-m]').textContent = pad(Math.floor(t % 36e5 / 6e4));
+      el.querySelector('[data-s]').textContent = pad(Math.floor(t % 6e4 / 1e3));
+    });
   }
-  tick(); setInterval(tick, 30000);
+  tick(); setInterval(tick, 1000);
+
+  // "Tap the ones that are true": the verdict lights up once she agrees
+  var verdict = document.getElementById('verdict');
+  document.querySelectorAll('.ag button').forEach(function(b){
+    b.addEventListener('click', function(){
+      var card = b.parentNode, on = card.classList.toggle('yes');
+      b.textContent = on ? 'Yes ✓' : 'That’s true';
+      verdict.classList.toggle('on', document.querySelectorAll('.ag.yes').length > 0);
+    });
+  });
 
   // Walking in / walking out toggle
   var shift = document.getElementById('shift');
