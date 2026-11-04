@@ -67,16 +67,29 @@ t.src=v;s=b.getElementsByTagName(e)[0];
 s.parentNode.insertBefore(t,s)}(window, document,'script',
 'https://connect.facebook.net/en_US/fbevents.js');
 fbq('init', '1874556003533048');
-window.rsTrack = function(n, d){
-  // Same event goes to the pixel and to the Conversions API (/api/capi) with one event ID, so Meta counts it once.
-  var id = n + '.' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-  try { fbq('track', n, d || {}, { eventID: id }); } catch (e) {}
-  try {
-    var b = JSON.stringify({ event_name: n, event_id: id, url: location.href, data: d || {} });
-    if (!(navigator.sendBeacon && navigator.sendBeacon('/api/capi', new Blob([b], { type: 'application/json' }))))
-      fetch('/api/capi', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: b, keepalive: true });
-  } catch (e) {}
-};
+(function(){
+  // Visitor ID and the ad she came from (utm_source / utm_content), kept across pages so a purchase is credited to its ad.
+  function get(k){ try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function set(k, v){ try { localStorage.setItem(k, v); } catch (e) {} }
+  var vid = get('rs_vid'); if (!vid) { vid = 'v' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10); set('rs_vid', vid); }
+  var q = new URLSearchParams(location.search), touch = { src: get('rs_src') || '', source: get('rs_source') || '' };
+  if (q.get('utm_source') || q.get('src')) {
+    touch = { src: q.get('utm_content') || q.get('src') || '', source: q.get('utm_source') || '' };
+    set('rs_src', touch.src); set('rs_source', touch.source);
+  }
+  function send(n, id, d){
+    try {
+      var b = JSON.stringify({ event_name: n, event_id: id, url: location.href, data: d || {}, vid: vid, touch: touch });
+      if (!(navigator.sendBeacon && navigator.sendBeacon('/api/capi', new Blob([b], { type: 'application/json' }))))
+        fetch('/api/capi', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: b, keepalive: true });
+    } catch (e) {}
+  }
+  function newId(n){ return n + '.' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+  // Standard events: pixel + Conversions API + dashboard, one event ID so Meta counts it once.
+  window.rsTrack = function(n, d){ var id = newId(n); try { fbq('track', n, d || {}, { eventID: id }); } catch (e) {} send(n, id, d); };
+  // Dashboard-only signals (never sent to Meta).
+  window.rsLog = function(n, d){ send(n, newId(n), d); };
+})();
 rsTrack('PageView');
 </script>
 <noscript><img height="1" width="1" style="display:none"

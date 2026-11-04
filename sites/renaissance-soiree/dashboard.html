@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Soirée Funnel · Live</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f7fb;--card:#fff;--ink:#0b2545;--text:#33415c;--muted:#6b7a90;--line:#e3e9f2;--navy:#0b2545;--blue:#1d5fd1;
+  --ok:#1f7a4d;--ok-bg:#e6f4ec;--warn:#a26b00;--warn-bg:#fdf3dc;--bad:#b42318;--bad-bg:#fdecea;--few:#cfd8e6;--sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:400 15px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1320px;margin:0 auto;padding:22px 18px 80px}
+h1{font:800 1.9rem/1.1 var(--sans);color:var(--ink);letter-spacing:-.02em;margin:0}
+h2{font:800 1.2rem var(--sans);color:var(--ink);margin:0 0 4px}
+.sub{color:var(--muted);margin:6px 0 0}
+.live{display:inline-flex;align-items:center;gap:6px;font:600 .72rem var(--sans);color:var(--ok);background:var(--ok-bg);border-radius:999px;padding:4px 10px;margin-left:10px;vertical-align:middle}
+.live i{width:7px;height:7px;border-radius:50%;background:var(--ok);animation:blink 1.6s infinite}
+@keyframes blink{50%{opacity:.25}}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:18px 0}
+.seg{display:inline-flex;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:9px 14px;font:600 .9rem var(--sans);color:var(--ink);cursor:pointer}
+.seg button.on{background:var(--navy);color:#fff}
+.btn{border:1px solid var(--line);background:#fff;border-radius:12px;padding:9px 14px;font:600 .9rem var(--sans);color:var(--ink);cursor:pointer}
+.updated{color:var(--muted);font-size:.88rem}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+.kpi.hl{border:2px solid var(--blue)}
+.kpi h4{margin:0;font:700 .7rem var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.kpi b{display:block;font:800 1.75rem/1.15 var(--sans);color:var(--ink);margin:6px 0 2px}
+.kpi span{font-size:.84rem;color:var(--muted)}
+.kpi.good b{color:var(--ok)} .kpi.bad b{color:var(--bad)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 22px 24px;margin-top:18px}
+.legend{display:flex;flex-wrap:wrap;gap:16px;margin:10px 0 14px;font-size:.88rem}
+.legend span::before{content:"";display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px;background:var(--c)}
+.board{background-image:radial-gradient(#d9e2ee 1px,transparent 1px);background-size:18px 18px;border:1px solid var(--line);border-radius:16px;padding:18px}
+.row-t{display:flex;align-items:center;gap:10px;font:700 .78rem var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:6px 0 12px}
+.row-t i{width:26px;height:26px;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;font-style:normal;font-size:.8rem;letter-spacing:0}
+.flow{display:flex;align-items:stretch;gap:0;margin-bottom:22px;overflow-x:auto;padding-bottom:4px}
+.box{flex:1 1 118px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 14px 12px;box-shadow:0 2px 10px -6px rgba(11,37,69,.2);cursor:pointer;min-width:118px}
+.box:hover{border-color:var(--blue)}
+.box.end{border:2px solid var(--ok)}
+.box h5{margin:0;font:700 .86rem var(--sans);color:var(--ink)}
+.box b{display:block;font:800 1.6rem/1.1 var(--sans);color:var(--ink);margin:6px 0 2px}
+.box small{display:block;color:var(--muted);font-size:.8rem}
+.badge{display:inline-block;margin-top:6px;font:600 .74rem var(--sans);border-radius:999px;padding:3px 8px;background:#eef2f8;color:var(--ink)}
+.badge.ok{background:var(--ok-bg);color:var(--ok)} .badge.warn{background:var(--warn-bg);color:var(--warn)} .badge.bad{background:var(--bad-bg);color:var(--bad)}
+.arr{flex:0 0 84px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;cursor:pointer}
+.arr::before{content:"";position:absolute;left:4px;right:10px;top:50%;height:3px;background:var(--c,var(--few));border-radius:2px;margin-top:-14px}
+.arr::after{content:"";position:absolute;right:2px;top:50%;margin-top:-19px;border:6px solid transparent;border-left:9px solid var(--c,var(--few))}
+.arr .pct{position:relative;z-index:1;background:#fff;border:2px solid var(--c,var(--few));border-radius:999px;padding:3px 9px;font:800 .9rem var(--sans);color:var(--ink);margin-top:-28px}
+.arr .lft{font-size:.74rem;color:var(--muted);margin-top:6px;text-align:center;line-height:1.2}
+.arr.ok{--c:var(--ok)} .arr.warn{--c:var(--warn)} .arr.bad{--c:var(--bad)}
+.fix{border:1px solid var(--line);border-left:4px solid var(--warn);border-radius:14px;padding:16px 18px;margin-top:12px;display:grid;grid-template-columns:1fr auto;gap:14px}
+.fix.bad{border-left-color:var(--bad)}
+.fix h3{margin:0;font:800 1.05rem var(--sans);color:var(--ink)}
+.fix p{margin:6px 0 0}
+.fix ul{margin:8px 0 0;padding-left:20px}
+.fix .side{text-align:right}
+.tag{display:inline-block;font:700 .74rem var(--sans);border-radius:999px;padding:4px 10px;background:var(--warn-bg);color:var(--warn)}
+.tag.bad{background:var(--bad-bg);color:var(--bad)}
+.money{display:block;font:800 1.05rem var(--sans);color:var(--ink);margin:8px 0}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{padding:10px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{font:700 .7rem var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+th:first-child,td:first-child{text-align:left}
+.tw{overflow-x:auto}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid2>*,.card,.board{min-width:0}
+.empty{color:var(--muted);padding:12px 0}
+.detail{display:none;margin-top:16px;border-top:1px dashed var(--line);padding-top:16px}
+.detail.on{display:block}
+.bars{display:flex;align-items:flex-end;gap:6px;height:90px;margin-top:10px}
+.bars div{flex:1;background:var(--blue);border-radius:6px 6px 0 0;min-height:2px;position:relative}
+.bars div span{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:.7rem;color:var(--muted);white-space:nowrap}
+.note{font-size:.84rem;color:var(--muted);margin-top:10px}
+.gate{max-width:380px;margin:12vh auto;background:#fff;border:1px solid var(--line);border-radius:18px;padding:26px}
+.gate input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font:500 1rem var(--sans);margin:12px 0}
+.gate button{width:100%;padding:12px;border:0;border-radius:10px;background:var(--navy);color:#fff;font:700 1rem var(--sans);cursor:pointer}
+.err{color:var(--bad);font-size:.9rem;min-height:1.2em}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}.fix{grid-template-columns:1fr}.fix .side{text-align:left}}
+</style>
+</head>
+<body>
+<div id="gate" class="gate" hidden>
+  <h2>Soirée funnel</h2>
+  <p class="sub">Enter the dashboard key.</p>
+  <input id="key" type="password" autocomplete="current-password" placeholder="Dashboard key">
+  <button id="go" type="button">Open dashboard</button>
+  <p class="err" id="gerr"></p>
+</div>
+
+<div class="wrap" id="app" hidden>
+  <h1>Funnel Flow and Fixes <span class="live"><i></i>Live · refreshes every minute</span></h1>
+  <p class="sub">The Renaissance Soirée, from the ad to the paid seat: where women drop off, what to fix first, and whether each fix worked.</p>
+
+  <div class="controls">
+    <div class="seg" data-k="range"><button data-v="24h">24h</button><button data-v="3d">3d</button><button data-v="7d" class="on">7d</button><button data-v="all">All</button></div>
+    <div class="seg" data-k="device"><button data-v="" class="on">All devices</button><button data-v="mobile">Phone</button><button data-v="desktop">Desktop</button></div>
+    <div class="seg" data-k="traffic"><button data-v="" class="on">All traffic</button><button data-v="meta">Meta ads</button><button data-v="other">Other</button></div>
+    <button class="btn" id="refresh" type="button">Refresh</button>
+    <span class="updated" id="updated"></span>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="card">
+    <h2>The funnel on a whiteboard</h2>
+    <p class="sub">Women at each step, and the share who moved on to the next. Click any box or arrow for the detail: by device, by ad and day by day.</p>
+    <div class="legend"><span style="--c:var(--ok)">On target</span><span style="--c:var(--warn)">Below target</span><span style="--c:var(--bad)">Leak (sure)</span><span style="--c:var(--few)">Too few people to judge</span></div>
+    <div class="board" id="board"></div>
+    <div class="detail" id="detail"></div>
+  </div>
+
+  <div class="card">
+    <h2>Fix first</h2>
+    <p class="sub">Worked out from your own numbers each time the page loads. Ranked by the extra revenue if the step reached its target, weighted by how sure the data is. Press "We tried this" when you change something; the log below then shows whether it worked.</p>
+    <div id="fixes"></div>
+  </div>
+
+  <div class="card">
+    <h2>Which ad is selling</h2>
+    <p class="sub">Meta's spend and clicks next to what those women actually did on the page.</p>
+    <div class="tw"><table id="byad"></table></div>
+    <p class="note" id="metanote"></p>
+  </div>
+
+  <div class="grid2">
+    <div class="card"><h2>Which audience</h2><p class="sub">Spend and results per ad set (your 3 audiences).</p><div class="tw"><table id="byaud"></table></div></div>
+    <div class="card"><h2>Which tier</h2><p class="sub">Interest (tier tapped) against paid seats.</p><div class="tw"><table id="bytier"></table></div></div>
+  </div>
+
+  <div class="card">
+    <h2>Fix log</h2>
+    <p class="sub">Each change you tried, with the step's conversion before and after it.</p>
+    <div class="tw"><table id="fixlog"></table></div>
+  </div>
+
+  <p class="note">Paid seats are counted when Stan sends the buyer to /welcome?tier=… after checkout. If a product's redirect isn't set, those sales won't appear here: check Stan's sales report for the true total. Revenue is list price by tier.</p>
+</div>
+
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var S = { key: '', range: '7d', device: '', traffic: '', data: null, sel: null };
+  var fmt = function(n){ return Math.round(n).toLocaleString('en-US'); };
+  var usd = function(n){ return '$' + (n >= 100 ? fmt(n) : (Math.round(n * 100) / 100).toFixed(2)); };
+  var pct = function(n){ return n == null ? 'n/a' : (n * 100 >= 10 ? (n * 100).toFixed(0) : (n * 100).toFixed(1)) + '%'; };
+  var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var AD_NAME = { tickets: 'A · Death to your old identity', decision: 'B · Put yourself in the room', singleday: 'C · Receive instead of proving' };
+  var MIN = 30, SURE = 100;
+
+  // Funnel steps and targets (warm audience, high-ticket event)
+  var ARROWS = {
+    'imp>click': { label: 'Saw ad → clicked', target: .015, why: 'Click-through on the ad',
+      tips: ['Lead with her line "Death to your old identity" in the first 5 words', 'Use the image with Sumaya on stage; faces beat buildings', 'Retire the weakest of A/B/C and give its budget to the best'] },
+    'click>visit': { label: 'Clicked → page loaded', target: .75, why: 'Clicks that actually reached the page',
+      tips: ['Check page speed on 4G: the hero image should load in under 2 seconds', 'Make sure every ad links to the same page (no broken links)', 'In-app browser issues: test the ad link inside Instagram'] },
+    'visit>read50': { label: 'Visited → read half', target: .45, why: 'The first screen is not holding them',
+      tips: ['Headline must repeat the ad\'s promise word for word', 'Show the date, The Plaza and "from $997" in the first screen', 'Move the "Tap the ones that are true" section higher'] },
+    'visit>tiers': { label: 'Visited → reached the tiers', target: .35, why: 'Women are not getting to the prices',
+      tips: ['Add a second "Choose your tier" button after the thermostat section', 'Shorten the page above the tiers', 'Make the sticky "Choose tier" bar more visible on phone'] },
+    'tiers>checkout': { label: 'Saw tiers → started checkout', target: .20, why: 'Prices are seen but not chosen',
+      tips: ['Lead the Icon card with "2 spots left" and the private dinner', 'Repeat "Your old self will not stand a chance in this room" above the cards', 'Make the WhatsApp help button visible next to the cards'] },
+    'checkout>paid': { label: 'Started checkout → paid', target: .35, why: 'Women open Stan checkout and leave',
+      tips: ['Confirm Stan redirects to /welcome?tier=… (otherwise sales are uncounted)', 'Turn on Apple Pay / Google Pay in Stan', 'WhatsApp the women who tapped a tier but did not buy'] },
+    'visit>legacy': { label: 'Visited → Legacy interest', target: .03, why: 'Few women open the Legacy',
+      tips: ['Add one line about the presidential suite overnight in the hero', 'Show the $500 sundae photo near the Legacy card'] },
+    'legacy>apply': { label: 'Legacy interest → applied', target: .30, why: 'Legacy interest is not turning into applications',
+      tips: ['Push WhatsApp-to-Sumaya as the first option', 'Shorten the application to 3 questions'] },
+  };
+  var CORE = ['imp>click', 'click>visit', 'visit>tiers', 'tiers>checkout', 'checkout>paid'];
+
+  function counts(){
+    var d = S.data, s = (d && d.funnel && d.funnel.steps) || {}, m = d && d.meta && d.meta.totals;
+    return { imp: m ? m.impressions : null, click: m ? m.linkClicks : null, spend: m ? m.spend : null,
+      visit: s.visit || 0, read50: s.read50 || 0, tiers: s.tiers || 0, checkout: s.checkout || 0, paid: s.paid || 0,
+      legacy: s.legacy || 0, apply: s.apply || 0, help: s.help || 0, revenue: Number(d && d.funnel && d.funnel.revenue || 0),
+      adVisit: ((d && d.funnel && d.funnel.bySource) || []).filter(function(r){ return AD_NAME[r.src] || r.src === 'meta (no ad tag)'; }).reduce(function(n, r){ return n + (r.visit || 0); }, 0) };
+  }
+  function judge(key, c){
+    var p = key.split('>'), from = c[p[0]], to = key === 'click>visit' ? c.adVisit : c[p[1]], t = ARROWS[key].target;
+    if (from == null || to == null) return { state: 'few', rate: null, from: from, to: to, target: t, na: true };
+    var rate = from ? Math.min(1, to / from) : null;
+    var state = from < MIN || rate == null ? 'few' : rate >= t ? 'ok' : (from >= SURE && rate < t * .6 ? 'bad' : 'warn');
+    return { state: state, rate: rate, from: from, to: to, target: t };
+  }
+
+  function render(){
+    var c = counts(), d = S.data;
+    var aov = c.paid ? c.revenue / c.paid : 1200;
+    var judged = Object.keys(ARROWS).map(function(k){ return [k, judge(k, c)]; });
+    var onT = judged.filter(function(x){ return x[1].state === 'ok'; }).length, can = judged.filter(function(x){ return x[1].state !== 'few'; }).length;
+    var v2b = c.visit ? c.paid / c.visit : null, roas = c.spend ? c.revenue / c.spend : null;
+    var k = [
+      ['Ad spend', c.spend == null ? '—' : usd(c.spend), c.imp == null ? 'Meta data unavailable' : fmt(c.imp) + ' impressions'],
+      ['Visitors', fmt(c.visit), 'unique women on the page'],
+      ['Paid seats', fmt(c.paid), 'tracked via Stan redirect', c.paid ? 'good' : ''],
+      ['Revenue tracked', usd(c.revenue), c.paid ? 'avg ' + usd(aov) + ' a seat' : 'no tracked sales yet'],
+      ['Cost per seat', c.spend && c.paid ? usd(c.spend / c.paid) : '—', 'ad spend ÷ paid seats'],
+      ['Return on ad spend', roas == null ? '—' : roas.toFixed(1) + 'x', 'revenue ÷ ad spend', roas != null && roas >= 3 ? 'good' : roas != null && c.spend > 50 && roas < 1 ? 'bad' : ''],
+      ['Visitor to buyer', v2b == null ? '—' : pct(v2b), 'target 2%', 'hl'],
+      ['Revenue per visitor', c.visit ? usd(c.revenue / c.visit) : '—', 'what one visit is worth'],
+      ['Checkout to paid', c.checkout ? pct(c.paid / c.checkout) : '—', fmt(Math.max(0, c.checkout - c.paid)) + ' started and left'],
+      ['Steps on target', onT + ' of ' + can, (judged.length - can) + ' steps need more people'],
+    ];
+    $('kpis').innerHTML = k.map(function(x){ return '<div class="kpi ' + (x[3] || '') + '"><h4>' + x[0] + '</h4><b>' + x[1] + '</b><span>' + x[2] + '</span></div>'; }).join('');
+
+    function box(id, title, n, small, extra, end){ return '<div class="box' + (end ? ' end' : '') + '" data-step="' + id + '"><h5>' + title + '</h5><b>' + (n == null ? '—' : fmt(n)) + '</b><small>' + (small || '') + '</small>' + (extra || '') + '</div>'; }
+    function arr(key){
+      var j = judge(key, c), left = j.from != null && j.to != null ? Math.max(0, j.from - j.to) : null;
+      return '<div class="arr ' + j.state + '" data-arrow="' + key + '" title="' + esc(ARROWS[key].label) + ' · target ' + pct(j.target) + '"><span class="pct">' + (j.na ? 'n/a' : pct(j.rate)) + '</span><span class="lft">' + (left == null ? 'no data' : '−' + fmt(left) + ' left') + '<br>target ' + pct(j.target) + '</span></div>';
+    }
+    var r50 = judge('visit>read50', c);
+    var readBadge = '<span class="badge ' + (r50.state === 'few' ? '' : r50.state) + '">' + (c.visit ? pct(c.read50 / c.visit) : '—') + ' read half</span>';
+    $('board').innerHTML =
+      '<div class="row-t"><i>1</i>Getting the seat</div><div class="flow">' +
+        box('imp', 'Ad impressions', c.imp, c.spend == null ? '' : usd(c.spend) + ' spent') + arr('imp>click') +
+        box('click', 'Link clicks', c.click, c.click ? usd(c.spend / c.click) + ' a click' : '') + arr('click>visit') +
+        box('visit', 'Page visitors', c.visit, c.adVisit + ' from the ads', readBadge) + arr('visit>tiers') +
+        box('tiers', 'Reached the tiers', c.tiers, '') + arr('tiers>checkout') +
+        box('checkout', 'Started checkout', c.checkout, c.help ? c.help + ' asked for help on WhatsApp' : 'tapped a tier') + arr('checkout>paid') +
+        box('paid', 'Paid seat', c.paid, usd(c.revenue), '', true) +
+      '</div><div class="row-t"><i>2</i>The Legacy path ($4,997)</div><div class="flow">' +
+        box('visit', 'Page visitors', c.visit, '') + arr('visit>legacy') +
+        box('legacy', 'Legacy interest', c.legacy, 'opened the application or WhatsApp') + arr('legacy>apply') +
+        box('apply', 'Applied', c.apply, 'form sent · WhatsApp chats are in her phone', '', true) +
+      '</div>';
+    document.querySelectorAll('#board [data-step],#board [data-arrow]').forEach(function(el){ el.addEventListener('click', function(){ detail(el.getAttribute('data-step') || el.getAttribute('data-arrow')); }); });
+    if (S.sel) detail(S.sel, true);
+
+    // Fix first: rank by money if the step reached target
+    var order = ['imp>click', 'click>visit', 'visit>read50', 'visit>tiers', 'tiers>checkout', 'checkout>paid', 'visit>legacy', 'legacy>apply'];
+    function down(key){ // conversion from this arrow's end to a paid seat
+      var idx = CORE.indexOf(key), m = 1;
+      if (key === 'visit>read50') idx = 1;
+      if (key === 'visit>legacy') return judge('legacy>apply', c).rate || .3;
+      if (key === 'legacy>apply') return .5;
+      for (var i = idx + 1; i < CORE.length; i++) { var j = judge(CORE[i], c); m *= j.state === 'few' || j.rate == null ? ARROWS[CORE[i]].target : j.rate; }
+      if (key === 'visit>read50') m = m * 1; return m;
+    }
+    var list = order.map(function(key){
+      var j = judge(key, c); if (j.state === 'few' || j.state === 'ok' || j.na) return null;
+      var val = key.indexOf('legacy') >= 0 ? 4997 : aov;
+      var extra = j.from * Math.max(0, j.target - j.rate) * down(key) * val * Math.min(1, j.from / SURE);
+      return { key: key, j: j, extra: extra };
+    }).filter(Boolean).sort(function(a, b){ return b.extra - a.extra; });
+    $('fixes').innerHTML = list.length ? list.map(function(x, i){
+      var a = ARROWS[x.key], j = x.j;
+      return '<div class="fix ' + (j.state === 'bad' ? 'bad' : '') + '"><div><h3>' + (i + 1) + '. ' + esc(a.why) + ': ' + pct(j.rate) + ' against a ' + pct(j.target) + ' target</h3>' +
+        '<p>' + fmt(j.to) + ' of ' + fmt(j.from) + ' made it (' + esc(a.label) + ').</p><ul>' + a.tips.map(function(t){ return '<li>' + esc(t) + '</li>'; }).join('') + '</ul></div>' +
+        '<div class="side"><span class="tag ' + (j.state === 'bad' ? 'bad' : '') + '">' + (j.state === 'bad' ? 'Leak, fix now' : 'Worth a test') + '</span>' +
+        '<span class="money">≈ ' + usd(x.extra) + ' more</span><button class="btn" data-fix="' + x.key + '">We tried this</button></div></div>';
+    }).join('') : '<p class="empty">' + (can ? 'Every step with enough people is on target. Keep the budget where it is.' : 'Not enough people yet to judge any step. This fills in as the ads deliver.') + '</p>';
+    document.querySelectorAll('[data-fix]').forEach(function(b){ b.addEventListener('click', function(){ logFix(b.getAttribute('data-fix')); }); });
+
+    // By ad: Meta + our page data by utm_content
+    var m = d.meta, bySrc = {}; (d.funnel.bySource || []).forEach(function(r){ bySrc[r.src] = r; });
+    var ads = {};
+    ((m && m.ads) || []).forEach(function(a){ var s = a.src || a.ad; var t = ads[s] = ads[s] || { spend: 0, impressions: 0, linkClicks: 0, mpurch: 0 }; t.spend += a.spend; t.impressions += a.impressions; t.linkClicks += a.linkClicks; t.mpurch += a.purchases; });
+    var keys = Object.keys(AD_NAME).concat(Object.keys(bySrc).filter(function(s){ return !AD_NAME[s]; }));
+    var rows = keys.map(function(s){
+      var a = ads[s] || {}, p = bySrc[s] || {};
+      if (!a.spend && !p.visit && !p.paid) return '';
+      return '<tr><td>' + esc(AD_NAME[s] || s) + '</td><td>' + (a.spend != null ? usd(a.spend) : '—') + '</td><td>' + (a.impressions ? fmt(a.impressions) : '—') + '</td><td>' + (a.impressions ? pct(a.linkClicks / a.impressions) : '—') +
+        '</td><td>' + (a.linkClicks ? usd(a.spend / a.linkClicks) : '—') + '</td><td>' + fmt(p.visit || 0) + '</td><td>' + fmt(p.tiers || 0) + '</td><td>' + fmt(p.checkout || 0) + '</td><td>' + fmt(p.paid || 0) + '</td><td>' + usd(Number(p.revenue || 0)) +
+        '</td><td>' + (a.spend && p.paid ? usd(a.spend / p.paid) : '—') + '</td><td>' + (a.spend ? (Number(p.revenue || 0) / a.spend).toFixed(1) + 'x' : '—') + '</td></tr>';
+    }).join('');
+    $('byad').innerHTML = '<tr><th>Ad / source</th><th>Spend</th><th>Impr.</th><th>CTR</th><th>Cost/click</th><th>Visitors</th><th>Tiers</th><th>Checkout</th><th>Paid</th><th>Revenue</th><th>Cost/seat</th><th>ROAS</th></tr>' + (rows || '<tr><td colspan="12" class="empty">No ad traffic yet.</td></tr>');
+    $('metanote').textContent = !m ? (S.traffic === 'other' ? 'Meta columns hidden for non-Meta traffic.' : 'Meta spend is not connected yet.') : m.error ? 'Meta data could not be loaded right now; page data is still live.' : 'Meta reports ' + fmt(m.totals.purchases) + ' purchases from its own attribution, for comparison.';
+
+    var aud = {}; ((m && m.ads) || []).forEach(function(a){ var t = aud[a.adset] = aud[a.adset] || { spend: 0, impressions: 0, linkClicks: 0, lpv: 0, purchases: 0 }; t.spend += a.spend; t.impressions += a.impressions; t.linkClicks += a.linkClicks; t.lpv += a.landingViews; t.purchases += a.purchases; });
+    $('byaud').innerHTML = '<tr><th>Audience</th><th>Spend</th><th>CTR</th><th>Cost/click</th><th>Page views</th><th>Purchases*</th></tr>' + (Object.keys(aud).map(function(n){ var t = aud[n];
+      return '<tr><td>' + esc(n.replace('Soirée · ', '')) + '</td><td>' + usd(t.spend) + '</td><td>' + (t.impressions ? pct(t.linkClicks / t.impressions) : '—') + '</td><td>' + (t.linkClicks ? usd(t.spend / t.linkClicks) : '—') + '</td><td>' + fmt(t.lpv) + '</td><td>' + fmt(t.purchases) + '</td></tr>'; }).join('') || '<tr><td colspan="6" class="empty">No delivery yet.</td></tr>');
+    $('bytier').innerHTML = '<tr><th>Tier</th><th>Interest</th><th>Paid</th><th>Conversion</th><th>Revenue</th></tr>' + (d.funnel.byTier || []).map(function(t){
+      return '<tr><td>' + { muse: 'The Muse · $997', icon: 'The Icon · $1,500', legacy: 'The Legacy · $4,997' }[t.tier] + '</td><td>' + fmt(t.interest) + '</td><td>' + fmt(t.paid) + '</td><td>' + (t.interest ? pct(t.paid / t.interest) : '—') + '</td><td>' + usd(Number(t.revenue)) + '</td></tr>'; }).join('');
+
+    // Fix log with before / after rates from the daily series
+    var daily = d.funnel.daily || [];
+    function rateBetween(key, from, to){
+      var p = key.split('>'), a = 0, b = 0;
+      daily.forEach(function(x){ if ((!from || x.d >= from) && (!to || x.d < to)) { a += (x.steps[p[0]] || 0); b += (x.steps[p[1]] || 0); } });
+      return a ? { r: b / a, n: a } : null;
+    }
+    var fx = d.funnel.fixes || [];
+    $('fixlog').innerHTML = '<tr><th>When</th><th>Step</th><th>What you tried</th><th>Before</th><th>After</th><th>Verdict</th></tr>' + (fx.length ? fx.map(function(f){
+      var day = new Date(f.ts).toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+      var meta = f.step.indexOf('imp') === 0 || f.step.indexOf('click>') === 0;
+      var bf = meta ? null : rateBetween(f.step, null, day), af = meta ? null : rateBetween(f.step, day, null);
+      var verdict = meta ? 'check in Ads Manager' : !af || af.n < MIN ? 'waiting for ' + MIN + ' people' : !bf ? 'no before data' : af.r > bf.r * 1.1 ? 'Worked ↑' : af.r < bf.r * .9 ? 'Worse ↓' : 'No change';
+      return '<tr><td>' + new Date(f.ts).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + '</td><td>' + esc((ARROWS[f.step] || {}).label || f.step) + '</td><td style="text-align:left;white-space:normal">' + esc(f.note || '') + '</td><td>' + (bf ? pct(bf.r) : '—') + '</td><td>' + (af ? pct(af.r) + ' (' + af.n + ')' : '—') + '</td><td>' + verdict + '</td></tr>';
+    }).join('') : '<tr><td colspan="6" class="empty">No fixes logged yet.</td></tr>');
+  }
+
+  function detail(id, keep){
+    var d = S.data, box = $('detail'); if (!d) return;
+    if (!keep && S.sel === id && box.classList.contains('on')) { box.classList.remove('on'); S.sel = null; return; }
+    S.sel = id; box.classList.add('on');
+    var steps = id.indexOf('>') > 0 ? id.split('>') : [id, null], s = steps[1] || steps[0];
+    var daily = d.funnel.daily || [], dev = d.funnel.byDevice || {};
+    var title = id.indexOf('>') > 0 ? ARROWS[id].label + ' · target ' + pct(ARROWS[id].target) : 'Step: ' + s;
+    var series = daily.map(function(x){ var a = x.steps[steps[0]] || 0, b = steps[1] ? (x.steps[steps[1]] || 0) : a; return { d: x.d.slice(5), v: steps[1] ? (a ? b / a : 0) : a, lbl: steps[1] ? b + '/' + a : a }; });
+    var max = Math.max.apply(null, series.map(function(x){ return x.v; }).concat([steps[1] ? .0001 : 1]));
+    var devRows = Object.keys(dev).map(function(k){ var a = dev[k][steps[0]] || 0, b = steps[1] ? (dev[k][steps[1]] || 0) : null;
+      return '<tr><td>' + esc(k) + '</td><td>' + fmt(a) + '</td>' + (steps[1] ? '<td>' + fmt(b) + '</td><td>' + (a ? pct(b / a) : '—') + '</td>' : '') + '</tr>'; }).join('');
+    var srcRows = (d.funnel.bySource || []).map(function(r){ var a = r[steps[0]], b = steps[1] ? r[steps[1]] : null; if (a == null) return '';
+      return '<tr><td>' + esc(AD_NAME[r.src] || r.src) + '</td><td>' + fmt(a) + '</td>' + (steps[1] ? '<td>' + fmt(b || 0) + '</td><td>' + (a ? pct((b || 0) / a) : '—') + '</td>' : '') + '</tr>'; }).join('');
+    var hdr = '<tr><th></th><th>' + esc(steps[0]) + '</th>' + (steps[1] ? '<th>' + esc(steps[1]) + '</th><th>Rate</th>' : '') + '</tr>';
+    box.innerHTML = '<h2>' + esc(title) + '</h2>' +
+      (series.length ? '<div class="bars">' + series.map(function(x){ return '<div style="height:' + Math.max(2, x.v / max * 100) + '%" title="' + x.d + ': ' + x.lbl + '"><span>' + x.d + '</span></div>'; }).join('') + '</div><br>' : '<p class="empty">No daily data yet.</p>') +
+      '<div class="grid2"><div class="tw"><h4>By device</h4><table>' + hdr + (devRows || '<tr><td class="empty">—</td></tr>') + '</table></div><div class="tw"><h4>By ad / source</h4><table>' + hdr + (srcRows || '<tr><td class="empty">—</td></tr>') + '</table></div></div>' +
+      (ARROWS[id] ? '<p class="note">To try: ' + ARROWS[id].tips.map(esc).join(' · ') + '</p>' : '');
+  }
+
+  function logFix(step){
+    var note = prompt('What did you change? (e.g. "Moved tiers higher")');
+    if (note == null) return;
+    api({ fix: { step: step, note: note } }).then(function(){ load(); });
+  }
+
+  function api(extra){
+    var body = Object.assign({ key: S.key, range: S.range, device: S.device, traffic: S.traffic }, extra || {});
+    return fetch('/api/stats', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(function(r){ return r.json().then(function(j){ if (!r.ok) throw Object.assign(new Error(j.error || 'Error'), { status: r.status }); return j; }); });
+  }
+  function load(){
+    $('updated').textContent = 'Loading…';
+    return api().then(function(j){
+      S.data = j; render();
+      $('updated').textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }).catch(function(e){
+      if (e.status === 401) { try { localStorage.removeItem('rs_dash_key'); } catch (x) {} $('app').hidden = true; $('gate').hidden = false; $('gerr').textContent = 'Wrong key.'; return; }
+      $('updated').textContent = 'Could not refresh: ' + e.message;
+    });
+  }
+
+  document.querySelectorAll('.seg').forEach(function(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button'); if (!b) return;
+      seg.querySelectorAll('button').forEach(function(x){ x.classList.toggle('on', x === b); });
+      S[seg.getAttribute('data-k')] = b.getAttribute('data-v'); load();
+    });
+  });
+  $('refresh').addEventListener('click', load);
+  function open(){ S.key = $('key').value.trim(); if (!S.key) return; try { localStorage.setItem('rs_dash_key', S.key); } catch (x) {} $('gate').hidden = true; $('app').hidden = false; $('gerr').textContent = ''; load(); }
+  $('go').addEventListener('click', open);
+  $('key').addEventListener('keydown', function(e){ if (e.key === 'Enter') open(); });
+  var saved = null; try { saved = localStorage.getItem('rs_dash_key'); } catch (x) {}
+  if (saved) { S.key = saved; $('app').hidden = false; load(); } else $('gate').hidden = false;
+  setInterval(function(){ if (!$('app').hidden && document.visibilityState === 'visible') load(); }, 60000);
+})();
+</script>
+</body>
+</html>
