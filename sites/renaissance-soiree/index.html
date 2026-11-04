@@ -75,8 +75,12 @@ h2 em,h1 em,h3 em{font-style:italic;color:var(--wine)}
 @keyframes drift{to{transform:scale(1.1)}}
 .hero .wrap{position:relative;z-index:1;padding-top:72px;padding-bottom:84px;width:100%}
 .hero .eyebrow{color:var(--gold-2)}
-.hero h1{color:var(--ivory);font-family:var(--display);font-weight:400;letter-spacing:.04em;font-size:clamp(2.5rem,6.4vw,5rem);line-height:1;margin:18px 0 8px}
-.hero h1 span{display:block;font-family:var(--serif);font-style:italic;font-size:.42em;letter-spacing:0;color:var(--gold-2);margin-bottom:6px}
+.hero .kicker{margin:16px 0 0;font:400 clamp(1.1rem,2.2vw,1.45rem)/1.2 var(--display);letter-spacing:.14em;color:var(--gold-2)}
+.hero .kicker i{font:italic 400 .9em var(--serif);letter-spacing:0;margin-right:4px}
+.hero h1{color:var(--ivory);font-family:var(--serif);font-weight:500;font-size:clamp(2.2rem,4.8vw,3.9rem);line-height:1.07;margin:14px 0 18px;letter-spacing:-.005em}
+.hero h1 em{font-style:italic;color:var(--gold-2)}
+.hero .mech{display:flex;flex-wrap:wrap;gap:10px 18px;margin:0 0 6px;font:500 .8rem var(--sans);color:var(--on-d)}
+.hero .mech span::before{content:"◆";color:var(--gold);font-size:.55rem;margin-right:8px;vertical-align:2px}
 .hook{font-size:clamp(1.35rem,3.4vw,2rem);line-height:1.25;color:var(--ivory);max-width:780px;margin:22px 0 14px;font-style:italic}
 .hero p.sub{max-width:640px;color:var(--on-d-muted);font-size:1.12rem;margin:0}
 .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}
@@ -351,9 +355,10 @@ src="https://www.facebook.com/tr?id=1874556003533048&ev=PageView&noscript=1"
   <div class="wrap hero-grid">
     <div class="hero-copy">
     <span class="eyebrow">For the women who have been watching</span>
-    <h1><span>The</span>Renaissance Soirée</h1>
-    <p class="hook">You have watched me on your screen for months.<br>On Saturday, you sit in the room.</p>
-    <p class="sub">You know the work. You have felt it shift something through a phone. Now I am doing it in person, for one day, inside the Champagne Suite at The Plaza, for the women ready to stop pulling their success back to the old size.</p>
+    <p class="kicker"><i>The</i> Renaissance Soirée</p>
+    <h1>Hold more money, love and visibility, <em>without sabotaging it back down.</em></h1>
+    <p class="sub">No more hustle, no more courses. The Renaissance Method resets the identity running underneath your success, in one day inside the Champagne Suite at The Plaza. You have watched it work through a screen. On Saturday, you sit in the room.</p>
+    <div class="mech" style="margin-top:20px"><span>The Renaissance Method</span><span>4,000+ women in 2026</span><span>One day, in person</span></div>
     <div class="chips">
       <span>Saturday, November 7th, 2026</span>
       <span>10am to 4pm, then the evening</span>
