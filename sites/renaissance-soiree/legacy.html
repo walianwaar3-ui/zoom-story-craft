@@ -201,6 +201,11 @@ src="https://www.facebook.com/tr?id=1874556003533048&ev=PageView&noscript=1"
     text = 'LEGACY APPLICATION\n\nName: ' + name + '\nEmail: ' + email + '\nInstagram: ' + val('ig') + '\nPhone: ' + val('phone') +
       '\nWhat I do: ' + val('work') + '\nCeiling: ' + val('ceiling') + '\nBy Sunday morning: ' + val('next') +
       '\nReady to invest $4,997: ' + val('ready') + '\nCan stay overnight Nov 7th and join brunch: ' + val('overnight');
+    try {
+      var rec = { name: name, email: email, ig: val('ig'), phone: val('phone'), work: val('work'), ceiling: val('ceiling'), next: val('next'), ready: val('ready'), overnight: val('overnight') };
+      try { rec.vid = localStorage.getItem('rs_vid') || ''; rec.src = (localStorage.getItem('rs_source') || '') + (localStorage.getItem('rs_src') ? ' / ' + localStorage.getItem('rs_src') : ''); } catch (x) {}
+      fetch('/api/apply', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(rec), keepalive: true });
+    } catch (x) {}
     mail = 'mailto:' + TO + '?subject=' + encodeURIComponent('Legacy application: ' + name) + '&body=' + encodeURIComponent(text);
     try { navigator.clipboard && navigator.clipboard.writeText(text).then(function(){ document.getElementById('copied').textContent = 'Your answers are copied: paste them into the Instagram DM.'; }); } catch (x) {}
     document.getElementById('first').textContent = name.split(' ')[0];

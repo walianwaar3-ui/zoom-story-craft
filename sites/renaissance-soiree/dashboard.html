@@ -77,6 +77,19 @@ th:first-child,td:first-child{text-align:left}
 .bars div{flex:1;background:var(--blue);border-radius:6px 6px 0 0;min-height:2px;position:relative}
 .bars div span{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:.7rem;color:var(--muted);white-space:nowrap}
 .note{font-size:.84rem;color:var(--muted);margin-top:10px}
+.stan{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px}
+.app{border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:14px;padding:14px 16px;margin-top:12px}
+.app.hot{border-left-color:var(--ok)}
+.app h3{margin:0;font:800 1.05rem var(--sans);color:var(--ink)} .app .when{font-size:.8rem;color:var(--muted)}
+.app dl{display:grid;grid-template-columns:150px 1fr;gap:4px 12px;margin:10px 0 0;font-size:.9rem} .app dt{color:var(--muted)} .app dd{margin:0;color:var(--ink);white-space:pre-wrap;word-break:break-word}
+.app .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px} .app .acts a{border:1px solid var(--line);border-radius:10px;padding:8px 12px;font:600 .84rem var(--sans);color:var(--ink);text-decoration:none}
+.app .acts a.wa{background:#1f7a4d;border-color:#1f7a4d;color:#fff}
+@media (max-width:600px){.app dl{grid-template-columns:1fr}.app dt{margin-top:6px}}
+.stan .t{border:1px solid var(--line);border-radius:14px;padding:14px}
+.stan .t h4{margin:0 0 8px;font:700 .8rem var(--sans);color:var(--ink)}
+.stan label{display:block;font-size:.76rem;color:var(--muted);margin-top:6px}
+.stan input{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:10px;font:600 1rem var(--sans);color:var(--ink)}
+.stan button{margin-top:10px;width:100%;padding:9px;border:0;border-radius:10px;background:var(--navy);color:#fff;font:700 .86rem var(--sans);cursor:pointer}
 .tr-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:12px}
 .tr-tot{display:flex;flex-wrap:wrap;gap:18px;margin:12px 0 4px}
 .tr-tot div{font-size:.82rem;color:var(--muted)} .tr-tot b{display:block;font:800 1.25rem var(--sans);color:var(--ink)}
@@ -124,6 +137,19 @@ th:first-child,td:first-child{text-align:left}
   </div>
 
   <div class="kpis" id="kpis"></div>
+
+  <div class="card">
+    <h2>Seats sold in Stan</h2>
+    <p class="sub">Stan's checkout can't send buyers back to the page, so not every sale is seen here. Copy the totals from Stan → Income once or twice a day; paid seats, revenue, cost per seat and ROAS then use the higher of Stan and the page.</p>
+    <div class="stan" id="stanform"></div>
+    <p class="note" id="stannote"></p>
+  </div>
+
+  <div class="card">
+    <h2>Legacy applications <span class="badge" id="appcount">0</span></h2>
+    <p class="sub">Everyone who sends the Legacy form, newest first, with one tap to reach her. Women who chose "WhatsApp Sumaya" instead are in Sumaya's WhatsApp, not here.</p>
+    <div id="apps"></div>
+  </div>
 
   <div class="card">
     <div class="tr-head">
@@ -211,8 +237,11 @@ th:first-child,td:first-child{text-align:left}
     return { imp: m ? m.impressions : null, click: m ? m.linkClicks : null, spend: m ? m.spend : null,
       visit: s.visit || 0, read50: s.read50 || 0, tiers: s.tiers || 0, checkout: s.checkout || 0, paid: s.paid || 0,
       legacy: s.legacy || 0, apply: s.apply || 0, help: s.help || 0, revenue: Number(d && d.funnel && d.funnel.revenue || 0),
+      stanPaid: stanTot(d).qty, stanRev: stanTot(d).rev,
       adVisit: ((d && d.funnel && d.funnel.bySource) || []).filter(function(r){ return isAd(r.src); }).reduce(function(n, r){ return n + (r.visit || 0); }, 0) };
   }
+  // Stan's Income page is the source of truth for sales; when entered, it overrides the page-tracked count if higher.
+  function stanTot(d){ var t = { qty: 0, rev: 0 }; ((d && d.stan) || []).forEach(function(r){ t.qty += Number(r.qty || 0); t.rev += Number(r.revenue || 0); }); return t; }
   function judge(key, c){
     var p = key.split('>'), from = c[p[0]], to = key === 'click>visit' ? c.adVisit : c[p[1]], t = ARROWS[key].target;
     if (from == null || to == null) return { state: 'few', rate: null, from: from, to: to, target: t, na: true };
@@ -224,18 +253,22 @@ th:first-child,td:first-child{text-align:left}
   function render(){
     traffic();
     var c = counts(), d = S.data;
+    // Money KPIs use Stan totals when higher; funnel rates keep the page-seen numbers so they stay comparable.
+    c.mPaid = c.paid; c.mRev = c.revenue;
+    if (c.stanPaid > c.paid) { c.mPaid = c.stanPaid; c.mRev = Math.max(c.revenue, c.stanRev); c.fromStan = true; }
+    stanForm(d); apps(d);
     var aov = c.paid ? c.revenue / c.paid : 1200;
     var judged = Object.keys(ARROWS).map(function(k){ return [k, judge(k, c)]; });
     var onT = judged.filter(function(x){ return x[1].state === 'ok'; }).length, can = judged.filter(function(x){ return x[1].state !== 'few'; }).length;
-    var v2b = c.visit ? c.paid / c.visit : null, roas = c.spend ? c.revenue / c.spend : null;
+    var v2b = c.visit ? c.paid / c.visit : null, roas = c.spend ? c.mRev / c.spend : null;
     var k = [
       ['Ad spend', c.spend == null ? '—' : usd(c.spend), c.imp == null ? 'Meta data unavailable' : fmt(c.imp) + ' impressions'],
       ['Visitors', fmt(c.visit), 'unique women on the page'],
-      ['Paid seats', fmt(c.paid), 'tracked via Stan redirect', c.paid ? 'good' : ''],
-      ['Revenue tracked', usd(c.revenue), c.paid ? 'avg ' + usd(aov) + ' a seat' : 'no tracked sales yet'],
-      ['Cost per seat', c.spend && c.paid ? usd(c.spend / c.paid) : '—', 'ad spend ÷ paid seats'],
+      ['Paid seats', fmt(c.mPaid), c.fromStan ? 'from Stan · ' + fmt(c.paid) + ' seen on the page' : 'seen on the page · enter Stan totals below', c.mPaid ? 'good' : ''],
+      [c.fromStan ? 'Revenue (Stan)' : 'Revenue tracked', usd(c.mRev), c.mPaid ? 'avg ' + usd(c.mRev / c.mPaid) + ' a seat' : 'no tracked sales yet'],
+      ['Cost per seat', c.spend && c.mPaid ? usd(c.spend / c.mPaid) : '—', 'ad spend ÷ paid seats (Stan when entered)'],
       ['Return on ad spend', roas == null ? '—' : roas.toFixed(1) + 'x', 'revenue ÷ ad spend', roas != null && roas >= 3 ? 'good' : roas != null && c.spend > 50 && roas < 1 ? 'bad' : ''],
-      ['Visitor to buyer', v2b == null ? '—' : pct(v2b), 'target 2%', 'hl'],
+      ['Visitor to buyer', v2b == null ? '—' : pct(v2b), 'page-seen buyers · target 2%', 'hl'],
       ['Revenue per visitor', c.visit ? usd(c.revenue / c.visit) : '—', 'what one visit is worth'],
       ['Tier click to paid', c.checkout ? pct(c.paid / c.checkout) : '—', fmt(Math.max(0, c.checkout - c.paid)) + ' clicked and did not pay'],
       ['Steps on target', onT + ' of ' + can, (judged.length - can) + ' steps need more people'],
@@ -372,6 +405,44 @@ th:first-child,td:first-child{text-align:left}
     el.addEventListener('mouseleave', function(){ tip.style.display = 'none'; el.querySelectorAll('.tr-b.on').forEach(function(x){ x.classList.remove('on'); }); });
   }
   document.addEventListener('click', function(e){ var t = $('trtip'); if (t && !e.target.closest('#trchart')) t.style.display = 'none'; });
+
+  var PRICE = { muse: 997, icon: 1500, legacy: 4997 }, TNAME = { muse: 'The Muse · $997', icon: 'The Icon · $1,500', legacy: 'The Legacy · $4,997' };
+  function stanForm(d){
+    var el = $('stanform'); if (!el || el.getAttribute('data-ready')) { stanNote(d); return; }
+    var cur = {}; ((d && d.stan) || []).forEach(function(r){ cur[r.tier] = r; });
+    el.innerHTML = ['muse', 'icon', 'legacy'].map(function(t){ var r = cur[t] || {};
+      return '<div class="t"><h4>' + TNAME[t] + '</h4><label>Seats sold</label><input type="number" min="0" max="999" inputmode="numeric" id="sq-' + t + '" value="' + (r.qty != null ? r.qty : '') + '">' +
+        '<label>Revenue received ($, after discounts)</label><input type="number" min="0" step="0.01" inputmode="decimal" id="sr-' + t + '" value="' + (r.revenue != null ? r.revenue : '') + '">' +
+        '<button type="button" data-t="' + t + '">Save ' + t + '</button></div>'; }).join('');
+    el.setAttribute('data-ready', '1');
+    el.querySelectorAll('[id^=sq-]').forEach(function(q){ q.addEventListener('input', function(){ var t = q.id.slice(3), r = $('sr-' + t); if (r && !r.getAttribute('data-touched')) r.value = q.value ? q.value * PRICE[t] : ''; }); });
+    el.querySelectorAll('[id^=sr-]').forEach(function(r){ r.addEventListener('input', function(){ r.setAttribute('data-touched', '1'); }); });
+    el.querySelectorAll('button').forEach(function(b){ b.addEventListener('click', function(){ var t = b.getAttribute('data-t');
+      b.textContent = 'Saving…'; api({ stan: { tier: t, qty: $('sq-' + t).value || 0, revenue: $('sr-' + t).value || 0 } })
+        .then(function(){ b.textContent = 'Saved ✓'; setTimeout(function(){ b.textContent = 'Save ' + t; }, 1500); load(); })
+        .catch(function(){ b.textContent = 'Could not save'; }); }); });
+    stanNote(d);
+  }
+  function apps(d){
+    var list = (d && d.applications) || [], el = $('apps'); if (!el) return;
+    $('appcount').textContent = list.length;
+    if (!d.applications) { el.innerHTML = '<p class="empty">Applications could not be loaded right now.</p>'; return; }
+    el.innerHTML = list.length ? list.map(function(a){
+      var ph = String(a.phone || '').replace(/[^0-9]/g, ''), first = String(a.name || '').split(' ')[0], hot = /^Yes, ready/.test(a.ready || '');
+      var wa = ph.length >= 8 ? 'https://wa.me/' + ph + '?text=' + encodeURIComponent('Hi ' + first + ', it\u2019s the team at The Renaissance Soir\u00e9e. Thank you for applying for The Legacy. Do you have a moment to chat today?') : '';
+      var ig = String(a.ig || '').replace(/^@/, '').replace(/[^A-Za-z0-9._]/g, '');
+      var rows = [['Email', a.email], ['Instagram', a.ig], ['Phone', a.phone], ['What she does', a.work], ['Ceiling', a.ceiling], ['By Sunday morning', a.next], ['Ready to invest', a.ready], ['Can stay overnight', a.overnight], ['Came from', a.src]]
+        .filter(function(r){ return r[1]; }).map(function(r){ return '<dt>' + r[0] + '</dt><dd>' + esc(r[1]) + '</dd>'; }).join('');
+      return '<div class="app' + (hot ? ' hot' : '') + '"><h3>' + esc(a.name) + (hot ? ' <span class="badge ok">Ready</span>' : '') + '</h3><div class="when">' + new Date(a.ts).toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + '</div><dl>' + rows + '</dl><div class="acts">' +
+        (wa ? '<a class="wa" href="' + wa + '" target="_blank" rel="noopener">WhatsApp ' + esc(first) + '</a>' : '') +
+        '<a href="mailto:' + encodeURIComponent(a.email) + '?subject=' + encodeURIComponent('Your Legacy application') + '">Email</a>' +
+        (ig ? '<a href="https://ig.me/m/' + ig + '" target="_blank" rel="noopener">Instagram DM</a>' : '') + '</div></div>'; }).join('')
+      : '<p class="empty">No applications yet. They appear here the moment someone sends the Legacy form.</p>';
+  }
+  function stanNote(d){
+    var t = stanTot(d), p = Number(d && d.funnel && d.funnel.steps && d.funnel.steps.paid || 0), last = ((d && d.stan) || []).map(function(r){ return r.updated_at; }).sort().pop();
+    $('stannote').textContent = 'Stan: ' + fmt(t.qty) + ' seats · ' + usd(t.rev) + (last ? ' (updated ' + new Date(last).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ')' : ' (not entered yet)') + '. Seen on the page: ' + fmt(p) + ' paid. Stan totals are all-time, so they ignore the date filter.';
+  }
 
   function detail(id, keep){
     var d = S.data, box = $('detail'); if (!d) return;
