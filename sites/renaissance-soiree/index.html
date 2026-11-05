@@ -249,6 +249,11 @@ wistia-player[media-id='5ekwt3rsk8']:not(:defined){background:center / contain n
 .tier-img{position:relative;margin:-30px -26px 18px;height:190px;overflow:hidden;border-radius:22px 22px 0 0}
 .tier-img img{width:100%;height:100%;object-fit:cover;object-position:50% 80%;display:block}
 .tier-img figcaption{position:absolute;left:12px;bottom:12px;font:600 .6rem var(--sans);letter-spacing:.2em;text-transform:uppercase;color:#fff;background:rgba(20,16,12,.62);backdrop-filter:blur(6px);padding:7px 12px;border-radius:999px}
+.tier.sold{opacity:.82}
+.tier.sold .tier-img img{filter:grayscale(.35)}
+.tier .sold-badge{background:var(--ink);color:var(--gold-2);z-index:2}
+.tier.sold .price s{text-decoration-thickness:2px;opacity:.6}
+.btn.is-sold{cursor:not-allowed;opacity:.55;pointer-events:none;text-align:center}
 .tier .rn{font:500 .9rem var(--display);color:var(--gold);letter-spacing:.2em}
 .tier h3{font-family:var(--display);font-weight:400;font-size:1.8rem;letter-spacing:.06em;margin:6px 0 8px}
 .tier.feat h3{color:var(--ivory)}
@@ -418,7 +423,7 @@ src="https://www.facebook.com/tr?id=1874556003533048&ev=PageView&noscript=1"
   <div class="strip">
     <span class="lbl">Doors open at The Plaza in</span>
     <span class="timer" data-timer aria-live="off"><span><b data-d>0</b><i>days</i></span><span><b data-h>00</b><i>hrs</i></span><span><b data-m>00</b><i>min</i></span><span><b data-s>00</b><i>sec</i></span></span>
-    <b class="lbl">Icon: 2 spots · Legacy: 1 left</b>
+    <b class="lbl">Icon: 2 spots · Legacy: sold out</b>
   </div>
   <header class="nav">
     <div class="wrap">
@@ -452,7 +457,7 @@ src="https://www.facebook.com/tr?id=1874556003533048&ev=PageView&noscript=1"
       <a href="#tiers" class="btn">Choose your tier</a>
       <a href="#day" class="btn ghost">See the day</a>
     </div>
-    <a class="legacy-tease" href="legacy.html" data-tier="legacy"><span>◆ The Legacy · 1 spot left</span> A double board-certified doctor has already joined, before a single ad ran. The night in the presidential suite, the $500 sundae and Sunday brunch with Sumaya. <u>Apply for the last spot</u></a>
+    <a class="legacy-tease" href="#tiers"><span>◆ The Legacy · Sold out</span> Both overnight seats went before a single ad ran, one to a double board-certified doctor. The private dinner with Sumaya is still open in The Icon: 2 spots. <u>Claim The Icon</u></a>
     <p class="note">— Sumaya · The woman who walks in will not be the woman who walks out.</p>
     </div>
   </div>
@@ -741,14 +746,15 @@ src="https://www.facebook.com/tr?id=1874556003533048&ev=PageView&noscript=1"
         <p class="sec-note">Secure checkout through Stan</p>
         <a class="wa-mini" href="https://wa.me/19179291766?text=Hi%20team%2C%20I%27m%20choosing%20my%20tier%20for%20The%20Renaissance%20Soir%C3%A9e%20and%20have%20a%20quick%20question." target="_blank" rel="noopener" data-help="tier"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.2 14.2c-.2.6-1.3 1.2-1.8 1.3-.5 0-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2.1 1-2.4c.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .6l-.4.6-.4.4c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3Z"/></svg>Questions? WhatsApp the team</a>
       </div>
-      <div class="tier rv">
+      <div class="tier rv sold">
+        <span class="badge sold-badge">Sold out</span>
         <figure class="tier-img"><img src="img/sundae.jpg" alt="The $500 Plaza sundae" loading="lazy"><figcaption>The $500 sundae · Legacy only</figcaption></figure>
         <span class="rn">III</span>
         <h3>The Legacy</h3>
         <p class="who">The woman who does not leave the room. She becomes it.</p>
-        <div class="price">$4,997</div>
-        <div class="left">1 spot left · Approval required</div>
-        <p class="proof">◆ Already joining The Legacy: a double board-certified doctor. One spot remains.</p>
+        <div class="price"><s>$4,997</s></div>
+        <div class="left">Sold out · both seats taken</div>
+        <p class="proof">◆ Both seats taken, including a double board-certified doctor.</p>
         <ul>
           <li class="plus">Everything in The Icon, plus</li>
           <li>Overnight in the presidential suite with Sumaya</li>
@@ -757,8 +763,8 @@ src="https://www.facebook.com/tr?id=1874556003533048&ev=PageView&noscript=1"
           <li>Sunday brunch, November 8th</li>
           <li>Integration mastermind session after the event</li>
         </ul>
-        <a class="btn ghost" href="legacy.html" data-tier="legacy">Apply for The Legacy</a>
-        <p class="sec-note">Apply, or <a id="wa-legacy" href="https://wa.me/19179291766?text=Hi%20Sumaya%2C%20I%27d%20love%20to%20be%20considered%20for%20The%20Legacy%20at%20The%20Renaissance%20Soir%C3%A9e.%20A%20little%20about%20me%3A%20" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">WhatsApp Sumaya directly</a></p>
+        <span class="btn ghost is-sold" aria-disabled="true">Sold out</span>
+        <p class="sec-note">Want the evening with Sumaya? The Icon includes the private dinner.</p>
       </div>
     </div>
     <div class="help rv">
@@ -808,7 +814,7 @@ src="https://www.facebook.com/tr?id=1874556003533048&ev=PageView&noscript=1"
     <span class="eyebrow" style="color:var(--gold-2)">November 7th · The Plaza</span>
     <h2>Your old self will not stand a chance<br><em>in this room.</em></h2>
     <p class="lead">You have watched from the screen. Now take the seat. The room is already being prepared for her: choose the identity you are walking in as.</p>
-    <div class="btns"><a href="#tiers" class="btn">Choose your tier</a><a href="legacy.html" class="btn ghost" data-tier="legacy">Apply for The Legacy</a></div>
+    <div class="btns"><a href="#tiers" class="btn">Choose your tier</a></div>
     <p class="note" style="margin-top:20px;font:500 .78rem var(--sans);color:var(--on-d-muted)" data-cd-long>In person only. No livestream. No replay.</p>
   </div>
 </section>
@@ -822,7 +828,7 @@ src="https://www.facebook.com/tr?id=1874556003533048&ev=PageView&noscript=1"
       <details><summary>Why not just take another course or hire a coach?</summary><p>Because you already have the strategy. Courses and coaches add information, and information runs on top of the setting. If the setting stays the same, the new strategy gets pulled back to the old size. This day is for the setting itself.</p></details>
       <details><summary>Is this therapy?</summary><p>No. The Renaissance Soirée is a personal development experience. It is not therapy, medical treatment or mental health care, and not a substitute for them. No specific financial or personal outcome is guaranteed.</p></details>
       <details><summary>Is there a recording or a virtual seat?</summary><p>No. The day exists only for the women in the room at The Plaza.</p></details>
-      <details><summary>Which tier should I choose?</summary><p>The Muse is the full day. The Icon adds the private dinner and hot seats with Sumaya, where most of the personal work on your business and patterns happens. The Legacy is the full immersion: the night in the presidential suite, Sunday brunch and integration support after. It is by application.</p></details>
+      <details><summary>Which tier should I choose?</summary><p>The Muse is the full day. The Icon adds the private dinner and hot seats with Sumaya, where most of the personal work on your business and patterns happens. The Legacy is the full immersion: the night in the presidential suite, Sunday brunch and integration support after. It is now sold out.</p></details>
       <details><summary>Can I get a refund?</summary><p>All ticket sales are final and non-refundable, including for illness, travel disruption or a change of plans. If the event is cancelled or rescheduled by us, you will be offered the new date or a full refund.</p></details>
       <details><summary>Can I transfer my seat?</summary><p>Your ticket is transferable to another woman with written notice to teammindfullysumaya@gmail.com, so the guest list with The Plaza can be updated. Legacy transfers are subject to approval.</p></details>
       <details><summary>Is travel or a hotel room included?</summary><p>Only for The Legacy, which includes the overnight stay on November 7th. Travel, accommodation and other expenses are your own for the other tiers.</p></details>
