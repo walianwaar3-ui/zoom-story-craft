@@ -874,7 +874,7 @@ document.documentElement.classList.add('js');
   }, { passive: true });
   var tiersEl = document.getElementById('tiers');
   if (tiersEl && 'IntersectionObserver' in window) {
-    var tio = new IntersectionObserver(function(es){ if (es[0].isIntersecting) { tio.disconnect(); window.rsLog && rsLog('ViewTiers'); } }, { threshold: 0.25 });
+    var tio = new IntersectionObserver(function(es){ if (es[0].isIntersecting) { tio.disconnect(); window.rsLog && rsLog('ViewTiers'); } }, { threshold: 0, rootMargin: '0px 0px -40% 0px' });
     tio.observe(tiersEl);
   }
 
