@@ -75,7 +75,16 @@ h2 em,h1 em,h3 em{font-style:italic;color:var(--wine)}
 .hero-art::after{content:"";position:absolute;inset:12px;border:1px solid rgba(217,184,120,.55);border-radius:999px 999px 12px 12px;pointer-events:none}
 .hero-art figcaption{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);font:600 .6rem var(--sans);letter-spacing:.26em;text-transform:uppercase;color:#fff;background:rgba(20,16,12,.6);backdrop-filter:blur(6px);padding:8px 14px;border-radius:999px;white-space:nowrap}
 @keyframes drift{to{transform:scale(1.1)}}
-.vsl{margin:0;position:relative}
+.hero-center{text-align:center}
+.hero-center .hero-copy{max-width:900px;margin:0 auto}
+.hero-center h1{max-width:820px;margin-left:auto;margin-right:auto}
+.hero .hero-center p.sub{max-width:680px;margin:0 auto}
+.hero-center p.sub:not(.sub2){font-size:1.22rem;color:var(--on-d)}
+.hero .hero-center .sub2{margin-bottom:22px}
+.hero-center h1{font-size:clamp(2.1rem,3.8vw,3.1rem);margin-top:10px;margin-bottom:12px}
+.hero .wrap.hero-center{padding-top:36px}
+.hero-center .mech,.hero-center .chips,.hero-center .btns{justify-content:center}
+.vsl{position:relative;margin:24px auto 24px;max-width:760px}
 .vsl-frame{position:relative;border-radius:18px;overflow:hidden;background:#0d0a07;box-shadow:0 40px 80px -40px rgba(0,0,0,.85),0 0 0 1px rgba(217,184,120,.45)}
 wistia-player[media-id='5ekwt3rsk8']:not(:defined){background:center / contain no-repeat url('https://fast.wistia.com/embed/medias/5ekwt3rsk8/swatch');display:block;filter:blur(5px);padding-top:56.25%}
 .vsl figcaption{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:14px;font:600 .62rem var(--sans);letter-spacing:.24em;text-transform:uppercase;color:var(--gold-2)}
@@ -330,14 +339,14 @@ footer .terms{margin-top:28px;border-top:1px solid var(--line-d);padding-top:22p
   .gal figure:first-child{grid-column:span 2;grid-row:auto}
   .hero-grid{grid-template-columns:1fr;gap:28px}
   .hero-art{order:-1;aspect-ratio:4/3;max-height:42vh;width:100%;border-radius:200px 200px 16px 16px}
-  .hero-grid:has(.vsl){gap:0}
-  .hero-grid:has(.vsl) .hero-copy{display:contents}
-  .hero-grid:has(.vsl) .hero-copy>*{order:3}
-  .hero-grid:has(.vsl) .hero-copy>.eyebrow,.hero-grid:has(.vsl) .hero-copy>.kicker,.hero-grid:has(.vsl) .hero-copy>h1{order:1}
-  .hero .vsl{order:2;margin:2px -4px 26px}
-  .hero-grid:has(.vsl) .eyebrow{justify-self:start}
   .hero-art::after{border-radius:190px 190px 10px 10px}
   .hero .wrap{padding-top:22px;padding-bottom:56px}
+  .hero-center .vsl{margin:18px -4px 20px}
+  .hero-center .eyebrow{display:none}
+  .hero-center .kicker{margin-top:0}
+  .hero-center h1{font-size:2.05rem}
+  .hero-center p.sub:not(.sub2){font-size:1.08rem}
+  .hero .wrap.hero-center{padding-top:18px}
   .nav .btn{display:none}
   .nav .wrap{height:54px}
   .strip .lbl{display:none}
@@ -406,12 +415,17 @@ src="https://www.facebook.com/tr?id=1874556003533048&ev=PageView&noscript=1"
 
 <main id="top">
 <section class="hero">
-  <div class="wrap hero-grid">
+  <div class="wrap hero-center">
     <div class="hero-copy">
     <span class="eyebrow">For the women who have been watching</span>
     <p class="kicker"><i>The</i> Renaissance Soirée</p>
     <h1>Hold more money, love and visibility, <em>without sabotaging it back down.</em></h1>
-    <p class="sub">What's happening at The Plaza on Saturday is death to the old identity: the version who doubts herself, who fears being seen as her authentic self, who plays it small. One day of live hypnosis and the Renaissance Method inside the Champagne Suite. You have watched it work through a screen. On Saturday, you sit in the room.</p>
+    <p class="sub">Death to the old identity. One day of live hypnosis inside The Plaza, this Saturday.</p>
+    <figure class="vsl" id="vsl">
+      <div class="vsl-frame"><wistia-player media-id="5ekwt3rsk8" aspect="1.7777777777777777"></wistia-player></div>
+      <figcaption>Press play · from Sumaya</figcaption>
+    </figure>
+    <p class="sub sub2">The version who doubts herself, who fears being seen as her authentic self, who plays it small, does not leave the Champagne Suite with you. You have watched the Renaissance Method work through a screen. On Saturday, you sit in the room.</p>
     <div class="mech" style="margin-top:20px"><span>The Renaissance Method</span><span>4,000+ women in 2026</span><span>One day, in person</span></div>
     <div class="chips">
       <span>Saturday, November 7th, 2026</span>
@@ -425,10 +439,6 @@ src="https://www.facebook.com/tr?id=1874556003533048&ev=PageView&noscript=1"
     </div>
     <p class="note">— Sumaya · The woman who walks in will not be the woman who walks out.</p>
     </div>
-    <figure class="vsl" id="vsl">
-      <div class="vsl-frame"><wistia-player media-id="5ekwt3rsk8" aspect="1.7777777777777777"></wistia-player></div>
-      <figcaption>Press play · from Sumaya</figcaption>
-    </figure>
   </div>
 </section>
 
