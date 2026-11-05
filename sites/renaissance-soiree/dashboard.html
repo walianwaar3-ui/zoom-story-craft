@@ -138,17 +138,15 @@ th:first-child,td:first-child{text-align:left}
 
   <div class="kpis" id="kpis"></div>
 
-  <div class="card">
-    <h2>Seats sold in Stan</h2>
-    <p class="sub">Stan's checkout can't send buyers back to the page, so not every sale is seen here. Copy the totals from Stan → Income once or twice a day; paid seats, revenue, cost per seat and ROAS then use the higher of Stan and the page.</p>
-    <div class="stan" id="stanform"></div>
-    <p class="note" id="stannote"></p>
-  </div>
+
+
 
   <div class="card">
-    <h2>Legacy applications <span class="badge" id="appcount">0</span></h2>
-    <p class="sub">Everyone who sends the Legacy form, newest first, with one tap to reach her. Women who chose "WhatsApp Sumaya" instead are in Sumaya's WhatsApp, not here.</p>
-    <div id="apps"></div>
+    <h2>The funnel on a whiteboard</h2>
+    <p class="sub">Women at each step, and the share who moved on to the next. Click any box or arrow for the detail: by device, by ad and day by day.</p>
+    <div class="legend"><span style="--c:var(--ok)">On target</span><span style="--c:var(--warn)">Below target</span><span style="--c:var(--bad)">Leak (sure)</span><span style="--c:var(--few)">Too few people to judge</span></div>
+    <div class="board" id="board"></div>
+    <div class="detail" id="detail"></div>
   </div>
 
   <div class="card">
@@ -159,14 +157,6 @@ th:first-child,td:first-child{text-align:left}
     <div class="tr-tot" id="trtot"></div>
     <div class="tr-leg"><span><i style="--c:#bcd0f2"></i>Visitors</span><span><i style="--c:var(--blue)"></i>Reached the tiers</span><span><i style="--c:var(--ok);border-radius:50%"></i>Paid seat</span></div>
     <div class="tr" id="trchart"></div>
-  </div>
-
-  <div class="card">
-    <h2>The funnel on a whiteboard</h2>
-    <p class="sub">Women at each step, and the share who moved on to the next. Click any box or arrow for the detail: by device, by ad and day by day.</p>
-    <div class="legend"><span style="--c:var(--ok)">On target</span><span style="--c:var(--warn)">Below target</span><span style="--c:var(--bad)">Leak (sure)</span><span style="--c:var(--few)">Too few people to judge</span></div>
-    <div class="board" id="board"></div>
-    <div class="detail" id="detail"></div>
   </div>
 
   <div class="card">
@@ -188,12 +178,25 @@ th:first-child,td:first-child{text-align:left}
   </div>
 
   <div class="card">
+    <h2>Seats sold in Stan</h2>
+    <p class="sub">Stan's checkout can't send buyers back to the page, so not every sale is seen here. Copy the totals from Stan → Income once or twice a day; paid seats, revenue, cost per seat and ROAS then use the higher of Stan and the page.</p>
+    <div class="stan" id="stanform"></div>
+    <p class="note" id="stannote"></p>
+  </div>
+
+  <div class="card">
+    <h2>Legacy applications <span class="badge" id="appcount">0</span></h2>
+    <p class="sub">Everyone who sends the Legacy form, newest first, with one tap to reach her. Women who chose "WhatsApp Sumaya" instead are in Sumaya's WhatsApp, not here.</p>
+    <div id="apps"></div>
+  </div>
+
+  <div class="card">
     <h2>Fix log</h2>
     <p class="sub">Each change you tried, with the step's conversion before and after it.</p>
     <div class="tw"><table id="fixlog"></table></div>
   </div>
 
-  <p class="note">Paid seats are counted when Stan sends the buyer to /welcome?tier=… after checkout. If a product's redirect isn't set, those sales won't appear here: check Stan's sales report for the true total. Revenue is list price by tier. "Clicked a tier" is counted on our page when she taps Muse or Icon; what happens inside Stan's checkout is not visible here.</p>
+  <p class="note">Paid seats on the page are counted when a buyer opens /welcome?tier=… (the link in Stan's confirmation email). Stan's own pixel reports every purchase to Meta. For the true total, enter Stan → Income in "Seats sold in Stan". "Clicked a tier" is counted on our page when she taps Muse or Icon; what happens inside Stan's checkout is not visible here.</p>
 </div>
 
 <script>
