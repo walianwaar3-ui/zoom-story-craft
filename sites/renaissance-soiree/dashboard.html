@@ -77,6 +77,24 @@ th:first-child,td:first-child{text-align:left}
 .bars div{flex:1;background:var(--blue);border-radius:6px 6px 0 0;min-height:2px;position:relative}
 .bars div span{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:.7rem;color:var(--muted);white-space:nowrap}
 .note{font-size:.84rem;color:var(--muted);margin-top:10px}
+.tr-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:12px}
+.tr-tot{display:flex;flex-wrap:wrap;gap:18px;margin:12px 0 4px}
+.tr-tot div{font-size:.82rem;color:var(--muted)} .tr-tot b{display:block;font:800 1.25rem var(--sans);color:var(--ink)}
+.tr-leg{display:flex;flex-wrap:wrap;gap:14px;font-size:.82rem;color:var(--muted);margin:6px 0 0}
+.tr-leg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px;background:var(--c)}
+.tr{position:relative;height:220px;margin:16px 0 30px 34px;border-left:1px solid var(--line);border-bottom:1px solid var(--line)}
+.tr-grid{position:absolute;left:0;right:0;border-top:1px dashed var(--line);font-size:.7rem;color:var(--muted)}
+.tr-grid span{position:absolute;left:-34px;top:-8px;width:28px;text-align:right}
+.tr-bars{position:absolute;inset:0;display:flex;align-items:flex-end;gap:var(--gap,4px);padding:0 4px}
+.tr-b{flex:1;height:100%;display:flex;align-items:flex-end;position:relative;cursor:pointer;min-width:0}
+.tr-b .v{width:100%;background:#bcd0f2;border-radius:4px 4px 0 0;position:relative;min-height:0}
+.tr-b .t{position:absolute;left:0;right:0;bottom:0;background:var(--blue);border-radius:4px 4px 0 0}
+.tr-b .p{position:absolute;left:50%;transform:translate(-50%,50%);width:9px;height:9px;border-radius:50%;background:var(--ok);border:2px solid #fff}
+.tr-b:hover .v,.tr-b.on .v{background:#9fbbea}
+.tr-b .x{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-size:.7rem;color:var(--muted);white-space:nowrap}
+.tr-tip{position:absolute;z-index:5;background:var(--navy);color:#fff;border-radius:12px;padding:10px 12px;font-size:.82rem;line-height:1.45;pointer-events:none;min-width:180px;box-shadow:0 10px 30px -10px rgba(11,37,69,.6);display:none}
+.tr-tip b{display:block;font-size:.86rem;margin-bottom:4px}
+.tr-tip div{display:flex;justify-content:space-between;gap:14px} .tr-tip span{opacity:.75}
 .gate{max-width:380px;margin:12vh auto;background:#fff;border:1px solid var(--line);border-radius:18px;padding:26px}
 .gate input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font:500 1rem var(--sans);margin:12px 0}
 .gate button{width:100%;padding:12px;border:0;border-radius:10px;background:var(--navy);color:#fff;font:700 1rem var(--sans);cursor:pointer}
@@ -106,6 +124,16 @@ th:first-child,td:first-child{text-align:left}
   </div>
 
   <div class="kpis" id="kpis"></div>
+
+  <div class="card">
+    <div class="tr-head">
+      <div><h2>Traffic, day by day</h2><p class="sub">How many women reached the page, and when. Hover or tap a bar to see what that traffic did.</p></div>
+      <div class="seg" id="trmode"><button data-v="day" class="on">Day</button><button data-v="hour">Hour</button></div>
+    </div>
+    <div class="tr-tot" id="trtot"></div>
+    <div class="tr-leg"><span><i style="--c:#bcd0f2"></i>Visitors</span><span><i style="--c:var(--blue)"></i>Reached the tiers</span><span><i style="--c:var(--ok);border-radius:50%"></i>Paid seat</span></div>
+    <div class="tr" id="trchart"></div>
+  </div>
 
   <div class="card">
     <h2>The funnel on a whiteboard</h2>
@@ -190,6 +218,7 @@ th:first-child,td:first-child{text-align:left}
   }
 
   function render(){
+    traffic();
     var c = counts(), d = S.data;
     var aov = c.paid ? c.revenue / c.paid : 1200;
     var judged = Object.keys(ARROWS).map(function(k){ return [k, judge(k, c)]; });
@@ -295,6 +324,48 @@ th:first-child,td:first-child{text-align:left}
     }).join('') : '<tr><td colspan="6" class="empty">No fixes logged yet.</td></tr>');
   }
 
+  // Traffic chart: visitors per day or per hour (New York time), tooltip with what that traffic did.
+  var TR_ROWS = [['visit', 'Visitors'], ['video', 'Pressed play'], ['read50', 'Read half'], ['tiers', 'Reached the tiers'], ['checkout', 'Clicked a tier'], ['help', 'Asked for help'], ['legacy', 'Legacy interest'], ['paid', 'Paid seats']];
+  var trMode = 'day';
+  function nyKey(t, hour){ var p = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' }).formatToParts(t), g = {}; p.forEach(function(x){ g[x.type] = x.value; }); return g.year + '-' + g.month + '-' + g.day + (hour ? 'T' + g.hour : ''); }
+  function traffic(){
+    var d = S.data, el = $('trchart'); if (!d || !el) return;
+    var hour = trMode === 'hour', src = hour ? (d.funnel.hourly || []) : (d.funnel.daily || []), map = {};
+    src.forEach(function(x){ map[hour ? x.h : x.d] = x.steps || {}; });
+    var keys = [], now = Date.now(), step = hour ? 36e5 : 864e5;
+    var span = hour ? Math.min(72, S.range === '24h' ? 24 : 72) : null;
+    if (hour) { var firstH = src.length ? src[0].h : null; for (var i = span - 1; i >= 0; i--) { var hk = nyKey(new Date(now - i * step), true); if (!firstH || hk >= firstH || span - i > span - 6) keys.push(hk); } if (keys.length < 6) { keys = []; for (var j = 5; j >= 0; j--) keys.push(nyKey(new Date(now - j * step), true)); } }
+    else if (src.length) { var first = new Date(src[0].d + 'T12:00:00Z').getTime(); for (var t = first; nyKey(new Date(t)) <= nyKey(new Date(now)); t += step) keys.push(nyKey(new Date(t))); }
+    keys = keys.filter(function(k, i){ return keys.indexOf(k) === i; });
+    var rows = keys.map(function(k){ return { k: k, s: map[k] || {} }; });
+    var tot = {}; rows.forEach(function(r){ TR_ROWS.forEach(function(x){ tot[x[0]] = (tot[x[0]] || 0) + (r.s[x[0]] || 0); }); });
+    var peak = rows.reduce(function(a, r){ return (r.s.visit || 0) > (a ? a.s.visit || 0 : -1) ? r : a; }, null);
+    function label(k, long){ if (hour) { var h = +k.slice(11), d = new Date(k.slice(0, 10) + 'T12:00:00Z'); var hh = (h % 12 || 12) + (h < 12 ? 'am' : 'pm'); return long ? d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' }) + ' · ' + hh + ' NY' : hh; }
+      return new Date(k + 'T12:00:00Z').toLocaleDateString('en-US', long ? { weekday: 'long', month: 'short', day: 'numeric', timeZone: 'UTC' } : { weekday: 'short', day: 'numeric', timeZone: 'UTC' }); }
+    $('trtot').innerHTML = '<div><b>' + fmt(tot.visit || 0) + '</b>visitors in view</div><div><b>' + (peak && peak.s.visit ? label(peak.k, true) : '—') + '</b>busiest ' + (hour ? 'hour' : 'day') + (peak && peak.s.visit ? ' · ' + fmt(peak.s.visit) : '') + '</div><div><b>' + (tot.visit ? pct((tot.tiers || 0) / tot.visit) : '—') + '</b>reached the tiers</div><div><b>' + fmt(tot.paid || 0) + '</b>paid seats</div>';
+    if (!rows.length) { el.innerHTML = '<p class="empty" style="padding:90px 12px;text-align:center">No traffic in this range yet.</p>'; return; }
+    var max = Math.max(1, Math.max.apply(null, rows.map(function(r){ return r.s.visit || 0; })));
+    var nice = Math.max(4, Math.ceil(max / 4) * 4), every = hour ? (rows.length > 36 ? 12 : rows.length > 16 ? 6 : rows.length > 8 ? 3 : 1) : Math.ceil(rows.length / 10);
+    var grid = [0.25, .5, .75, 1].map(function(f){ return '<div class="tr-grid" style="bottom:' + f * 100 + '%"><span>' + fmt(nice * f) + '</span></div>'; }).join('');
+    var bars = rows.map(function(r, i){ var v = r.s.visit || 0, t = Math.min(v, r.s.tiers || 0);
+      return '<div class="tr-b" data-i="' + i + '"><div class="v" style="height:' + v / nice * 100 + '%">' + (t ? '<div class="t" style="height:' + (v ? t / v * 100 : 0) + '%"></div>' : '') + '</div>' +
+        (r.s.paid ? '<div class="p" style="bottom:' + v / nice * 100 + '%"></div>' : '') +
+        ((hour ? +r.k.slice(11) % every === 0 : i % every === 0) ? '<span class="x">' + label(r.k) + '</span>' : '') + '</div>'; }).join('');
+    el.innerHTML = grid + '<div class="tr-bars" style="--gap:' + (rows.length > 40 ? 1 : rows.length > 20 ? 2 : 6) + 'px">' + bars + '</div><div class="tr-tip" id="trtip"></div>';
+    var tip = $('trtip');
+    function show(b){ var r = rows[+b.getAttribute('data-i')], s = r.s, v = s.visit || 0;
+      el.querySelectorAll('.tr-b.on').forEach(function(x){ x.classList.remove('on'); }); b.classList.add('on');
+      tip.innerHTML = '<b>' + esc(label(r.k, true)) + '</b>' + TR_ROWS.map(function(x){ var n = s[x[0]] || 0; if (!n && x[0] !== 'visit') return '';
+        return '<div><span>' + x[1] + '</span>' + fmt(n) + (x[0] !== 'visit' && v ? ' · ' + pct(n / v) : '') + '</div>'; }).join('') + (v ? '' : '<div><span>No visitors</span></div>');
+      tip.style.display = 'block';
+      var bx = b.offsetLeft + b.offsetWidth / 2, w = tip.offsetWidth, cw = el.offsetWidth;
+      tip.style.left = Math.max(-30, Math.min(cw - w, bx - w / 2)) + 'px'; tip.style.top = '-10px'; tip.style.transform = 'translateY(-100%)';
+      if (b.offsetTop + 0 < 0) tip.style.top = '0'; }
+    el.querySelectorAll('.tr-b').forEach(function(b){ b.addEventListener('mouseenter', function(){ show(b); }); b.addEventListener('click', function(e){ e.stopPropagation(); show(b); }); });
+    el.addEventListener('mouseleave', function(){ tip.style.display = 'none'; el.querySelectorAll('.tr-b.on').forEach(function(x){ x.classList.remove('on'); }); });
+  }
+  document.addEventListener('click', function(e){ var t = $('trtip'); if (t && !e.target.closest('#trchart')) t.style.display = 'none'; });
+
   function detail(id, keep){
     var d = S.data, box = $('detail'); if (!d) return;
     if (!keep && S.sel === id && box.classList.contains('on')) { box.classList.remove('on'); S.sel = null; return; }
@@ -337,7 +408,8 @@ th:first-child,td:first-child{text-align:left}
     });
   }
 
-  document.querySelectorAll('.seg').forEach(function(seg){
+  $('trmode').addEventListener('click', function(e){ var b = e.target.closest('button'); if (!b) return; this.querySelectorAll('button').forEach(function(x){ x.classList.toggle('on', x === b); }); trMode = b.getAttribute('data-v'); traffic(); });
+  document.querySelectorAll('.seg[data-k]').forEach(function(seg){
     seg.addEventListener('click', function(e){
       var b = e.target.closest('button'); if (!b) return;
       seg.querySelectorAll('button').forEach(function(x){ x.classList.toggle('on', x === b); });
