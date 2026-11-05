@@ -63,9 +63,9 @@ fbq('init', '1874556003533048');
     touch = { src: q.get('utm_content') || q.get('src') || '', source: q.get('utm_source') || '' };
     set('rs_src', touch.src); set('rs_source', touch.source);
   }
-  function send(n, id, d){
+  function send(n, id, d, internal){
     try {
-      var b = JSON.stringify({ event_name: n, event_id: id, url: location.href, data: d || {}, vid: vid, touch: touch });
+      var b = JSON.stringify({ event_name: n, event_id: id, url: location.href, data: d || {}, vid: vid, touch: touch, internal: !!internal });
       if (!(navigator.sendBeacon && navigator.sendBeacon('/api/capi', new Blob([b], { type: 'application/json' }))))
         fetch('/api/capi', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: b, keepalive: true });
     } catch (e) {}
@@ -74,7 +74,7 @@ fbq('init', '1874556003533048');
   // Standard events: pixel + Conversions API + dashboard, one event ID so Meta counts it once.
   window.rsTrack = function(n, d){ var id = newId(n); try { fbq('track', n, d || {}, { eventID: id }); } catch (e) {} send(n, id, d); };
   // Dashboard-only signals (never sent to Meta).
-  window.rsLog = function(n, d){ send(n, newId(n), d); };
+  window.rsLog = function(n, d){ send(n, newId(n), d, true); };
 })();
 rsTrack('PageView');
 </script>
@@ -143,13 +143,13 @@ src="https://www.facebook.com/tr?id=1874556003533048&ev=PageView&noscript=1"
 })();
 </script>
 <script>
-// Purchase fires once per buyer when Stan redirects here with ?tier=muse|icon|legacy (set per product in Stan). No tier: CompleteRegistration only.
+// Stan's own Meta pixel reports the Purchase to Meta, so here the purchase goes to the dashboard only (no double count in Meta). No tier: CompleteRegistration only.
 (function(){
   var t = (new URLSearchParams(location.search).get('tier') || '').toLowerCase(), VAL = { muse: 997, icon: 1500, legacy: 4997 };
   try {
     if (VAL[t]) {
       if (sessionStorage.getItem('rs-purchase') === t) return;
-      rsTrack('Purchase', { content_name: 'Renaissance Soiree: ' + t, value: VAL[t], currency: 'USD' });
+      rsLog('Purchase', { content_name: 'Renaissance Soiree: ' + t, value: VAL[t], currency: 'USD' });
       sessionStorage.setItem('rs-purchase', t);
     } else rsTrack('CompleteRegistration', { content_name: 'Renaissance Soiree' });
   } catch (e) {}

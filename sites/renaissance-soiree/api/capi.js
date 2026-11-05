@@ -89,7 +89,8 @@ export default async function handler(req, res) {
     src: str(t.src, 60), source: str(t.source, 60), path, label: custom.content_name,
     value: custom.value != null ? String(custom.value) : undefined, device: deviceOf(ua),
   })];
-  if (META_EVENTS.has(name)) jobs.push(forward(req, body, custom, ip));
+  // internal: true = dashboard only (e.g. the welcome-page Purchase, which Stan's own pixel already reports to Meta).
+  if (META_EVENTS.has(name) && body.internal !== true) jobs.push(forward(req, body, custom, ip));
   const results = await Promise.all(jobs);
   return res.status(results[1] === false ? 502 : 200).json({ ok: true });
 }
