@@ -242,6 +242,13 @@ wistia-player[media-id='5ekwt3rsk8']:not(:defined){background:center / contain n
 .tier{position:relative;display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:22px;padding:30px 26px 26px}
 .tier.feat{background:var(--ink);color:var(--on-d);border-color:var(--gold);box-shadow:0 30px 60px -30px rgba(110,31,42,.55);transform:translateY(-8px)}
 .tier .badge{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--wine);color:#fff;font:600 .62rem var(--sans);letter-spacing:.2em;text-transform:uppercase;padding:7px 14px;border-radius:999px;white-space:nowrap}
+ .legacy-tease{display:block;max-width:620px;margin:22px auto 0;padding:12px 18px;border:1px solid rgba(217,184,120,.45);border-radius:14px;background:rgba(184,145,74,.08);color:var(--on-d);font:400 1rem/1.5 var(--serif);text-decoration:none;transition:border-color .2s,background .2s}
+.legacy-tease span{display:block;font:600 .62rem var(--sans);letter-spacing:.22em;text-transform:uppercase;color:var(--gold-2);margin-bottom:4px}
+.legacy-tease u{color:var(--gold-2);text-underline-offset:3px;white-space:nowrap}
+.legacy-tease:hover{border-color:var(--gold);background:rgba(184,145,74,.16)}
+.tier-img{position:relative;margin:-30px -26px 18px;height:190px;overflow:hidden;border-radius:22px 22px 0 0}
+.tier-img img{width:100%;height:100%;object-fit:cover;object-position:50% 80%;display:block}
+.tier-img figcaption{position:absolute;left:12px;bottom:12px;font:600 .6rem var(--sans);letter-spacing:.2em;text-transform:uppercase;color:#fff;background:rgba(20,16,12,.62);backdrop-filter:blur(6px);padding:7px 12px;border-radius:999px}
 .tier .rn{font:500 .9rem var(--display);color:var(--gold);letter-spacing:.2em}
 .tier h3{font-family:var(--display);font-weight:400;font-size:1.8rem;letter-spacing:.06em;margin:6px 0 8px}
 .tier.feat h3{color:var(--ivory)}
@@ -437,6 +444,7 @@ src="https://www.facebook.com/tr?id=1874556003533048&ev=PageView&noscript=1"
       <a href="#tiers" class="btn">Choose your tier</a>
       <a href="#day" class="btn ghost">See the day</a>
     </div>
+    <a class="legacy-tease" href="legacy.html" data-tier="legacy"><span>◆ For two women only</span> The night in the presidential suite, the $500 Plaza sundae and Sunday brunch with Sumaya. <u>Apply for The Legacy</u></a>
     <p class="note">— Sumaya · The woman who walks in will not be the woman who walks out.</p>
     </div>
   </div>
@@ -720,6 +728,7 @@ src="https://www.facebook.com/tr?id=1874556003533048&ev=PageView&noscript=1"
         <p class="sec-note">Secure checkout through Stan</p>
       </div>
       <div class="tier rv">
+        <figure class="tier-img"><img src="img/sundae.jpg" alt="The $500 Plaza sundae" loading="lazy"><figcaption>The $500 sundae · Legacy only</figcaption></figure>
         <span class="rn">III</span>
         <h3>The Legacy</h3>
         <p class="who">The woman who does not leave the room. She becomes it.</p>
@@ -734,7 +743,7 @@ src="https://www.facebook.com/tr?id=1874556003533048&ev=PageView&noscript=1"
           <li>Integration mastermind session after the event</li>
         </ul>
         <a class="btn ghost" href="legacy.html" data-tier="legacy">Apply for The Legacy</a>
-        <p class="sec-note">Apply, or <a href="https://wa.me/19179291766?text=Hi%20Sumaya%2C%20I%27d%20love%20to%20be%20considered%20for%20The%20Legacy%20at%20The%20Renaissance%20Soir%C3%A9e.%20A%20little%20about%20me%3A%20" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">WhatsApp Sumaya directly</a></p>
+        <p class="sec-note">Apply, or <a id="wa-legacy" href="https://wa.me/19179291766?text=Hi%20Sumaya%2C%20I%27d%20love%20to%20be%20considered%20for%20The%20Legacy%20at%20The%20Renaissance%20Soir%C3%A9e.%20A%20little%20about%20me%3A%20" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline">WhatsApp Sumaya directly</a></p>
       </div>
     </div>
     <div class="help rv">
@@ -784,7 +793,7 @@ src="https://www.facebook.com/tr?id=1874556003533048&ev=PageView&noscript=1"
     <span class="eyebrow" style="color:var(--gold-2)">November 7th · The Plaza</span>
     <h2>Your old self will not stand a chance<br><em>in this room.</em></h2>
     <p class="lead">You have watched from the screen. Now take the seat. The room is already being prepared for her: choose the identity you are walking in as.</p>
-    <div class="btns"><a href="#tiers" class="btn">Choose your tier</a><a href="legacy.html" class="btn ghost">Apply for The Legacy</a></div>
+    <div class="btns"><a href="#tiers" class="btn">Choose your tier</a><a href="legacy.html" class="btn ghost" data-tier="legacy">Apply for The Legacy</a></div>
     <p class="note" style="margin-top:20px;font:500 .78rem var(--sans);color:var(--on-d-muted)" data-cd-long>In person only. No livestream. No replay.</p>
   </div>
 </section>
@@ -906,6 +915,7 @@ document.documentElement.classList.add('js');
   function fire(n, d){ try { rsTrack(n, d); } catch (e) {} }
   fire('ViewContent', { content_name: 'The Renaissance Soiree', content_category: 'event' });
   var VAL = { muse: 997, icon: 1500, legacy: 4997 };
+  var wl = document.getElementById('wa-legacy'); if (wl) wl.addEventListener('click', function(){ fire('Contact', { content_name: 'Legacy WhatsApp', value: 4997, currency: 'USD' }); });
   var wh = document.getElementById('wa-help'); if (wh) wh.addEventListener('click', function(){ fire('Contact', { content_name: 'Checkout help WhatsApp' }); });
   document.querySelectorAll('[data-tier]').forEach(function(a){
     a.addEventListener('click', function(){
