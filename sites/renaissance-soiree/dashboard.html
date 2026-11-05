@@ -139,7 +139,7 @@ th:first-child,td:first-child{text-align:left}
     <div class="tw"><table id="fixlog"></table></div>
   </div>
 
-  <p class="note">Paid seats are counted when Stan sends the buyer to /welcome?tier=… after checkout. If a product's redirect isn't set, those sales won't appear here: check Stan's sales report for the true total. Revenue is list price by tier.</p>
+  <p class="note">Paid seats are counted when Stan sends the buyer to /welcome?tier=… after checkout. If a product's redirect isn't set, those sales won't appear here: check Stan's sales report for the true total. Revenue is list price by tier. "Clicked a tier" is counted on our page when she taps Muse or Icon; what happens inside Stan's checkout is not visible here.</p>
 </div>
 
 <script>
@@ -163,9 +163,9 @@ th:first-child,td:first-child{text-align:left}
       tips: ['Headline must repeat the ad\'s promise word for word', 'Show the date, The Plaza and "from $997" in the first screen', 'Move the "Tap the ones that are true" section higher'] },
     'visit>tiers': { label: 'Visited → reached the tiers', target: .35, why: 'Women are not getting to the prices',
       tips: ['Add a second "Choose your tier" button after the thermostat section', 'Shorten the page above the tiers', 'Make the sticky "Choose tier" bar more visible on phone'] },
-    'tiers>checkout': { label: 'Saw tiers → started checkout', target: .20, why: 'Prices are seen but not chosen',
+    'tiers>checkout': { label: 'Saw tiers → clicked a tier', target: .20, why: 'Prices are seen but not chosen',
       tips: ['Lead the Icon card with "2 spots left" and the private dinner', 'Repeat "Your old self will not stand a chance in this room" above the cards', 'Make the WhatsApp help button visible next to the cards'] },
-    'checkout>paid': { label: 'Started checkout → paid', target: .35, why: 'Women open Stan checkout and leave',
+    'checkout>paid': { label: 'Clicked a tier → paid', target: .35, why: 'She tapped a tier, went to Stan, and did not pay',
       tips: ['Confirm Stan redirects to /welcome?tier=… (otherwise sales are uncounted)', 'Turn on Apple Pay / Google Pay in Stan', 'WhatsApp the women who tapped a tier but did not buy'] },
     'visit>legacy': { label: 'Visited → Legacy interest', target: .03, why: 'Few women open the Legacy',
       tips: ['Add one line about the presidential suite overnight in the hero', 'Show the $500 sundae photo near the Legacy card'] },
@@ -204,7 +204,7 @@ th:first-child,td:first-child{text-align:left}
       ['Return on ad spend', roas == null ? '—' : roas.toFixed(1) + 'x', 'revenue ÷ ad spend', roas != null && roas >= 3 ? 'good' : roas != null && c.spend > 50 && roas < 1 ? 'bad' : ''],
       ['Visitor to buyer', v2b == null ? '—' : pct(v2b), 'target 2%', 'hl'],
       ['Revenue per visitor', c.visit ? usd(c.revenue / c.visit) : '—', 'what one visit is worth'],
-      ['Checkout to paid', c.checkout ? pct(c.paid / c.checkout) : '—', fmt(Math.max(0, c.checkout - c.paid)) + ' started and left'],
+      ['Tier click to paid', c.checkout ? pct(c.paid / c.checkout) : '—', fmt(Math.max(0, c.checkout - c.paid)) + ' clicked and did not pay'],
       ['Steps on target', onT + ' of ' + can, (judged.length - can) + ' steps need more people'],
     ];
     $('kpis').innerHTML = k.map(function(x){ return '<div class="kpi ' + (x[3] || '') + '"><h4>' + x[0] + '</h4><b>' + x[1] + '</b><span>' + x[2] + '</span></div>'; }).join('');
@@ -222,7 +222,7 @@ th:first-child,td:first-child{text-align:left}
         box('click', 'Link clicks', c.click, c.click ? usd(c.spend / c.click) + ' a click' : '') + arr('click>visit') +
         box('visit', 'Page visitors', c.visit, c.adVisit + ' from the ads', readBadge) + arr('visit>tiers') +
         box('tiers', 'Reached the tiers', c.tiers, '') + arr('tiers>checkout') +
-        box('checkout', 'Started checkout', c.checkout, c.help ? c.help + ' asked for help on WhatsApp' : 'tapped a tier') + arr('checkout>paid') +
+        box('checkout', 'Clicked a tier', c.checkout, c.help ? c.help + ' asked for help on WhatsApp' : 'tapped Muse or Icon, sent to Stan') + arr('checkout>paid') +
         box('paid', 'Paid seat', c.paid, usd(c.revenue), '', true) +
       '</div><div class="row-t"><i>2</i>The Legacy path ($4,997)</div><div class="flow">' +
         box('visit', 'Page visitors', c.visit, '') + arr('visit>legacy') +
@@ -269,7 +269,7 @@ th:first-child,td:first-child{text-align:left}
         '</td><td>' + (a.linkClicks ? usd(a.spend / a.linkClicks) : '—') + '</td><td>' + fmt(p.visit || 0) + '</td><td>' + fmt(p.tiers || 0) + '</td><td>' + fmt(p.checkout || 0) + '</td><td>' + fmt(p.paid || 0) + '</td><td>' + usd(Number(p.revenue || 0)) +
         '</td><td>' + (a.spend && p.paid ? usd(a.spend / p.paid) : '—') + '</td><td>' + (a.spend ? (Number(p.revenue || 0) / a.spend).toFixed(1) + 'x' : '—') + '</td></tr>';
     }).join('');
-    $('byad').innerHTML = '<tr><th>Ad / source</th><th>Spend</th><th>Impr.</th><th>CTR</th><th>Cost/click</th><th>Visitors</th><th>Tiers</th><th>Checkout</th><th>Paid</th><th>Revenue</th><th>Cost/seat</th><th>ROAS</th></tr>' + (rows || '<tr><td colspan="12" class="empty">No ad traffic yet.</td></tr>');
+    $('byad').innerHTML = '<tr><th>Ad / source</th><th>Spend</th><th>Impr.</th><th>CTR</th><th>Cost/click</th><th>Visitors</th><th>Tiers</th><th>Tier clicks</th><th>Paid</th><th>Revenue</th><th>Cost/seat</th><th>ROAS</th></tr>' + (rows || '<tr><td colspan="12" class="empty">No ad traffic yet.</td></tr>');
     $('metanote').textContent = !m ? (S.traffic === 'other' ? 'Meta columns hidden for non-Meta traffic.' : 'Meta spend is not connected yet.') : m.error ? 'Meta data could not be loaded right now; page data is still live.' : 'Meta reports ' + fmt(m.totals.purchases) + ' purchases from its own attribution, for comparison.';
 
     var aud = {}; ((m && m.ads) || []).forEach(function(a){ var t = aud[a.adset] = aud[a.adset] || { spend: 0, impressions: 0, linkClicks: 0, lpv: 0, purchases: 0 }; t.spend += a.spend; t.impressions += a.impressions; t.linkClicks += a.linkClicks; t.lpv += a.landingViews; t.purchases += a.purchases; });
