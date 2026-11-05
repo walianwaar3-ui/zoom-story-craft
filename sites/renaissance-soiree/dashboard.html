@@ -179,6 +179,10 @@ th:first-child,td:first-child{text-align:left}
   var pct = function(n){ return n == null ? 'n/a' : (n * 100 >= 10 ? (n * 100).toFixed(0) : (n * 100).toFixed(1)) + '%'; };
   var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
   var AD_NAME = { tickets: 'A · Death to your old identity', decision: 'B · Put yourself in the room', singleday: 'C · Receive instead of proving' };
+  // Second campaign run from the other ads tool: tagged adset{N}_creative{M}. Part of the same ecosystem, counted as ad traffic.
+  var TOOL = /^adset(\d+)_creative(\d+)$/;
+  function srcName(s){ if (AD_NAME[s]) return AD_NAME[s]; var m = TOOL.exec(s || ''); return m ? 'Tool campaign · ad set ' + m[1] + ' · creative ' + m[2] : s; }
+  function isAd(s){ return !!AD_NAME[s] || s === 'meta (no ad tag)' || TOOL.test(s || ''); }
   var MIN = 30, SURE = 100;
 
   // Funnel steps and targets (warm audience, high-ticket event)
@@ -207,7 +211,7 @@ th:first-child,td:first-child{text-align:left}
     return { imp: m ? m.impressions : null, click: m ? m.linkClicks : null, spend: m ? m.spend : null,
       visit: s.visit || 0, read50: s.read50 || 0, tiers: s.tiers || 0, checkout: s.checkout || 0, paid: s.paid || 0,
       legacy: s.legacy || 0, apply: s.apply || 0, help: s.help || 0, revenue: Number(d && d.funnel && d.funnel.revenue || 0),
-      adVisit: ((d && d.funnel && d.funnel.bySource) || []).filter(function(r){ return AD_NAME[r.src] || r.src === 'meta (no ad tag)'; }).reduce(function(n, r){ return n + (r.visit || 0); }, 0) };
+      adVisit: ((d && d.funnel && d.funnel.bySource) || []).filter(function(r){ return isAd(r.src); }).reduce(function(n, r){ return n + (r.visit || 0); }, 0) };
   }
   function judge(key, c){
     var p = key.split('>'), from = c[p[0]], to = key === 'click>visit' ? c.adVisit : c[p[1]], t = ARROWS[key].target;
@@ -290,16 +294,19 @@ th:first-child,td:first-child{text-align:left}
     var m = d.meta, bySrc = {}; (d.funnel.bySource || []).forEach(function(r){ bySrc[r.src] = r; });
     var ads = {};
     ((m && m.ads) || []).forEach(function(a){ var s = a.src || a.ad; var t = ads[s] = ads[s] || { spend: 0, impressions: 0, linkClicks: 0, mpurch: 0 }; t.spend += a.spend; t.impressions += a.impressions; t.linkClicks += a.linkClicks; t.mpurch += a.purchases; });
-    var keys = Object.keys(AD_NAME).concat(Object.keys(bySrc).filter(function(s){ return !AD_NAME[s]; }));
+    var toolKeys = Object.keys(bySrc).filter(function(s){ return TOOL.test(s); }).sort(function(a, b){ return (bySrc[b].visit || 0) - (bySrc[a].visit || 0); });
+    if (toolKeys.length) { var tt = { visit: 0, tiers: 0, checkout: 0, paid: 0, revenue: 0 }; toolKeys.forEach(function(k){ for (var f in tt) tt[f] += Number(bySrc[k][f] || 0); }); bySrc['__tool'] = tt; }
+    var keys = Object.keys(AD_NAME).concat(toolKeys.length ? ['__tool'] : [], toolKeys, Object.keys(bySrc).filter(function(s){ return !AD_NAME[s] && !TOOL.test(s) && s !== '__tool'; }));
     var rows = keys.map(function(s){
       var a = ads[s] || {}, p = bySrc[s] || {};
       if (!a.spend && !p.visit && !p.paid) return '';
-      return '<tr><td>' + esc(AD_NAME[s] || s) + '</td><td>' + (a.spend != null ? usd(a.spend) : '—') + '</td><td>' + (a.impressions ? fmt(a.impressions) : '—') + '</td><td>' + (a.impressions ? pct(a.linkClicks / a.impressions) : '—') +
+      if (s === '__tool') return '<tr style="background:#f4f7fb;font-weight:700"><td>Tool campaign · all ' + toolKeys.length + ' ads</td><td>other tool</td><td>—</td><td>—</td><td>—</td><td>' + fmt(p.visit) + '</td><td>' + fmt(p.tiers) + '</td><td>' + fmt(p.checkout) + '</td><td>' + fmt(p.paid) + '</td><td>' + usd(p.revenue) + '</td><td>—</td><td>—</td></tr>';
+      return '<tr><td>' + esc(srcName(s)) + '</td><td>' + (a.spend != null ? usd(a.spend) : (TOOL.test(s) ? 'other tool' : '—')) + '</td><td>' + (a.impressions ? fmt(a.impressions) : '—') + '</td><td>' + (a.impressions ? pct(a.linkClicks / a.impressions) : '—') +
         '</td><td>' + (a.linkClicks ? usd(a.spend / a.linkClicks) : '—') + '</td><td>' + fmt(p.visit || 0) + '</td><td>' + fmt(p.tiers || 0) + '</td><td>' + fmt(p.checkout || 0) + '</td><td>' + fmt(p.paid || 0) + '</td><td>' + usd(Number(p.revenue || 0)) +
         '</td><td>' + (a.spend && p.paid ? usd(a.spend / p.paid) : '—') + '</td><td>' + (a.spend ? (Number(p.revenue || 0) / a.spend).toFixed(1) + 'x' : '—') + '</td></tr>';
     }).join('');
     $('byad').innerHTML = '<tr><th>Ad / source</th><th>Spend</th><th>Impr.</th><th>CTR</th><th>Cost/click</th><th>Visitors</th><th>Tiers</th><th>Tier clicks</th><th>Paid</th><th>Revenue</th><th>Cost/seat</th><th>ROAS</th></tr>' + (rows || '<tr><td colspan="12" class="empty">No ad traffic yet.</td></tr>');
-    $('metanote').textContent = !m ? (S.traffic === 'other' ? 'Meta columns hidden for non-Meta traffic.' : 'Meta spend is not connected yet.') : m.error ? 'Meta data could not be loaded right now; page data is still live.' : 'Meta reports ' + fmt(m.totals.purchases) + ' purchases from its own attribution, for comparison.';
+    $('metanote').textContent = !m ? (S.traffic === 'other' ? 'Meta columns hidden for non-Meta traffic.' : 'Meta spend is not connected yet.') : m.error ? 'Meta data could not be loaded right now; page data is still live.' : 'Meta reports ' + fmt(m.totals.purchases) + ' purchases from its own attribution, for comparison. Spend shown is the Soirée campaign only; the tool campaign (ad set / creative rows) is spent and reported in that tool.';
 
     var aud = {}; ((m && m.ads) || []).forEach(function(a){ var t = aud[a.adset] = aud[a.adset] || { spend: 0, impressions: 0, linkClicks: 0, lpv: 0, purchases: 0 }; t.spend += a.spend; t.impressions += a.impressions; t.linkClicks += a.linkClicks; t.lpv += a.landingViews; t.purchases += a.purchases; });
     $('byaud').innerHTML = '<tr><th>Audience</th><th>Spend</th><th>CTR</th><th>Cost/click</th><th>Page views</th><th>Purchases*</th></tr>' + (Object.keys(aud).map(function(n){ var t = aud[n];
@@ -378,7 +385,7 @@ th:first-child,td:first-child{text-align:left}
     var devRows = Object.keys(dev).map(function(k){ var a = dev[k][steps[0]] || 0, b = steps[1] ? (dev[k][steps[1]] || 0) : null;
       return '<tr><td>' + esc(k) + '</td><td>' + fmt(a) + '</td>' + (steps[1] ? '<td>' + fmt(b) + '</td><td>' + (a ? pct(b / a) : '—') + '</td>' : '') + '</tr>'; }).join('');
     var srcRows = (d.funnel.bySource || []).map(function(r){ var a = r[steps[0]], b = steps[1] ? r[steps[1]] : null; if (a == null) return '';
-      return '<tr><td>' + esc(AD_NAME[r.src] || r.src) + '</td><td>' + fmt(a) + '</td>' + (steps[1] ? '<td>' + fmt(b || 0) + '</td><td>' + (a ? pct((b || 0) / a) : '—') + '</td>' : '') + '</tr>'; }).join('');
+      return '<tr><td>' + esc(srcName(r.src)) + '</td><td>' + fmt(a) + '</td>' + (steps[1] ? '<td>' + fmt(b || 0) + '</td><td>' + (a ? pct((b || 0) / a) : '—') + '</td>' : '') + '</tr>'; }).join('');
     var hdr = '<tr><th></th><th>' + esc(steps[0]) + '</th>' + (steps[1] ? '<th>' + esc(steps[1]) + '</th><th>Rate</th>' : '') + '</tr>';
     box.innerHTML = '<h2>' + esc(title) + '</h2>' +
       (series.length ? '<div class="bars">' + series.map(function(x){ return '<div style="height:' + Math.max(2, x.v / max * 100) + '%" title="' + x.d + ': ' + x.lbl + '"><span>' + x.d + '</span></div>'; }).join('') + '</div><br>' : '<p class="empty">No daily data yet.</p>') +
