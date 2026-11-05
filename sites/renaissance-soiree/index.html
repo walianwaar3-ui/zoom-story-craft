@@ -9,6 +9,8 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://fast.wistia.com/player.js" async></script>
+<script src="https://fast.wistia.com/embed/5ekwt3rsk8.js" async type="module"></script>
 <style>
 :root{
   --ink:#14100c;--ink-2:#1d1712;--card-d:#221b15;
@@ -73,6 +75,11 @@ h2 em,h1 em,h3 em{font-style:italic;color:var(--wine)}
 .hero-art::after{content:"";position:absolute;inset:12px;border:1px solid rgba(217,184,120,.55);border-radius:999px 999px 12px 12px;pointer-events:none}
 .hero-art figcaption{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);font:600 .6rem var(--sans);letter-spacing:.26em;text-transform:uppercase;color:#fff;background:rgba(20,16,12,.6);backdrop-filter:blur(6px);padding:8px 14px;border-radius:999px;white-space:nowrap}
 @keyframes drift{to{transform:scale(1.1)}}
+.vsl{margin:0;position:relative}
+.vsl-frame{position:relative;border-radius:18px;overflow:hidden;background:#0d0a07;box-shadow:0 40px 80px -40px rgba(0,0,0,.85),0 0 0 1px rgba(217,184,120,.45)}
+wistia-player[media-id='5ekwt3rsk8']:not(:defined){background:center / contain no-repeat url('https://fast.wistia.com/embed/medias/5ekwt3rsk8/swatch');display:block;filter:blur(5px);padding-top:56.25%}
+.vsl figcaption{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:14px;font:600 .62rem var(--sans);letter-spacing:.24em;text-transform:uppercase;color:var(--gold-2)}
+.vsl figcaption::before,.vsl figcaption::after{content:"";height:1px;width:28px;background:var(--gold);opacity:.6}
 .hero .wrap{position:relative;z-index:1;padding-top:72px;padding-bottom:84px;width:100%}
 .hero .eyebrow{color:var(--gold-2)}
 .hero .kicker{margin:16px 0 0;font:400 clamp(1.1rem,2.2vw,1.45rem)/1.2 var(--display);letter-spacing:.14em;color:var(--gold-2)}
@@ -323,6 +330,12 @@ footer .terms{margin-top:28px;border-top:1px solid var(--line-d);padding-top:22p
   .gal figure:first-child{grid-column:span 2;grid-row:auto}
   .hero-grid{grid-template-columns:1fr;gap:28px}
   .hero-art{order:-1;aspect-ratio:4/3;max-height:42vh;width:100%;border-radius:200px 200px 16px 16px}
+  .hero-grid:has(.vsl){gap:0}
+  .hero-grid:has(.vsl) .hero-copy{display:contents}
+  .hero-grid:has(.vsl) .hero-copy>*{order:3}
+  .hero-grid:has(.vsl) .hero-copy>.eyebrow,.hero-grid:has(.vsl) .hero-copy>.kicker,.hero-grid:has(.vsl) .hero-copy>h1{order:1}
+  .hero .vsl{order:2;margin:2px -4px 26px}
+  .hero-grid:has(.vsl) .eyebrow{justify-self:start}
   .hero-art::after{border-radius:190px 190px 10px 10px}
   .hero .wrap{padding-top:22px;padding-bottom:56px}
   .nav .btn{display:none}
@@ -412,7 +425,10 @@ src="https://www.facebook.com/tr?id=1874556003533048&ev=PageView&noscript=1"
     </div>
     <p class="note">— Sumaya · The woman who walks in will not be the woman who walks out.</p>
     </div>
-    <figure class="hero-art"><img src="img/suite.jpg" alt="The Plaza, New York" fetchpriority="high"><figcaption>The Plaza · Fifth Avenue</figcaption></figure>
+    <figure class="vsl" id="vsl">
+      <div class="vsl-frame"><wistia-player media-id="5ekwt3rsk8" aspect="1.7777777777777777"></wistia-player></div>
+      <figcaption>Press play · from Sumaya</figcaption>
+    </figure>
   </div>
 </section>
 
@@ -865,6 +881,16 @@ document.documentElement.classList.add('js');
 })();
 </script>
 <script>
+// VSL: play, halfway and finished, stored for the dashboard only.
+(function(){
+  var v = document.querySelector('wistia-player[media-id="5ekwt3rsk8"]'); if (!v) return;
+  var sent = {};
+  function once(n){ if (!sent[n]) { sent[n] = 1; window.rsLog && rsLog(n); } }
+  v.addEventListener('play', function(){ once('VideoPlay'); });
+  v.addEventListener('time-update', function(){ var d = v.duration, t = v.currentTime; if (d > 0 && t / d >= 0.5) once('Video50'); });
+  v.addEventListener('ended', function(){ once('Video50'); once('VideoEnd'); });
+  v.addEventListener('end', function(){ once('Video50'); once('VideoEnd'); });
+})();
 // Funnel events: ViewContent on the sales page, InitiateCheckout when a tier is chosen, Lead when Legacy is opened.
 (function(){
   function fire(n, d){ try { rsTrack(n, d); } catch (e) {} }

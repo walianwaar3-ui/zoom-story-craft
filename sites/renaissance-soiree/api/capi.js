@@ -5,7 +5,7 @@ import crypto from 'node:crypto';
 
 const PIXEL_ID = '1874556003533048';
 const META_EVENTS = new Set(['PageView', 'ViewContent', 'InitiateCheckout', 'Lead', 'Contact', 'SubmitApplication', 'Purchase', 'CompleteRegistration']);
-const INTERNAL_EVENTS = new Set(['Scroll50', 'ViewTiers']); // dashboard only, never sent to Meta
+const INTERNAL_EVENTS = new Set(['Scroll50', 'ViewTiers', 'VideoPlay', 'Video50', 'VideoEnd']); // dashboard only, never sent to Meta
 
 function cookie(req, name) {
   const m = (req.headers.cookie || '').match(new RegExp('(?:^|; )' + name + '=([^;]+)'));
