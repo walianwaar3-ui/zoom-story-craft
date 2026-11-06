@@ -1,5 +1,7 @@
 // Dashboard data: the funnel from Supabase (rs_dashboard, gated by the dashboard key) plus live spend from every campaign in the Meta ad account.
 // Also logs "We tried this" fixes. Env: SUPABASE_URL, SUPABASE_ANON_KEY, META_ADS_TOKEN, META_CAMPAIGN_ID (ours, listed first), META_AD_ACCOUNT (optional).
+import { ACCOUNT, sumActions, adLinks } from './_meta.js';
+
 const RANGES = { '24h': 1, '3d': 3, '7d': 7, all: null };
 const AD_SRC = { A: 'tickets', B: 'decision', C: 'singleday' };
 
@@ -13,36 +15,9 @@ async function rpc(fn, args) {
   return { ok: r.ok, data };
 }
 
-function sumActions(list, types) {
-  return (list || []).filter(a => types.includes(a.action_type)).reduce((n, a) => n + Number(a.value || 0), 0);
-}
 
 // Every campaign in the ad account counts (ours plus the ones built in the other tool). Each ad is matched to the
 // page's traffic by the utm_content in its link, so Meta spend sits next to what those visitors did on the page.
-const ACCOUNT = process.env.META_AD_ACCOUNT || 'act_1124506973279138';
-let linkCache = { at: 0, map: {} };
-async function adLinks(token) {
-  if (Date.now() - linkCache.at < 10 * 60e3) return linkCache.map;
-  const map = {};
-  let url = `https://graph.facebook.com/v21.0/${ACCOUNT}/ads?` + new URLSearchParams({ access_token: token, fields: 'id,creative{url_tags,object_story_spec,asset_feed_spec{link_urls}}', limit: '200' });
-  for (let i = 0; url && i < 5; i++) {
-    const r = await fetch(url, { signal: AbortSignal.timeout(9000) });
-    const j = await r.json();
-    if (!r.ok) { console.error('Meta ads error', JSON.stringify(j.error || j).slice(0, 300)); break; }
-    for (const a of j.data || []) {
-      const c = a.creative || {}, o = c.object_story_spec || {}, ld = o.link_data || {}, vd = o.video_data || {};
-      const link = ld.link || (vd.call_to_action && vd.call_to_action.value && vd.call_to_action.value.link) || ((c.asset_feed_spec && c.asset_feed_spec.link_urls) || [])[0]?.website_url || '';
-      let q = new URLSearchParams();
-      try { q = new URL(link).searchParams; } catch {}
-      if (c.url_tags) for (const [k, v] of new URLSearchParams(c.url_tags)) if (!q.get(k)) q.set(k, v);
-      map[a.id] = { content: q.get('utm_content') || q.get('src') || '', campaign: q.get('utm_campaign') || '' };
-    }
-    url = j.paging && j.paging.next;
-  }
-  linkCache = { at: Date.now(), map };
-  return map;
-}
-
 async function meta(sinceDays, device) {
   const token = process.env.META_ADS_TOKEN;
   if (!token) return null;

@@ -167,6 +167,14 @@ th:first-child,td:first-child{text-align:left}
   </div>
 
   <div class="card">
+    <h2>Budget autopilot</h2>
+    <p class="sub">Hard cap: $550 across every campaign until the event. Meta's own account spending limit enforces it, so nothing can go over. Every hour the autopilot moves what is left toward the ad sets whose visitors actually choose a tier or buy (Stan checkout and purchases, plus tier taps on our page), and pauses ads that spent $10+ without one.</p>
+    <div id="pilot"><p class="empty">Loading…</p></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn" id="pilotPreview" type="button">Preview next move</button><button class="btn" id="pilotRun" type="button">Run now</button></div>
+    <p class="note" id="pilotnote"></p>
+  </div>
+
+  <div class="card">
     <h2>Every campaign</h2>
     <p class="sub">All campaigns in the Meta ad account, ours and the ones built in ChatGPT, pulled live from Meta and matched to what their visitors did on the page.</p>
     <div class="tw"><table id="bycamp"></table></div>
@@ -503,10 +511,40 @@ th:first-child,td:first-child{text-align:left}
     return fetch('/api/stats', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       .then(function(r){ return r.json().then(function(j){ if (!r.ok) throw Object.assign(new Error(j.error || 'Error'), { status: r.status }); return j; }); });
   }
+  function pilotHtml(p, when, applied){
+    var spent = p.totalSpent, pctUsed = spent != null ? Math.min(1, spent / p.cap) : 0;
+    var KIND = { pause_ad: 'Paused ad', pause_adset: 'Paused ad set', pause_campaign: 'Paused campaign', lifetime_budget: 'Total budget', daily_budget: 'Daily budget', campaign_cap: 'Campaign limit' };
+    var acts = (p.actions || []).map(function(a){
+      var ch = a.from != null ? usd(a.from) + ' → ' + usd(a.to) : '';
+      var bad = a.result && !a.result.ok ? ' <span style="color:#b42318">(Meta refused: ' + esc(a.result.error) + ')</span>' : '';
+      return '<tr><td>' + KIND[a.kind] + '</td><td>' + esc(a.name) + '</td><td>' + ch + '</td><td class="muted">' + esc(a.why) + bad + '</td></tr>'; }).join('');
+    var shares = (p.holders || []).slice().sort(function(a, b){ return b.share - a.share; }).map(function(h){
+      return '<tr><td>' + esc(h.name) + '</td><td>' + usd(h.spend) + '</td><td>' + fmt(h.choices) + '</td><td>' + fmt(h.buys) + '</td><td>' + usd(h.share) + '</td></tr>'; }).join('');
+    return '<div class="kpis" style="margin-bottom:10px"><div class="kpi"><h4>Spent of $' + fmt(p.cap) + '</h4><b>' + (spent == null ? '—' : usd(spent)) + '</b><span>' + (p.left == null ? 'no cap set' : usd(p.left) + ' left') + '</span></div></div>' +
+      '<div style="height:8px;border-radius:6px;background:#eef1f5;overflow:hidden;margin:4px 0 12px"><div style="height:100%;width:' + Math.round(pctUsed * 100) + '%;background:' + (pctUsed > .9 ? '#b42318' : '#1f6feb') + '"></div></div>' +
+      '<p class="sub">' + (applied ? 'Last run ' : 'Preview at ') + new Date(when).toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' }) + (applied ? '' : ' · nothing changed') + '</p>' +
+      '<div class="tw"><table><tr><th>Move</th><th>Where</th><th>Budget</th><th>Why</th></tr>' + (acts || '<tr><td colspan="4" class="empty">No change needed: money is already where the results are.</td></tr>') + '</table></div>' +
+      '<div class="tw" style="margin-top:10px"><table><tr><th>Ad set / campaign</th><th>Spent</th><th>Tier choices</th><th>Buys</th><th>Gets of what is left</th></tr>' + shares + '</table></div>' +
+      ((p.notes || []).length ? '<p class="note">' + p.notes.map(esc).join(' ') + '</p>' : '');
+  }
+  function pilot(body){
+    return fetch('/api/allocate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ key: S.key }, body)) }).then(function(r){ return r.json(); });
+  }
+  function loadPilot(){
+    pilot({ log: true }).then(function(j){
+      var last = j && j.runs && j.runs[0];
+      if (last) { $('pilot').innerHTML = pilotHtml(last.run, last.ts, true); $('pilotnote').textContent = j.runs.length + ' runs logged. It runs by itself every hour.'; }
+      else { $('pilotnote').textContent = 'No run logged yet. It runs by itself every hour.'; previewPilot(); }
+    }).catch(function(){ $('pilotnote').textContent = 'Autopilot log could not be loaded.'; });
+  }
+  function previewPilot(){ $('pilotnote').textContent = 'Working out the next move…'; pilot({}).then(function(j){ if (j.ok) { $('pilot').innerHTML = pilotHtml(j.plan, j.plan.at, false); $('pilotnote').textContent = 'Preview only. Press Run now to apply it, or wait for the next hourly run.'; } else $('pilotnote').textContent = j.error || 'Could not reach Meta.'; }); }
+  $('pilotPreview').addEventListener('click', previewPilot);
+  $('pilotRun').addEventListener('click', function(){ if (!confirm('Apply the autopilot moves to Meta now?')) return; $('pilotnote').textContent = 'Applying…'; pilot({ apply: true }).then(function(j){ if (j.ok) { $('pilot').innerHTML = pilotHtml(j.plan, j.plan.at, true); $('pilotnote').textContent = 'Applied.'; } else $('pilotnote').textContent = j.error || 'Could not reach Meta.'; }); });
+
   function load(){
     $('updated').textContent = 'Loading…';
     return api().then(function(j){
-      S.data = j; META_SRC = {}; ((j.meta && j.meta.ads) || []).forEach(function(a){ if (a.src) META_SRC[a.src] = a; }); render();
+      S.data = j; META_SRC = {}; ((j.meta && j.meta.ads) || []).forEach(function(a){ if (a.src) META_SRC[a.src] = a; }); render(); loadPilot();
       $('updated').textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }).catch(function(e){
       if (e.status === 401) { try { localStorage.removeItem('rs_dash_key'); } catch (x) {} $('app').hidden = true; $('gate').hidden = false; $('gerr').textContent = 'Wrong key.'; return; }
