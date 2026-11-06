@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
+.muted{color:#7a8597;font-weight:400;font-size:.9em}
 :root{--bg:#f4f7fb;--card:#fff;--ink:#0b2545;--text:#33415c;--muted:#6b7a90;--line:#e3e9f2;--navy:#0b2545;--blue:#1d5fd1;
   --ok:#1f7a4d;--ok-bg:#e6f4ec;--warn:#a26b00;--warn-bg:#fdf3dc;--bad:#b42318;--bad-bg:#fdecea;--few:#cfd8e6;--sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
 *{box-sizing:border-box}
@@ -166,14 +167,20 @@ th:first-child,td:first-child{text-align:left}
   </div>
 
   <div class="card">
+    <h2>Every campaign</h2>
+    <p class="sub">All campaigns in the Meta ad account, ours and the ones built in ChatGPT, pulled live from Meta and matched to what their visitors did on the page.</p>
+    <div class="tw"><table id="bycamp"></table></div>
+  </div>
+
+  <div class="card">
     <h2>Which ad is selling</h2>
-    <p class="sub">Meta's spend and clicks next to what those women actually did on the page.</p>
+    <p class="sub">Every ad, grouped by campaign: Meta's spend and clicks next to what those women actually did on the page.</p>
     <div class="tw"><table id="byad"></table></div>
     <p class="note" id="metanote"></p>
   </div>
 
   <div class="grid2">
-    <div class="card"><h2>Which audience</h2><p class="sub">Spend and results per ad set (your 3 audiences).</p><div class="tw"><table id="byaud"></table></div></div>
+    <div class="card"><h2>Which audience</h2><p class="sub">Spend and results per ad set, across every campaign.</p><div class="tw"><table id="byaud"></table></div></div>
     <div class="card"><h2>Which tier</h2><p class="sub">Interest (tier tapped) against paid seats.</p><div class="tw"><table id="bytier"></table></div></div>
   </div>
 
@@ -210,8 +217,11 @@ th:first-child,td:first-child{text-align:left}
   var AD_NAME = { tickets: 'A · Death to your old identity', decision: 'B · Put yourself in the room', singleday: 'C · Receive instead of proving' };
   // Second campaign run from the other ads tool: tagged adset{N}_creative{M}. Part of the same ecosystem, counted as ad traffic.
   var TOOL = /^adset(\d+)_creative(\d+)$/;
-  function srcName(s){ if (AD_NAME[s]) return AD_NAME[s]; var m = TOOL.exec(s || ''); return m ? 'Tool campaign · ad set ' + m[1] + ' · creative ' + m[2] : s; }
-  function isAd(s){ return !!AD_NAME[s] || s === 'meta (no ad tag)' || TOOL.test(s || ''); }
+  // Every ad in the Meta account, keyed by the utm_content in its link (filled from the API on each load).
+  var META_SRC = {};
+  function shortCamp(n){ return String(n || '').replace(/^Renaissance Soirée · /, ''); }
+  function srcName(s){ if (AD_NAME[s]) return AD_NAME[s]; if (META_SRC[s]) return META_SRC[s].ad; var m = TOOL.exec(s || ''); return m ? 'Tool campaign · ad set ' + m[1] + ' · creative ' + m[2] : s; }
+  function isAd(s){ return !!AD_NAME[s] || !!META_SRC[s] || s === 'meta (no ad tag)' || TOOL.test(s || ''); }
   var MIN = 30, SURE = 100;
 
   // Funnel steps and targets (warm audience, high-ticket event)
@@ -329,23 +339,38 @@ th:first-child,td:first-child{text-align:left}
     // By ad: Meta + our page data by utm_content
     var m = d.meta, bySrc = {}; (d.funnel.bySource || []).forEach(function(r){ bySrc[r.src] = r; });
     var ads = {};
-    ((m && m.ads) || []).forEach(function(a){ var s = a.src || a.ad; var t = ads[s] = ads[s] || { spend: 0, impressions: 0, linkClicks: 0, mpurch: 0 }; t.spend += a.spend; t.impressions += a.impressions; t.linkClicks += a.linkClicks; t.mpurch += a.purchases; });
-    var toolKeys = Object.keys(bySrc).filter(function(s){ return TOOL.test(s); }).sort(function(a, b){ return (bySrc[b].visit || 0) - (bySrc[a].visit || 0); });
-    if (toolKeys.length) { var tt = { visit: 0, tiers: 0, checkout: 0, paid: 0, revenue: 0 }; toolKeys.forEach(function(k){ for (var f in tt) tt[f] += Number(bySrc[k][f] || 0); }); bySrc['__tool'] = tt; }
-    var keys = Object.keys(AD_NAME).concat(toolKeys.length ? ['__tool'] : [], toolKeys, Object.keys(bySrc).filter(function(s){ return !AD_NAME[s] && !TOOL.test(s) && s !== '__tool'; }));
-    var rows = keys.map(function(s){
-      var a = ads[s] || {}, p = bySrc[s] || {};
-      if (!a.spend && !p.visit && !p.paid) return '';
-      if (s === '__tool') return '<tr style="background:#f4f7fb;font-weight:700"><td>Tool campaign · all ' + toolKeys.length + ' ads</td><td>other tool</td><td>—</td><td>—</td><td>—</td><td>' + fmt(p.visit) + '</td><td>' + fmt(p.tiers) + '</td><td>' + fmt(p.checkout) + '</td><td>' + fmt(p.paid) + '</td><td>' + usd(p.revenue) + '</td><td>—</td><td>—</td></tr>';
-      return '<tr><td>' + esc(srcName(s)) + '</td><td>' + (a.spend != null ? usd(a.spend) : (TOOL.test(s) ? 'other tool' : '—')) + '</td><td>' + (a.impressions ? fmt(a.impressions) : '—') + '</td><td>' + (a.impressions ? pct(a.linkClicks / a.impressions) : '—') +
+    ((m && m.ads) || []).forEach(function(a){ var s = a.src || a.ad; var t = ads[s] = ads[s] || { spend: 0, impressions: 0, linkClicks: 0, mpurch: 0, camp: a.campaignId }; t.spend += a.spend; t.impressions += a.impressions; t.linkClicks += a.linkClicks; t.mpurch += a.purchases; });
+    var camps = (m && m.campaigns) || [], ZP = function(){ return { visit: 0, tiers: 0, checkout: 0, paid: 0, revenue: 0 }; };
+    function pageSum(keys){ var t = ZP(); keys.forEach(function(k){ var p = bySrc[k]; if (p) for (var f in t) t[f] += Number(p[f] || 0); }); return t; }
+    function adRow(name, a, p, style){
+      return '<tr' + (style ? ' style="' + style + '"' : '') + '><td>' + name + '</td><td>' + (a.spend != null ? usd(a.spend) : '—') + '</td><td>' + (a.impressions ? fmt(a.impressions) : '—') + '</td><td>' + (a.impressions ? pct(a.linkClicks / a.impressions) : '—') +
         '</td><td>' + (a.linkClicks ? usd(a.spend / a.linkClicks) : '—') + '</td><td>' + fmt(p.visit || 0) + '</td><td>' + fmt(p.tiers || 0) + '</td><td>' + fmt(p.checkout || 0) + '</td><td>' + fmt(p.paid || 0) + '</td><td>' + usd(Number(p.revenue || 0)) +
         '</td><td>' + (a.spend && p.paid ? usd(a.spend / p.paid) : '—') + '</td><td>' + (a.spend ? (Number(p.revenue || 0) / a.spend).toFixed(1) + 'x' : '—') + '</td></tr>';
-    }).join('');
-    $('byad').innerHTML = '<tr><th>Ad / source</th><th>Spend</th><th>Impr.</th><th>CTR</th><th>Cost/click</th><th>Visitors</th><th>Tiers</th><th>Tier clicks</th><th>Paid</th><th>Revenue</th><th>Cost/seat</th><th>ROAS</th></tr>' + (rows || '<tr><td colspan="12" class="empty">No ad traffic yet.</td></tr>');
-    $('metanote').textContent = !m ? (S.traffic === 'other' ? 'Meta columns hidden for non-Meta traffic.' : 'Meta spend is not connected yet.') : m.error ? 'Meta data could not be loaded right now; page data is still live.' : 'Meta reports ' + fmt(m.totals.purchases) + ' purchases from its own attribution, for comparison. Spend shown is the Soirée campaign only; the tool campaign (ad set / creative rows) is spent and reported in that tool.';
+    }
+    var seen = {}, rows = '';
+    camps.forEach(function(c){
+      var keys = c.srcs.slice().sort(function(x, y){ return ((ads[y] || {}).spend || 0) - ((ads[x] || {}).spend || 0); });
+      keys.forEach(function(k){ seen[k] = 1; });
+      rows += adRow('<b>' + esc(shortCamp(c.name)) + '</b> <span class="muted">· ' + (c.ours ? 'Claude' : 'ChatGPT') + ' · ' + keys.length + ' ads</span>', c, pageSum(keys), 'background:#f4f7fb;font-weight:700');
+      rows += keys.map(function(k){ var a = ads[k] || {}, p = bySrc[k] || {}; return (a.spend || p.visit || p.paid) ? adRow('&nbsp;&nbsp;' + esc(srcName(k)), a, p) : ''; }).join('');
+    });
+    // Ad-tagged traffic Meta no longer reports in this account (older ads, or ads outside the date range)
+    var rest = Object.keys(bySrc).filter(function(k){ return !seen[k]; }).sort(function(x, y){ return (bySrc[y].visit || 0) - (bySrc[x].visit || 0); });
+    var oldAds = rest.filter(function(k){ return isAd(k) || TOOL.test(k); });
+    if (oldAds.length) { rows += adRow('<b>Other ad traffic</b> <span class="muted">· no Meta spend in this range</span>', {}, pageSum(oldAds), 'background:#f4f7fb;font-weight:700') + oldAds.map(function(k){ return adRow('&nbsp;&nbsp;' + esc(srcName(k)), {}, bySrc[k]); }).join(''); }
+    var other = rest.filter(function(k){ return oldAds.indexOf(k) < 0; });
+    if (other.length) { rows += adRow('<b>Not from ads</b> <span class="muted">· organic, links, direct</span>', {}, pageSum(other), 'background:#f4f7fb;font-weight:700') + other.map(function(k){ return adRow('&nbsp;&nbsp;' + esc(srcName(k) || '(direct)'), {}, bySrc[k]); }).join(''); }
 
-    var aud = {}; ((m && m.ads) || []).forEach(function(a){ var t = aud[a.adset] = aud[a.adset] || { spend: 0, impressions: 0, linkClicks: 0, lpv: 0, purchases: 0 }; t.spend += a.spend; t.impressions += a.impressions; t.linkClicks += a.linkClicks; t.lpv += a.landingViews; t.purchases += a.purchases; });
-    $('byaud').innerHTML = '<tr><th>Audience</th><th>Spend</th><th>CTR</th><th>Cost/click</th><th>Page views</th><th>Purchases*</th></tr>' + (Object.keys(aud).map(function(n){ var t = aud[n];
+    $('bycamp').innerHTML = '<tr><th>Campaign</th><th>Built in</th><th>Spend</th><th>Impr.</th><th>CTR</th><th>Cost/click</th><th>Landing views</th><th>Visitors</th><th>Tier clicks</th><th>Paid</th><th>Revenue</th><th>Cost/seat</th><th>ROAS</th></tr>' + (camps.map(function(c){ var p = pageSum(c.srcs);
+      return '<tr><td>' + esc(shortCamp(c.name)) + '</td><td>' + (c.ours ? 'Claude' : 'ChatGPT') + '</td><td>' + usd(c.spend) + '</td><td>' + fmt(c.impressions) + '</td><td>' + (c.impressions ? pct(c.linkClicks / c.impressions) : '—') + '</td><td>' + (c.linkClicks ? usd(c.spend / c.linkClicks) : '—') +
+        '</td><td>' + fmt(c.landingViews) + '</td><td>' + fmt(p.visit) + '</td><td>' + fmt(p.checkout) + '</td><td>' + fmt(p.paid) + '</td><td>' + usd(p.revenue) + '</td><td>' + (c.spend && p.paid ? usd(c.spend / p.paid) : '—') + '</td><td>' + (c.spend ? (p.revenue / c.spend).toFixed(1) + 'x' : '—') + '</td></tr>'; }).join('') +
+      (camps.length > 1 ? (function(){ var t = m.totals, p = pageSum(Object.keys(ads)); return '<tr style="font-weight:700;background:#f4f7fb"><td>All campaigns</td><td></td><td>' + usd(t.spend) + '</td><td>' + fmt(t.impressions) + '</td><td>' + (t.impressions ? pct(t.linkClicks / t.impressions) : '—') + '</td><td>' + (t.linkClicks ? usd(t.spend / t.linkClicks) : '—') + '</td><td>' + fmt(t.landingViews) + '</td><td>' + fmt(p.visit) + '</td><td>' + fmt(p.checkout) + '</td><td>' + fmt(p.paid) + '</td><td>' + usd(p.revenue) + '</td><td>' + (t.spend && p.paid ? usd(t.spend / p.paid) : '—') + '</td><td>' + (t.spend ? (p.revenue / t.spend).toFixed(1) + 'x' : '—') + '</td></tr>'; })() : '')
+      || '<tr><td colspan="13" class="empty">' + (!m ? 'Meta is not connected.' : m.error ? 'Meta data could not be loaded right now.' : 'No campaign delivery in this range.') + '</td></tr>');
+    $('byad').innerHTML = '<tr><th>Ad / source</th><th>Spend</th><th>Impr.</th><th>CTR</th><th>Cost/click</th><th>Visitors</th><th>Tiers</th><th>Tier clicks</th><th>Paid</th><th>Revenue</th><th>Cost/seat</th><th>ROAS</th></tr>' + (rows || '<tr><td colspan="12" class="empty">No ad traffic yet.</td></tr>');
+    $('metanote').textContent = !m ? (S.traffic === 'other' ? 'Meta columns hidden for non-Meta traffic.' : 'Meta spend is not connected yet.') : m.error ? 'Meta data could not be loaded right now; page data is still live.' : 'Spend covers all ' + ((m.campaigns || []).length) + ' campaigns in the ad account (Claude and ChatGPT). Meta reports ' + fmt(m.totals.purchases) + ' purchases from its own attribution, for comparison; Paid and Revenue are what our page and Stan saw.';
+
+    var aud = {}; ((m && m.ads) || []).forEach(function(a){ var key = (a.ours ? '' : shortCamp(a.campaign).split(' · ').slice(0, 2).join(' · ') + ' → ') + a.adset; var t = aud[key] = aud[key] || { spend: 0, impressions: 0, linkClicks: 0, lpv: 0, purchases: 0 }; t.spend += a.spend; t.impressions += a.impressions; t.linkClicks += a.linkClicks; t.lpv += a.landingViews; t.purchases += a.purchases; });
+    $('byaud').innerHTML = '<tr><th>Audience</th><th>Spend</th><th>CTR</th><th>Cost/click</th><th>Page views</th><th>Purchases*</th></tr>' + (Object.keys(aud).sort(function(x, y){ return aud[y].spend - aud[x].spend; }).map(function(n){ var t = aud[n];
       return '<tr><td>' + esc(n.replace('Soirée · ', '')) + '</td><td>' + usd(t.spend) + '</td><td>' + (t.impressions ? pct(t.linkClicks / t.impressions) : '—') + '</td><td>' + (t.linkClicks ? usd(t.spend / t.linkClicks) : '—') + '</td><td>' + fmt(t.lpv) + '</td><td>' + fmt(t.purchases) + '</td></tr>'; }).join('') || '<tr><td colspan="6" class="empty">No delivery yet.</td></tr>');
     $('bytier').innerHTML = '<tr><th>Tier</th><th>Interest</th><th>Paid</th><th>Conversion</th><th>Revenue</th></tr>' + (d.funnel.byTier || []).map(function(t){
       return '<tr><td>' + { muse: 'The Muse · $997', icon: 'The Icon · $1,500', legacy: 'The Legacy · $4,997' }[t.tier] + '</td><td>' + fmt(t.interest) + '</td><td>' + fmt(t.paid) + '</td><td>' + (t.interest ? pct(t.paid / t.interest) : '—') + '</td><td>' + usd(Number(t.revenue)) + '</td></tr>'; }).join('');
@@ -481,7 +506,7 @@ th:first-child,td:first-child{text-align:left}
   function load(){
     $('updated').textContent = 'Loading…';
     return api().then(function(j){
-      S.data = j; render();
+      S.data = j; META_SRC = {}; ((j.meta && j.meta.ads) || []).forEach(function(a){ if (a.src) META_SRC[a.src] = a; }); render();
       $('updated').textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }).catch(function(e){
       if (e.status === 401) { try { localStorage.removeItem('rs_dash_key'); } catch (x) {} $('app').hidden = true; $('gate').hidden = false; $('gerr').textContent = 'Wrong key.'; return; }
