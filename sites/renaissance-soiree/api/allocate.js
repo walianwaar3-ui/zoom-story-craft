@@ -59,7 +59,9 @@ export async function plan(token, bySource) {
     graphAll(ACCOUNT + '/insights', { level: 'ad', date_preset: 'maximum', fields: 'ad_id,spend,inline_link_clicks,actions', limit: '500' }, token),
     adLinks(token).catch(() => ({})),
   ]);
-  const capLeft = Number(acct.spend_cap) > 0 ? (Number(acct.spend_cap) - Number(acct.amount_spent)) / 100 : null;
+  // Meta's billed amount_spent lags real delivery, so the money left is the tighter of the account limit and $550 minus reported ad spend.
+  const insSpent = ins.reduce((n, x) => n + Number(x.spend || 0), 0);
+  const capLeft = Number(acct.spend_cap) > 0 ? Math.min((Number(acct.spend_cap) - Number(acct.amount_spent)) / 100, CAP_TOTAL - insSpent) : null;
   const src = {}; (bySource || []).forEach(r => { src[r.src] = r; });
   const insBy = {}; ins.forEach(x => { insBy[x.ad_id] = x; });
 
@@ -151,7 +153,7 @@ export async function plan(token, bySource) {
   }
   if (left != null && left <= 3) { notes.push('Cap reached: everything stops.'); }
 
-  const totalSpent = left == null ? null : CAP_TOTAL - left;
+  const totalSpent = Math.round(insSpent * 100) / 100;
   return {
     at: new Date(now).toISOString(), cap: CAP_TOTAL, left, totalSpent,
     holders: holders.map(h => ({ id: h.id, name: h.name, camp: h.campName, level: h.level, spend: h.spend, choices: h.choices, buys: h.buys,
