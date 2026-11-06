@@ -1,0 +1,6 @@
+{
+  "name": "renaissance-soiree-site",
+  "private": true,
+  "type": "module",
+  "description": "The Renaissance Soirée landing pages, CAPI relay and live funnel dashboard (Vercel)."
+}

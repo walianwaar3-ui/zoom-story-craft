@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>The Renaissance Soirée</title>
+<meta name="description" content="A one day identity experience for high achieving women, inside the Champagne Suite at The Plaza, New York. Saturday, November 7th, 2026.">
+<meta name="theme-color" content="#14100c">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600&family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://fast.wistia.com/player.js" async></script>
+<script src="https://fast.wistia.com/embed/5ekwt3rsk8.js" async type="module"></script>
+<style>
+:root{
+  --ink:#14100c;--ink-2:#1d1712;--card-d:#221b15;
+  --ivory:#f7f1e6;--paper:#fbf7ef;--cream:#efe5d3;
+  --text:#3a3129;--muted:#7a6c5c;--line:rgba(58,49,41,.14);
+  --on-d:#efe6d6;--on-d-muted:#b3a58f;--line-d:rgba(239,230,214,.14);
+  --gold:#b8914a;--gold-2:#d9b878;--gold-soft:rgba(184,145,74,.14);
+  --wine:#6e1f2a;
+  --serif:'EB Garamond',Georgia,serif;--display:'Cinzel','Trajan Pro',Georgia,serif;--sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--paper);color:var(--text);font-family:var(--serif);font-size:19px;line-height:1.6;-webkit-font-smoothing:antialiased}
+img{max-width:100%;display:block}
+a{color:inherit}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px}
+.narrow{max-width:720px;margin-left:auto;margin-right:auto}
+.center{text-align:center}
+.eyebrow{display:inline-block;font:600 .68rem/1 var(--sans);letter-spacing:.28em;text-transform:uppercase;color:var(--gold)}
+h1,h2,h3{font-family:var(--serif);font-weight:500;color:var(--ink);margin:0}
+h2{font-size:clamp(2rem,5.2vw,3.3rem);line-height:1.08;margin:14px 0 18px}
+h2 em,h1 em,h3 em{font-style:italic;color:var(--wine)}
+.dark h2,.dark h3{color:var(--ivory)}
+.dark h2 em,.dark h3 em{color:var(--gold-2)}
+.lead{font-size:1.2rem;color:var(--muted)}
+.dark{background:var(--ink);color:var(--on-d)}
+.dark .lead{color:var(--on-d-muted)}
+.sec{padding:96px 0;border-top:1px solid var(--line)}
+.dark.sec{border-top-color:var(--line-d)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:10px;text-decoration:none;cursor:pointer;border:0;border-radius:999px;padding:16px 30px;font:600 .78rem/1 var(--sans);letter-spacing:.2em;text-transform:uppercase;background:linear-gradient(180deg,var(--gold-2),var(--gold));color:#1a130a;box-shadow:0 10px 30px -12px rgba(184,145,74,.7);transition:transform .2s,box-shadow .2s}
+.btn:hover{transform:translateY(-1px);box-shadow:0 14px 34px -12px rgba(184,145,74,.85)}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1px var(--gold)}
+.dark .btn.ghost,.hero .btn.ghost,.final .btn.ghost{color:var(--ivory)}
+.btns{display:flex;flex-wrap:wrap;gap:12px;margin-top:28px}
+.center .btns{justify-content:center}
+.rule{display:flex;align-items:center;gap:14px;justify-content:center;color:var(--gold);margin:0 auto 6px}
+.rule::before,.rule::after{content:"";height:1px;width:60px;background:currentColor;opacity:.5}
+.rule span{font-size:.7rem}
+
+/* sticky top: countdown strip + nav */
+.topbar{position:sticky;top:0;z-index:40}
+.strip{background:var(--wine);color:#f6e7d7;font:500 .76rem/1.3 var(--sans);letter-spacing:.04em;padding:8px 16px;display:flex;align-items:center;justify-content:center;gap:14px;flex-wrap:wrap}
+.strip b{color:#fff;font-weight:600}
+.timer{display:inline-flex;align-items:center;gap:4px;font-variant-numeric:tabular-nums}
+.timer span{display:inline-flex;flex-direction:column;align-items:center;min-width:38px;background:rgba(0,0,0,.28);border-radius:7px;padding:4px 5px 3px;line-height:1}
+.timer span b{font:600 1rem/1 var(--sans);color:#fff}
+.timer span i{font:500 .52rem/1 var(--sans);letter-spacing:.14em;text-transform:uppercase;font-style:normal;color:#f1c9cf;margin-top:3px}
+.timer em{font-style:normal;color:#f1c9cf;font-weight:600}
+
+/* nav */
+.nav{background:rgba(20,16,12,.94);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line-d)}
+.nav .wrap{display:flex;align-items:center;justify-content:space-between;height:62px}
+.brand{font:500 1rem var(--display);letter-spacing:.14em;color:var(--ivory);text-decoration:none}
+.brand small{display:block;font:500 .58rem var(--sans);letter-spacing:.3em;color:var(--gold-2);text-transform:uppercase;margin-top:2px}
+.nav .btn{padding:11px 18px;font-size:.66rem}
+
+/* hero */
+.hero{position:relative;color:var(--on-d);overflow:hidden;background:radial-gradient(ellipse 70% 60% at 85% 30%,rgba(184,145,74,.16),transparent 70%),var(--ink)}
+.hero-grid{display:grid;grid-template-columns:1.08fr .92fr;gap:64px;align-items:center}
+.hero-art{position:relative;margin:0;aspect-ratio:4/5;border-radius:999px 999px 20px 20px;overflow:hidden;box-shadow:0 40px 80px -40px rgba(0,0,0,.8)}
+.hero-art img{width:100%;height:100%;object-fit:cover;object-position:50% 40%;transform:scale(1.03);animation:drift 24s ease-in-out infinite alternate}
+.hero-art::after{content:"";position:absolute;inset:12px;border:1px solid rgba(217,184,120,.55);border-radius:999px 999px 12px 12px;pointer-events:none}
+.hero-art figcaption{position:absolute;left:50%;bottom:22px;transform:translateX(-50%);font:600 .6rem var(--sans);letter-spacing:.26em;text-transform:uppercase;color:#fff;background:rgba(20,16,12,.6);backdrop-filter:blur(6px);padding:8px 14px;border-radius:999px;white-space:nowrap}
+@keyframes drift{to{transform:scale(1.1)}}
+.hero-center{text-align:center}
+.hero-center .hero-copy{max-width:900px;margin:0 auto}
+.hero-center h1{max-width:820px;margin-left:auto;margin-right:auto}
+.hero .hero-center p.sub{max-width:680px;margin:0 auto}
+.hero-center p.sub:not(.sub2){font-size:1.22rem;color:var(--on-d)}
+.hero .hero-center .sub2{margin-bottom:22px}
+.hero-center h1{font-size:clamp(2.1rem,3.8vw,3.1rem);margin-top:10px;margin-bottom:12px}
+.hero .wrap.hero-center{padding-top:36px}
+.hero-center .mech,.hero-center .chips,.hero-center .btns{justify-content:center}
+.vsl{position:relative;margin:24px auto 24px;max-width:760px}
+.vsl-frame{position:relative;border-radius:18px;overflow:hidden;background:#0d0a07;box-shadow:0 40px 80px -40px rgba(0,0,0,.85),0 0 0 1px rgba(217,184,120,.45)}
+wistia-player[media-id='5ekwt3rsk8']:not(:defined){background:center / contain no-repeat url('https://fast.wistia.com/embed/medias/5ekwt3rsk8/swatch');display:block;filter:blur(5px);padding-top:56.25%}
+.vsl figcaption{display:flex;align-items:center;justify-content:center;gap:10px;margin-top:14px;font:600 .62rem var(--sans);letter-spacing:.24em;text-transform:uppercase;color:var(--gold-2)}
+.vsl figcaption::before,.vsl figcaption::after{content:"";height:1px;width:28px;background:var(--gold);opacity:.6}
+.hero .wrap{position:relative;z-index:1;padding-top:72px;padding-bottom:84px;width:100%}
+.hero .eyebrow{color:var(--gold-2)}
+.hero .kicker{margin:16px 0 0;font:400 clamp(1.1rem,2.2vw,1.45rem)/1.2 var(--display);letter-spacing:.14em;color:var(--gold-2)}
+.hero .kicker i{font:italic 400 .9em var(--serif);letter-spacing:0;margin-right:4px}
+.hero h1{color:var(--ivory);font-family:var(--serif);font-weight:500;font-size:clamp(2.2rem,4.8vw,3.9rem);line-height:1.07;margin:14px 0 18px;letter-spacing:-.005em}
+.hero h1 em{font-style:italic;color:var(--gold-2)}
+.hero .mech{display:flex;flex-wrap:wrap;gap:10px 18px;margin:0 0 6px;font:500 .8rem var(--sans);color:var(--on-d)}
+.hero .mech span::before{content:"◆";color:var(--gold);font-size:.55rem;margin-right:8px;vertical-align:2px}
+.hook{font-size:clamp(1.35rem,3.4vw,2rem);line-height:1.25;color:var(--ivory);max-width:780px;margin:22px 0 14px;font-style:italic}
+.hero p.sub{max-width:640px;color:var(--on-d-muted);font-size:1.12rem;margin:0}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:26px}
+.chips span{font:500 .74rem var(--sans);letter-spacing:.06em;color:var(--on-d);border:1px solid var(--line-d);background:rgba(255,255,255,.04);border-radius:999px;padding:8px 14px}
+.hero .note{font:500 .74rem var(--sans);color:var(--on-d-muted);margin-top:16px;letter-spacing:.04em}
+
+/* stats */
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:18px;overflow:hidden;margin-top:48px}
+.stat{background:var(--paper);padding:26px 18px;text-align:center}
+.stat b{display:block;font:500 clamp(1.6rem,4vw,2.4rem)/1 var(--serif);color:var(--wine)}
+.stat span{display:block;font:500 .7rem var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-top:8px}
+.anchor{margin:34px auto 0;max-width:720px;background:var(--cream);border-radius:18px;padding:24px 26px;text-align:center}
+.anchor b{color:var(--wine);font-weight:600}
+.fine{font:400 .74rem/1.5 var(--sans);color:var(--muted);margin-top:10px}
+
+/* agree (irrefutable) */
+.agree{display:grid;gap:12px;max-width:760px;margin:36px auto 0}
+.ag{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:16px;padding:18px 20px;text-align:left;transition:border-color .3s,background .3s}
+.ag p{margin:0;font-size:1.12rem;color:var(--ink)}
+.ag button{border:1px solid var(--gold);background:transparent;color:var(--ink);font:600 .68rem var(--sans);letter-spacing:.18em;text-transform:uppercase;border-radius:999px;padding:10px 16px;cursor:pointer;white-space:nowrap}
+.ag.yes{border-color:var(--gold);background:var(--cream)}
+.ag.yes button{background:var(--gold);color:#1a130a}
+.verdict{max-width:760px;margin:22px auto 0;text-align:center;font-size:1.35rem;line-height:1.4;color:var(--ink);opacity:.35;transition:opacity .5s}
+.verdict.on{opacity:1}
+.verdict em{color:var(--wine)}
+
+/* thermostat (old path vs new path) */
+.paths{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:40px}
+.path{border-radius:20px;padding:28px}
+.path.old{background:var(--card-d);border:1px solid var(--line-d)}
+.path.new{background:linear-gradient(160deg,rgba(217,184,120,.18),rgba(110,31,42,.25));border:1px solid rgba(217,184,120,.5)}
+.path h3{font:600 .7rem var(--sans);letter-spacing:.24em;text-transform:uppercase;color:var(--gold-2);margin:0 0 8px}
+.path .big{font:500 2rem/1.1 var(--serif);color:var(--ivory);margin:0 0 12px}
+.path p{margin:0 0 10px;color:var(--on-d-muted);font-size:1.04rem}
+.path ul{margin:8px 0 0;padding-left:18px;color:var(--on-d);font-size:1rem}
+.path li{margin:5px 0}
+.thermo{display:flex;align-items:center;gap:18px;justify-content:center;margin:46px auto 0;max-width:760px;text-align:left}
+.dial{flex-shrink:0;width:96px;height:96px;border-radius:50%;border:2px solid var(--gold);display:grid;place-items:center;font:500 1.7rem var(--serif);color:var(--gold-2);position:relative}
+.dial small{position:absolute;bottom:16px;font:600 .5rem var(--sans);letter-spacing:.2em;color:var(--on-d-muted)}
+.thermo p{margin:0;color:var(--on-d);font-size:1.1rem}
+
+/* consequences */
+.years{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:40px}
+.yr{border-radius:18px;padding:24px;background:#fff;border:1px solid var(--line)}
+.yr b{display:block;font:400 2.4rem/1 var(--display);color:var(--wine);margin-bottom:10px}
+.yr p{margin:0;font-size:1.04rem}
+.gut{max-width:820px;margin:44px auto 0;background:var(--ink);color:var(--on-d);border-radius:22px;padding:34px 30px;font-size:1.25rem;line-height:1.5;text-align:center}
+.gut em{color:var(--gold-2)}
+
+/* three things */
+.three{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:36px}
+.th{border-top:2px solid var(--gold);padding-top:16px}
+.th .n{font:400 2.4rem/1 var(--display);color:var(--gold)}
+.th h3{font-size:1.4rem;margin:8px 0 6px}
+.th p{margin:0;color:var(--muted);font-size:1.02rem}
+
+/* toggle */
+.toggle{display:inline-flex;background:var(--card-d);border:1px solid var(--line-d);border-radius:999px;padding:4px;margin:20px 0 30px}
+.toggle button{border:0;background:transparent;color:var(--on-d-muted);font:600 .72rem var(--sans);letter-spacing:.16em;text-transform:uppercase;padding:11px 20px;border-radius:999px;cursor:pointer}
+.toggle button.on{background:var(--gold);color:#1a130a}
+.toggle{position:relative;transition:transform .25s}
+.toggle button{position:relative;transition:background .3s,color .3s}
+/* Until she taps it, "Walking out" glows, pulses and carries a bouncing "Tap" tag */
+.toggle.hint button[data-side=out]{color:var(--ivory);box-shadow:inset 0 0 0 1px var(--gold-2);animation:tapPulse 1.8s ease-out infinite}
+.toggle.hint button[data-side=out]::after{content:"Tap ↓";position:absolute;left:50%;bottom:calc(100% + 10px);transform:translateX(-50%);background:var(--gold-2);color:#1a130a;font:700 .62rem var(--sans);letter-spacing:.14em;padding:6px 10px;border-radius:999px;white-space:nowrap;animation:tapBob 1.1s ease-in-out infinite;box-shadow:0 8px 20px -8px rgba(217,184,120,.8)}
+.toggle.hint button[data-side=out]:hover{background:rgba(217,184,120,.18)}
+@keyframes tapPulse{0%{box-shadow:inset 0 0 0 1px var(--gold-2),0 0 0 0 rgba(217,184,120,.55)}70%{box-shadow:inset 0 0 0 1px var(--gold-2),0 0 0 14px rgba(217,184,120,0)}100%{box-shadow:inset 0 0 0 1px var(--gold-2),0 0 0 0 rgba(217,184,120,0)}}
+@keyframes tapBob{0%,100%{transform:translate(-50%,0)}50%{transform:translate(-50%,-5px)}}
+.shift .c{transition:border-color .4s,transform .4s}
+.shift.after .c{transform:translateY(-2px)}
+@media (prefers-reduced-motion:reduce){.toggle.hint button[data-side=out],.toggle.hint button[data-side=out]::after{animation:none}}
+.shift{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;text-align:left}
+.shift .c{background:var(--card-d);border:1px solid var(--line-d);border-radius:16px;padding:20px 20px 22px;transition:border-color .4s}
+.shift .c h4{margin:0 0 8px;font:600 .66rem var(--sans);letter-spacing:.24em;text-transform:uppercase;color:var(--gold-2)}
+.shift .c p{margin:0;font-size:1.04rem;line-height:1.5;color:var(--on-d)}
+.shift .c .out{display:none}
+.shift.after .c{border-color:rgba(217,184,120,.45)}
+.shift.after .c .in{display:none}
+.shift.after .c .out{display:block}
+
+/* fears */
+.fears{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:36px}
+.fear{border-top:2px solid var(--gold);padding-top:16px}
+.fear h3{font-size:1.35rem;margin-bottom:6px}
+.fear p{margin:0;font-size:1rem;color:var(--muted)}
+.quote{font-size:clamp(1.5rem,3.6vw,2.2rem);line-height:1.3;font-style:italic;color:var(--ink);text-align:center;max-width:820px;margin:64px auto 0}
+.quote small{display:block;font:500 .72rem var(--sans);letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-style:normal;margin-top:16px}
+
+/* method */
+.split{display:grid;grid-template-columns:1.05fr .95fr;gap:56px;align-items:center}
+.photo{border-radius:20px;overflow:hidden;box-shadow:0 30px 60px -30px rgba(20,16,12,.5)}
+.photo img{width:100%;height:100%;object-fit:cover}
+.pillars{display:grid;gap:14px;margin-top:22px}
+.pillar{display:grid;grid-template-columns:54px 1fr;gap:16px;align-items:start;padding:18px 0;border-bottom:1px solid var(--line)}
+.pillar:last-child{border-bottom:0}
+.pillar .n{width:54px;height:54px;border-radius:50%;display:grid;place-items:center;border:1px solid var(--gold);font:500 1rem var(--display);color:var(--gold)}
+.pillar h3{font-size:1.4rem;margin-bottom:4px}
+.pillar p{margin:0;color:var(--muted);font-size:1.02rem}
+.method{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.method span{font:600 .7rem var(--sans);letter-spacing:.2em;text-transform:uppercase;padding:10px 16px;border-radius:999px;background:var(--ink);color:var(--gold-2)}
+
+/* timeline */
+.tl{position:relative;margin-top:44px;display:grid;gap:14px}
+.tl .row{display:grid;grid-template-columns:150px 1fr;gap:26px;background:var(--card-d);border:1px solid var(--line-d);border-radius:18px;padding:24px 26px}
+.tl .when{font:500 .7rem/1.4 var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--gold-2)}
+.tl .when b{display:block;font:400 1.9rem/1 var(--display);color:var(--ivory);letter-spacing:0;margin-bottom:8px}
+.tl h3{font-size:1.5rem;margin-bottom:6px}
+.tl p{margin:0;color:var(--on-d-muted);font-size:1.03rem}
+.tag{display:inline-block;font:600 .6rem var(--sans);letter-spacing:.18em;text-transform:uppercase;border:1px solid var(--line-d);border-radius:999px;padding:5px 10px;margin-bottom:10px;color:var(--on-d-muted)}
+.tag.gold{border-color:var(--gold);color:var(--gold-2)}
+
+/* guide */
+.creds{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-top:26px}
+.cred{background:var(--cream);border-radius:14px;padding:16px 18px}
+.cred b{display:block;font-size:1.2rem;color:var(--ink);font-weight:500}
+.cred span{font:400 .82rem/1.4 var(--sans);color:var(--muted)}
+.pull{border-left:2px solid var(--gold);padding-left:18px;font-style:italic;font-size:1.25rem;color:var(--ink);margin:26px 0 0}
+
+/* fit */
+.fit{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:40px}
+.fit .col{border-radius:20px;padding:28px}
+.fit .no{background:var(--cream)}
+.fit .yes{background:var(--ink);color:var(--on-d)}
+.fit h3{font:600 .72rem var(--sans);letter-spacing:.24em;text-transform:uppercase;margin-bottom:14px}
+.fit .no h3{color:var(--wine)}
+.fit .yes h3{color:var(--gold-2)}
+.fit ul{list-style:none;margin:0;padding:0}
+.fit li{padding:12px 0 12px 30px;position:relative;border-bottom:1px solid var(--line);font-size:1.03rem}
+.fit .yes li{border-bottom-color:var(--line-d)}
+.fit li:last-child{border-bottom:0}
+.fit li::before{position:absolute;left:0;top:12px;font:600 .9rem var(--sans)}
+.fit .no li::before{content:"✕";color:var(--wine)}
+.fit .yes li::before{content:"✓";color:var(--gold-2)}
+.fit li b{display:block;color:inherit;font-weight:600}
+.fit .no li b{color:var(--ink)}
+.fit .yes li b{color:var(--ivory)}
+
+/* tiers */
+.includes{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:36px 0 46px}
+.includes div{border:1px solid var(--line);border-radius:14px;padding:16px;font-size:.98rem;background:#fff}
+.includes div::before{content:"◆";color:var(--gold);display:block;font-size:.7rem;margin-bottom:8px}
+.tiers{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;align-items:stretch}
+.tier{position:relative;display:flex;flex-direction:column;background:#fff;border:1px solid var(--line);border-radius:22px;padding:30px 26px 26px}
+.tier.feat{background:var(--ink);color:var(--on-d);border-color:var(--gold);box-shadow:0 30px 60px -30px rgba(110,31,42,.55);transform:translateY(-8px)}
+.tier .badge{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--wine);color:#fff;font:600 .62rem var(--sans);letter-spacing:.2em;text-transform:uppercase;padding:7px 14px;border-radius:999px;white-space:nowrap}
+ .legacy-tease{display:block;max-width:620px;margin:22px auto 0;padding:12px 18px;border:1px solid rgba(217,184,120,.45);border-radius:14px;background:rgba(184,145,74,.08);color:var(--on-d);font:400 1rem/1.5 var(--serif);text-decoration:none;transition:border-color .2s,background .2s}
+.legacy-tease span{display:block;font:600 .62rem var(--sans);letter-spacing:.22em;text-transform:uppercase;color:var(--gold-2);margin-bottom:4px}
+.legacy-tease u{color:var(--gold-2);text-underline-offset:3px;white-space:nowrap}
+.legacy-tease:hover{border-color:var(--gold);background:rgba(184,145,74,.16)}
+.tier-img{position:relative;margin:-30px -26px 18px;height:190px;overflow:hidden;border-radius:22px 22px 0 0}
+.tier-img img{width:100%;height:100%;object-fit:cover;object-position:50% 80%;display:block}
+.tier-img figcaption{position:absolute;left:12px;bottom:12px;font:600 .6rem var(--sans);letter-spacing:.2em;text-transform:uppercase;color:#fff;background:rgba(20,16,12,.62);backdrop-filter:blur(6px);padding:7px 12px;border-radius:999px}
+.tier.sold{opacity:.82}
+.tier.sold .tier-img img{filter:grayscale(.35)}
+.tier .sold-badge{background:var(--ink);color:var(--gold-2);z-index:2}
+.tier.sold .price s{text-decoration-thickness:2px;opacity:.6}
+.btn.is-sold{cursor:not-allowed;opacity:.55;pointer-events:none;text-align:center}
+.tier .rn{font:500 .9rem var(--display);color:var(--gold);letter-spacing:.2em}
+.tier h3{font-family:var(--display);font-weight:400;font-size:1.8rem;letter-spacing:.06em;margin:6px 0 8px}
+.tier.feat h3{color:var(--ivory)}
+.tier .who{font-style:italic;color:var(--muted);font-size:1rem;min-height:72px}
+.tier.feat .who{color:var(--on-d-muted)}
+.price{font:500 2.8rem/1 var(--serif);color:var(--ink);margin:18px 0 4px}
+.tier.feat .price{color:var(--gold-2)}
+.price small{font:500 .7rem var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin-left:6px}
+.left{font:600 .72rem var(--sans);letter-spacing:.06em;color:var(--wine);margin-bottom:14px}
+.tier.feat .left{color:#f1a3ad}
+.tier .proof{margin:-6px 0 14px;font:500 .8rem/1.45 var(--sans);color:var(--ink);background:rgba(184,145,74,.12);border-left:3px solid var(--gold);border-radius:8px;padding:8px 10px}
+.room-proof{display:inline-block;margin:16px auto 0;font:500 .86rem/1.5 var(--sans);color:var(--wine);background:rgba(110,31,42,.06);border:1px solid rgba(110,31,42,.18);border-radius:14px;padding:10px 16px;max-width:640px}
+.tier ul{list-style:none;padding:0;margin:8px 0 22px;flex:1}
+.tier li{position:relative;padding:8px 0 8px 22px;font-size:.98rem;border-bottom:1px solid var(--line)}
+.tier.feat li{border-bottom-color:var(--line-d)}
+.tier li::before{content:"◆";position:absolute;left:0;top:11px;font-size:.55rem;color:var(--gold)}
+.tier li.plus{font:600 .66rem var(--sans);letter-spacing:.16em;text-transform:uppercase;color:var(--gold);padding-left:0}
+.tier li.plus::before{display:none}
+.tier .btn{width:100%}
+.old-self{margin:14px auto 0;font:italic 400 clamp(1.2rem,2.6vw,1.5rem)/1.35 var(--serif);color:var(--ink);max-width:620px}
+.muse-lead{margin:0 0 10px;font:600 .74rem/1.4 var(--sans);letter-spacing:.06em;color:var(--wine);background:rgba(110,31,42,.06);border:1px solid rgba(110,31,42,.2);border-radius:10px;padding:8px 10px;text-align:center}
+.icon-lead{margin:0 0 10px;font:600 .74rem/1.4 var(--sans);letter-spacing:.06em;color:var(--gold-2);background:rgba(217,184,120,.12);border:1px solid rgba(217,184,120,.4);border-radius:10px;padding:8px 10px;text-align:center}
+.wa-mini{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;padding:10px 12px;border-radius:999px;border:1px solid #25d366;color:#128c4a;background:rgba(37,211,102,.08);font:600 .78rem var(--sans);text-decoration:none}
+.wa-mini svg{width:16px;height:16px}
+.tier.feat .wa-mini{color:#7ee2a8;border-color:rgba(37,211,102,.6);background:rgba(37,211,102,.1)}
+.tier .sec-note{font:400 .72rem/1.4 var(--sans);color:var(--muted);text-align:center;margin-top:10px}
+.tier.feat .sec-note{color:var(--on-d-muted)}
+.compare{width:100%;border-collapse:collapse;margin-top:56px;font-size:.98rem;background:#fff;border-radius:18px;overflow:hidden}
+.compare th,.compare td{padding:13px 14px;border-bottom:1px solid var(--line);text-align:center}
+.compare th{font:600 .66rem var(--sans);letter-spacing:.18em;text-transform:uppercase;color:var(--muted);background:var(--cream)}
+.compare td:first-child,.compare th:first-child{text-align:left}
+.compare .y{color:var(--gold);font-weight:600}
+.compare .x{color:#c9bca8}
+.compare-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+
+.help{margin:30px auto 0;max-width:760px;display:flex;align-items:center;gap:20px;justify-content:space-between;background:var(--cream);border:1px solid rgba(184,145,74,.35);border-radius:18px;padding:18px 20px;text-align:left}
+.help b{display:block;font:600 1.15rem var(--serif);color:var(--ink);margin-bottom:2px}
+.help span{display:block;font:400 .9rem/1.45 var(--sans);color:var(--text)}
+.help .btn{flex-shrink:0;background:#1f9d55;color:#fff;box-shadow:0 10px 24px -12px rgba(31,157,85,.8)}
+.wa-btn{display:inline-flex;align-items:center;gap:10px}
+.wa-btn::before{content:"";width:18px;height:18px;background:currentColor;-webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.6-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3z'/%3E%3C/svg%3E") center/contain no-repeat;mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2zm5.3 14.1c-.2.6-1.3 1.2-1.8 1.2-.5.1-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2 1-2.3c.2-.3.5-.3.7-.3h.5c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .5l-.4.6-.4.4c-.1.1-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.3 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3z'/%3E%3C/svg%3E") center/contain no-repeat}
+@media (max-width:640px){.help{flex-direction:column;align-items:stretch;text-align:center}.help .btn{width:100%}}
+/* gallery */
+.gal{display:grid;grid-template-columns:2fr 1fr 1fr;grid-template-rows:240px 240px;gap:12px;margin-top:36px}
+.gal figure{margin:0;border-radius:16px;overflow:hidden;position:relative}
+.gal figure:first-child{grid-row:span 2}
+.gal img{width:100%;height:100%;object-fit:cover;transition:transform 1.2s}
+.gal figure:hover img{transform:scale(1.05)}
+.gal figcaption{position:absolute;left:12px;bottom:12px;font:500 .68rem var(--sans);letter-spacing:.12em;text-transform:uppercase;color:#fff;background:rgba(20,16,12,.55);padding:6px 10px;border-radius:999px}
+
+/* final */
+.final{position:relative;padding:120px 0;text-align:center;color:var(--on-d);overflow:hidden;background:var(--ink)}
+.final .bg{position:absolute;inset:0;background:url('img/palmcourt.jpg') center/cover;opacity:.12;filter:grayscale(.4)}
+.final .wrap{position:relative}
+.final h2{color:var(--ivory)}
+
+/* faq */
+.faq{margin-top:30px}
+.faq details{border-bottom:1px solid var(--line);padding:6px 0}
+.faq summary{cursor:pointer;list-style:none;padding:18px 34px 18px 0;position:relative;font-size:1.2rem;color:var(--ink)}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";position:absolute;right:4px;top:14px;font:300 1.6rem var(--sans);color:var(--gold)}
+.faq details[open] summary::after{content:"–"}
+.faq details p{margin:0 0 18px;color:var(--muted);font-size:1.05rem}
+
+footer{background:var(--ink);color:var(--on-d-muted);padding:56px 0 110px;font:400 .82rem/1.6 var(--sans)}
+footer a{color:var(--gold-2)}
+footer .row{display:flex;flex-wrap:wrap;justify-content:space-between;gap:20px;align-items:flex-start}
+footer .terms{margin-top:28px;border-top:1px solid var(--line-d);padding-top:22px;font-size:.74rem;max-width:900px}
+
+/* mobile bar */
+.mbar{position:fixed;left:0;right:0;bottom:0;z-index:50;display:none;align-items:center;gap:12px;justify-content:space-between;padding:12px 16px calc(12px + env(safe-area-inset-bottom));background:rgba(20,16,12,.96);border-top:1px solid var(--line-d);color:var(--on-d);font:500 .78rem/1.3 var(--sans);transform:translateY(110%);transition:transform .35s}
+.mbar.show{transform:none}
+.mbar b{display:block;color:var(--ivory);font-size:.86rem}
+.mbar .btn{padding:13px 18px;font-size:.66rem;flex-shrink:0}
+
+/* reveal */
+.js .rv{opacity:0;transform:translateY(18px);transition:opacity .9s,transform .9s}
+.js .rv.in{opacity:1;transform:none}
+
+@media (max-width:960px){
+  .split{grid-template-columns:1fr;gap:34px}
+  .fears{grid-template-columns:repeat(2,1fr)}
+  .shift{grid-template-columns:1fr 1fr}
+  .tiers{grid-template-columns:1fr;max-width:520px;margin:0 auto}
+  .tier.feat{transform:none}
+  .includes{grid-template-columns:1fr 1fr}
+  .mbar{display:flex}
+  .paths,.years,.three{grid-template-columns:1fr}
+}
+@media (max-width:640px){
+  body{font-size:18px}
+  .sec{padding:70px 0}
+  .wrap{padding:0 16px}
+  .stats{grid-template-columns:1fr 1fr}
+  .shift{grid-template-columns:1fr}
+  .fears{grid-template-columns:1fr}
+  .fit{grid-template-columns:1fr}
+  .tl .row{grid-template-columns:1fr;gap:10px}
+  .creds{grid-template-columns:1fr}
+  .includes{grid-template-columns:1fr}
+  .gal{grid-template-columns:1fr 1fr;grid-template-rows:200px 160px 160px}
+  .gal figure:first-child{grid-column:span 2;grid-row:auto}
+  .hero-grid{grid-template-columns:1fr;gap:28px}
+  .hero-art{order:-1;aspect-ratio:4/3;max-height:42vh;width:100%;border-radius:200px 200px 16px 16px}
+  .hero-art::after{border-radius:190px 190px 10px 10px}
+  .hero .wrap{padding-top:22px;padding-bottom:56px}
+  .hero-center .vsl{margin:18px -4px 20px}
+  .hero-center .eyebrow{display:none}
+  .hero-center .kicker{margin-top:0}
+  .hero-center h1{font-size:2.05rem}
+  .hero-center p.sub:not(.sub2){font-size:1.08rem}
+  .hero .wrap.hero-center{padding-top:18px}
+  .nav .btn{display:none}
+  .nav .wrap{height:54px}
+  .strip .lbl{display:none}
+  .ag{grid-template-columns:1fr;gap:10px}
+  .ag button{justify-self:start}
+  .thermo{flex-direction:column;text-align:center}
+}
+@media (prefers-reduced-motion:reduce){.hero-art img{animation:none}.js .rv{opacity:1;transform:none;transition:none}}
+</style>
+<!-- Meta Pixel Code -->
+<script>
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '1874556003533048');
+(function(){
+  // Visitor ID and the ad she came from (utm_source / utm_content), kept across pages so a purchase is credited to its ad.
+  function get(k){ try { return localStorage.getItem(k); } catch (e) { return null; } }
+  function set(k, v){ try { localStorage.setItem(k, v); } catch (e) {} }
+  var vid = get('rs_vid'); if (!vid) { vid = 'v' + Date.now().toString(36) + Math.random().toString(36).slice(2, 10); set('rs_vid', vid); }
+  var q = new URLSearchParams(location.search), touch = { src: get('rs_src') || '', source: get('rs_source') || '' };
+  if (q.get('utm_source') || q.get('src')) {
+    touch = { src: q.get('utm_content') || q.get('src') || '', source: q.get('utm_source') || '' };
+    set('rs_src', touch.src); set('rs_source', touch.source);
+  }
+  function send(n, id, d){
+    try {
+      var b = JSON.stringify({ event_name: n, event_id: id, url: location.href, data: d || {}, vid: vid, touch: touch });
+      if (!(navigator.sendBeacon && navigator.sendBeacon('/api/capi', new Blob([b], { type: 'application/json' }))))
+        fetch('/api/capi', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: b, keepalive: true });
+    } catch (e) {}
+  }
+  function newId(n){ return n + '.' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+  // Standard events: pixel + Conversions API + dashboard, one event ID so Meta counts it once.
+  window.rsTrack = function(n, d){ var id = newId(n); try { fbq('track', n, d || {}, { eventID: id }); } catch (e) {} send(n, id, d); };
+  // Dashboard-only signals (never sent to Meta).
+  window.rsLog = function(n, d){ send(n, newId(n), d); };
+})();
+rsTrack('PageView');
+</script>
+<noscript><img height="1" width="1" style="display:none"
+src="https://www.facebook.com/tr?id=1874556003533048&ev=PageView&noscript=1"
+/></noscript>
+<!-- End Meta Pixel Code -->
+</head>
+<body>
+
+<div class="topbar">
+  <div class="strip">
+    <span class="lbl">Doors open at The Plaza in</span>
+    <span class="timer" data-timer aria-live="off"><span><b data-d>0</b><i>days</i></span><span><b data-h>00</b><i>hrs</i></span><span><b data-m>00</b><i>min</i></span><span><b data-s>00</b><i>sec</i></span></span>
+    <b class="lbl">Icon: 2 spots · Legacy: sold out</b>
+  </div>
+  <header class="nav">
+    <div class="wrap">
+      <a href="#top" class="brand">MindfullySumaya<small>The Renaissance Soirée</small></a>
+      <a href="#tiers" class="btn">Choose your tier</a>
+    </div>
+  </header>
+</div>
+
+<main id="top">
+<section class="hero">
+  <div class="wrap hero-center">
+    <div class="hero-copy">
+    <span class="eyebrow">For the women who have been watching</span>
+    <p class="kicker"><i>The</i> Renaissance Soirée</p>
+    <h1>Hold more money, love and visibility, <em>without sabotaging it back down.</em></h1>
+    <p class="sub">Death to the old identity. One day of live hypnosis inside The Plaza, this Saturday.</p>
+    <figure class="vsl" id="vsl">
+      <div class="vsl-frame"><wistia-player media-id="5ekwt3rsk8" aspect="1.7777777777777777"></wistia-player></div>
+      <figcaption>Press play · from Sumaya</figcaption>
+    </figure>
+    <p class="sub sub2">The version who doubts herself, who fears being seen as her authentic self, who plays it small, does not leave the Champagne Suite with you. You have watched the Renaissance Method work through a screen. On Saturday, you sit in the room.</p>
+    <div class="mech" style="margin-top:20px"><span>The Renaissance Method</span><span>4,000+ women in 2026</span><span>One day, in person</span></div>
+    <div class="chips">
+      <span>Saturday, November 7th, 2026</span>
+      <span>10am to 4pm, then the evening</span>
+      <span>The Plaza · Fifth Avenue</span>
+      <span>In person only</span>
+    </div>
+    <div class="btns">
+      <a href="#tiers" class="btn">Choose your tier</a>
+      <a href="#day" class="btn ghost">See the day</a>
+    </div>
+    <a class="legacy-tease" href="#tiers"><span>◆ The Legacy · Sold out</span> Both overnight seats went before a single ad ran, one to a double board-certified doctor. The private dinner with Sumaya is still open in The Icon: 2 spots. <u>Claim The Icon</u></a>
+    <p class="note">— Sumaya · The woman who walks in will not be the woman who walks out.</p>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="agree" style="border-top:0">
+  <div class="wrap">
+    <div class="narrow center rv">
+      <span class="eyebrow">Be honest with me for a moment</span>
+      <h2>Four questions.<br><em>Tap the ones that are true.</em></h2>
+      <p class="lead">You have been in my comments. You know I am going to ask.</p>
+    </div>
+    <div class="agree">
+      <div class="ag rv"><p>You know women with less talent, fewer degrees and half your work ethic who earn more, rest more and get chosen more.</p><button type="button">That’s true</button></div>
+      <div class="ag rv"><p>You have saved my posts, replayed the hypnosis and felt something move. And a week later, life was the same size again.</p><button type="button">That’s true</button></div>
+      <div class="ag rv"><p>You have had a breakthrough year, and then watched yourself quietly bring it back down to the size you are used to.</p><button type="button">That’s true</button></div>
+      <div class="ag rv"><p>You stand up straighter, speak slower and feel more expensive in a five star lobby than you do in a fluorescent office.</p><button type="button">That’s true</button></div>
+    </div>
+    <p class="verdict rv" id="verdict">Then it was never a discipline problem, and never an information problem.<br><em>A post gives you a moment. A room changes the setting.</em></p>
+  </div>
+</section>
+
+<section class="sec dark" id="root">
+  <div class="wrap">
+    <div class="narrow center rv">
+      <span class="eyebrow">The real root</span>
+      <h2>You are not stuck.<br><em>You are set.</em></h2>
+      <p class="lead">Think of the thermostat in your home. Open every window, run every fan, and the room still drifts back to the number on the wall. Not because the fans failed. Because the setting decides.</p>
+      <p>Your identity is that setting. It decides how much money feels safe, how visible you are allowed to be and how much love you let in. Push past it with effort and it quietly brings you back.</p>
+    </div>
+    <div class="paths">
+      <div class="path old rv">
+        <h3>The old path</h3>
+        <p class="big">More content.</p>
+        <p>What we all do, me included, before we stop:</p>
+        <ul><li>Saving one more post, replaying one more reel</li><li>Another course, another coach, another framework</li><li>Waiting to feel ready, then waiting longer</li></ul>
+        <p style="margin-top:14px">It feels like progress, for an afternoon. Then the setting pulls it back.</p>
+      </div>
+      <div class="path new rv">
+        <h3>The new path</h3>
+        <p class="big">Change the setting.</p>
+        <p>Identity recalibration: reset the subconscious normal, so a bigger life stops registering as a threat.</p>
+        <ul><li>See the pattern that keeps pulling you back</li><li>Release it at the root, in the body</li><li>Rise into the identity that can hold more</li></ul>
+        <p style="margin-top:14px">Your strategy finally has room to work.</p>
+      </div>
+    </div>
+    <div class="thermo rv"><div class="dial">68°<small>SET</small></div><p>You cannot out-work a thermostat. You change the number. That is what the Renaissance Soirée is for: one day to reset the number, inside a room that shows your body what the new one feels like.</p></div>
+  </div>
+</section>
+
+<section class="sec" id="why">
+  <div class="wrap">
+    <div class="narrow center rv">
+      <span class="eyebrow">Why this room is rare</span>
+      <h2>Successful women don’t just invest in strategy.<br><em>They invest in rooms.</em></h2>
+      <p class="lead">Your nervous system learns what is normal from the room it sits in. So for one day, the room is one of the most iconic in New York, and your body takes notes.</p>
+      <p>The work Sumaya does with private clients, the same subconscious and identity work, is opened to one room, for one day, in person. No livestream. No replay. Only the women physically in the suite.</p>
+    </div>
+    <div class="stats rv">
+      <div class="stat"><b>1 day</b><span>The Plaza, in person</span></div>
+      <div class="stat"><b>4,000+</b><span>Women worked with her in 2026</span></div>
+      <div class="stat"><b>223</b><span>Countries her work has reached</span></div>
+      <div class="stat"><b>3</b><span>Tiers, three identities</span></div>
+    </div>
+    <div class="anchor rv">
+      Private clients invest <b>$10,000 a month</b> for this work with Sumaya. On November 7th, the room opens from <b>$997</b>.
+      <p class="fine">The $10,000 figure is what her private clients pay. It is not the ticket price, and not a promise of the same results.</p>
+    </div>
+  </div>
+</section>
+
+<section class="sec dark" id="problem">
+  <div class="wrap center">
+    <div class="narrow rv">
+      <span class="eyebrow">When the setting changes</span>
+      <h2>The woman who walks in,<br><em>and the woman who walks out.</em></h2>
+      <p class="lead">A version of you built for a smaller life is running the operation. She is very good at her job. She is just working for the wrong version of you.</p>
+      <p>Tap <b style="color:var(--gold-2)">“Walking out”</b> to see what changes when she is replaced.</p>
+    </div>
+    <div class="toggle hint rv" role="tablist" aria-label="Before and after the day">
+      <button type="button" class="on" data-side="in" role="tab" aria-selected="true">Walking in</button>
+      <button type="button" data-side="out" role="tab" aria-selected="false">Walking out</button>
+    </div>
+    <div class="shift rv" id="shift">
+      <div class="c"><h4>Money</h4><p class="in">Quietly counting, even when the numbers are fine. The feeling it could all disappear if she stops holding it together.</p><p class="out">Trusting that it keeps coming. She spends, gives and receives without the knot in her stomach.</p></div>
+      <div class="c"><h4>Being seen</h4><p class="in">She softens her opinion before it leaves her mouth.</p><p class="out">Her real voice, in the room, the first time. No editing it down.</p></div>
+      <div class="c"><h4>Decisions</h4><p class="in">Second guessing for a week, asking four people, then second guessing again.</p><p class="out">She decides, and she stops auditing the decision afterwards.</p></div>
+      <div class="c"><h4>Fear</h4><p class="in">What will they think. What if I fail. What if it actually works.</p><p class="out">Faith instead of fear. Working out for her is the assumption, not the hope.</p></div>
+      <div class="c"><h4>Worth</h4><p class="in">Who am I to want more than this, when I already have so much.</p><p class="out">She asks for more without flinching. Wanting more is not a betrayal.</p></div>
+      <div class="c"><h4>Love</h4><p class="in">Pouring into people who are not available, and calling it patience.</p><p class="out">Held, chosen, seen. She stops accepting half of what she gives.</p></div>
+      <div class="c"><h4>Her body</h4><p class="in">Managing it, covering it, waiting to feel confident until something changes.</p><p class="out">Confidence that walks into the room ahead of her.</p></div>
+      <div class="c"><h4>People pleasing</h4><p class="in">Saying yes while her whole body says no, then resenting it quietly.</p><p class="out">She disappoints people and survives it. Her yes means something now.</p></div>
+      <div class="c"><h4>Capacity</h4><p class="in">Settling at the size that feels comfortable, because more sounds exhausting.</p><p class="out">Built to hold more money, love and visibility without shrinking it back down.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="cost">
+  <div class="wrap">
+    <div class="narrow center rv">
+      <span class="eyebrow">What it costs to wait</span>
+      <h2>If the setting stays the same,<br><em>so does the ceiling.</em></h2>
+      <p class="lead">Nothing dramatic happens. That is the danger. Life just stays exactly this size.</p>
+    </div>
+    <div class="years">
+      <div class="yr rv"><b>1 year</b><p>Another strong year on paper. The same number, the same knot in your stomach, and one more plan you talked yourself out of.</p></div>
+      <div class="yr rv"><b>5 years</b><p>More titles, more responsibility, the same ceiling. You are the most capable woman in every room and still softening your voice in it.</p></div>
+      <div class="yr rv"><b>10 years</b><p>The women who started beside you went bigger. Not because they were better. Because they stopped holding themselves back first.</p></div>
+    </div>
+    <p class="gut rv">One day you look up and realise you spent your best decade being <em>the most impressive woman in the room</em>, and the least free one. The work was never the problem. You just never changed the setting.</p>
+  </div>
+</section>
+
+<section class="sec" id="underneath">
+  <div class="wrap">
+    <div class="narrow center rv">
+      <span class="eyebrow">What’s running underneath</span>
+      <h2>Five quiet patterns.<br><em>One ceiling.</em></h2>
+      <p class="lead">Entrepreneurs, physicians, attorneys, executives, artists. Different fields, the same five patterns.</p>
+    </div>
+    <div class="fears">
+      <div class="fear rv"><h3>Doubt</h3><p>It never fully leaves, no matter how much evidence she gathers against it.</p></div>
+      <div class="fear rv"><h3>Being seen</h3><p>The real her, rather than the polished version she has performed since she was young.</p></div>
+      <div class="fear rv"><h3>Not being chosen</h3><p>So she makes herself indispensable instead of asking.</p></div>
+      <div class="fear rv"><h3>Failure</h3><p>It looks like high standards and feels like a held breath.</p></div>
+      <div class="fear rv"><h3>Self sabotage</h3><p>She can watch herself do it in real time, and still not stop.</p></div>
+    </div>
+    <p class="quote rv">“You are not stuck for lack of information. Strategy cannot replace her. Identity work can.”<small>Sumaya Ahmed</small></p>
+  </div>
+</section>
+
+<section class="sec" id="method" style="background:var(--ivory)">
+  <div class="wrap split">
+    <div class="rv">
+      <span class="eyebrow">Inside the room</span>
+      <h2>This is not a keynote.<br><em>It is a rebirth.</em></h2>
+      <p class="lead">A full day of being poured into, worked on and recalibrated inside one of the most iconic buildings in the world. You are not coming to collect more information. You are coming to quantum jump to your next level.</p>
+      <div class="pillars">
+        <div class="pillar"><span class="n">I</span><div><h3>The environment</h3><p>One of the most expensive rooms in New York, so your nervous system learns a new normal by sitting in it.</p></div></div>
+        <div class="pillar"><span class="n">II</span><div><h3>The identity</h3><p>We take apart the version of you built for a smaller life, then build the one who runs the next.</p></div></div>
+        <div class="pillar"><span class="n">III</span><div><h3>The capacity</h3><p>Live group hypnosis and nervous system work, so more money, love and visibility stop registering as a threat.</p></div></div>
+      </div>
+      <div class="method"><span>Reconnect</span><span>Release</span><span>Rise</span></div>
+    </div>
+    <figure class="photo rv" style="margin:0;aspect-ratio:4/5"><img src="img/keycard.jpg" alt="A gloved hand holding a Plaza Hotel key card" loading="lazy"></figure>
+  </div>
+</section>
+
+<section class="sec dark" id="day">
+  <div class="wrap">
+    <div class="narrow center rv">
+      <span class="eyebrow">How the day unfolds</span>
+      <h2>Saturday, November 7th.<br><em>The Plaza, Fifth Avenue.</em></h2>
+    </div>
+    <div class="tl">
+      <div class="row rv"><div class="when"><b>I</b>10am to 12pm</div><div><span class="tag">Every guest</span><h3>The welcome, and the dismantling</h3><p>A welcome ceremony to settle your nervous system and set the intention for the woman you walk out as. Then the beliefs, the patterns and the voice running the operation come down. You cannot build the new identity on top of the old one.</p></div></div>
+      <div class="row rv"><div class="when"><b>II</b>12pm to 1pm</div><div><span class="tag">Every guest</span><h3>Refreshment and integration</h3><p>Eat, stretch, meet the women in the room. Not a break: your system is still processing, and connection is part of how it lands.</p></div></div>
+      <div class="row rv"><div class="when"><b>III</b>1pm to 2pm</div><div><span class="tag">Every guest · Guest speaker</span><h3>The wealth frequency</h3><p>What it actually takes to build wealth from nothing, as a first generation daughter raised in New York City. The real mechanics of how money moves when your relationship with it changes.</p></div></div>
+      <div class="row rv"><div class="when"><b>IV</b>2pm to 4pm</div><div><span class="tag">Every guest</span><h3>The rise</h3><p>Phones down. The deepest work of the day. We stop dismantling and rise into the new identity: the woman who moves with conviction instead of permission. Most women do not have words for it until the next morning.</p></div></div>
+      <div class="row rv"><div class="when"><b>V</b>That evening</div><div><span class="tag gold">The Icon and The Legacy</span><h3>The Winner’s Table</h3><p>A private mastermind dinner with Sumaya. Hot seats over the table, the questions you would not ask in front of fifty women, and an honest read on your business, your patterns and your next level.</p></div></div>
+      <div class="row rv"><div class="when"><b>VI</b>Overnight</div><div><span class="tag gold">The Legacy</span><h3>The Sleepover</h3><p>The presidential suite. The Home Alone experience and the legendary $500 Plaza sundae, matching pajamas, and a billionaire identity hypnosis before sleep, so you fall asleep in the new reality and wake up in it.</p></div></div>
+      <div class="row rv"><div class="when"><b>VII</b>Sunday morning</div><div><span class="tag gold">The Legacy</span><h3>Brunch</h3><p>Sunday, November 8th. You wake up as her, and sit down with the women who watched it happen. The night before becomes language, and you decide what you are taking home.</p></div></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="guide">
+  <div class="wrap split">
+    <figure class="photo rv" style="margin:0;aspect-ratio:3/4"><img src="img/sumaya.jpg" alt="Sumaya Ahmed on Fifth Avenue" loading="lazy"></figure>
+    <div class="rv">
+      <span class="eyebrow">Why I am doing this in person</span>
+      <h2>You know my story.<br><em>Here is the part I don’t post.</em></h2>
+      <p class="lead">Sumaya Ahmed · Certified hypnotherapist and subconscious identity mentor · Creator of the Renaissance Method</p>
+      <p>You have heard about the fifteen dollar card minimum in Queens, losing my father, and building everything while carrying my family.</p>
+      <p>What I do not post is this: the one thing that got me to first-class flights two to four times a month, financially supporting my whole family and leading thousands of incredible women worldwide was not a strategy. It was putting myself in the room. Up-levelling my environment changed everything. A screen can show you the door. Only a room walks you through it.</p>
+      <p>That is why November 7th is in person, and why it is at The Plaza. I want your body to feel the new normal, not just hear me describe it.</p>
+      <div class="creds">
+        <div class="cred"><b>Harvard &amp; Columbia</b><span>Two master’s degrees, the second in clinical psychology</span></div>
+        <div class="cred"><b>4,000+ women</b><span>Paid clients in 2026 alone</span></div>
+        <div class="cred"><b>223 countries</b><span>Where her work has reached</span></div>
+        <div class="cred"><b>Google, Uber, LinkedIn</b><span>Plus Morgan Stanley and Lululemon trainings</span></div>
+      </div>
+      <p class="pull">“The one thing that changed my trajectory more than any strategy was putting myself in rooms my current self had no business being in yet.”</p>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="for" style="background:var(--ivory)">
+  <div class="wrap">
+    <div class="narrow center rv">
+      <span class="eyebrow">Be honest with yourself</span>
+      <h2>This room is <em>not</em> for everybody.</h2>
+      <p class="lead">Every seat matters. If you take one, take it seriously.</p>
+    </div>
+    <div class="fit">
+      <div class="col no rv">
+        <h3>Don’t come if</h3>
+        <ul>
+          <li><b>You believe your results are purely logical.</b>More hours and better tactics are the only levers you will pull.</li>
+          <li><b>You won’t challenge your beliefs.</b>This room will not reinforce what you think you are allowed to have.</li>
+          <li><b>You won’t confront your ego.</b>Your identity and the limits you accepted will be questioned.</li>
+          <li><b>You want an overnight promise.</b>Nobody can promise you a number or a timeline.</li>
+          <li><b>You plan to sit at the back and listen.</b>This is not a keynote. Observing wastes your seat and someone else’s.</li>
+        </ul>
+      </div>
+      <div class="col yes rv">
+        <h3>This is for you if</h3>
+        <ul>
+          <li><b>You are ready to pay attention.</b>Phone down, guard down, present for the whole day.</li>
+          <li><b>You are done with the free version.</b>You have read the books and saved the posts. The missing piece is not another resource.</li>
+          <li><b>You want the next level, not a better version of this one.</b>In your money, your love, your body and your peace.</li>
+          <li><b>You want proximity.</b>To someone who has done it, and to women playing at your level.</li>
+          <li><b>You are ready to change in a single sitting.</b>One day at The Plaza, not years of slow progress.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="sec dark" id="three">
+  <div class="wrap">
+    <div class="narrow center rv">
+      <span class="eyebrow">Before you leave The Plaza</span>
+      <h2>Three things happen<br><em>in one day.</em></h2>
+      <p class="lead">Not homework for later. In the room, before you walk back out onto Fifth Avenue.</p>
+    </div>
+    <div class="three">
+      <div class="th rv"><span class="n">I</span><h3>You name the pattern</h3><p>The exact one that has been pulling your money, your visibility or your love back to the old size. Seen clearly, maybe for the first time.</p></div>
+      <div class="th rv"><span class="n">II</span><h3>You reset it at the root</h3><p>Live group hypnosis and nervous system work in the Champagne Suite, so the new normal lands in your body, not just your notebook.</p></div>
+      <div class="th rv"><span class="n">III</span><h3>You make the decision</h3><p>The one you have been circling for months. You leave having decided it, as the woman who no longer audits it afterwards.</p></div>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="tiers">
+  <div class="wrap">
+    <div class="narrow center rv">
+      <span class="eyebrow">Three tiers, three identities</span>
+      <h2>Choose for the woman <em>you are becoming.</em></h2>
+      <p class="lead">Not the one your current identity is comfortable paying for.</p>
+      <p class="room-proof">Already taking their seats: double board-certified doctors, founders and professionals who are done playing small.</p>
+      <p class="old-self">“Your old self will not stand a chance in this room.”</p>
+    </div>
+    <div class="includes rv">
+      <div>A full day of identity recalibration in the Champagne Suite</div>
+      <div>Live group hypnosis to rewire your money and identity blueprint</div>
+      <div>Nervous system and wealth identity work, the Renaissance Method</div>
+      <div>A butler-served high tea experience woven through the day</div>
+      <div>The Renaissance Soirée workbook and a curated giftbag</div>
+    </div>
+    <div class="tiers">
+      <div class="tier rv">
+        <p class="muse-lead">◆ Start here if this is your first room with Sumaya</p>
+        <span class="rn">I</span>
+        <h3>The Muse</h3>
+        <p class="who">Every renaissance begins with a muse: the woman art gets made about. The one who finally lets herself receive instead of proving.</p>
+        <div class="price">$997</div>
+        <div class="left">The full day at The Plaza</div>
+        <ul>
+          <li>The full day inside the Champagne Suite</li>
+          <li>Live group hypnosis</li>
+          <li>Renaissance Method nervous system work</li>
+          <li>Butler-served high tea through the day</li>
+          <li>Workbook and curated Muse giftbag</li>
+        </ul>
+        <a class="btn ghost" href="https://stan.store/MindfullySumaya/p/the-muse-at-the-plaza-renaissance-soire" data-tier="muse">Claim your seat</a>
+        <p class="sec-note">Secure checkout through Stan</p>
+        <a class="wa-mini" href="https://wa.me/19179291766?text=Hi%20team%2C%20I%27m%20choosing%20my%20tier%20for%20The%20Renaissance%20Soir%C3%A9e%20and%20have%20a%20quick%20question." target="_blank" rel="noopener" data-help="tier"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.2 14.2c-.2.6-1.3 1.2-1.8 1.3-.5 0-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2.1 1-2.4c.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .6l-.4.6-.4.4c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3Z"/></svg>Questions? WhatsApp the team</a>
+      </div>
+      <div class="tier feat rv">
+        <span class="badge">Most chosen</span>
+        <p class="icon-lead">◆ 2 spots left · includes a private dinner with Sumaya</p>
+        <span class="rn">II</span>
+        <h3>The Icon</h3>
+        <p class="who">A muse inspires the room. An icon becomes the reference point in it.</p>
+        <div class="price">$1,500</div>
+        <div class="left">2 spots left</div>
+        <ul>
+          <li class="plus">Everything in The Muse, plus</li>
+          <li>The Winner’s Table: private mastermind dinner with Sumaya</li>
+          <li>Hot seat coaching over dinner</li>
+          <li>Priority front row seating all day</li>
+          <li>The Icon giftbag upgrade</li>
+        </ul>
+        <a class="btn" href="https://stan.store/MindfullySumaya/p/the-icon-at-the-plaza-renaissance-soire" data-tier="icon">Claim The Icon</a>
+        <p class="sec-note">Secure checkout through Stan</p>
+        <a class="wa-mini" href="https://wa.me/19179291766?text=Hi%20team%2C%20I%27m%20choosing%20my%20tier%20for%20The%20Renaissance%20Soir%C3%A9e%20and%20have%20a%20quick%20question." target="_blank" rel="noopener" data-help="tier"><svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5-1.3A10 10 0 1 0 12 2Zm5.2 14.2c-.2.6-1.3 1.2-1.8 1.3-.5 0-1 .2-3.3-.7-2.8-1.1-4.6-4-4.7-4.2-.1-.2-1.1-1.5-1.1-2.9s.7-2.1 1-2.4c.3-.3.6-.3.8-.3h.6c.2 0 .4 0 .6.5l.8 2c.1.2.1.4 0 .6l-.4.6-.4.4c-.1.2-.3.3-.1.6.2.3.8 1.3 1.7 2.1 1.2 1 2.1 1.4 2.4 1.5.3.1.5.1.6-.1l.9-1c.2-.3.4-.2.6-.1l1.9.9c.3.1.5.2.5.3.1.2.1.7-.1 1.3Z"/></svg>Questions? WhatsApp the team</a>
+      </div>
+      <div class="tier rv sold">
+        <span class="badge sold-badge">Sold out</span>
+        <figure class="tier-img"><img src="img/sundae.jpg" alt="The $500 Plaza sundae" loading="lazy"><figcaption>The $500 sundae · Legacy only</figcaption></figure>
+        <span class="rn">III</span>
+        <h3>The Legacy</h3>
+        <p class="who">The woman who does not leave the room. She becomes it.</p>
+        <div class="price"><s>$4,997</s></div>
+        <div class="left">Sold out · both seats taken</div>
+        <p class="proof">◆ Both seats taken, including a double board-certified doctor.</p>
+        <ul>
+          <li class="plus">Everything in The Icon, plus</li>
+          <li>Overnight in the presidential suite with Sumaya</li>
+          <li>The Home Alone experience and the $500 Plaza sundae</li>
+          <li>Billionaire identity hypnosis before sleep</li>
+          <li>Sunday brunch, November 8th</li>
+          <li>Integration mastermind session after the event</li>
+        </ul>
+        <span class="btn ghost is-sold" aria-disabled="true">Sold out</span>
+        <p class="sec-note">Want the evening with Sumaya? The Icon includes the private dinner.</p>
+      </div>
+    </div>
+    <div class="help rv">
+      <div><b>Trouble with checkout?</b><span>Card declined, page stuck, or want to pay another way? The team will sort your seat for you personally, usually within minutes.</span></div>
+      <a class="btn wa-btn" id="wa-help" href="https://wa.me/19179291766?text=Hi%20team%2C%20I%27d%20like%20to%20book%20The%20Renaissance%20Soir%C3%A9e%20but%20I%27m%20having%20trouble%20with%20the%20checkout." target="_blank" rel="noopener">WhatsApp the team</a>
+    </div>
+    <div class="compare-wrap rv">
+      <table class="compare">
+        <thead><tr><th>Inclusion</th><th>Muse</th><th>Icon</th><th>Legacy</th></tr></thead>
+        <tbody>
+          <tr><td>Full day in the Champagne Suite</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
+          <tr><td>Live group hypnosis</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
+          <tr><td>Butler-served high tea</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
+          <tr><td>Workbook and giftbag</td><td class="y">✓</td><td class="y">✓</td><td class="y">✓</td></tr>
+          <tr><td>Priority front row seating</td><td class="x">·</td><td class="y">✓</td><td class="y">✓</td></tr>
+          <tr><td>Private dinner and hot seats</td><td class="x">·</td><td class="y">✓</td><td class="y">✓</td></tr>
+          <tr><td>Overnight in the presidential suite</td><td class="x">·</td><td class="x">·</td><td class="y">✓</td></tr>
+          <tr><td>The $500 sundae and Sunday brunch</td><td class="x">·</td><td class="x">·</td><td class="y">✓</td></tr>
+          <tr><td>Integration mastermind after</td><td class="x">·</td><td class="x">·</td><td class="y">✓</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<section class="sec" id="place" style="background:var(--ivory)">
+  <div class="wrap">
+    <div class="narrow center rv">
+      <span class="eyebrow">Where it happens</span>
+      <h2>The Plaza, <em>Fifth Avenue at Central Park South.</em></h2>
+      <p class="lead">The lobby, the Palm Court, the rooms, and one very famous sundae.</p>
+    </div>
+    <div class="gal rv">
+      <figure><img src="img/palmcourt.jpg" alt="The Palm Court at The Plaza" loading="lazy"><figcaption>The Palm Court</figcaption></figure>
+      <figure><img src="img/room.jpg" alt="A guest room at The Plaza" loading="lazy"><figcaption>The rooms</figcaption></figure>
+      <figure><img src="img/door.jpg" alt="The Plaza entrance" loading="lazy"><figcaption>Fifth Avenue</figcaption></figure>
+      <figure><img src="img/sundae.jpg" alt="The $500 Plaza sundae" loading="lazy"><figcaption>The $500 sundae</figcaption></figure>
+      <figure><img src="img/sumaya-plaza.jpg" alt="Sumaya outside The Plaza" loading="lazy"><figcaption>Your host</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section class="final" id="reserve">
+  <div class="bg" aria-hidden="true"></div>
+  <div class="wrap narrow">
+    <div class="rule"><span>◆</span></div>
+    <span class="eyebrow" style="color:var(--gold-2)">November 7th · The Plaza</span>
+    <h2>Your old self will not stand a chance<br><em>in this room.</em></h2>
+    <p class="lead">You have watched from the screen. Now take the seat. The room is already being prepared for her: choose the identity you are walking in as.</p>
+    <div class="btns"><a href="#tiers" class="btn">Choose your tier</a></div>
+    <p class="note" style="margin-top:20px;font:500 .78rem var(--sans);color:var(--on-d-muted)" data-cd-long>In person only. No livestream. No replay.</p>
+  </div>
+</section>
+
+<section class="sec" id="faq">
+  <div class="wrap narrow">
+    <div class="center rv"><span class="eyebrow">Before you decide</span><h2>Questions, <em>answered.</em></h2></div>
+    <div class="faq rv">
+      <details><summary>I’m having trouble paying. What do I do?</summary><p>Message the team on WhatsApp at <a href="https://wa.me/19179291766?text=Hi%20team%2C%20I%27d%20like%20to%20book%20The%20Renaissance%20Soir%C3%A9e%20but%20I%27m%20having%20trouble%20with%20the%20checkout." target="_blank" rel="noopener">+1 (917) 929-1766</a>. Tell us which tier you want and we will help you complete it, or send you another way to pay.</p></details>
+      <details><summary>Who is this for?</summary><p>High achieving women in every field: entrepreneurs and founders, physicians and attorneys, executives, artists, professors, women in finance and tech. Women who are winning on paper and quietly exhausted by how hard they work to hold it up.</p></details>
+      <details><summary>Why not just take another course or hire a coach?</summary><p>Because you already have the strategy. Courses and coaches add information, and information runs on top of the setting. If the setting stays the same, the new strategy gets pulled back to the old size. This day is for the setting itself.</p></details>
+      <details><summary>Is this therapy?</summary><p>No. The Renaissance Soirée is a personal development experience. It is not therapy, medical treatment or mental health care, and not a substitute for them. No specific financial or personal outcome is guaranteed.</p></details>
+      <details><summary>Is there a recording or a virtual seat?</summary><p>No. The day exists only for the women in the room at The Plaza.</p></details>
+      <details><summary>Which tier should I choose?</summary><p>The Muse is the full day. The Icon adds the private dinner and hot seats with Sumaya, where most of the personal work on your business and patterns happens. The Legacy is the full immersion: the night in the presidential suite, Sunday brunch and integration support after. It is now sold out.</p></details>
+      <details><summary>Can I get a refund?</summary><p>All ticket sales are final and non-refundable, including for illness, travel disruption or a change of plans. If the event is cancelled or rescheduled by us, you will be offered the new date or a full refund.</p></details>
+      <details><summary>Can I transfer my seat?</summary><p>Your ticket is transferable to another woman with written notice to teammindfullysumaya@gmail.com, so the guest list with The Plaza can be updated. Legacy transfers are subject to approval.</p></details>
+      <details><summary>Is travel or a hotel room included?</summary><p>Only for The Legacy, which includes the overnight stay on November 7th. Travel, accommodation and other expenses are your own for the other tiers.</p></details>
+      <details><summary>Will there be cameras?</summary><p>Yes. By purchasing, you consent to being photographed and filmed during the event, and to that footage being used in marketing.</p></details>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <div class="row">
+      <div><span class="brand" style="font-size:.95rem">MindfullySumaya</span><p style="margin:8px 0 0">Thank you. More please.</p></div>
+      <div>Trouble booking? WhatsApp the team: <a href="https://wa.me/19179291766?text=Hi%20team%2C%20I%20have%20a%20question%20about%20The%20Renaissance%20Soir%C3%A9e." target="_blank" rel="noopener">+1 (917) 929-1766</a><br>Email <a href="mailto:teammindfullysumaya@gmail.com">teammindfullysumaya@gmail.com</a><br>or <a href="https://instagram.com/mindfullysumaya">@mindfullysumaya</a> on Instagram</div>
+    </div>
+    <p class="terms">All ticket sales are final and non-refundable. Tickets are transferable with written notice; Legacy transfers need approval. Travel and expenses outside your tier are your own. If the event is cancelled or rescheduled by us, you will be offered a new date or a full refund. By purchasing you consent to being photographed and filmed. The Renaissance Soirée is a personal development experience, not therapy, medical treatment or mental health care. No specific financial or personal outcome is guaranteed. The $10,000 a month figure refers to private client engagements, not the ticket price.</p>
+  </div>
+</footer>
+
+<div class="mbar" id="mbar"><div><b>The Renaissance Soirée</b><span data-cd>November 7th · The Plaza</span></div><a href="#tiers" class="btn">Choose tier</a></div>
+
+<script>
+document.documentElement.classList.add('js');
+(function(){
+  // Countdown to doors: Saturday 7 Nov 2026, 10:00 New York time (EST, UTC-5).
+  var DOORS = Date.UTC(2026, 10, 7, 15, 0, 0);
+  function tick(){
+    var ms = DOORS - Date.now(), txt, long;
+    if (ms <= 0) { txt = 'The room is open'; long = 'The Renaissance Soirée is happening now.'; }
+    else {
+      var d = Math.floor(ms / 864e5), h = Math.floor(ms % 864e5 / 36e5), m = Math.floor(ms % 36e5 / 6e4);
+      txt = 'Doors in ' + (d ? d + 'd ' : '') + h + 'h ' + m + 'm';
+      long = 'Doors open in ' + (d ? d + (d === 1 ? ' day, ' : ' days, ') : '') + h + (h === 1 ? ' hour' : ' hours') + '. In person only. No livestream. No replay.';
+    }
+    document.querySelectorAll('[data-cd]').forEach(function(el){ el.textContent = txt; });
+    document.querySelectorAll('[data-cd-long]').forEach(function(el){ el.textContent = long; });
+    // Sticky timer boxes, ticking every second
+    var t = Math.max(0, ms), pad = function(n){ return (n < 10 ? '0' : '') + n; };
+    document.querySelectorAll('[data-timer]').forEach(function(el){
+      if (ms <= 0) { el.innerHTML = '<em>The room is open</em>'; return; }
+      el.querySelector('[data-d]').textContent = Math.floor(t / 864e5);
+      el.querySelector('[data-h]').textContent = pad(Math.floor(t % 864e5 / 36e5));
+      el.querySelector('[data-m]').textContent = pad(Math.floor(t % 36e5 / 6e4));
+      el.querySelector('[data-s]').textContent = pad(Math.floor(t % 6e4 / 1e3));
+    });
+  }
+  tick(); setInterval(tick, 1000);
+
+  // "Tap the ones that are true": the verdict lights up once she agrees
+  var verdict = document.getElementById('verdict');
+  document.querySelectorAll('.ag button').forEach(function(b){
+    b.addEventListener('click', function(){
+      var card = b.parentNode, on = card.classList.toggle('yes');
+      b.textContent = on ? 'Yes ✓' : 'That’s true';
+      verdict.classList.toggle('on', document.querySelectorAll('.ag.yes').length > 0);
+    });
+  });
+
+  // Walking in / walking out toggle
+  var shift = document.getElementById('shift');
+  document.querySelectorAll('.toggle button').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('.toggle button').forEach(function(x){ x.classList.toggle('on', x === b); x.setAttribute('aria-selected', String(x === b)); });
+      shift.classList.toggle('after', b.getAttribute('data-side') === 'out');
+      b.parentNode.classList.remove('hint');
+    });
+  });
+
+  // Dashboard signals: read half the page, reached the tiers (once each per page view)
+  var halfSent = false;
+  window.addEventListener('scroll', function(){
+    if (!halfSent && window.scrollY + window.innerHeight >= document.documentElement.scrollHeight * 0.5) { halfSent = true; window.rsLog && rsLog('Scroll50'); }
+  }, { passive: true });
+  var tiersEl = document.getElementById('tiers');
+  if (tiersEl && 'IntersectionObserver' in window) {
+    var tio = new IntersectionObserver(function(es){ if (es[0].isIntersecting) { tio.disconnect(); window.rsLog && rsLog('ViewTiers'); } }, { threshold: 0, rootMargin: '0px 0px -40% 0px' });
+    tio.observe(tiersEl);
+  }
+
+  // Mobile bar after the hero
+  var bar = document.getElementById('mbar'), hero = document.querySelector('.hero');
+  function onScroll(){ bar.classList.toggle('show', window.scrollY > hero.offsetHeight * 0.7); }
+  window.addEventListener('scroll', onScroll, { passive: true }); onScroll();
+
+  // Reveal on scroll
+  var items = [].slice.call(document.querySelectorAll('.rv'));
+  if (!('IntersectionObserver' in window)) { items.forEach(function(el){ el.classList.add('in'); }); return; }
+  var io = new IntersectionObserver(function(es){ es.forEach(function(e){ if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }); }, { threshold: .08 });
+  items.forEach(function(el){ io.observe(el); });
+})();
+</script>
+<script>
+// VSL: play, halfway and finished, stored for the dashboard only.
+(function(){
+  var v = document.querySelector('wistia-player[media-id="5ekwt3rsk8"]'); if (!v) return;
+  var sent = {};
+  function once(n){ if (!sent[n]) { sent[n] = 1; window.rsLog && rsLog(n); } }
+  v.addEventListener('play', function(){ once('VideoPlay'); });
+  v.addEventListener('time-update', function(){ var d = v.duration, t = v.currentTime; if (d > 0 && t / d >= 0.5) once('Video50'); });
+  v.addEventListener('ended', function(){ once('Video50'); once('VideoEnd'); });
+  v.addEventListener('end', function(){ once('Video50'); once('VideoEnd'); });
+})();
+// Funnel events: ViewContent on the sales page, InitiateCheckout when a tier is chosen, Lead when Legacy is opened.
+(function(){
+  function fire(n, d){ try { rsTrack(n, d); } catch (e) {} }
+  fire('ViewContent', { content_name: 'The Renaissance Soiree', content_category: 'event' });
+  var VAL = { muse: 997, icon: 1500, legacy: 4997 };
+  document.querySelectorAll('.wa-mini').forEach(function(a){ a.addEventListener('click', function(){ fire('Contact', { content_name: 'Checkout help WhatsApp (tier card)' }); }); });
+  var wl = document.getElementById('wa-legacy'); if (wl) wl.addEventListener('click', function(){ fire('Contact', { content_name: 'Legacy WhatsApp', value: 4997, currency: 'USD' }); });
+  var wh = document.getElementById('wa-help'); if (wh) wh.addEventListener('click', function(){ fire('Contact', { content_name: 'Checkout help WhatsApp' }); });
+  document.querySelectorAll('[data-tier]').forEach(function(a){
+    a.addEventListener('click', function(){
+      var t = a.getAttribute('data-tier'), d = { content_name: 'Renaissance Soiree: ' + t, value: VAL[t], currency: 'USD' };
+      fire(t === 'legacy' ? 'Lead' : 'InitiateCheckout', d);
+    });
+  });
+})();
+</script>
+</body>
+</html>

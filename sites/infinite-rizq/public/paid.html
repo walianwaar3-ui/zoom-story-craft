@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Already Paid | Infinite Rizq</title>
+<meta name="description" content="Already paid for Infinite Rizq? Enter your details and get your ticket instantly.">
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#0a0a0b">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;1,500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<!--
+  ALREADY-PAID PAGE: infiniterizq.com/paid
+  For people who paid by bank, JazzCash or card in the last hours, after sales closed on the site.
+  The form posts to /api/seats (open flow, ir_claim_open_seat): the pass is issued at once with status
+  "pending", shows on the dashboard and the sheet, and the payment is checked at the door.
+-->
+<style>
+:root{
+  --bg:#0a0a0b;--card:#16161a;--line:rgba(255,255,255,.08);--line-2:rgba(255,255,255,.14);
+  --ivory:#f3ede1;--text:#c9c3b6;--muted:#8a857b;--gold:#d4a73a;--gold-2:#e8c66a;--gold-soft:rgba(212,167,58,.14);
+  --red:#e0736b;--serif:'Playfair Display',Georgia,serif;--sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--sans);font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased}
+.wrap{max-width:560px;margin:0 auto;padding:0 16px 48px}
+header{display:flex;align-items:center;gap:12px;padding:18px 0 6px}
+.mark{width:40px;height:40px;border-radius:50%;display:inline-grid;place-items:center;background:#1a1a1e;border:1px solid var(--line-2);font:600 .76rem var(--serif);color:var(--ivory)}
+header small{display:block;color:var(--muted);font-size:.72rem;letter-spacing:.14em;text-transform:uppercase}
+header b{color:var(--ivory);font-family:var(--serif);font-weight:600;font-size:1.05rem}
+h1{font-family:var(--serif);font-weight:600;color:var(--ivory);line-height:1.15;margin:22px 0 8px;font-size:clamp(1.7rem,6vw,2.3rem)}
+h1 em{font-style:italic;color:var(--gold-2);font-weight:500}
+.lead{margin:0 0 20px;font-size:.98rem}
+form{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 16px}
+fieldset{border:0;margin:0 0 18px;padding:0}
+legend,label{display:block;color:var(--ivory);font-size:.86rem;font-weight:600;margin:0 0 6px}
+.opt{color:var(--muted);font-weight:400}
+input,select{width:100%;background:#0f0f12;border:1px solid var(--line-2);border-radius:10px;color:var(--ivory);font:inherit;padding:12px;margin:0 0 14px}
+input:focus,select:focus{outline:2px solid var(--gold-2);outline-offset:1px;border-color:transparent}
+.choices{display:grid;gap:8px}
+.choices.two{grid-template-columns:1fr 1fr}
+.choice{display:flex;align-items:center;gap:10px;border:1px solid var(--line-2);border-radius:10px;padding:11px 12px;cursor:pointer;font-size:.92rem;color:var(--text)}
+.choice input{width:auto;margin:0;accent-color:var(--gold)}
+.choice b{color:var(--ivory);font-weight:600}
+.choice span{margin-left:auto;color:var(--gold-2);font-weight:600;white-space:nowrap}
+.choice:has(input:checked){border-color:var(--gold);background:var(--gold-soft)}
+.btn{display:block;width:100%;border:0;border-radius:12px;background:var(--gold);color:#141005;font:700 1rem var(--sans);padding:15px;cursor:pointer;margin-top:6px}
+.btn[disabled]{opacity:.6;cursor:wait}
+.msg{margin:12px 0 0;font-size:.9rem;min-height:1.2em}
+.msg.err{color:var(--red)}
+.note{color:var(--muted);font-size:.8rem;margin:14px 0 0}
+footer{color:var(--muted);font-size:.8rem;text-align:center;margin-top:26px}
+footer a{color:var(--gold-2)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><span class="mark">IR</span><div><small>Saturday 17 October · Nishat Hotel</small><b>Infinite Rizq</b></div></header>
+
+  <h1>Already paid? <em>Get your ticket.</em></h1>
+  <p class="lead">Enter your details and the ticket you paid for. Your ticket is issued straight away and your seat is given to you on arrival. Bring your payment screenshot to the door.</p>
+
+  <form id="f" novalidate>
+    <fieldset>
+      <legend>Which ticket did you pay for?</legend>
+      <div class="choices">
+        <label class="choice"><input type="radio" name="tier" value="back"><b>Main Hall</b><span>5,555</span></label>
+        <label class="choice"><input type="radio" name="tier" value="general"><b>General Admission</b><span>11,111</span></label>
+        <label class="choice"><input type="radio" name="tier" value="pair"><b>Pair Pass (2 people)</b><span>15,555</span></label>
+        <label class="choice"><input type="radio" name="tier" value="student"><b>Student Pair Pass (2 students)</b><span>5,555</span></label>
+        <label class="choice"><input type="radio" name="tier" value="inner"><b>VIP Inner Table</b><span>33,333</span></label>
+      </div>
+    </fieldset>
+
+    <fieldset>
+      <legend>Seating section</legend>
+      <div class="choices two" id="sections">
+        <label class="choice"><input type="radio" name="section" value="sisters"><b>Sister</b></label>
+        <label class="choice"><input type="radio" name="section" value="brothers"><b>Brother</b></label>
+        <label class="choice" id="mixed" hidden><input type="radio" name="section" value="mixed"><b>One sister, one brother</b></label>
+      </div>
+    </fieldset>
+
+    <label for="name" id="l-name">Full name</label>
+    <input id="name" autocomplete="name" maxlength="58" required>
+    <label for="email">Email</label>
+    <input id="email" type="email" autocomplete="email" maxlength="160" required>
+    <label for="phone">WhatsApp number</label>
+    <input id="phone" type="tel" autocomplete="tel" maxlength="40" placeholder="+92 300 1234567" required>
+
+    <div id="g2" hidden>
+      <label for="name2" id="l-name2">Second person's full name</label>
+      <input id="name2" maxlength="58">
+      <label for="phone2">Second person's WhatsApp <span class="opt">(optional)</span></label>
+      <input id="phone2" type="tel" maxlength="40" placeholder="+92 300 1234567">
+    </div>
+
+    <label for="method">How did you pay?</label>
+    <select id="method" required>
+      <option value="">Choose one</option>
+      <option>Meezan Bank transfer</option>
+      <option>JazzCash</option>
+      <option>Card (Stripe)</option>
+      <option>Other</option>
+    </select>
+    <label for="ref">Transaction ID or reference <span class="opt">(optional)</span></label>
+    <input id="ref" maxlength="60" placeholder="From your payment screenshot">
+
+    <button class="btn" type="submit" id="go">Issue my ticket</button>
+    <p class="msg" id="msg" role="status" aria-live="polite"></p>
+    <p class="note">Your payment is checked at the door against your screenshot. A ticket without a matching payment is not valid.</p>
+  </form>
+
+  <footer>Questions? WhatsApp Wali Anwaar, Event Coordinator, <a href="https://wa.me/13322332380">+1 (332) 233-2380</a></footer>
+</div>
+
+<script>
+(function(){
+var $ = function(id){ return document.getElementById(id); };
+function val(n){ var el = document.querySelector('input[name="' + n + '"]:checked'); return el ? el.value : ''; }
+function sync(){
+  var t = val('tier'), two = t === 'pair' || t === 'student';
+  $('g2').hidden = !two;
+  $('mixed').hidden = t !== 'student';
+  if (t !== 'student' && val('section') === 'mixed') document.querySelector('input[value="mixed"]').checked = false;
+  $('l-name').textContent = t === 'student' ? 'Student 1 full name' : 'Full name';
+  $('l-name2').textContent = t === 'student' ? 'Student 2 full name' : "Second person's full name";
+}
+document.querySelectorAll('input[name="tier"]').forEach(function(r){ r.addEventListener('change', sync); });
+
+$('f').addEventListener('submit', function(e){
+  e.preventDefault();
+  var tier = val('tier'), section = val('section'), name = $('name').value.trim(), email = $('email').value.trim(),
+      phone = $('phone').value.trim(), name2 = $('name2').value.trim(), phone2 = $('phone2').value.trim(), method = $('method').value;
+  function bad(t){ $('msg').textContent = t; $('msg').className = 'msg err'; }
+  var two = tier === 'pair' || tier === 'student';
+  if (!tier) return bad('Please choose the ticket you paid for.');
+  if (!section) return bad('Please choose your seating section.');
+  if (!name) return bad('Please enter your full name.');
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return bad('Please enter a valid email.');
+  if (phone.replace(/\D/g, '').length < 10) return bad('Please enter your WhatsApp number.');
+  if (two && !name2) return bad("Please enter the second person's full name.");
+  if (!method) return bad('Please choose how you paid.');
+  $('go').disabled = true; $('msg').className = 'msg'; $('msg').textContent = 'Issuing your ticket…';
+  var body = { tier: tier, seats: [], name: two ? name + ' & ' + name2 : name, email: email, phone: phone, section: section,
+               paid: { method: method, ref: $('ref').value.trim() } };
+  if (two) body.student2 = { name: name2, phone: phone2 };
+  fetch('/api/seats', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+    .then(function(r){ return r.json(); })
+    .then(function(j){
+      if (j.ok && j.data && j.data.token) { location.replace('/seats?t=' + j.data.token); return; }
+      if (j.code === 'already_chosen') return bad('A ticket already exists for this email. Find it at infiniterizq.com/my-seat, or WhatsApp the coordinator.'), ($('go').disabled = false);
+      bad(j.error || 'Could not issue the ticket. Please try again.'); $('go').disabled = false;
+    })
+    .catch(function(){ bad('Network error. Please try again.'); $('go').disabled = false; });
+});
+})();
+</script>
+</body>
+</html>

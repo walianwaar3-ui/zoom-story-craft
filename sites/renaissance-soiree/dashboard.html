@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Soirée Funnel · Live</title>
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+.muted{color:#7a8597;font-weight:400;font-size:.9em}
+:root{--bg:#f4f7fb;--card:#fff;--ink:#0b2545;--text:#33415c;--muted:#6b7a90;--line:#e3e9f2;--navy:#0b2545;--blue:#1d5fd1;
+  --ok:#1f7a4d;--ok-bg:#e6f4ec;--warn:#a26b00;--warn-bg:#fdf3dc;--bad:#b42318;--bad-bg:#fdecea;--few:#cfd8e6;--sans:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:400 15px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+.wrap{max-width:1320px;margin:0 auto;padding:22px 18px 80px}
+h1{font:800 1.9rem/1.1 var(--sans);color:var(--ink);letter-spacing:-.02em;margin:0}
+h2{font:800 1.2rem var(--sans);color:var(--ink);margin:0 0 4px}
+.sub{color:var(--muted);margin:6px 0 0}
+.live{display:inline-flex;align-items:center;gap:6px;font:600 .72rem var(--sans);color:var(--ok);background:var(--ok-bg);border-radius:999px;padding:4px 10px;margin-left:10px;vertical-align:middle}
+.live i{width:7px;height:7px;border-radius:50%;background:var(--ok);animation:blink 1.6s infinite}
+@keyframes blink{50%{opacity:.25}}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin:18px 0}
+.seg{display:inline-flex;background:#fff;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:9px 14px;font:600 .9rem var(--sans);color:var(--ink);cursor:pointer}
+.seg button.on{background:var(--navy);color:#fff}
+.btn{border:1px solid var(--line);background:#fff;border-radius:12px;padding:9px 14px;font:600 .9rem var(--sans);color:var(--ink);cursor:pointer}
+.updated{color:var(--muted);font-size:.88rem}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:12px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+.kpi.hl{border:2px solid var(--blue)}
+.kpi h4{margin:0;font:700 .7rem var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.kpi b{display:block;font:800 1.75rem/1.15 var(--sans);color:var(--ink);margin:6px 0 2px}
+.kpi span{font-size:.84rem;color:var(--muted)}
+.kpi.good b{color:var(--ok)} .kpi.bad b{color:var(--bad)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px 22px 24px;margin-top:18px}
+.legend{display:flex;flex-wrap:wrap;gap:16px;margin:10px 0 14px;font-size:.88rem}
+.legend span::before{content:"";display:inline-block;width:18px;height:3px;border-radius:2px;vertical-align:middle;margin-right:6px;background:var(--c)}
+.board{background-image:radial-gradient(#d9e2ee 1px,transparent 1px);background-size:18px 18px;border:1px solid var(--line);border-radius:16px;padding:18px}
+.row-t{display:flex;align-items:center;gap:10px;font:700 .78rem var(--sans);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);margin:6px 0 12px}
+.row-t i{width:26px;height:26px;border-radius:50%;background:var(--navy);color:#fff;display:grid;place-items:center;font-style:normal;font-size:.8rem;letter-spacing:0}
+.flow{display:flex;align-items:stretch;gap:0;margin-bottom:22px;overflow-x:auto;padding-bottom:4px}
+.box{flex:1 1 118px;background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 14px 12px;box-shadow:0 2px 10px -6px rgba(11,37,69,.2);cursor:pointer;min-width:118px}
+.box:hover{border-color:var(--blue)}
+.box.end{border:2px solid var(--ok)}
+.box h5{margin:0;font:700 .86rem var(--sans);color:var(--ink)}
+.box b{display:block;font:800 1.6rem/1.1 var(--sans);color:var(--ink);margin:6px 0 2px}
+.box small{display:block;color:var(--muted);font-size:.8rem}
+.badge{display:inline-block;margin-top:6px;font:600 .74rem var(--sans);border-radius:999px;padding:3px 8px;background:#eef2f8;color:var(--ink)}
+.badge.ok{background:var(--ok-bg);color:var(--ok)} .badge.warn{background:var(--warn-bg);color:var(--warn)} .badge.bad{background:var(--bad-bg);color:var(--bad)}
+.arr{flex:0 0 84px;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;cursor:pointer}
+.arr::before{content:"";position:absolute;left:4px;right:10px;top:50%;height:3px;background:var(--c,var(--few));border-radius:2px;margin-top:-14px}
+.arr::after{content:"";position:absolute;right:2px;top:50%;margin-top:-19px;border:6px solid transparent;border-left:9px solid var(--c,var(--few))}
+.arr .pct{position:relative;z-index:1;background:#fff;border:2px solid var(--c,var(--few));border-radius:999px;padding:3px 9px;font:800 .9rem var(--sans);color:var(--ink);margin-top:-28px}
+.arr .lft{font-size:.74rem;color:var(--muted);margin-top:6px;text-align:center;line-height:1.2}
+.arr.ok{--c:var(--ok)} .arr.warn{--c:var(--warn)} .arr.bad{--c:var(--bad)}
+.fix{border:1px solid var(--line);border-left:4px solid var(--warn);border-radius:14px;padding:16px 18px;margin-top:12px;display:grid;grid-template-columns:1fr auto;gap:14px}
+.fix.bad{border-left-color:var(--bad)}
+.fix h3{margin:0;font:800 1.05rem var(--sans);color:var(--ink)}
+.fix p{margin:6px 0 0}
+.fix ul{margin:8px 0 0;padding-left:20px}
+.fix .side{text-align:right}
+.tag{display:inline-block;font:700 .74rem var(--sans);border-radius:999px;padding:4px 10px;background:var(--warn-bg);color:var(--warn)}
+.tag.bad{background:var(--bad-bg);color:var(--bad)}
+.money{display:block;font:800 1.05rem var(--sans);color:var(--ink);margin:8px 0}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th,td{padding:10px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{font:700 .7rem var(--sans);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+th:first-child,td:first-child{text-align:left}
+.tw{overflow-x:auto}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.grid2>*,.card,.board{min-width:0}
+.empty{color:var(--muted);padding:12px 0}
+.detail{display:none;margin-top:16px;border-top:1px dashed var(--line);padding-top:16px}
+.detail.on{display:block}
+.bars{display:flex;align-items:flex-end;gap:6px;height:90px;margin-top:10px}
+.bars div{flex:1;background:var(--blue);border-radius:6px 6px 0 0;min-height:2px;position:relative}
+.bars div span{position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:.7rem;color:var(--muted);white-space:nowrap}
+.note{font-size:.84rem;color:var(--muted);margin-top:10px}
+.stan{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin-top:14px}
+.app{border:1px solid var(--line);border-left:4px solid var(--blue);border-radius:14px;padding:14px 16px;margin-top:12px}
+.app.hot{border-left-color:var(--ok)}
+.app h3{margin:0;font:800 1.05rem var(--sans);color:var(--ink)} .app .when{font-size:.8rem;color:var(--muted)}
+.app dl{display:grid;grid-template-columns:150px 1fr;gap:4px 12px;margin:10px 0 0;font-size:.9rem} .app dt{color:var(--muted)} .app dd{margin:0;color:var(--ink);white-space:pre-wrap;word-break:break-word}
+.app .acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px} .app .acts a{border:1px solid var(--line);border-radius:10px;padding:8px 12px;font:600 .84rem var(--sans);color:var(--ink);text-decoration:none}
+.app .acts a.wa{background:#1f7a4d;border-color:#1f7a4d;color:#fff}
+@media (max-width:600px){.app dl{grid-template-columns:1fr}.app dt{margin-top:6px}}
+.stan .t{border:1px solid var(--line);border-radius:14px;padding:14px}
+.stan .t h4{margin:0 0 8px;font:700 .8rem var(--sans);color:var(--ink)}
+.stan label{display:block;font-size:.76rem;color:var(--muted);margin-top:6px}
+.stan input{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:10px;font:600 1rem var(--sans);color:var(--ink)}
+.stan button{margin-top:10px;width:100%;padding:9px;border:0;border-radius:10px;background:var(--navy);color:#fff;font:700 .86rem var(--sans);cursor:pointer}
+.tr-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:12px}
+.tr-tot{display:flex;flex-wrap:wrap;gap:18px;margin:12px 0 4px}
+.tr-tot div{font-size:.82rem;color:var(--muted)} .tr-tot b{display:block;font:800 1.25rem var(--sans);color:var(--ink)}
+.tr-leg{display:flex;flex-wrap:wrap;gap:14px;font-size:.82rem;color:var(--muted);margin:6px 0 0}
+.tr-leg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px;background:var(--c)}
+.tr{position:relative;height:220px;margin:16px 0 30px 34px;border-left:1px solid var(--line);border-bottom:1px solid var(--line)}
+.tr-grid{position:absolute;left:0;right:0;border-top:1px dashed var(--line);font-size:.7rem;color:var(--muted)}
+.tr-grid span{position:absolute;left:-34px;top:-8px;width:28px;text-align:right}
+.tr-bars{position:absolute;inset:0;display:flex;align-items:flex-end;gap:var(--gap,4px);padding:0 4px}
+.tr-b{flex:1;height:100%;display:flex;align-items:flex-end;position:relative;cursor:pointer;min-width:0}
+.tr-b .v{width:100%;background:#bcd0f2;border-radius:4px 4px 0 0;position:relative;min-height:0}
+.tr-b .t{position:absolute;left:0;right:0;bottom:0;background:var(--blue);border-radius:4px 4px 0 0}
+.tr-b .p{position:absolute;left:50%;transform:translate(-50%,50%);width:9px;height:9px;border-radius:50%;background:var(--ok);border:2px solid #fff}
+.tr-b:hover .v,.tr-b.on .v{background:#9fbbea}
+.tr-b .x{position:absolute;bottom:-22px;left:50%;transform:translateX(-50%);font-size:.7rem;color:var(--muted);white-space:nowrap}
+.tr-tip{position:absolute;z-index:5;background:var(--navy);color:#fff;border-radius:12px;padding:10px 12px;font-size:.82rem;line-height:1.45;pointer-events:none;min-width:180px;box-shadow:0 10px 30px -10px rgba(11,37,69,.6);display:none}
+.tr-tip b{display:block;font-size:.86rem;margin-bottom:4px}
+.tr-tip div{display:flex;justify-content:space-between;gap:14px} .tr-tip span{opacity:.75}
+.gate{max-width:380px;margin:12vh auto;background:#fff;border:1px solid var(--line);border-radius:18px;padding:26px}
+.gate input{width:100%;padding:12px;border:1px solid var(--line);border-radius:10px;font:500 1rem var(--sans);margin:12px 0}
+.gate button{width:100%;padding:12px;border:0;border-radius:10px;background:var(--navy);color:#fff;font:700 1rem var(--sans);cursor:pointer}
+.err{color:var(--bad);font-size:.9rem;min-height:1.2em}
+@media (max-width:900px){.grid2{grid-template-columns:1fr}.fix{grid-template-columns:1fr}.fix .side{text-align:left}}
+</style>
+</head>
+<body>
+<div id="gate" class="gate" hidden>
+  <h2>Soirée funnel</h2>
+  <p class="sub">Enter the dashboard key.</p>
+  <input id="key" type="password" autocomplete="current-password" placeholder="Dashboard key">
+  <button id="go" type="button">Open dashboard</button>
+  <p class="err" id="gerr"></p>
+</div>
+
+<div class="wrap" id="app" hidden>
+  <h1>Funnel Flow and Fixes <span class="live"><i></i>Live · refreshes every minute</span></h1>
+  <p class="sub">The Renaissance Soirée, from the ad to the paid seat: where women drop off, what to fix first, and whether each fix worked.</p>
+
+  <div class="controls">
+    <div class="seg" data-k="range"><button data-v="24h">24h</button><button data-v="3d">3d</button><button data-v="7d" class="on">7d</button><button data-v="all">All</button></div>
+    <div class="seg" data-k="device"><button data-v="" class="on">All devices</button><button data-v="mobile">Phone</button><button data-v="desktop">Desktop</button></div>
+    <div class="seg" data-k="traffic"><button data-v="" class="on">All traffic</button><button data-v="meta">Meta ads</button><button data-v="other">Other</button></div>
+    <button class="btn" id="refresh" type="button">Refresh</button>
+    <span class="updated" id="updated"></span>
+  </div>
+
+  <div class="kpis" id="kpis"></div>
+
+
+
+
+  <div class="card">
+    <h2>The funnel on a whiteboard</h2>
+    <p class="sub">Women at each step, and the share who moved on to the next. Click any box or arrow for the detail: by device, by ad and day by day.</p>
+    <div class="legend"><span style="--c:var(--ok)">On target</span><span style="--c:var(--warn)">Below target</span><span style="--c:var(--bad)">Leak (sure)</span><span style="--c:var(--few)">Too few people to judge</span></div>
+    <div class="board" id="board"></div>
+    <div class="detail" id="detail"></div>
+  </div>
+
+  <div class="card">
+    <div class="tr-head">
+      <div><h2>Traffic, day by day</h2><p class="sub">How many women reached the page, and when. Hover or tap a bar to see what that traffic did.</p></div>
+      <div class="seg" id="trmode"><button data-v="day" class="on">Day</button><button data-v="hour">Hour</button></div>
+    </div>
+    <div class="tr-tot" id="trtot"></div>
+    <div class="tr-leg"><span><i style="--c:#bcd0f2"></i>Visitors</span><span><i style="--c:var(--blue)"></i>Reached the tiers</span><span><i style="--c:var(--ok);border-radius:50%"></i>Paid seat</span></div>
+    <div class="tr" id="trchart"></div>
+  </div>
+
+  <div class="card">
+    <h2>Fix first</h2>
+    <p class="sub">Worked out from your own numbers each time the page loads. Ranked by the extra revenue if the step reached its target, weighted by how sure the data is. Press "We tried this" when you change something; the log below then shows whether it worked.</p>
+    <div id="fixes"></div>
+  </div>
+
+  <div class="card">
+    <h2>Budget autopilot</h2>
+    <p class="sub">Hard cap: $550 across every campaign until the event. Meta's own account spending limit enforces it, so nothing can go over. Every hour the autopilot moves what is left toward the ad sets whose visitors actually choose a tier or buy (Stan checkout and purchases, plus tier taps on our page), and pauses ads that spent $10+ without one.</p>
+    <div id="pilot"><p class="empty">Loading…</p></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px"><button class="btn" id="pilotPreview" type="button">Preview next move</button><button class="btn" id="pilotRun" type="button">Run now</button></div>
+    <p class="note" id="pilotnote"></p>
+  </div>
+
+  <div class="card">
+    <h2>Every campaign</h2>
+    <p class="sub">All campaigns in the Meta ad account, ours and the ones built in ChatGPT, pulled live from Meta and matched to what their visitors did on the page.</p>
+    <div class="tw"><table id="bycamp"></table></div>
+  </div>
+
+  <div class="card">
+    <h2>Which ad is selling</h2>
+    <p class="sub">Every ad, grouped by campaign: Meta's spend and clicks next to what those women actually did on the page.</p>
+    <div class="tw"><table id="byad"></table></div>
+    <p class="note" id="metanote"></p>
+  </div>
+
+  <div class="grid2">
+    <div class="card"><h2>Which audience</h2><p class="sub">Spend and results per ad set, across every campaign.</p><div class="tw"><table id="byaud"></table></div></div>
+    <div class="card"><h2>Which tier</h2><p class="sub">Interest (tier tapped) against paid seats.</p><div class="tw"><table id="bytier"></table></div></div>
+  </div>
+
+  <div class="card">
+    <h2>Seats sold in Stan</h2>
+    <p class="sub">Stan's checkout can't send buyers back to the page, so not every sale is seen here. Copy the totals from Stan → Income once or twice a day; paid seats, revenue, cost per seat and ROAS then use the higher of Stan and the page.</p>
+    <div class="stan" id="stanform"></div>
+    <p class="note" id="stannote"></p>
+  </div>
+
+  <div class="card">
+    <h2>Legacy applications <span class="badge" id="appcount">0</span></h2>
+    <p class="sub">Everyone who sends the Legacy form, newest first, with one tap to reach her. Women who chose "WhatsApp Sumaya" instead are in Sumaya's WhatsApp, not here.</p>
+    <div id="apps"></div>
+  </div>
+
+  <div class="card">
+    <h2>Fix log</h2>
+    <p class="sub">Each change you tried, with the step's conversion before and after it.</p>
+    <div class="tw"><table id="fixlog"></table></div>
+  </div>
+
+  <p class="note">Paid seats on the page are counted when a buyer opens /welcome?tier=… (the link in Stan's confirmation email). Stan's own pixel reports every purchase to Meta. For the true total, enter Stan → Income in "Seats sold in Stan". "Clicked a tier" is counted on our page when she taps Muse or Icon; what happens inside Stan's checkout is not visible here.</p>
+</div>
+
+<script>
+(function(){
+  var $ = function(id){ return document.getElementById(id); };
+  var S = { key: '', range: '7d', device: '', traffic: '', data: null, sel: null };
+  var fmt = function(n){ return Math.round(n).toLocaleString('en-US'); };
+  var usd = function(n){ return '$' + (n >= 100 ? fmt(n) : (Math.round(n * 100) / 100).toFixed(2)); };
+  var pct = function(n){ return n == null ? 'n/a' : (n * 100 >= 10 ? (n * 100).toFixed(0) : (n * 100).toFixed(1)) + '%'; };
+  var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"]/g, function(c){ return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
+  var AD_NAME = { tickets: 'A · Death to your old identity', decision: 'B · Put yourself in the room', singleday: 'C · Receive instead of proving' };
+  // Second campaign run from the other ads tool: tagged adset{N}_creative{M}. Part of the same ecosystem, counted as ad traffic.
+  var TOOL = /^adset(\d+)_creative(\d+)$/;
+  // Every ad in the Meta account, keyed by the utm_content in its link (filled from the API on each load).
+  var META_SRC = {};
+  function shortCamp(n){ return String(n || '').replace(/^Renaissance Soirée · /, ''); }
+  function srcName(s){ if (AD_NAME[s]) return AD_NAME[s]; if (META_SRC[s]) return META_SRC[s].ad; var m = TOOL.exec(s || ''); return m ? 'Tool campaign · ad set ' + m[1] + ' · creative ' + m[2] : s; }
+  function isAd(s){ return !!AD_NAME[s] || !!META_SRC[s] || s === 'meta (no ad tag)' || TOOL.test(s || ''); }
+  var MIN = 30, SURE = 100;
+
+  // Funnel steps and targets (warm audience, high-ticket event)
+  var ARROWS = {
+    'imp>click': { label: 'Saw ad → clicked', target: .015, why: 'Click-through on the ad',
+      tips: ['Lead with her line "Death to your old identity" in the first 5 words', 'Use the image with Sumaya on stage; faces beat buildings', 'Retire the weakest of A/B/C and give its budget to the best'] },
+    'click>visit': { label: 'Clicked → page loaded', target: .75, why: 'Clicks that actually reached the page',
+      tips: ['Check page speed on 4G: the hero image should load in under 2 seconds', 'Make sure every ad links to the same page (no broken links)', 'In-app browser issues: test the ad link inside Instagram'] },
+    'visit>read50': { label: 'Visited → read half', target: .45, why: 'The first screen is not holding them',
+      tips: ['Headline must repeat the ad\'s promise word for word', 'Show the date, The Plaza and "from $997" in the first screen', 'Move the "Tap the ones that are true" section higher'] },
+    'visit>tiers': { label: 'Visited → reached the tiers', target: .35, why: 'Women are not getting to the prices',
+      tips: ['Add a second "Choose your tier" button after the thermostat section', 'Shorten the page above the tiers', 'Make the sticky "Choose tier" bar more visible on phone'] },
+    'tiers>checkout': { label: 'Saw tiers → clicked a tier', target: .20, why: 'Prices are seen but not chosen',
+      tips: ['Done 5 Nov: Icon leads with 2 spots + private dinner, "old self" line above the cards, WhatsApp help under Muse and Icon (press "We tried this" to measure it)', 'Done 5 Nov: Muse card says "Start here" for first-time guests', 'Ask Stan about a 2 or 3 payment split on The Muse and add it to the card'] },
+    'checkout>paid': { label: 'Clicked a tier → paid', target: .35, why: 'She tapped a tier, went to Stan, and did not pay',
+      tips: ['Stan cannot redirect: add the welcome link to each product Confirmation Email so paid buyers are counted', 'Turn on Apple Pay / Google Pay in Stan', 'WhatsApp the women who tapped a tier but did not buy', 'Enter Stan Income totals in the Seats sold in Stan box'] },
+    'visit>legacy': { label: 'Visited → Legacy interest', target: .03, why: 'Few women open the Legacy',
+      tips: ['Done 5 Nov: presidential suite line in the hero + sundae photo on the Legacy card (press "We tried this" to measure it)', 'Sumaya posts a story: "1 Legacy spot left" with the doctor proof, linked to the page', 'Personally message the women who reached the tiers today about the last Legacy spot'] },
+    'legacy>apply': { label: 'Legacy interest → applied', target: .30, why: 'Legacy interest is not turning into applications',
+      tips: ['Push WhatsApp-to-Sumaya as the first option', 'Shorten the application to 3 questions'] },
+  };
+  var CORE = ['imp>click', 'click>visit', 'visit>tiers', 'tiers>checkout', 'checkout>paid'];
+
+  function counts(){
+    var d = S.data, s = (d && d.funnel && d.funnel.steps) || {}, m = d && d.meta && d.meta.totals;
+    return { imp: m ? m.impressions : null, click: m ? m.linkClicks : null, spend: m ? m.spend : null,
+      visit: s.visit || 0, read50: s.read50 || 0, tiers: s.tiers || 0, checkout: s.checkout || 0, paid: s.paid || 0,
+      legacy: s.legacy || 0, apply: s.apply || 0, help: s.help || 0, revenue: Number(d && d.funnel && d.funnel.revenue || 0),
+      stanPaid: stanTot(d).qty, stanRev: stanTot(d).rev,
+      adVisit: ((d && d.funnel && d.funnel.bySource) || []).filter(function(r){ return isAd(r.src); }).reduce(function(n, r){ return n + (r.visit || 0); }, 0) };
+  }
+  // Stan's Income page is the source of truth for sales; when entered, it overrides the page-tracked count if higher.
+  function stanTot(d){ var t = { qty: 0, rev: 0 }; ((d && d.stan) || []).forEach(function(r){ t.qty += Number(r.qty || 0); t.rev += Number(r.revenue || 0); }); return t; }
+  function judge(key, c){
+    var p = key.split('>'), from = c[p[0]], to = key === 'click>visit' ? c.adVisit : c[p[1]], t = ARROWS[key].target;
+    if (from == null || to == null) return { state: 'few', rate: null, from: from, to: to, target: t, na: true };
+    var rate = from ? Math.min(1, to / from) : null;
+    var state = from < MIN || rate == null ? 'few' : rate >= t ? 'ok' : (from >= SURE && rate < t * .6 ? 'bad' : 'warn');
+    return { state: state, rate: rate, from: from, to: to, target: t };
+  }
+
+  function render(){
+    traffic();
+    var c = counts(), d = S.data;
+    // Money KPIs use Stan totals when higher; funnel rates keep the page-seen numbers so they stay comparable.
+    c.mPaid = c.paid; c.mRev = c.revenue;
+    if (c.stanPaid > c.paid) { c.mPaid = c.stanPaid; c.mRev = Math.max(c.revenue, c.stanRev); c.fromStan = true; }
+    stanForm(d); apps(d);
+    var aov = c.paid ? c.revenue / c.paid : 1200;
+    var judged = Object.keys(ARROWS).map(function(k){ return [k, judge(k, c)]; });
+    var onT = judged.filter(function(x){ return x[1].state === 'ok'; }).length, can = judged.filter(function(x){ return x[1].state !== 'few'; }).length;
+    var v2b = c.visit ? c.paid / c.visit : null, roas = c.spend ? c.mRev / c.spend : null;
+    var k = [
+      ['Ad spend', c.spend == null ? '—' : usd(c.spend), c.imp == null ? 'Meta data unavailable' : fmt(c.imp) + ' impressions'],
+      ['Visitors', fmt(c.visit), 'unique women on the page'],
+      ['Paid seats', fmt(c.mPaid), c.fromStan ? 'from Stan · ' + fmt(c.paid) + ' seen on the page' : 'seen on the page · enter Stan totals below', c.mPaid ? 'good' : ''],
+      [c.fromStan ? 'Revenue (Stan)' : 'Revenue tracked', usd(c.mRev), c.mPaid ? 'avg ' + usd(c.mRev / c.mPaid) + ' a seat' : 'no tracked sales yet'],
+      ['Cost per seat', c.spend && c.mPaid ? usd(c.spend / c.mPaid) : '—', 'ad spend ÷ paid seats (Stan when entered)'],
+      ['Return on ad spend', roas == null ? '—' : roas.toFixed(1) + 'x', 'revenue ÷ ad spend', roas != null && roas >= 3 ? 'good' : roas != null && c.spend > 50 && roas < 1 ? 'bad' : ''],
+      ['Visitor to buyer', v2b == null ? '—' : pct(v2b), 'page-seen buyers · target 2%', 'hl'],
+      ['Revenue per visitor', c.visit ? usd(c.revenue / c.visit) : '—', 'what one visit is worth'],
+      ['Tier click to paid', c.checkout ? pct(c.paid / c.checkout) : '—', fmt(Math.max(0, c.checkout - c.paid)) + ' clicked and did not pay'],
+      ['Steps on target', onT + ' of ' + can, (judged.length - can) + ' steps need more people'],
+    ];
+    $('kpis').innerHTML = k.map(function(x){ return '<div class="kpi ' + (x[3] || '') + '"><h4>' + x[0] + '</h4><b>' + x[1] + '</b><span>' + x[2] + '</span></div>'; }).join('');
+
+    function box(id, title, n, small, extra, end){ return '<div class="box' + (end ? ' end' : '') + '" data-step="' + id + '"><h5>' + title + '</h5><b>' + (n == null ? '—' : fmt(n)) + '</b><small>' + (small || '') + '</small>' + (extra || '') + '</div>'; }
+    function arr(key){
+      var j = judge(key, c), left = j.from != null && j.to != null ? Math.max(0, j.from - j.to) : null;
+      return '<div class="arr ' + j.state + '" data-arrow="' + key + '" title="' + esc(ARROWS[key].label) + ' · target ' + pct(j.target) + '"><span class="pct">' + (j.na ? 'n/a' : pct(j.rate)) + '</span><span class="lft">' + (left == null ? 'no data' : '−' + fmt(left) + ' left') + '<br>target ' + pct(j.target) + '</span></div>';
+    }
+    var r50 = judge('visit>read50', c);
+    var readBadge = '<span class="badge ' + (r50.state === 'few' ? '' : r50.state) + '">' + (c.visit ? pct(c.read50 / c.visit) : '—') + ' read half</span>';
+    $('board').innerHTML =
+      '<div class="row-t"><i>1</i>Getting the seat</div><div class="flow">' +
+        box('imp', 'Ad impressions', c.imp, c.spend == null ? '' : usd(c.spend) + ' spent') + arr('imp>click') +
+        box('click', 'Link clicks', c.click, c.click ? usd(c.spend / c.click) + ' a click' : '') + arr('click>visit') +
+        box('visit', 'Page visitors', c.visit, c.adVisit + ' from the ads', readBadge) + arr('visit>tiers') +
+        box('tiers', 'Reached the tiers', c.tiers, '') + arr('tiers>checkout') +
+        box('checkout', 'Clicked a tier', c.checkout, c.help ? c.help + ' asked for help on WhatsApp' : 'tapped Muse or Icon, sent to Stan') + arr('checkout>paid') +
+        box('paid', 'Paid seat', c.paid, usd(c.revenue), '', true) +
+      '</div><div class="row-t"><i>2</i>The Legacy path ($4,997)</div><div class="flow">' +
+        box('visit', 'Page visitors', c.visit, '') + arr('visit>legacy') +
+        box('legacy', 'Legacy interest', c.legacy, 'opened the application or WhatsApp') + arr('legacy>apply') +
+        box('apply', 'Applied', c.apply, 'form sent · WhatsApp chats are in her phone', '', true) +
+      '</div>';
+    document.querySelectorAll('#board [data-step],#board [data-arrow]').forEach(function(el){ el.addEventListener('click', function(){ detail(el.getAttribute('data-step') || el.getAttribute('data-arrow')); }); });
+    if (S.sel) detail(S.sel, true);
+
+    // Fix first: rank by money if the step reached target
+    var order = ['imp>click', 'click>visit', 'visit>read50', 'visit>tiers', 'tiers>checkout', 'checkout>paid', 'visit>legacy', 'legacy>apply'];
+    function down(key){ // conversion from this arrow's end to a paid seat
+      var idx = CORE.indexOf(key), m = 1;
+      if (key === 'visit>read50') idx = 1;
+      if (key === 'visit>legacy') return judge('legacy>apply', c).rate || .3;
+      if (key === 'legacy>apply') return .5;
+      for (var i = idx + 1; i < CORE.length; i++) { var j = judge(CORE[i], c); m *= j.state === 'few' || j.rate == null ? ARROWS[CORE[i]].target : j.rate; }
+      if (key === 'visit>read50') m = m * 1; return m;
+    }
+    var list = order.map(function(key){
+      var j = judge(key, c); if (j.state === 'few' || j.state === 'ok' || j.na) return null;
+      var val = key.indexOf('legacy') >= 0 ? 4997 : aov;
+      var extra = j.from * Math.max(0, j.target - j.rate) * down(key) * val * Math.min(1, j.from / SURE);
+      return { key: key, j: j, extra: extra };
+    }).filter(Boolean).sort(function(a, b){ return b.extra - a.extra; });
+    $('fixes').innerHTML = list.length ? list.map(function(x, i){
+      var a = ARROWS[x.key], j = x.j;
+      return '<div class="fix ' + (j.state === 'bad' ? 'bad' : '') + '"><div><h3>' + (i + 1) + '. ' + esc(a.why) + ': ' + pct(j.rate) + ' against a ' + pct(j.target) + ' target</h3>' +
+        '<p>' + fmt(j.to) + ' of ' + fmt(j.from) + ' made it (' + esc(a.label) + ').</p><ul>' + a.tips.map(function(t){ return '<li>' + esc(t) + '</li>'; }).join('') + '</ul></div>' +
+        '<div class="side"><span class="tag ' + (j.state === 'bad' ? 'bad' : '') + '">' + (j.state === 'bad' ? 'Leak, fix now' : 'Worth a test') + '</span>' +
+        '<span class="money">≈ ' + usd(x.extra) + ' more</span><button class="btn" data-fix="' + x.key + '">We tried this</button></div></div>';
+    }).join('') : '<p class="empty">' + (can ? 'Every step with enough people is on target. Keep the budget where it is.' : 'Not enough people yet to judge any step. This fills in as the ads deliver.') + '</p>';
+    document.querySelectorAll('[data-fix]').forEach(function(b){ b.addEventListener('click', function(){ logFix(b.getAttribute('data-fix')); }); });
+
+    // By ad: Meta + our page data by utm_content
+    var m = d.meta, bySrc = {}; (d.funnel.bySource || []).forEach(function(r){ bySrc[r.src] = r; });
+    var ads = {};
+    ((m && m.ads) || []).forEach(function(a){ var s = a.src || a.ad; var t = ads[s] = ads[s] || { spend: 0, impressions: 0, linkClicks: 0, mpurch: 0, camp: a.campaignId }; t.spend += a.spend; t.impressions += a.impressions; t.linkClicks += a.linkClicks; t.mpurch += a.purchases; });
+    var camps = (m && m.campaigns) || [], ZP = function(){ return { visit: 0, tiers: 0, checkout: 0, paid: 0, revenue: 0 }; };
+    function pageSum(keys){ var t = ZP(); keys.forEach(function(k){ var p = bySrc[k]; if (p) for (var f in t) t[f] += Number(p[f] || 0); }); return t; }
+    function adRow(name, a, p, style){
+      return '<tr' + (style ? ' style="' + style + '"' : '') + '><td>' + name + '</td><td>' + (a.spend != null ? usd(a.spend) : '—') + '</td><td>' + (a.impressions ? fmt(a.impressions) : '—') + '</td><td>' + (a.impressions ? pct(a.linkClicks / a.impressions) : '—') +
+        '</td><td>' + (a.linkClicks ? usd(a.spend / a.linkClicks) : '—') + '</td><td>' + fmt(p.visit || 0) + '</td><td>' + fmt(p.tiers || 0) + '</td><td>' + fmt(p.checkout || 0) + '</td><td>' + fmt(p.paid || 0) + '</td><td>' + usd(Number(p.revenue || 0)) +
+        '</td><td>' + (a.spend && p.paid ? usd(a.spend / p.paid) : '—') + '</td><td>' + (a.spend ? (Number(p.revenue || 0) / a.spend).toFixed(1) + 'x' : '—') + '</td></tr>';
+    }
+    var seen = {}, rows = '';
+    camps.forEach(function(c){
+      var keys = c.srcs.slice().sort(function(x, y){ return ((ads[y] || {}).spend || 0) - ((ads[x] || {}).spend || 0); });
+      keys.forEach(function(k){ seen[k] = 1; });
+      rows += adRow('<b>' + esc(shortCamp(c.name)) + '</b> <span class="muted">· ' + (c.ours ? 'Claude' : 'ChatGPT') + ' · ' + keys.length + ' ads</span>', c, pageSum(keys), 'background:#f4f7fb;font-weight:700');
+      rows += keys.map(function(k){ var a = ads[k] || {}, p = bySrc[k] || {}; return (a.spend || p.visit || p.paid) ? adRow('&nbsp;&nbsp;' + esc(srcName(k)), a, p) : ''; }).join('');
+    });
+    // Ad-tagged traffic Meta no longer reports in this account (older ads, or ads outside the date range)
+    var rest = Object.keys(bySrc).filter(function(k){ return !seen[k]; }).sort(function(x, y){ return (bySrc[y].visit || 0) - (bySrc[x].visit || 0); });
+    var oldAds = rest.filter(function(k){ return isAd(k) || TOOL.test(k); });
+    if (oldAds.length) { rows += adRow('<b>Other ad traffic</b> <span class="muted">· no Meta spend in this range</span>', {}, pageSum(oldAds), 'background:#f4f7fb;font-weight:700') + oldAds.map(function(k){ return adRow('&nbsp;&nbsp;' + esc(srcName(k)), {}, bySrc[k]); }).join(''); }
+    var other = rest.filter(function(k){ return oldAds.indexOf(k) < 0; });
+    if (other.length) { rows += adRow('<b>Not from ads</b> <span class="muted">· organic, links, direct</span>', {}, pageSum(other), 'background:#f4f7fb;font-weight:700') + other.map(function(k){ return adRow('&nbsp;&nbsp;' + esc(srcName(k) || '(direct)'), {}, bySrc[k]); }).join(''); }
+
+    $('bycamp').innerHTML = '<tr><th>Campaign</th><th>Built in</th><th>Spend</th><th>Impr.</th><th>CTR</th><th>Cost/click</th><th>Landing views</th><th>Visitors</th><th>Tier clicks</th><th>Paid</th><th>Revenue</th><th>Cost/seat</th><th>ROAS</th></tr>' + (camps.map(function(c){ var p = pageSum(c.srcs);
+      return '<tr><td>' + esc(shortCamp(c.name)) + '</td><td>' + (c.ours ? 'Claude' : 'ChatGPT') + '</td><td>' + usd(c.spend) + '</td><td>' + fmt(c.impressions) + '</td><td>' + (c.impressions ? pct(c.linkClicks / c.impressions) : '—') + '</td><td>' + (c.linkClicks ? usd(c.spend / c.linkClicks) : '—') +
+        '</td><td>' + fmt(c.landingViews) + '</td><td>' + fmt(p.visit) + '</td><td>' + fmt(p.checkout) + '</td><td>' + fmt(p.paid) + '</td><td>' + usd(p.revenue) + '</td><td>' + (c.spend && p.paid ? usd(c.spend / p.paid) : '—') + '</td><td>' + (c.spend ? (p.revenue / c.spend).toFixed(1) + 'x' : '—') + '</td></tr>'; }).join('') +
+      (camps.length > 1 ? (function(){ var t = m.totals, p = pageSum(Object.keys(ads)); return '<tr style="font-weight:700;background:#f4f7fb"><td>All campaigns</td><td></td><td>' + usd(t.spend) + '</td><td>' + fmt(t.impressions) + '</td><td>' + (t.impressions ? pct(t.linkClicks / t.impressions) : '—') + '</td><td>' + (t.linkClicks ? usd(t.spend / t.linkClicks) : '—') + '</td><td>' + fmt(t.landingViews) + '</td><td>' + fmt(p.visit) + '</td><td>' + fmt(p.checkout) + '</td><td>' + fmt(p.paid) + '</td><td>' + usd(p.revenue) + '</td><td>' + (t.spend && p.paid ? usd(t.spend / p.paid) : '—') + '</td><td>' + (t.spend ? (p.revenue / t.spend).toFixed(1) + 'x' : '—') + '</td></tr>'; })() : '')
+      || '<tr><td colspan="13" class="empty">' + (!m ? 'Meta is not connected.' : m.error ? 'Meta data could not be loaded right now.' : 'No campaign delivery in this range.') + '</td></tr>');
+    $('byad').innerHTML = '<tr><th>Ad / source</th><th>Spend</th><th>Impr.</th><th>CTR</th><th>Cost/click</th><th>Visitors</th><th>Tiers</th><th>Tier clicks</th><th>Paid</th><th>Revenue</th><th>Cost/seat</th><th>ROAS</th></tr>' + (rows || '<tr><td colspan="12" class="empty">No ad traffic yet.</td></tr>');
+    $('metanote').textContent = !m ? (S.traffic === 'other' ? 'Meta columns hidden for non-Meta traffic.' : 'Meta spend is not connected yet.') : m.error ? 'Meta data could not be loaded right now; page data is still live.' : 'Spend covers all ' + ((m.campaigns || []).length) + ' campaigns in the ad account (Claude and ChatGPT). Meta reports ' + fmt(m.totals.purchases) + ' purchases from its own attribution, for comparison; Paid and Revenue are what our page and Stan saw.';
+
+    var aud = {}; ((m && m.ads) || []).forEach(function(a){ var key = (a.ours ? '' : shortCamp(a.campaign).split(' · ').slice(0, 2).join(' · ') + ' → ') + a.adset; var t = aud[key] = aud[key] || { spend: 0, impressions: 0, linkClicks: 0, lpv: 0, purchases: 0 }; t.spend += a.spend; t.impressions += a.impressions; t.linkClicks += a.linkClicks; t.lpv += a.landingViews; t.purchases += a.purchases; });
+    $('byaud').innerHTML = '<tr><th>Audience</th><th>Spend</th><th>CTR</th><th>Cost/click</th><th>Page views</th><th>Purchases*</th></tr>' + (Object.keys(aud).sort(function(x, y){ return aud[y].spend - aud[x].spend; }).map(function(n){ var t = aud[n];
+      return '<tr><td>' + esc(n.replace('Soirée · ', '')) + '</td><td>' + usd(t.spend) + '</td><td>' + (t.impressions ? pct(t.linkClicks / t.impressions) : '—') + '</td><td>' + (t.linkClicks ? usd(t.spend / t.linkClicks) : '—') + '</td><td>' + fmt(t.lpv) + '</td><td>' + fmt(t.purchases) + '</td></tr>'; }).join('') || '<tr><td colspan="6" class="empty">No delivery yet.</td></tr>');
+    $('bytier').innerHTML = '<tr><th>Tier</th><th>Interest</th><th>Paid</th><th>Conversion</th><th>Revenue</th></tr>' + (d.funnel.byTier || []).map(function(t){
+      return '<tr><td>' + { muse: 'The Muse · $997', icon: 'The Icon · $1,500', legacy: 'The Legacy · $4,997' }[t.tier] + '</td><td>' + fmt(t.interest) + '</td><td>' + fmt(t.paid) + '</td><td>' + (t.interest ? pct(t.paid / t.interest) : '—') + '</td><td>' + usd(Number(t.revenue)) + '</td></tr>'; }).join('');
+
+    // Fix log with before / after rates from the daily series
+    var daily = d.funnel.daily || [];
+    function rateBetween(key, from, to){
+      var p = key.split('>'), a = 0, b = 0;
+      daily.forEach(function(x){ if ((!from || x.d >= from) && (!to || x.d < to)) { a += (x.steps[p[0]] || 0); b += (x.steps[p[1]] || 0); } });
+      return a ? { r: b / a, n: a } : null;
+    }
+    var fx = d.funnel.fixes || [];
+    $('fixlog').innerHTML = '<tr><th>When</th><th>Step</th><th>What you tried</th><th>Before</th><th>After</th><th>Verdict</th></tr>' + (fx.length ? fx.map(function(f){
+      var day = new Date(f.ts).toLocaleDateString('en-CA', { timeZone: 'America/New_York' });
+      var meta = f.step.indexOf('imp') === 0 || f.step.indexOf('click>') === 0;
+      var bf = meta ? null : rateBetween(f.step, null, day), af = meta ? null : rateBetween(f.step, day, null);
+      var verdict = meta ? 'check in Ads Manager' : !af || af.n < MIN ? 'waiting for ' + MIN + ' people' : !bf ? 'no before data' : af.r > bf.r * 1.1 ? 'Worked ↑' : af.r < bf.r * .9 ? 'Worse ↓' : 'No change';
+      return '<tr><td>' + new Date(f.ts).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + '</td><td>' + esc((ARROWS[f.step] || {}).label || f.step) + '</td><td style="text-align:left;white-space:normal">' + esc(f.note || '') + '</td><td>' + (bf ? pct(bf.r) : '—') + '</td><td>' + (af ? pct(af.r) + ' (' + af.n + ')' : '—') + '</td><td>' + verdict + '</td></tr>';
+    }).join('') : '<tr><td colspan="6" class="empty">No fixes logged yet.</td></tr>');
+  }
+
+  // Traffic chart: visitors per day or per hour (New York time), tooltip with what that traffic did.
+  var TR_ROWS = [['visit', 'Visitors'], ['video', 'Pressed play'], ['read50', 'Read half'], ['tiers', 'Reached the tiers'], ['checkout', 'Clicked a tier'], ['help', 'Asked for help'], ['legacy', 'Legacy interest'], ['paid', 'Paid seats']];
+  var trMode = 'day';
+  function nyKey(t, hour){ var p = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', hourCycle: 'h23' }).formatToParts(t), g = {}; p.forEach(function(x){ g[x.type] = x.value; }); return g.year + '-' + g.month + '-' + g.day + (hour ? 'T' + g.hour : ''); }
+  function traffic(){
+    var d = S.data, el = $('trchart'); if (!d || !el) return;
+    var hour = trMode === 'hour', src = hour ? (d.funnel.hourly || []) : (d.funnel.daily || []), map = {};
+    src.forEach(function(x){ map[hour ? x.h : x.d] = x.steps || {}; });
+    var keys = [], now = Date.now(), step = hour ? 36e5 : 864e5;
+    var span = hour ? Math.min(72, S.range === '24h' ? 24 : 72) : null;
+    if (hour) { var firstH = src.length ? src[0].h : null; for (var i = span - 1; i >= 0; i--) { var hk = nyKey(new Date(now - i * step), true); if (!firstH || hk >= firstH || span - i > span - 6) keys.push(hk); } if (keys.length < 6) { keys = []; for (var j = 5; j >= 0; j--) keys.push(nyKey(new Date(now - j * step), true)); } }
+    else if (src.length) { var first = new Date(src[0].d + 'T12:00:00Z').getTime(); for (var t = first; nyKey(new Date(t)) <= nyKey(new Date(now)); t += step) keys.push(nyKey(new Date(t))); }
+    keys = keys.filter(function(k, i){ return keys.indexOf(k) === i; });
+    var rows = keys.map(function(k){ return { k: k, s: map[k] || {} }; });
+    var tot = {}; rows.forEach(function(r){ TR_ROWS.forEach(function(x){ tot[x[0]] = (tot[x[0]] || 0) + (r.s[x[0]] || 0); }); });
+    var peak = rows.reduce(function(a, r){ return (r.s.visit || 0) > (a ? a.s.visit || 0 : -1) ? r : a; }, null);
+    function label(k, long){ if (hour) { var h = +k.slice(11), d = new Date(k.slice(0, 10) + 'T12:00:00Z'); var hh = (h % 12 || 12) + (h < 12 ? 'am' : 'pm'); return long ? d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric', timeZone: 'UTC' }) + ' · ' + hh + ' NY' : hh; }
+      return new Date(k + 'T12:00:00Z').toLocaleDateString('en-US', long ? { weekday: 'long', month: 'short', day: 'numeric', timeZone: 'UTC' } : { weekday: 'short', day: 'numeric', timeZone: 'UTC' }); }
+    $('trtot').innerHTML = '<div><b>' + fmt(tot.visit || 0) + '</b>visitors in view</div><div><b>' + (peak && peak.s.visit ? label(peak.k, true) : '—') + '</b>busiest ' + (hour ? 'hour' : 'day') + (peak && peak.s.visit ? ' · ' + fmt(peak.s.visit) : '') + '</div><div><b>' + (tot.visit ? pct((tot.tiers || 0) / tot.visit) : '—') + '</b>reached the tiers</div><div><b>' + fmt(tot.paid || 0) + '</b>paid seats</div>';
+    if (!rows.length) { el.innerHTML = '<p class="empty" style="padding:90px 12px;text-align:center">No traffic in this range yet.</p>'; return; }
+    var max = Math.max(1, Math.max.apply(null, rows.map(function(r){ return r.s.visit || 0; })));
+    var nice = Math.max(4, Math.ceil(max / 4) * 4), every = hour ? (rows.length > 36 ? 12 : rows.length > 16 ? 6 : rows.length > 8 ? 3 : 1) : Math.ceil(rows.length / 10);
+    var grid = [0.25, .5, .75, 1].map(function(f){ return '<div class="tr-grid" style="bottom:' + f * 100 + '%"><span>' + fmt(nice * f) + '</span></div>'; }).join('');
+    var bars = rows.map(function(r, i){ var v = r.s.visit || 0, t = Math.min(v, r.s.tiers || 0);
+      return '<div class="tr-b" data-i="' + i + '"><div class="v" style="height:' + v / nice * 100 + '%">' + (t ? '<div class="t" style="height:' + (v ? t / v * 100 : 0) + '%"></div>' : '') + '</div>' +
+        (r.s.paid ? '<div class="p" style="bottom:' + v / nice * 100 + '%"></div>' : '') +
+        ((hour ? +r.k.slice(11) % every === 0 : i % every === 0) ? '<span class="x">' + label(r.k) + '</span>' : '') + '</div>'; }).join('');
+    el.innerHTML = grid + '<div class="tr-bars" style="--gap:' + (rows.length > 40 ? 1 : rows.length > 20 ? 2 : 6) + 'px">' + bars + '</div><div class="tr-tip" id="trtip"></div>';
+    var tip = $('trtip');
+    function show(b){ var r = rows[+b.getAttribute('data-i')], s = r.s, v = s.visit || 0;
+      el.querySelectorAll('.tr-b.on').forEach(function(x){ x.classList.remove('on'); }); b.classList.add('on');
+      tip.innerHTML = '<b>' + esc(label(r.k, true)) + '</b>' + TR_ROWS.map(function(x){ var n = s[x[0]] || 0; if (!n && x[0] !== 'visit') return '';
+        return '<div><span>' + x[1] + '</span>' + fmt(n) + (x[0] !== 'visit' && v ? ' · ' + pct(n / v) : '') + '</div>'; }).join('') + (v ? '' : '<div><span>No visitors</span></div>');
+      tip.style.display = 'block';
+      var bx = b.offsetLeft + b.offsetWidth / 2, w = tip.offsetWidth, cw = el.offsetWidth;
+      tip.style.left = Math.max(-30, Math.min(cw - w, bx - w / 2)) + 'px'; tip.style.top = '-10px'; tip.style.transform = 'translateY(-100%)';
+      if (b.offsetTop + 0 < 0) tip.style.top = '0'; }
+    el.querySelectorAll('.tr-b').forEach(function(b){ b.addEventListener('mouseenter', function(){ show(b); }); b.addEventListener('click', function(e){ e.stopPropagation(); show(b); }); });
+    el.addEventListener('mouseleave', function(){ tip.style.display = 'none'; el.querySelectorAll('.tr-b.on').forEach(function(x){ x.classList.remove('on'); }); });
+  }
+  document.addEventListener('click', function(e){ var t = $('trtip'); if (t && !e.target.closest('#trchart')) t.style.display = 'none'; });
+
+  var PRICE = { muse: 997, icon: 1500, legacy: 4997 }, TNAME = { muse: 'The Muse · $997', icon: 'The Icon · $1,500', legacy: 'The Legacy · $4,997' };
+  function stanForm(d){
+    var el = $('stanform'); if (!el || el.getAttribute('data-ready')) { stanNote(d); return; }
+    var cur = {}; ((d && d.stan) || []).forEach(function(r){ cur[r.tier] = r; });
+    el.innerHTML = ['muse', 'icon', 'legacy'].map(function(t){ var r = cur[t] || {};
+      return '<div class="t"><h4>' + TNAME[t] + '</h4><label>Seats sold</label><input type="number" min="0" max="999" inputmode="numeric" id="sq-' + t + '" value="' + (r.qty != null ? r.qty : '') + '">' +
+        '<label>Revenue received ($, after discounts)</label><input type="number" min="0" step="0.01" inputmode="decimal" id="sr-' + t + '" value="' + (r.revenue != null ? r.revenue : '') + '">' +
+        '<button type="button" data-t="' + t + '">Save ' + t + '</button></div>'; }).join('');
+    el.setAttribute('data-ready', '1');
+    el.querySelectorAll('[id^=sq-]').forEach(function(q){ q.addEventListener('input', function(){ var t = q.id.slice(3), r = $('sr-' + t); if (r && !r.getAttribute('data-touched')) r.value = q.value ? q.value * PRICE[t] : ''; }); });
+    el.querySelectorAll('[id^=sr-]').forEach(function(r){ r.addEventListener('input', function(){ r.setAttribute('data-touched', '1'); }); });
+    el.querySelectorAll('button').forEach(function(b){ b.addEventListener('click', function(){ var t = b.getAttribute('data-t');
+      b.textContent = 'Saving…'; api({ stan: { tier: t, qty: $('sq-' + t).value || 0, revenue: $('sr-' + t).value || 0 } })
+        .then(function(){ b.textContent = 'Saved ✓'; setTimeout(function(){ b.textContent = 'Save ' + t; }, 1500); load(); })
+        .catch(function(){ b.textContent = 'Could not save'; }); }); });
+    stanNote(d);
+  }
+  function apps(d){
+    var list = (d && d.applications) || [], el = $('apps'); if (!el) return;
+    $('appcount').textContent = list.length;
+    if (!d.applications) { el.innerHTML = '<p class="empty">Applications could not be loaded right now.</p>'; return; }
+    el.innerHTML = list.length ? list.map(function(a){
+      var ph = String(a.phone || '').replace(/[^0-9]/g, ''), first = String(a.name || '').split(' ')[0], hot = /^Yes, ready/.test(a.ready || '');
+      var wa = ph.length >= 8 ? 'https://wa.me/' + ph + '?text=' + encodeURIComponent('Hi ' + first + ', it\u2019s the team at The Renaissance Soir\u00e9e. Thank you for applying for The Legacy. Do you have a moment to chat today?') : '';
+      var ig = String(a.ig || '').replace(/^@/, '').replace(/[^A-Za-z0-9._]/g, '');
+      var rows = [['Email', a.email], ['Instagram', a.ig], ['Phone', a.phone], ['What she does', a.work], ['Ceiling', a.ceiling], ['By Sunday morning', a.next], ['Ready to invest', a.ready], ['Can stay overnight', a.overnight], ['Came from', a.src]]
+        .filter(function(r){ return r[1]; }).map(function(r){ return '<dt>' + r[0] + '</dt><dd>' + esc(r[1]) + '</dd>'; }).join('');
+      return '<div class="app' + (hot ? ' hot' : '') + '"><h3>' + esc(a.name) + (hot ? ' <span class="badge ok">Ready</span>' : '') + '</h3><div class="when">' + new Date(a.ts).toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + '</div><dl>' + rows + '</dl><div class="acts">' +
+        (wa ? '<a class="wa" href="' + wa + '" target="_blank" rel="noopener">WhatsApp ' + esc(first) + '</a>' : '') +
+        '<a href="mailto:' + encodeURIComponent(a.email) + '?subject=' + encodeURIComponent('Your Legacy application') + '">Email</a>' +
+        (ig ? '<a href="https://ig.me/m/' + ig + '" target="_blank" rel="noopener">Instagram DM</a>' : '') + '</div></div>'; }).join('')
+      : '<p class="empty">No applications yet. They appear here the moment someone sends the Legacy form.</p>';
+  }
+  function stanNote(d){
+    var t = stanTot(d), p = Number(d && d.funnel && d.funnel.steps && d.funnel.steps.paid || 0), last = ((d && d.stan) || []).map(function(r){ return r.updated_at; }).sort().pop();
+    $('stannote').textContent = 'Stan: ' + fmt(t.qty) + ' seats · ' + usd(t.rev) + (last ? ' (updated ' + new Date(last).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + ')' : ' (not entered yet)') + '. Seen on the page: ' + fmt(p) + ' paid. Stan totals are all-time, so they ignore the date filter.';
+  }
+
+  function detail(id, keep){
+    var d = S.data, box = $('detail'); if (!d) return;
+    if (!keep && S.sel === id && box.classList.contains('on')) { box.classList.remove('on'); S.sel = null; return; }
+    S.sel = id; box.classList.add('on');
+    var steps = id.indexOf('>') > 0 ? id.split('>') : [id, null], s = steps[1] || steps[0];
+    var daily = d.funnel.daily || [], dev = d.funnel.byDevice || {};
+    var title = id.indexOf('>') > 0 ? ARROWS[id].label + ' · target ' + pct(ARROWS[id].target) : 'Step: ' + s;
+    var series = daily.map(function(x){ var a = x.steps[steps[0]] || 0, b = steps[1] ? (x.steps[steps[1]] || 0) : a; return { d: x.d.slice(5), v: steps[1] ? (a ? b / a : 0) : a, lbl: steps[1] ? b + '/' + a : a }; });
+    var max = Math.max.apply(null, series.map(function(x){ return x.v; }).concat([steps[1] ? .0001 : 1]));
+    var devRows = Object.keys(dev).map(function(k){ var a = dev[k][steps[0]] || 0, b = steps[1] ? (dev[k][steps[1]] || 0) : null;
+      return '<tr><td>' + esc(k) + '</td><td>' + fmt(a) + '</td>' + (steps[1] ? '<td>' + fmt(b) + '</td><td>' + (a ? pct(b / a) : '—') + '</td>' : '') + '</tr>'; }).join('');
+    var srcRows = (d.funnel.bySource || []).map(function(r){ var a = r[steps[0]], b = steps[1] ? r[steps[1]] : null; if (a == null) return '';
+      return '<tr><td>' + esc(srcName(r.src)) + '</td><td>' + fmt(a) + '</td>' + (steps[1] ? '<td>' + fmt(b || 0) + '</td><td>' + (a ? pct((b || 0) / a) : '—') + '</td>' : '') + '</tr>'; }).join('');
+    var hdr = '<tr><th></th><th>' + esc(steps[0]) + '</th>' + (steps[1] ? '<th>' + esc(steps[1]) + '</th><th>Rate</th>' : '') + '</tr>';
+    box.innerHTML = '<h2>' + esc(title) + '</h2>' +
+      (series.length ? '<div class="bars">' + series.map(function(x){ return '<div style="height:' + Math.max(2, x.v / max * 100) + '%" title="' + x.d + ': ' + x.lbl + '"><span>' + x.d + '</span></div>'; }).join('') + '</div><br>' : '<p class="empty">No daily data yet.</p>') +
+      '<div class="grid2"><div class="tw"><h4>By device</h4><table>' + hdr + (devRows || '<tr><td class="empty">—</td></tr>') + '</table></div><div class="tw"><h4>By ad / source</h4><table>' + hdr + (srcRows || '<tr><td class="empty">—</td></tr>') + '</table></div></div>' +
+      (ARROWS[id] ? '<p class="note">To try: ' + ARROWS[id].tips.map(esc).join(' · ') + '</p>' : '');
+  }
+
+  function logFix(step){
+    var note = prompt('What did you change? (e.g. "Moved tiers higher")');
+    if (note == null) return;
+    api({ fix: { step: step, note: note } }).then(function(){ load(); });
+  }
+
+  function api(extra){
+    var body = Object.assign({ key: S.key, range: S.range, device: S.device, traffic: S.traffic }, extra || {});
+    return fetch('/api/stats', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
+      .then(function(r){ return r.json().then(function(j){ if (!r.ok) throw Object.assign(new Error(j.error || 'Error'), { status: r.status }); return j; }); });
+  }
+  function pilotHtml(p, when, applied){
+    var spent = p.totalSpent, pctUsed = spent != null ? Math.min(1, spent / p.cap) : 0;
+    var KIND = { pause_ad: 'Paused ad', pause_adset: 'Paused ad set', pause_campaign: 'Paused campaign', lifetime_budget: 'Total budget', daily_budget: 'Daily budget', campaign_cap: 'Campaign limit' };
+    var acts = (p.actions || []).map(function(a){
+      var ch = a.from != null ? usd(a.from) + ' → ' + usd(a.to) : '';
+      var bad = a.result && !a.result.ok ? ' <span style="color:#b42318">(Meta refused: ' + esc(a.result.error) + ')</span>' : '';
+      return '<tr><td>' + KIND[a.kind] + '</td><td>' + esc(a.name) + '</td><td>' + ch + '</td><td class="muted">' + esc(a.why) + bad + '</td></tr>'; }).join('');
+    var shares = (p.holders || []).slice().sort(function(a, b){ return b.share - a.share; }).map(function(h){
+      return '<tr><td>' + esc(h.name) + '</td><td>' + usd(h.spend) + '</td><td>' + fmt(h.choices) + '</td><td>' + fmt(h.buys) + '</td><td>' + usd(h.share) + '</td></tr>'; }).join('');
+    return '<div class="kpis" style="margin-bottom:10px"><div class="kpi"><h4>Spent of $' + fmt(p.cap) + '</h4><b>' + (spent == null ? '—' : usd(spent)) + '</b><span>' + (p.left == null ? 'no cap set' : usd(p.left) + ' left') + '</span></div></div>' +
+      '<div style="height:8px;border-radius:6px;background:#eef1f5;overflow:hidden;margin:4px 0 12px"><div style="height:100%;width:' + Math.round(pctUsed * 100) + '%;background:' + (pctUsed > .9 ? '#b42318' : '#1f6feb') + '"></div></div>' +
+      '<p class="sub">' + (applied ? 'Last run ' : 'Preview at ') + new Date(when).toLocaleString([], { weekday: 'short', hour: '2-digit', minute: '2-digit' }) + (applied ? '' : ' · nothing changed') + '</p>' +
+      '<div class="tw"><table><tr><th>Move</th><th>Where</th><th>Budget</th><th>Why</th></tr>' + (acts || '<tr><td colspan="4" class="empty">No change needed: money is already where the results are.</td></tr>') + '</table></div>' +
+      '<div class="tw" style="margin-top:10px"><table><tr><th>Ad set / campaign</th><th>Spent</th><th>Tier choices</th><th>Buys</th><th>Gets of what is left</th></tr>' + shares + '</table></div>' +
+      ((p.notes || []).length ? '<p class="note">' + p.notes.map(esc).join(' ') + '</p>' : '');
+  }
+  function pilot(body){
+    return fetch('/api/allocate', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ key: S.key }, body)) }).then(function(r){ return r.json(); });
+  }
+  function loadPilot(){
+    pilot({ log: true }).then(function(j){
+      var last = j && j.runs && j.runs[0];
+      if (last) { $('pilot').innerHTML = pilotHtml(last.run, last.ts, true); $('pilotnote').textContent = j.runs.length + ' runs logged. It runs by itself every hour.'; }
+      else { $('pilotnote').textContent = 'No run logged yet. It runs by itself every hour.'; previewPilot(); }
+    }).catch(function(){ $('pilotnote').textContent = 'Autopilot log could not be loaded.'; });
+  }
+  function previewPilot(){ $('pilotnote').textContent = 'Working out the next move…'; pilot({}).then(function(j){ if (j.ok) { $('pilot').innerHTML = pilotHtml(j.plan, j.plan.at, false); $('pilotnote').textContent = 'Preview only. Press Run now to apply it, or wait for the next hourly run.'; } else $('pilotnote').textContent = j.error || 'Could not reach Meta.'; }); }
+  $('pilotPreview').addEventListener('click', previewPilot);
+  $('pilotRun').addEventListener('click', function(){ if (!confirm('Apply the autopilot moves to Meta now?')) return; $('pilotnote').textContent = 'Applying…'; pilot({ apply: true }).then(function(j){ if (j.ok) { $('pilot').innerHTML = pilotHtml(j.plan, j.plan.at, true); $('pilotnote').textContent = 'Applied.'; } else $('pilotnote').textContent = j.error || 'Could not reach Meta.'; }); });
+
+  function load(){
+    $('updated').textContent = 'Loading…';
+    return api().then(function(j){
+      S.data = j; META_SRC = {}; ((j.meta && j.meta.ads) || []).forEach(function(a){ if (a.src) META_SRC[a.src] = a; }); render(); loadPilot();
+      $('updated').textContent = 'Updated ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }).catch(function(e){
+      if (e.status === 401) { try { localStorage.removeItem('rs_dash_key'); } catch (x) {} $('app').hidden = true; $('gate').hidden = false; $('gerr').textContent = 'Wrong key.'; return; }
+      $('updated').textContent = 'Could not refresh: ' + e.message;
+    });
+  }
+
+  $('trmode').addEventListener('click', function(e){ var b = e.target.closest('button'); if (!b) return; this.querySelectorAll('button').forEach(function(x){ x.classList.toggle('on', x === b); }); trMode = b.getAttribute('data-v'); traffic(); });
+  document.querySelectorAll('.seg[data-k]').forEach(function(seg){
+    seg.addEventListener('click', function(e){
+      var b = e.target.closest('button'); if (!b) return;
+      seg.querySelectorAll('button').forEach(function(x){ x.classList.toggle('on', x === b); });
+      S[seg.getAttribute('data-k')] = b.getAttribute('data-v'); load();
+    });
+  });
+  $('refresh').addEventListener('click', load);
+  function open(){ S.key = $('key').value.trim(); if (!S.key) return; try { localStorage.setItem('rs_dash_key', S.key); } catch (x) {} $('gate').hidden = true; $('app').hidden = false; $('gerr').textContent = ''; load(); }
+  $('go').addEventListener('click', open);
+  $('key').addEventListener('keydown', function(e){ if (e.key === 'Enter') open(); });
+  var saved = null; try { saved = localStorage.getItem('rs_dash_key'); } catch (x) {}
+  if (saved) { S.key = saved; $('app').hidden = false; load(); } else $('gate').hidden = false;
+  setInterval(function(){ if (!$('app').hidden && document.visibilityState === 'visible') load(); }, 60000);
+})();
+</script>
+</body>
+</html>
