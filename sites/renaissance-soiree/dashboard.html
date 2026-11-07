@@ -200,6 +200,13 @@ th:first-child,td:first-child{text-align:left}
   </div>
 
   <div class="card">
+    <h2>Waitlist for the next Soirée <span class="badge" id="wlcount">0</span></h2>
+    <p class="sub">Women who missed this one and joined the waitlist on the sold-out page, newest first, with one tap to reach her.</p>
+    <div id="wlist"></div>
+    <p class="note" id="wlnote"></p>
+  </div>
+
+  <div class="card">
     <h2>Legacy applications <span class="badge" id="appcount">0</span></h2>
     <p class="sub">Everyone who sends the Legacy form, newest first, with one tap to reach her. Women who chose "WhatsApp Sumaya" instead are in Sumaya's WhatsApp, not here.</p>
     <div id="apps"></div>
@@ -277,7 +284,7 @@ th:first-child,td:first-child{text-align:left}
     // Money KPIs use Stan totals when higher; funnel rates keep the page-seen numbers so they stay comparable.
     c.mPaid = c.paid; c.mRev = c.revenue;
     if (c.stanPaid > c.paid) { c.mPaid = c.stanPaid; c.mRev = Math.max(c.revenue, c.stanRev); c.fromStan = true; }
-    stanForm(d); apps(d);
+    stanForm(d); apps(d); waitlist(d);
     var aov = c.paid ? c.revenue / c.paid : 1200;
     var judged = Object.keys(ARROWS).map(function(k){ return [k, judge(k, c)]; });
     var onT = judged.filter(function(x){ return x[1].state === 'ok'; }).length, can = judged.filter(function(x){ return x[1].state !== 'few'; }).length;
@@ -474,6 +481,24 @@ th:first-child,td:first-child{text-align:left}
         '<a href="mailto:' + encodeURIComponent(a.email) + '?subject=' + encodeURIComponent('Your Legacy application') + '">Email</a>' +
         (ig ? '<a href="https://ig.me/m/' + ig + '" target="_blank" rel="noopener">Instagram DM</a>' : '') + '</div></div>'; }).join('')
       : '<p class="empty">No applications yet. They appear here the moment someone sends the Legacy form.</p>';
+  }
+  function waitlist(d){
+    var list = (d && d.waitlist) || [], el = $('wlist'); if (!el) return;
+    $('wlcount').textContent = list.length;
+    if (!d.waitlist) { el.innerHTML = '<p class="empty">The waitlist could not be loaded right now.</p>'; return; }
+    var TN = { muse: 'The Muse', icon: 'The Icon', legacy: 'The Legacy', unsure: 'Not sure yet' };
+    el.innerHTML = list.length ? list.map(function(a){
+      var ph = String(a.phone || '').replace(/[^0-9]/g, ''), first = String(a.name || '').split(' ')[0];
+      var wa = ph.length >= 8 ? 'https://wa.me/' + ph + '?text=' + encodeURIComponent('Hi ' + first + ', it\u2019s the team at The Renaissance Soir\u00e9e. Thank you for joining the waitlist. You will be the first to know about the next one.') : '';
+      var ig = String(a.ig || '').replace(/^@/, '').replace(/[^A-Za-z0-9._]/g, '');
+      var rows = [['Email', a.email], ['WhatsApp', a.phone], ['Instagram', a.ig], ['Wants', TN[a.tier]], ['Came from', a.src]]
+        .filter(function(r){ return r[1]; }).map(function(r){ return '<dt>' + r[0] + '</dt><dd>' + esc(r[1]) + '</dd>'; }).join('');
+      return '<div class="app"><h3>' + esc(a.name) + (a.tier === 'icon' || a.tier === 'legacy' ? ' <span class="badge ok">' + TN[a.tier] + '</span>' : '') + '</h3><div class="when">' + new Date(a.ts).toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) + '</div><dl>' + rows + '</dl><div class="acts">' +
+        (wa ? '<a class="wa" href="' + wa + '" target="_blank" rel="noopener">WhatsApp ' + esc(first) + '</a>' : '') +
+        '<a href="mailto:' + encodeURIComponent(a.email) + '?subject=' + encodeURIComponent('The next Renaissance Soir\u00e9e') + '">Email</a>' +
+        (ig ? '<a href="https://ig.me/m/' + ig + '" target="_blank" rel="noopener">Instagram DM</a>' : '') + '</div></div>'; }).join('')
+      : '<p class="empty">No one on the waitlist yet. Names appear here the moment someone joins on the sold-out page.</p>';
+    $('wlnote').textContent = list.length ? 'All emails: ' + list.map(function(a){ return a.email; }).join(', ') : '';
   }
   function stanNote(d){
     var t = stanTot(d), p = Number(d && d.funnel && d.funnel.steps && d.funnel.steps.paid || 0), last = ((d && d.stan) || []).map(function(r){ return r.updated_at; }).sort().pop();

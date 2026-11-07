@@ -95,16 +95,17 @@ export default async function handler(req, res) {
   const device = ['mobile', 'desktop', 'tablet'].includes(b.device) ? b.device : null;
   const traffic = ['meta', 'other'].includes(b.traffic) ? b.traffic : null;
   const since = days ? new Date(Date.now() - days * 864e5).toISOString() : null;
-  const [f, m, st, ap] = await Promise.all([
+  const [f, m, st, ap, wl] = await Promise.all([
     rpc('rs_dashboard', { p_key: key, p_since: since, p_device: device, p_traffic: traffic }),
     traffic === 'other' ? Promise.resolve(null) : meta(days, device),
     rpc('rs_stan_get', { p_key: key }).catch(() => ({ ok: false })),
     rpc('rs_applications_get', { p_key: key }).catch(() => ({ ok: false })),
+    rpc('rs_waitlist_get', { p_key: key }).catch(() => ({ ok: false })),
   ]);
   if (!f.ok) {
     if (f.data && f.data.message === 'unauthorized') return res.status(401).json({ ok: false, error: 'Wrong access key' });
     console.error('rs_dashboard failed', JSON.stringify(f.data).slice(0, 300));
     return res.status(502).json({ ok: false, error: 'Could not load the funnel' });
   }
-  return res.status(200).json({ ok: true, funnel: f.data, meta: m, stan: st && st.ok ? st.data : null, applications: ap && ap.ok ? ap.data : null });
+  return res.status(200).json({ ok: true, funnel: f.data, meta: m, stan: st && st.ok ? st.data : null, applications: ap && ap.ok ? ap.data : null, waitlist: wl && wl.ok ? wl.data : null });
 }
