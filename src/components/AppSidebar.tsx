@@ -1,4 +1,4 @@
-import { Video, FileText, LayoutDashboard, BookOpen, Sparkles, Settings as SettingsIcon, Activity, Wrench } from "lucide-react";
+import { Video, FileText, LayoutDashboard, BookOpen, Sparkles, Settings as SettingsIcon, Activity, Wrench, Megaphone } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
@@ -19,6 +19,7 @@ const primaryNav = [
   { title: "Zoom Transcripts", url: "/zoom-posts", icon: Video },
   { title: "Generate Post", url: "/generate-post", icon: Sparkles },
   { title: "Generated Posts", url: "/generated", icon: FileText },
+  { title: "Meta Ads", url: "/meta-ads", icon: Megaphone },
 ];
 
 const secondaryNav = [
