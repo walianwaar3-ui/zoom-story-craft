@@ -1,0 +1,174 @@
+{
+  "meta": {
+    "lang": "en",
+    "title": "Your First Mom and Baby Dance Class | MamaDances",
+    "description": "You already know how to dance. I will show you, step by step, how to teach your first mom and baby class. CA$27."
+  },
+  "brand": {
+    "name": "MamaDances",
+    "toggle_label": "Choose language"
+  },
+  "hero": {
+    "pill": "For dance teachers, yoga teachers and early childhood educators",
+    "headline": "Make money with your dance. *Teach your first mom and baby class*, step by step.",
+    "headline_b": "Is your studio empty in the morning? *Fill it with moms and their babies.*",
+    "sub": "I have taught these classes since 2006. I show you everything for your first class. Only **CA$27**, with a **30-day** money-back guarantee.",
+    "video_placeholder": "Video from Eryn, 60 to 90 seconds",
+    "video_sound": "Tap for sound",
+    "video_note": "You already know how to dance. I will show you, step by step, how to teach your first mom and baby class."
+  },
+  "buybox": {
+    "kicker": "Your First Mom and Baby Dance Class",
+    "title": "Get instant access",
+    "items": [
+      "4 short videos: principles, holding babies, babywearing, your first class",
+      "1 complete class plan, from hello to good-bye",
+      "1 music playlist",
+      "1 checklist: the room and safety"
+    ],
+    "button": "Get my first class for CA$27",
+    "secure": "Secure payment. 30-day money-back guarantee."
+  },
+  "stats": [
+    { "big": "Since 2006", "small": "Mom and baby classes in Montreal" },
+    { "big": "Since 2013", "small": "Training other teachers" },
+    { "big": "3 countries", "small": "Canada, Japan, Brazil" },
+    { "big": "EN and FR", "small": "English and French" }
+  ],
+  "foryou": {
+    "title": "This is for you *if...*",
+    "items": [
+      "You teach dance, yoga or movement.",
+      "You work with young families.",
+      "You own a studio and want a new class.",
+      "You are a mom who dances and wants a new path."
+    ],
+    "lead": "You love to teach. You have thought: \"I could teach moms and babies.\"",
+    "body": "Then the questions come. Is it safe? What do I do in class? What music?",
+    "close": "**This small kit answers those questions.** One at a time.",
+    "button": "Get my first class"
+  },
+  "kit": {
+    "tag": "For teachers",
+    "title": "Your First *Mom and Baby* Class",
+    "sub": "Step by step",
+    "icons": ["Videos", "Plan", "Music", "Room"],
+    "foot": "From hello to good-bye."
+  },
+  "compare": {
+    "title": "Before the kit. *With the kit.*",
+    "old_label": "Before",
+    "new_label": "With the kit",
+    "old": [
+      "You do not know how to hold a baby in class.",
+      "You do not know what to do in class.",
+      "You look for the right music.",
+      "You do not know how to set up the room.",
+      "You fear you are not ready."
+    ],
+    "new": [
+      "You have seen how to hold babies, on video.",
+      "You have a plan, from hello to good-bye.",
+      "Your music is ready.",
+      "Your room is ready, with the checklist.",
+      "You know what to do, step by step."
+    ]
+  },
+  "get": {
+    "title": "Here is what you *get right away*",
+    "items": [
+      { "name": "4 short videos.", "text": "The principles. Holding babies. Babywearing. Your first class." },
+      { "name": "1 complete class plan.", "text": "From hello to good-bye. You know what to do at each step." },
+      { "name": "1 music playlist.", "text": "The songs for your class, in the right order." },
+      { "name": "1 checklist: the room and safety.", "text": "One page to print. Set up the space before the moms arrive." }
+    ],
+    "button": "Get my first class for CA$27"
+  },
+  "how": {
+    "title": "How it *works*",
+    "steps": [
+      "Watch the 4 videos (under one hour).",
+      "Print your class plan and playlist.",
+      "Teach your first class."
+    ],
+    "step_label": "Step"
+  },
+  "eryn": {
+    "title": "Hello, I am *Eryn*",
+    "photo": "Photo of Eryn",
+    "story": [
+      "After my daughter was born, I was a new mom. I was alone, in a city where the working language was not my own.",
+      "I looked for a fun way to bond with my baby. I found none. So I built one from what I knew: modern and contemporary dance.",
+      "Other moms came. The classes grew. Then other teachers asked me to teach them."
+    ],
+    "facts_title": "A little about me:",
+    "facts": [
+      "BFA in dance from Juilliard.",
+      "Master of Dance from UQAM.",
+      "I have taught mom and baby classes since 2006.",
+      "Mother of two daughters."
+    ],
+    "close": "Founder and Artistic Director of MamaDances. I have served thousands of families in Montreal and its surrounding areas."
+  },
+  "testimonials": {
+    "pill": "In their own words",
+    "title": "Teachers *I have trained*",
+    "items": [
+      { "quote": "Testimonial to copy from the current site, with permission.", "name": "Marie-France Jacques", "town": "Baie-Comeau, QC" },
+      { "quote": "Testimonial to copy from the current site, with permission.", "name": "Johany", "town": "Sorel-Tracy, QC" },
+      { "quote": "Testimonial to copy from the current site, with permission.", "name": "Margie Williams", "town": "Ottawa, ON. Registered Early Childhood Educator." }
+    ]
+  },
+  "price": {
+    "title": "Your first class, ready to teach. *Only CA$27.*",
+    "button": "Get my first class for CA$27",
+    "small": "Instant access. In English and French. 30-day money-back guarantee."
+  },
+  "faq": {
+    "title": "Your *questions*",
+    "items": [
+      { "q": "Do I need experience with babies?", "a": "You should already teach movement. For babies, I show you how to hold them, on video." },
+      { "q": "Is it safe?", "a": "Safety comes first. One video shows how to hold babies. The checklist helps you set up the room." },
+      { "q": "How do I get it?", "a": "Right after you buy, you get an email. You open the kit in Kajabi." },
+      { "q": "Is it in French or English?", "a": "Both. Pick your language at the top of the page." },
+      { "q": "What if it is not for me?", "a": "Write to me within 30 days. I will refund you in full." },
+      { "q": "Can I become certified later?", "a": "Yes. The full online training is there. Your CA$27 is taken off the price." }
+    ]
+  },
+  "final": {
+    "title": "Teach your first mom and baby class. *Only CA$27.*",
+    "button": "Get my first class for CA$27",
+    "small": "30-day money-back guarantee."
+  },
+  "footer": {
+    "brand": "MamaDances / MamanDanse. Montreal, Quebec.",
+    "support": "Support",
+    "terms": "Terms",
+    "privacy": "Privacy",
+    "earnings": "Results depend on each person. No income is promised."
+  },
+  "checkout": {
+    "title": "Your First Mom and Baby Dance Class",
+    "close": "Close",
+    "step1": "Step 1: your details",
+    "email": "Your email",
+    "first_name": "Your first name",
+    "step2": "Step 2: your card",
+    "card_placeholder": "The Stripe card form shows here.",
+    "bump_arrow": "Yes, add it!",
+    "bump1_title": "13 Simple Props for a Magic Class",
+    "bump1_pitch": "A PDF guide to 13 props for your classes. Silk scarves, egg shakers, hula hoops, ribbons and more. Just CA$17.",
+    "bump2_title": "Watch, Learn and Teach Dancing With Babies in Carriers",
+    "bump2_pitch": "Two videos. Dancing with babies in carriers. A dance with babies in carriers. Watch it, then teach it. Just CA$27.",
+    "line_main": "Your First Mom and Baby Dance Class",
+    "line_bump1": "13 Simple Props",
+    "line_bump2": "Dancing in Carriers",
+    "total": "Total",
+    "pay": "Pay",
+    "guarantee": "30-day money-back guarantee. One charge.",
+    "demo_notice": "Draft version. Stripe payment is not connected yet."
+  },
+  "draft": {
+    "confirm": "To confirm"
+  }
+}

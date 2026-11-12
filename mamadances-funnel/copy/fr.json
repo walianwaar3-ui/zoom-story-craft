@@ -1,0 +1,174 @@
+{
+  "meta": {
+    "lang": "fr",
+    "title": "Votre premier cours maman-bébé | MamanDanse",
+    "description": "Vous savez déjà danser. Je vous montre, étape par étape, comment donner votre premier cours maman-bébé. 27 $ CA."
+  },
+  "brand": {
+    "name": "MamanDanse",
+    "toggle_label": "Choisir la langue"
+  },
+  "hero": {
+    "pill": "Pour les profs de danse, de yoga et les animatrices en petite enfance",
+    "headline": "Gagnez de l'argent avec votre danse. *Donnez votre premier cours maman-bébé*, étape par étape.",
+    "headline_b": "Votre studio est vide le matin ? *Remplissez-le avec des mamans et leurs bébés.*",
+    "sub": "Je donne ces cours depuis 2006. Je vous montre tout ce qu'il faut pour votre premier cours. Seulement **27 $ CA**, satisfaite ou remboursée **30 jours**.",
+    "video_placeholder": "Vidéo d'Eryn, 60 à 90 secondes",
+    "video_sound": "Touchez pour le son",
+    "video_note": "Vous savez déjà danser. Je vous montre, étape par étape, comment donner votre premier cours maman-bébé."
+  },
+  "buybox": {
+    "kicker": "Votre premier cours maman-bébé",
+    "title": "Accès immédiat",
+    "items": [
+      "4 courtes vidéos : principes, tenir bébé, porte-bébé, votre premier cours",
+      "1 plan de cours complet, du bonjour à l'au revoir",
+      "1 liste de musique",
+      "1 aide-mémoire : la salle et la sécurité"
+    ],
+    "button": "Je veux mon premier cours, 27 $",
+    "secure": "Paiement sécurisé. Satisfaite ou remboursée 30 jours."
+  },
+  "stats": [
+    { "big": "Depuis 2006", "small": "Cours maman-bébé à Montréal" },
+    { "big": "Depuis 2013", "small": "Formatrice de profs" },
+    { "big": "3 pays", "small": "Canada, Japon, Brésil" },
+    { "big": "FR et EN", "small": "Français et anglais" }
+  ],
+  "foryou": {
+    "title": "C'est pour vous *si...*",
+    "items": [
+      "Vous enseignez la danse, le yoga ou le mouvement.",
+      "Vous travaillez avec les jeunes familles.",
+      "Vous avez un studio et voulez un nouveau cours.",
+      "Vous êtes une maman qui danse et voulez un nouveau chemin."
+    ],
+    "lead": "Vous aimez enseigner. Vous vous êtes dit : « Je pourrais donner un cours maman-bébé. »",
+    "body": "Puis les questions arrivent. Est-ce sécuritaire ? Quoi faire pendant le cours ? Quelle musique ?",
+    "close": "**Ce petit kit répond à ces questions.** Une à la fois.",
+    "button": "Je veux mon premier cours"
+  },
+  "kit": {
+    "tag": "Pour les profs",
+    "title": "Votre premier cours *maman-bébé*",
+    "sub": "Étape par étape",
+    "icons": ["Vidéos", "Plan", "Musique", "Salle"],
+    "foot": "Du bonjour à l'au revoir."
+  },
+  "compare": {
+    "title": "Avant le kit. *Avec le kit.*",
+    "old_label": "Avant",
+    "new_label": "Avec le kit",
+    "old": [
+      "Vous ne savez pas comment tenir bébé.",
+      "Vous ne savez pas quoi faire pendant le cours.",
+      "Vous cherchez la bonne musique.",
+      "Vous ne savez pas comment préparer la salle.",
+      "Vous avez peur de ne pas être prête."
+    ],
+    "new": [
+      "Vous avez vu comment tenir bébé, en vidéo.",
+      "Vous avez un plan, du bonjour à l'au revoir.",
+      "Votre musique est prête.",
+      "Votre salle est prête, avec l'aide-mémoire.",
+      "Vous savez quoi faire, étape par étape."
+    ]
+  },
+  "get": {
+    "title": "Voici ce que vous *recevez tout de suite*",
+    "items": [
+      { "name": "4 courtes vidéos.", "text": "Les principes. Tenir bébé. Le porte-bébé. Votre premier cours." },
+      { "name": "1 plan de cours complet.", "text": "Du bonjour à l'au revoir. Vous savez quoi faire à chaque moment." },
+      { "name": "1 liste de musique.", "text": "Les chansons pour votre cours, dans le bon ordre." },
+      { "name": "1 aide-mémoire : la salle et la sécurité.", "text": "Une page à imprimer. Pour préparer l'espace avant l'arrivée des mamans." }
+    ],
+    "button": "Je veux mon premier cours, 27 $"
+  },
+  "how": {
+    "title": "Comment *ça marche*",
+    "steps": [
+      "Regardez les 4 vidéos (moins d'une heure).",
+      "Imprimez votre plan de cours et votre liste de musique.",
+      "Donnez votre premier cours."
+    ],
+    "step_label": "Étape"
+  },
+  "eryn": {
+    "title": "Bonjour, je suis *Eryn*",
+    "photo": "Photo d'Eryn",
+    "story": [
+      "Après la naissance de ma fille, j'étais une nouvelle maman. J'étais seule, dans une ville où la langue de travail n'était pas la mienne.",
+      "Je cherchais une façon joyeuse de créer un lien avec mon bébé. Je n'en ai pas trouvé. Alors je l'ai créée, avec ce que je connaissais : la danse moderne et contemporaine.",
+      "D'autres mamans sont venues. Les cours ont grandi. Puis des profs m'ont demandé de leur enseigner."
+    ],
+    "facts_title": "Un peu de moi :",
+    "facts": [
+      "Baccalauréat en danse de Juilliard.",
+      "Maîtrise en danse de l'UQAM.",
+      "Je donne des cours maman-bébé depuis 2006.",
+      "Maman de deux filles."
+    ],
+    "close": "Fondatrice et directrice artistique de MamanDanse. J'ai servi des milliers de familles à Montréal et dans les environs."
+  },
+  "testimonials": {
+    "pill": "Dans leurs mots",
+    "title": "Des profs que *j'ai formées*",
+    "items": [
+      { "quote": "Témoignage à reprendre du site actuel, avec permission.", "name": "Marie-France Jacques", "town": "Baie-Comeau, QC" },
+      { "quote": "Témoignage à reprendre du site actuel, avec permission.", "name": "Johany", "town": "Sorel-Tracy, QC" },
+      { "quote": "Témoignage à reprendre du site actuel, avec permission.", "name": "Margie Williams", "town": "Ottawa, ON. Éducatrice à la petite enfance." }
+    ]
+  },
+  "price": {
+    "title": "Votre premier cours, prêt à donner. *Seulement 27 $ CA.*",
+    "button": "Je veux mon premier cours, 27 $",
+    "small": "Accès immédiat. En français et en anglais. Satisfaite ou remboursée 30 jours."
+  },
+  "faq": {
+    "title": "Vos *questions*",
+    "items": [
+      { "q": "Dois-je avoir de l'expérience avec les bébés ?", "a": "Vous devez déjà enseigner le mouvement. Pour les bébés, je vous montre comment les tenir, en vidéo." },
+      { "q": "Est-ce sécuritaire ?", "a": "La sécurité vient en premier. Une vidéo montre comment tenir bébé. L'aide-mémoire vous aide à préparer la salle." },
+      { "q": "Comment je reçois le kit ?", "a": "Tout de suite après l'achat, vous recevez un courriel. Vous ouvrez le kit dans Kajabi." },
+      { "q": "C'est en français ou en anglais ?", "a": "Les deux. Choisissez votre langue en haut de la page." },
+      { "q": "Et si ce n'est pas pour moi ?", "a": "Écrivez-moi dans les 30 jours. Je vous rembourse au complet." },
+      { "q": "Puis-je me certifier plus tard ?", "a": "Oui. La formation complète en ligne existe. Vos 27 $ sont déduits du prix." }
+    ]
+  },
+  "final": {
+    "title": "Donnez votre premier cours maman-bébé. *Pour seulement 27 $ CA.*",
+    "button": "Je veux mon premier cours, 27 $",
+    "small": "Satisfaite ou remboursée 30 jours."
+  },
+  "footer": {
+    "brand": "MamanDanse / MamaDances. Montréal, Québec.",
+    "support": "Soutien",
+    "terms": "Conditions",
+    "privacy": "Confidentialité",
+    "earnings": "Les résultats dépendent de chaque personne. Aucun revenu n'est promis."
+  },
+  "checkout": {
+    "title": "Votre premier cours maman-bébé",
+    "close": "Fermer",
+    "step1": "Étape 1 : vos coordonnées",
+    "email": "Votre courriel",
+    "first_name": "Votre prénom",
+    "step2": "Étape 2 : votre carte",
+    "card_placeholder": "Le formulaire de carte Stripe s'affiche ici.",
+    "bump_arrow": "Oui, je l'ajoute !",
+    "bump1_title": "13 objets simples pour un cours magique",
+    "bump1_pitch": "Un guide PDF sur 13 objets pour vos cours. Foulards de soie, maracas, cerceaux, rubans et plus. Seulement 17 $.",
+    "bump2_title": "Regardez, apprenez et dansez avec bébé en porte-bébé",
+    "bump2_pitch": "Deux vidéos. Danser avec bébé en porte-bébé. Une chorégraphie avec bébé en porte-bébé. Regardez, puis enseignez-la. Seulement 27 $.",
+    "line_main": "Votre premier cours maman-bébé",
+    "line_bump1": "13 objets simples",
+    "line_bump2": "Danser en porte-bébé",
+    "total": "Total",
+    "pay": "Payer",
+    "guarantee": "Satisfaite ou remboursée 30 jours. Un seul paiement.",
+    "demo_notice": "Version brouillon. Le paiement Stripe n'est pas encore branché."
+  },
+  "draft": {
+    "confirm": "À confirmer"
+  }
+}
