@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Votre premier cours maman-bébé | MamanDanse</title>
+  <meta name="description" content="" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Sans:wght@600;700;800&family=Open+Sans:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/assets/style.css" />
+</head>
+<body class="is-loading">
+
+  <!-- 7.1 Top bar -->
+  <header class="topbar">
+    <div class="wrap topbar__inner">
+      <a class="logo" href="#top" aria-label="Logo" data-confirm>
+        <svg class="logo__heart" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.7 4.5c2.1 0 3.6 1.2 4.3 2.4h2c.7-1.2 2.2-2.4 4.3-2.4 3.7 0 5.8 3.9 4.3 7.3C19.5 16.4 12 21 12 21z"/></svg>
+        <span class="logo__name" data-t="brand.name"></span>
+      </a>
+      <div class="lang" role="group" data-attr-aria-label="brand.toggle_label">
+        <button type="button" class="lang__btn" data-lang="fr">FR</button>
+        <span class="lang__sep" aria-hidden="true">|</span>
+        <button type="button" class="lang__btn" data-lang="en">EN</button>
+      </div>
+    </div>
+  </header>
+
+  <main id="top" data-page="page1">
+    <!-- 7.2 to 7.6 Hero -->
+    <section class="hero" id="hero">
+      <div class="wrap">
+        <p class="pill"><span class="pill__dot" aria-hidden="true"></span><span data-t="hero.pill"></span></p>
+        <h1 class="hero__title" data-t="hero.headline"></h1>
+        <p class="hero__sub" data-t="hero.sub" data-confirm></p>
+
+        <div class="hero__grid">
+          <div class="hero__media" data-confirm>
+            <!-- 7.5 Video: swap the placeholder for Eryn's clip (muted autoplay after 2s) -->
+            <button type="button" class="video" id="video">
+              <span class="video__bg" aria-hidden="true"></span>
+              <span class="video__label" data-t="hero.video_placeholder"></span>
+              <span class="video__play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+              <span class="video__sound"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3a4.5 4.5 0 0 0-2.5-4v8a4.5 4.5 0 0 0 2.5-4z"/></svg><span data-t="hero.video_sound"></span></span>
+            </button>
+            <p class="hero__note" data-t="hero.video_note"></p>
+          </div>
+
+          <!-- 7.6 Buy box -->
+          <aside class="buybox" id="buy">
+            <div class="kit kit--small" aria-hidden="true" data-render="kit"></div>
+            <p class="buybox__kicker" data-t="buybox.kicker"></p>
+            <h2 class="buybox__title" data-t="buybox.title"></h2>
+            <ul class="checks" data-render="list" data-key="buybox.items"></ul>
+            <button type="button" class="btn js-buy" data-t="buybox.button"></button>
+            <p class="buybox__secure"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M17 9V7A5 5 0 0 0 7 7v2H5v12h14V9h-2zm-8-2a3 3 0 0 1 6 0v2H9V7z"/></svg><span data-t="buybox.secure" data-confirm></span></p>
+          </aside>
+        </div>
+      </div>
+      <svg class="hero__wave" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true"><path d="M0 40c240 70 480 90 720 60s480-90 720-60v80H0z"/></svg>
+    </section>
+
+    <!-- 7.11 Stats row (facts only) -->
+    <section class="stats">
+      <div class="wrap stats__grid" data-render="stats"></div>
+    </section>
+
+    <!-- 7.8 This is for you if -->
+    <section class="section" id="foryou">
+      <div class="wrap">
+        <h2 class="h2" data-t="foryou.title"></h2>
+        <div class="split">
+          <div class="split__visual"><div class="kit" aria-hidden="true" data-render="kit"></div></div>
+          <div class="split__copy">
+            <p class="lead" data-t="foryou.lead"></p>
+            <p data-t="foryou.body"></p>
+            <ul class="checks" data-render="list" data-key="foryou.items"></ul>
+            <p data-t="foryou.close"></p>
+            <button type="button" class="btn js-buy" data-t="foryou.button"></button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Before / with the kit (reference page "old way / new way") -->
+    <section class="section section--tint">
+      <div class="wrap">
+        <h2 class="h2" data-t="compare.title"></h2>
+        <div class="compare">
+          <div class="compare__col compare__col--old">
+            <p class="compare__head" data-t="compare.old_label"></p>
+            <ul class="xs" data-render="list" data-key="compare.old"></ul>
+          </div>
+          <div class="compare__col compare__col--new">
+            <p class="compare__head" data-t="compare.new_label"></p>
+            <ul class="checks" data-render="list" data-key="compare.new"></ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- What you get -->
+    <section class="section">
+      <div class="wrap">
+        <h2 class="h2" data-t="get.title"></h2>
+        <div class="card card--narrow">
+          <ul class="ticks" data-render="get"></ul>
+          <button type="button" class="btn js-buy" data-t="get.button"></button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7.7 How it works -->
+    <section class="section section--tint">
+      <div class="wrap">
+        <h2 class="h2" data-t="how.title"></h2>
+        <ol class="steps" data-render="steps"></ol>
+      </div>
+    </section>
+
+    <!-- 7.9 Meet Eryn -->
+    <section class="section" id="eryn">
+      <div class="wrap">
+        <h2 class="h2" data-t="eryn.title"></h2>
+        <div class="split">
+          <div class="split__visual">
+            <!-- Replace with a real class photo of Eryn (credit the photographer) -->
+            <div class="photo" data-confirm><span data-t="eryn.photo"></span></div>
+          </div>
+          <div class="split__copy">
+            <div data-render="paras" data-key="eryn.story"></div>
+            <p class="strong" data-t="eryn.facts_title"></p>
+            <ul class="checks" data-render="list" data-key="eryn.facts"></ul>
+            <p data-t="eryn.close"></p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7.10 Testimonials (only with permission) -->
+    <section class="section section--tint" id="voices">
+      <div class="wrap">
+        <p class="pill pill--center"><span class="pill__dot" aria-hidden="true"></span><span data-t="testimonials.pill"></span></p>
+        <h2 class="h2" data-t="testimonials.title"></h2>
+        <div class="quotes" data-render="quotes" data-confirm></div>
+
+        <div class="pricecta">
+          <h2 class="h2" data-t="price.title"></h2>
+          <button type="button" class="btn js-buy" data-t="price.button"></button>
+          <p class="small" data-t="price.small"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- 7.12 FAQ -->
+    <section class="section" id="faq">
+      <div class="wrap">
+        <h2 class="h2" data-t="faq.title"></h2>
+        <div class="faq" data-render="faq"></div>
+
+        <!-- 7.13 Final button + guarantee -->
+        <div class="card card--narrow final">
+          <h2 class="h2 h2--sm" data-t="final.title"></h2>
+          <button type="button" class="btn js-buy" data-t="final.button"></button>
+          <p class="small" data-t="final.small" data-confirm></p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <main data-page="upsell-1" hidden>
+    <section class="hero hero--slim">
+      <div class="wrap narrow">
+        <ol class="progress" aria-hidden="true">
+          <li class="done" data-t="progress.bought"></li>
+          <li class="now" data-t="progress.options"></li>
+          <li class="" data-t="progress.access"></li>
+        </ol>
+        <p class="pill"><span class="pill__dot" aria-hidden="true"></span><span data-t="upsell1.pill"></span></p>
+        <h1 class="hero__title hero__title--md" data-t="upsell1.headline"></h1>
+        <p class="hero__sub" data-t="upsell1.sub"></p>
+        <div class="video video--static" data-confirm>
+          <span class="video__bg" aria-hidden="true"></span>
+          <span class="video__label" data-t="upsell1.video_placeholder"></span>
+          <span class="video__play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+        </div>
+        <div class="offer">
+          <p class="strong" data-t="upsell1.items_title"></p>
+          <ul class="checks" data-render="list" data-key="upsell1.items"></ul>
+          <p class="offer__price" data-t="upsell1.price"></p>
+          <button type="button" class="btn js-oneclick" data-next="upsell-2" data-t="upsell1.yes"></button>
+          <p class="small center" data-t="upsell1.yes_note"></p>
+          <p class="notice js-oneclick-notice" hidden data-t="checkout.demo_notice"></p>
+          <button type="button" class="nothanks" data-go="upsell-2" data-t="upsell1.no"></button>
+        </div>
+      </div>
+      <svg class="hero__wave" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true"><path d="M0 40c240 70 480 90 720 60s480-90 720-60v80H0z"/></svg>
+    </section>
+  </main>
+
+  <main data-page="upsell-2" hidden>
+    <section class="hero hero--slim">
+      <div class="wrap narrow">
+        <ol class="progress" aria-hidden="true">
+          <li class="done" data-t="progress.bought"></li>
+          <li class="now" data-t="progress.options"></li>
+          <li class="" data-t="progress.access"></li>
+        </ol>
+        <p class="pill"><span class="pill__dot" aria-hidden="true"></span><span data-t="upsell2.pill"></span></p>
+        <h1 class="hero__title hero__title--md" data-t="upsell2.headline"></h1>
+        <p class="hero__sub" data-t="upsell2.sub"></p>
+        <div class="kit-stack" aria-hidden="true"><div class="kit" data-render="kit"></div><div class="kit kit--back" data-render="kit"></div><div class="kit kit--back2" data-render="kit"></div></div>
+        <div class="offer" data-confirm>
+          <p class="strong" data-t="upsell2.items_title"></p>
+          <ul class="checks" data-render="list" data-key="upsell2.items"></ul>
+          <p class="offer__price" data-t="upsell2.price"></p>
+          <button type="button" class="btn js-oneclick" data-next="thank-you" data-t="upsell2.yes"></button>
+          <p class="small center" data-t="upsell2.yes_note"></p>
+          <p class="notice js-oneclick-notice" hidden data-t="checkout.demo_notice"></p>
+          <button type="button" class="nothanks" data-go="thank-you" data-t="upsell2.no"></button>
+        </div>
+      </div>
+      <svg class="hero__wave" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true"><path d="M0 40c240 70 480 90 720 60s480-90 720-60v80H0z"/></svg>
+    </section>
+  </main>
+
+  <main data-page="thank-you" hidden>
+    <section class="hero hero--slim">
+      <div class="wrap narrow">
+        <ol class="progress" aria-hidden="true">
+          <li class="done" data-t="progress.bought"></li>
+          <li class="done" data-t="progress.options"></li>
+          <li class="now" data-t="progress.access"></li>
+        </ol>
+        <p class="pill"><span class="pill__dot" aria-hidden="true"></span><span data-t="thanks.pill"></span></p>
+        <h1 class="hero__title hero__title--md" data-t="thanks.headline"></h1>
+        <div class="card">
+          <h2 class="h3" data-t="thanks.steps_title"></h2>
+          <ol class="numbered" data-render="list" data-key="thanks.steps"></ol>
+          <a class="btn" href="#" data-confirm data-t="thanks.button"></a>
+        </div>
+      </div>
+      <svg class="hero__wave" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true"><path d="M0 40c240 70 480 90 720 60s480-90 720-60v80H0z"/></svg>
+    </section>
+    <section class="section">
+      <div class="wrap">
+        <h2 class="h2" data-t="thanks.next_title"></h2>
+        <div class="split">
+          <div class="split__visual"><div class="kit" aria-hidden="true" data-render="kit"></div></div>
+          <div class="split__copy">
+            <p data-t="thanks.next_body"></p>
+            <ul class="checks" data-render="list" data-key="thanks.next_items"></ul>
+            <p class="offer__price" data-t="thanks.next_price" data-confirm></p>
+            <a class="btn btn--purple" href="#" data-t="thanks.next_button" data-confirm></a>
+          </div>
+        </div>
+      </div>
+    </section>
+    <section class="section section--tint">
+      <div class="wrap narrow center">
+        <h2 class="h2" data-t="thanks.studio_title"></h2>
+        <p data-t="thanks.studio_body"></p>
+        <button type="button" class="btn btn--ghost" data-go="apply" data-t="thanks.studio_button"></button>
+      </div>
+    </section>
+  </main>
+
+  <main data-page="apply" hidden>
+    <section class="hero hero--slim">
+      <div class="wrap narrow">
+        <p class="pill"><span class="pill__dot" aria-hidden="true"></span><span data-t="apply.pill"></span></p>
+        <h1 class="hero__title hero__title--md" data-t="apply.headline"></h1>
+        <p class="hero__sub" data-t="apply.sub"></p>
+        <div class="photo photo--wide" data-confirm><span data-t="eryn.photo"></span></div>
+      </div>
+      <svg class="hero__wave" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true"><path d="M0 40c240 70 480 90 720 60s480-90 720-60v80H0z"/></svg>
+    </section>
+    <section class="section">
+      <div class="wrap">
+        <h2 class="h2" data-t="apply.programs_title"></h2>
+        <div class="programs" data-render="programs"></div>
+        <div class="card card--narrow">
+          <h3 class="h3" data-t="apply.get_title"></h3>
+          <ul class="ticks" data-render="list" data-key="apply.get"></ul>
+          <p class="offer__price" data-t="apply.dates" data-confirm></p>
+        </div>
+      </div>
+    </section>
+    <section class="section section--tint">
+      <div class="wrap">
+        <h2 class="h2" data-t="apply.how_title"></h2>
+        <ol class="numbered numbered--cards" data-render="list" data-key="apply.how"></ol>
+      </div>
+    </section>
+    <section class="section" id="apply-form">
+      <div class="wrap">
+        <h2 class="h2" data-t="apply.form_title"></h2>
+        <form class="card card--narrow appform" id="apply-f" novalidate>
+          <div class="row2">
+            <label class="field"><span data-t="apply.first_name"></span><input id="ap-first" name="first_name" autocomplete="given-name" required /></label>
+            <label class="field"><span data-t="apply.last_name"></span><input id="ap-last" name="last_name" autocomplete="family-name" required /></label>
+          </div>
+          <label class="field"><span data-t="apply.email"></span><input id="ap-email" type="email" name="email" autocomplete="email" required /></label>
+          <label class="field"><span data-t="apply.phone"></span><input id="ap-phone" type="tel" name="phone" autocomplete="tel" /></label>
+          <label class="field"><span data-t="apply.town"></span><input id="ap-town" name="town" required /></label>
+          <label class="field"><span data-t="apply.role"></span><select id="ap-role" name="role" required data-render="options" data-key="apply.roles"></select></label>
+          <fieldset class="field radios"><legend data-t="apply.program"></legend><div data-render="radios" data-key="apply.program_options" data-name="program"></div></fieldset>
+          <fieldset class="field radios"><legend data-t="apply.bought"></legend><div data-render="radios" data-key="apply.yes_no" data-name="bought"></div></fieldset>
+          <label class="field"><span data-t="apply.why"></span><textarea id="ap-why" name="why" rows="4" required></textarea></label>
+          <button type="submit" class="btn btn--full" data-t="apply.submit"></button>
+          <div class="success" id="apply-ok" hidden>
+            <p class="strong" data-t="apply.success_title"></p>
+            <p data-t="apply.success_body"></p>
+            <p class="notice" data-t="apply.demo_notice"></p>
+          </div>
+        </form>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="wrap">
+      <p class="footer__brand" data-t="footer.brand"></p>
+      <p class="footer__links">
+        <a href="mailto:support@example.com" data-t="footer.support" data-confirm></a>
+        <a href="#" data-t="footer.terms"></a>
+        <a href="#" data-t="footer.privacy"></a>
+      </p>
+      <p class="footer__earn" data-t="footer.earnings"></p>
+    </div>
+  </footer>
+
+  <!-- Checkout modal -->
+  <div class="modal" id="checkout" hidden>
+    <div class="modal__backdrop" data-close></div>
+    <div class="modal__panel" role="dialog" aria-modal="true" aria-labelledby="co-title">
+      <button type="button" class="modal__x" data-close data-attr-aria-label="checkout.close">&times;</button>
+      <h2 class="modal__title" id="co-title" data-t="checkout.title"></h2>
+      <form id="co-form" novalidate>
+        <p class="co-step" data-t="checkout.step1"></p>
+        <label class="field"><span data-t="checkout.email"></span><input type="email" name="email" autocomplete="email" required /></label>
+        <label class="field"><span data-t="checkout.first_name"></span><input type="text" name="first_name" autocomplete="given-name" required /></label>
+
+        <p class="co-step" data-t="checkout.step2"></p>
+        <!-- Stripe Payment Element mounts here -->
+        <div id="payment-element" class="card-slot"><span data-t="checkout.card_placeholder"></span></div>
+
+        <label class="bump">
+          <span class="bump__bar"><span class="bump__arrow" aria-hidden="true">&#10148;</span><input type="checkbox" name="bump1" data-price="17" /><span data-t="checkout.bump_arrow"></span></span>
+          <span class="bump__body"><strong data-t="checkout.bump1_title"></strong><span data-t="checkout.bump1_pitch"></span></span>
+        </label>
+        <label class="bump">
+          <span class="bump__bar"><span class="bump__arrow" aria-hidden="true">&#10148;</span><input type="checkbox" name="bump2" data-price="27" /><span data-t="checkout.bump_arrow"></span></span>
+          <span class="bump__body"><strong data-t="checkout.bump2_title"></strong><span data-t="checkout.bump2_pitch"></span></span>
+        </label>
+
+        <div class="summary" id="co-summary"></div>
+        <button type="submit" class="btn btn--full" id="co-pay"></button>
+        <p class="small center" data-t="checkout.guarantee"></p>
+        <div id="co-notice" hidden><p class="notice" data-t="checkout.demo_notice"></p><button type="button" class="nothanks" id="co-continue" data-t="checkout.continue"></button></div>
+      </form>
+    </div>
+  </div>
+
+  <script src="/assets/app.js" defer></script>
+</body>
+</html>
