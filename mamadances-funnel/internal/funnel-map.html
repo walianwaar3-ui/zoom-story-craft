@@ -1,0 +1,293 @@
+<!-- Funnel map: internal view for Wali and Eryn. Not deployed (see .vercelignore).
+     The preview bundle inserts this as the "map" page; each thumb placeholder becomes a phone screenshot. -->
+<main data-page="map" hidden>
+  <style>
+    .map { --ok: #2F7D5B; --ok-bg: #E3F2EA; --wait: #8A5A00; --wait-bg: #FCEFD2; --off: #6B6274; --off-bg: #ECE8F0; }
+    .map__head { background: linear-gradient(180deg, var(--bg), #EADFF1); padding-block: 34px 30px; }
+    .map__eyebrow { font-family: var(--font-head); font-weight: 700; font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--purple); margin: 0 0 6px; }
+    .map__title { font-size: clamp(30px, 7vw, 48px); font-weight: 800; margin: 0 0 10px; text-wrap: balance; }
+    .map__lede { max-width: 640px; margin: 0 0 18px; }
+    .legend { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; list-style: none; }
+    .chip { display: inline-flex; align-items: center; gap: 6px; font-family: var(--font-head); font-weight: 700; font-size: 12px; padding: 4px 10px; border-radius: 999px; white-space: nowrap; }
+    .chip::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+    .chip--ok { color: var(--ok); background: var(--ok-bg); }
+    .chip--wait { color: var(--wait); background: var(--wait-bg); }
+    .chip--off { color: var(--off); background: var(--off-bg); }
+
+    .map h2 { font-size: clamp(24px, 5.6vw, 32px); font-weight: 800; margin: 0 0 6px; }
+    .map__sec { padding-block: 40px; }
+    .map__sec > .wrap > p.sub { color: var(--muted); margin: 0 0 22px; max-width: 640px; }
+
+    /* flow: vertical on phones, horizontal track on desktop */
+    .flow { display: flex; flex-direction: column; align-items: stretch; gap: 0; }
+    .stage { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+    .stage__label { font-family: var(--font-head); font-weight: 800; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 0; }
+    .node { background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 14px; box-shadow: 0 12px 30px -20px rgba(62, 40, 82, .5); display: flex; gap: 14px; align-items: flex-start; }
+    .node--ghost { background: var(--bg); box-shadow: none; border-style: dashed; }
+    .node--money { border: 2px solid var(--purple); }
+    .phone { flex: none; width: 96px; aspect-ratio: 390 / 844; border-radius: 14px; border: 4px solid var(--text); overflow: hidden; background: var(--bg); display: block; }
+    .phone img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+    .node__body { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+    .node__name { font-family: var(--font-head); font-weight: 800; font-size: 17px; line-height: 1.2; margin: 0; }
+    .node__price { font-family: var(--font-head); font-weight: 800; color: var(--red); font-size: 20px; margin: 0; }
+    .node__text { font-size: 14px; color: var(--muted); margin: 0; line-height: 1.45; }
+    .node__chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .node__open { font-family: var(--font-head); font-weight: 700; font-size: 14px; color: var(--purple); text-decoration: none; margin-top: 2px; }
+    .node__open:hover { text-decoration: underline; }
+    .node__open::after { content: " \2192"; }
+    .bumps { display: grid; gap: 6px; margin: 4px 0 0; padding: 0; list-style: none; }
+    .bumps li { font-size: 13.5px; background: #FFF1EC; border: 1.5px dashed var(--red); border-radius: 8px; padding: 6px 8px; }
+    .bumps b { color: var(--red); }
+    .arrow { align-self: center; color: var(--purple); padding: 8px 0; display: flex; flex-direction: column; align-items: center; font-family: var(--font-head); font-weight: 700; font-size: 12px; text-align: center; }
+    .arrow svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; transform: rotate(90deg); }
+    .branch { display: grid; gap: 12px; }
+
+    /* calculator */
+    .calc { display: grid; gap: 20px; }
+    .calc__inputs { background: var(--white); border: 1px solid var(--line); border-radius: 16px; padding: 18px; display: grid; gap: 16px; }
+    .slider label { display: flex; justify-content: space-between; gap: 10px; font-weight: 600; font-size: 14.5px; }
+    .slider output { font-family: var(--font-head); font-weight: 800; color: var(--purple); font-variant-numeric: tabular-nums; }
+    .slider small { display: block; color: var(--muted); font-size: 12.5px; }
+    .slider input[type="range"] { width: 100%; accent-color: var(--purple); margin: 6px 0 0; }
+    .calc__out { background: var(--text); color: var(--white); border-radius: 16px; padding: 20px; display: grid; gap: 16px; align-content: start; }
+    .kpis { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .kpi p { margin: 0; }
+    .kpi__v { font-family: var(--font-head); font-weight: 800; font-size: 30px; font-variant-numeric: tabular-nums; line-height: 1.1; }
+    .kpi__l { font-size: 12.5px; color: #CFC6D8; }
+    .kpi--big .kpi__v { color: var(--gold); }
+    .bars { display: grid; gap: 8px; }
+    .bar { display: grid; grid-template-columns: 112px 1fr 64px; gap: 8px; align-items: center; font-size: 13px; }
+    .bar__track { height: 10px; background: rgba(255, 255, 255, .12); border-radius: 99px; overflow: hidden; }
+    .bar__fill { display: block; height: 100%; background: var(--gold); border-radius: 99px; transition: width .2s; }
+    .bar__v { text-align: right; font-variant-numeric: tabular-nums; font-weight: 700; }
+    .calc__note { font-size: 12.5px; color: #CFC6D8; margin: 0; }
+    .verdict { font-family: var(--font-head); font-weight: 700; font-size: 16px; padding: 10px 12px; border-radius: 10px; margin: 0; }
+    .verdict--ok { background: rgba(47, 125, 91, .35); }
+    .verdict--no { background: rgba(199, 61, 49, .4); }
+
+    /* checklist */
+    .todo { display: grid; gap: 10px; padding: 0; margin: 0; list-style: none; }
+    .todo li { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; background: var(--white); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; }
+    .todo li span:first-child { min-width: 0; }
+    .todo b { display: block; font-family: var(--font-head); }
+    .todo small { color: var(--muted); font-size: 13px; }
+    .backmap { position: fixed; left: calc(12px + env(safe-area-inset-left, 0px)); bottom: calc(12px + env(safe-area-inset-bottom, 0px)); z-index: 40; background: var(--text); color: var(--white); border: 0; border-radius: 999px; padding: 10px 16px; font-family: var(--font-head); font-weight: 700; font-size: 14px; box-shadow: var(--shadow); cursor: pointer; text-decoration: none; }
+    body[data-page="map"] .backmap, body[data-page="map"] .topbar { display: none; }
+
+    @media (min-width: 720px) {
+      .calc { grid-template-columns: 1fr 1fr; }
+      .branch { grid-template-columns: 1fr 1fr; }
+    }
+    @media (min-width: 1100px) {
+      .map__flowwrap { max-width: 1440px; }
+      .flow { flex-direction: row; align-items: flex-start; overflow-x: auto; padding-bottom: 12px; }
+      .stage { width: 188px; flex: none; }
+      .stage--wide { width: 220px; }
+      .node { padding: 12px; }
+      .node__name { font-size: 15.5px; }
+      .node__price { font-size: 18px; }
+      .node { flex-direction: column; }
+      .phone { width: 100%; }
+      .arrow { align-self: stretch; justify-content: center; padding: 0 2px; width: 40px; flex: none; font-size: 10.5px; }
+      .arrow svg { transform: none; }
+      .branch { grid-template-columns: 1fr; }
+    }
+  </style>
+
+  <div class="map">
+    <header class="map__head">
+      <div class="wrap">
+        <p class="map__eyebrow">MamaDances / MamanDanse · funnel v1</p>
+        <h1 class="map__title">The full funnel, one screen</h1>
+        <p class="map__lede">From the ad to the in-person training in Montreal. Tap a page to open it. Every page works in French and English.</p>
+        <ul class="legend">
+          <li class="chip chip--ok">Built, draft</li>
+          <li class="chip chip--wait">Needs Eryn</li>
+          <li class="chip chip--off">Not wired yet</li>
+        </ul>
+      </div>
+    </header>
+
+    <section class="map__sec">
+      <div class="wrap map__flowwrap">
+        <h2>The path a buyer takes</h2>
+        <p class="sub">Cold traffic is teachers, not new moms. The CA$27 kit finishes one job: one class, ready to teach next week.</p>
+
+        <div class="flow">
+          <div class="stage">
+            <p class="stage__label">1 · Traffic</p>
+            <div class="node node--ghost"><div class="node__body">
+              <p class="node__name">Meta ads, cold</p>
+              <p class="node__text">Dance and yoga teachers, early childhood educators, studio owners. Quebec, rest of Canada, France. 3 ad sets at CA$10/day, built paused.</p>
+              <div class="node__chips"><span class="chip chip--wait">Budget</span><span class="chip chip--off">Pixel</span></div>
+            </div></div>
+          </div>
+
+          <div class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12h16M14 6l6 6-6 6"/></svg></div>
+
+          <div class="stage stage--wide">
+            <p class="stage__label">2 · Front end</p>
+            <div class="node node--money">
+              <a class="phone" href="#page-1">{{thumb:page1}}</a>
+              <div class="node__body">
+                <p class="node__name">Votre premier cours maman-bébé</p>
+                <p class="node__price">CA$27</p>
+                <p class="node__text">4 videos, 1 class plan, 1 playlist, 1 room and safety checklist.</p>
+                <ul class="bumps">
+                  <li><b>Bump 1 · CA$17</b> 13 props guide (PDF)</li>
+                  <li><b>Bump 2 · CA$27</b> Babies in carriers videos</li>
+                </ul>
+                <div class="node__chips"><span class="chip chip--ok">Page</span><span class="chip chip--off">Stripe</span><span class="chip chip--wait">Video</span></div>
+                <a class="node__open" href="#page-1">Open page</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12h16M14 6l6 6-6 6"/></svg><span>skipped bump 2</span></div>
+
+          <div class="stage">
+            <p class="stage__label">3 · Upsell 1</p>
+            <div class="node">
+              <a class="phone" href="#upsell-1">{{thumb:upsell-1}}</a>
+              <div class="node__body">
+                <p class="node__name">Dance with babies in carriers</p>
+                <p class="node__price">CA$27</p>
+                <p class="node__text">Same as bump 2. Shown only to buyers who said no to it. One click, saved card.</p>
+                <div class="node__chips"><span class="chip chip--ok">Page</span><span class="chip chip--off">One-click</span></div>
+                <a class="node__open" href="#upsell-1">Open page</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12h16M14 6l6 6-6 6"/></svg></div>
+
+          <div class="stage">
+            <p class="stage__label">4 · Upsell 2</p>
+            <div class="node">
+              <a class="phone" href="#upsell-2">{{thumb:upsell-2}}</a>
+              <div class="node__body">
+                <p class="node__name">Une saison complète</p>
+                <p class="node__price">CA$97</p>
+                <p class="node__text">All class plans, music and playlists, from the Class Planning module.</p>
+                <div class="node__chips"><span class="chip chip--ok">Page</span><span class="chip chip--wait">Yes or no</span></div>
+                <a class="node__open" href="#upsell-2">Open page</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12h16M14 6l6 6-6 6"/></svg></div>
+
+          <div class="stage">
+            <p class="stage__label">5 · Thank you</p>
+            <div class="node">
+              <a class="phone" href="#thank-you">{{thumb:thank-you}}</a>
+              <div class="node__body">
+                <p class="node__name">Check your email, go to Kajabi</p>
+                <p class="node__text">Kajabi grants each product bought. Then two next steps.</p>
+                <div class="node__chips"><span class="chip chip--ok">Page</span><span class="chip chip--off">Kajabi grant</span></div>
+                <a class="node__open" href="#thank-you">Open page</a>
+              </div>
+            </div>
+          </div>
+
+          <div class="arrow" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 12h16M14 6l6 6-6 6"/></svg></div>
+
+          <div class="stage stage--wide">
+            <p class="stage__label">6 · Back end</p>
+            <div class="branch">
+              <div class="node node--ghost"><div class="node__body">
+                <p class="node__name">Online certification</p>
+                <p class="node__price">CA$1,035 / CA$689</p>
+                <p class="node__text">Existing Kajabi courses. CA$27 credited.</p>
+                <div class="node__chips"><span class="chip chip--wait">Credit</span></div>
+              </div></div>
+              <div class="node">
+                <a class="phone" href="#apply">{{thumb:apply}}</a>
+                <div class="node__body">
+                  <p class="node__name">Apply: in person, Montreal</p>
+                  <p class="node__price">Price TBC</p>
+                  <p class="node__text">5 or 10 days, 35 studio hours per program. Application, then a call with Eryn.</p>
+                  <div class="node__chips"><span class="chip chip--ok">Page</span><span class="chip chip--wait">Price, dates</span></div>
+                  <a class="node__open" href="#apply">Open page</a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="map__sec section--tint">
+      <div class="wrap">
+        <h2>Does the front end pay for the ads?</h2>
+        <p class="sub">Move the sliders. Bump ranges come from the playbook. Upsell rates are my starting guesses, so replace them with real data after the first week.</p>
+        <div class="calc">
+          <div class="calc__inputs">
+            <div class="slider"><label for="c-cpa">Ad cost per CA$27 buyer <output id="o-cpa"></output></label><input id="c-cpa" type="range" min="10" max="120" step="1" value="40" /></div>
+            <div class="slider"><label for="c-b1">Bump 1 take rate <output id="o-b1"></output></label><small>Playbook target 15 to 30%</small><input id="c-b1" type="range" min="0" max="50" step="1" value="20" /></div>
+            <div class="slider"><label for="c-b2">Bump 2 take rate <output id="o-b2"></output></label><small>Playbook target 8 to 15%</small><input id="c-b2" type="range" min="0" max="40" step="1" value="10" /></div>
+            <div class="slider"><label for="c-u1">Upsell 1 take rate <output id="o-u1"></output></label><small>Of buyers who skipped bump 2</small><input id="c-u1" type="range" min="0" max="40" step="1" value="12" /></div>
+            <div class="slider"><label for="c-u2">Upsell 2 take rate <output id="o-u2"></output></label><input id="c-u2" type="range" min="0" max="30" step="1" value="8" /></div>
+          </div>
+          <div class="calc__out" aria-live="polite">
+            <div class="kpis">
+              <div class="kpi kpi--big"><p class="kpi__v" id="k-aov"></p><p class="kpi__l">Average order value</p></div>
+              <div class="kpi kpi--big"><p class="kpi__v" id="k-liq"></p><p class="kpi__l">Ad spend covered</p></div>
+              <div class="kpi"><p class="kpi__v" id="k-net"></p><p class="kpi__l">Left per buyer after ads</p></div>
+              <div class="kpi"><p class="kpi__v" id="k-be"></p><p class="kpi__l">Break-even cost per buyer</p></div>
+            </div>
+            <p class="verdict" id="k-verdict"></p>
+            <div class="bars" id="k-bars"></div>
+            <p class="calc__note">Revenue per buyer before Stripe fees and sales tax. Every buyer who covers the ads is a free lead for the CA$1,035 training and the Montreal program.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="map__sec">
+      <div class="wrap">
+        <h2>What stands between us and launch</h2>
+        <p class="sub">From playbook sections 5 and 12. Pages are built; these are the gaps.</p>
+        <ul class="todo">
+          <li><span><b>Yes or no on the ladder</b><small>Sell slices on their own, the CA$97 upsell, in-person price above online.</small></span><span class="chip chip--wait">Eryn</span></li>
+          <li><span><b>Front-end videos and the kit</b><small>4 videos picked, total runtime, 1 class plan, 1 playlist.</small></span><span class="chip chip--wait">Eryn</span></li>
+          <li><span><b>Page 1 video, photos, logo files</b><small>60 to 90 second clip. Real class photos with credit.</small></span><span class="chip chip--wait">Eryn</span></li>
+          <li><span><b>Testimonial permissions</b><small>Names, towns, quotes and photos.</small></span><span class="chip chip--wait">Eryn</span></li>
+          <li><span><b>Guarantee, support email, CA$27 credit</b><small>Also 2027 in-person dates (pages disagree).</small></span><span class="chip chip--wait">Eryn</span></li>
+          <li><span><b>Stripe checkout and one-click upsells</b><small>CAD, Stripe Tax for GST and QST, card saved for upsells.</small></span><span class="chip chip--off">Build</span></li>
+          <li><span><b>Kajabi grants</b><small>One Kajabi offer per product, granted on payment.</small></span><span class="chip chip--off">Build</span></li>
+          <li><span><b>Applications saved and sent to Eryn</b><small>Postgres row plus email.</small></span><span class="chip chip--off">Build</span></li>
+          <li><span><b>Pixel, events, Meta campaign paused</b><small>FR vs EN and headline A vs B tracked.</small></span><span class="chip chip--off">Build</span></li>
+        </ul>
+      </div>
+    </section>
+  </div>
+  <script>
+  (function () {
+    var P = { main: 27, b1: 17, b2: 27, u1: 27, u2: 97 };
+    function $(id) { return document.getElementById(id); }
+    function cad(n) { return "CA$" + n.toFixed(2).replace(/\.00$/, ""); }
+    function calc() {
+      var cpa = +$("c-cpa").value, b1 = $("c-b1").value / 100, b2 = $("c-b2").value / 100, u1 = $("c-u1").value / 100, u2 = $("c-u2").value / 100;
+      $("o-cpa").textContent = "CA$" + cpa;
+      ["b1", "b2", "u1", "u2"].forEach(function (k) { $("o-" + k).textContent = $("c-" + k).value + "%"; });
+      var parts = [["Front end", P.main], ["Bump 1", b1 * P.b1], ["Bump 2", b2 * P.b2], ["Upsell 1", (1 - b2) * u1 * P.u1], ["Upsell 2", u2 * P.u2]];
+      var aov = parts.reduce(function (s, p) { return s + p[1]; }, 0);
+      var liq = aov / cpa;
+      $("k-aov").textContent = cad(aov);
+      $("k-liq").textContent = Math.round(liq * 100) + "%";
+      $("k-net").textContent = (aov - cpa < 0 ? "-" : "") + cad(Math.abs(aov - cpa));
+      $("k-be").textContent = cad(aov);
+      var v = $("k-verdict");
+      v.className = "verdict " + (liq >= 1 ? "verdict--ok" : "verdict--no");
+      v.textContent = liq >= 1 ? "Self-liquidating: the ads pay for themselves." : "Not liquidating yet: lower the cost per buyer or lift the offers.";
+      $("k-bars").innerHTML = parts.map(function (p) {
+        return '<div class="bar"><span>' + p[0] + '</span><span class="bar__track"><span class="bar__fill" style="width:' + Math.round(p[1] / P.main * 100) + '%"></span></span><span class="bar__v">' + cad(p[1]) + "</span></div>";
+      }).join("");
+    }
+    document.querySelectorAll('.calc input[type="range"]').forEach(function (i) { i.addEventListener("input", calc); });
+    calc();
+  })();
+  </script>
+</main>
+<a class="backmap" href="#map">&#8592; Funnel map</a>

@@ -109,6 +109,26 @@
           '</blockquote><figcaption><strong>' + md(q.name) + "</strong><span>" + md(q.town) + "</span></figcaption></figure>";
       }).join("");
     },
+    programs: function (el) {
+      el.innerHTML = copy.apply.programs.map(function (p) {
+        return '<div class="program"><p class="program__days">' + md(p.days) + '</p><p class="program__name">' + md(p.name) + "</p><p>" + md(p.text) + "</p></div>";
+      }).join("");
+    },
+    options: function (el) {
+      var v = el.value;
+      el.innerHTML = '<option value=""></option>' + get(el.dataset.key).map(function (t, i) {
+        return '<option value="' + i + '">' + esc(t) + "</option>";
+      }).join("");
+      el.value = v;
+    },
+    radios: function (el) {
+      var name = el.dataset.name, checked = el.querySelector("input:checked");
+      var cur = checked ? checked.value : null;
+      el.innerHTML = get(el.dataset.key).map(function (t, i) {
+        return '<label class="radio"><input type="radio" id="ap-' + name + "-" + i + '" name="' + name + '" value="' + i + '" required' +
+          (String(i) === cur ? " checked" : "") + " /><span>" + esc(t) + "</span></label>";
+      }).join("");
+    },
     faq: function (el) {
       el.innerHTML = copy.faq.items.map(function (f, i) {
         var confirm = (i === 3 || i === 4 || i === 5) ? " data-confirm" : "";
@@ -117,13 +137,47 @@
     }
   };
 
+  // ---------- pages ----------
+  // Production: path routes (/fr/, /fr/upsell-1, /en/thank-you...). Preview bundle: hash routes.
+  var HASH = !!window.__HASH_ROUTER;
+  var PAGES = ["page1", "upsell-1", "upsell-2", "thank-you", "apply", "map"];
+  var page = "page1";
+
+  function pageFromUrl() {
+    var slug;
+    if (HASH) {
+      slug = location.hash.replace("#", "");
+      if (slug === "page-1") return "page1";
+      if (!slug) return document.querySelector('main[data-page="map"]') ? "map" : "page1";
+    } else {
+      slug = location.pathname.replace(/^\/(fr|en)(\/|$)/, "/").replace(/^\/|\/$/g, "");
+    }
+    return PAGES.indexOf(slug) > 0 && document.querySelector('main[data-page="' + slug + '"]') ? slug : "page1";
+  }
+
+  function showPage(p) {
+    page = p;
+    document.querySelectorAll("main[data-page]").forEach(function (m) { m.hidden = m.dataset.page !== p; });
+    document.body.dataset.page = p;
+    if (copy) setTitle();
+  }
+
+  function setTitle() {
+    document.title = page === "page1" || !copy.pages[page] ? copy.meta.title : copy.pages[page];
+  }
+
+  function go(p) {
+    if (HASH) { location.hash = p === "page1" ? "page-1" : p; return; }
+    location.href = "/" + lang + "/" + (p === "page1" ? "" : p);
+  }
+
   function variant() {
     try { return new URLSearchParams(location.search).get("v") === "b" ? "b" : "a"; } catch (e) { return "a"; }
   }
 
   function render() {
     document.documentElement.lang = lang;
-    document.title = copy.meta.title;
+    setTitle();
     var d = document.querySelector('meta[name="description"]');
     if (d) d.setAttribute("content", copy.meta.description);
 
@@ -159,8 +213,8 @@
       render();
       window.scrollTo(0, y); // toggle keeps the same section
       writeCookie(l);
-      if (push) {
-        try { history.replaceState(null, "", "/" + l + "/" + location.search + location.hash); } catch (e) { /* ignore */ }
+      if (push && !HASH) {
+        try { history.replaceState(null, "", "/" + l + "/" + (page === "page1" ? "" : page) + location.search + location.hash); } catch (e) { /* ignore */ }
       }
     });
   }
@@ -215,6 +269,11 @@
       // Next step: create the PaymentIntent in /api/checkout (Stripe, CAD), store lang in customer metadata.
       document.getElementById("co-notice").hidden = false;
     });
+    document.getElementById("co-continue").addEventListener("click", function () {
+      var skipUpsell1 = form.bump2.checked; // bought the carrier videos already
+      closeCheckout();
+      go(skipUpsell1 ? "upsell-2" : "upsell-1");
+    });
   }
 
   // ---------- video placeholder ----------
@@ -227,6 +286,27 @@
   document.addEventListener("DOMContentLoaded", function () {
     initCheckout();
     initVideo();
+    document.addEventListener("click", function (e) {
+      var g = e.target.closest("[data-go]");
+      if (g) { e.preventDefault(); go(g.dataset.go); }
+      var one = e.target.closest(".js-oneclick");
+      if (one) {
+        // Next step: charge the saved card server side (/api/upsell), then redirect.
+        var n = one.parentNode.querySelector(".js-oneclick-notice");
+        n.hidden = false;
+        setTimeout(function () { n.hidden = true; go(one.dataset.next); }, 1400);
+      }
+    });
+    var ap = document.getElementById("apply-f");
+    ap.addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (!ap.reportValidity()) return;
+      // Next step: POST to /api/apply (Postgres + email to Eryn).
+      document.getElementById("apply-ok").hidden = false;
+      ap.querySelector('button[type="submit"]').hidden = true;
+    });
+    window.addEventListener("hashchange", function () { if (HASH) { showPage(pageFromUrl()); window.scrollTo(0, 0); } });
+    showPage(pageFromUrl());
     document.querySelectorAll(".lang__btn").forEach(function (b) {
       b.addEventListener("click", function () { if (b.dataset.lang !== lang) setLang(b.dataset.lang, true); });
     });

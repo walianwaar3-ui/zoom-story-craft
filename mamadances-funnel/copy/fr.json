@@ -30,10 +30,22 @@
     "secure": "Paiement sécurisé. Satisfaite ou remboursée 30 jours."
   },
   "stats": [
-    { "big": "Depuis 2006", "small": "Cours maman-bébé à Montréal" },
-    { "big": "Depuis 2013", "small": "Formatrice de profs" },
-    { "big": "3 pays", "small": "Canada, Japon, Brésil" },
-    { "big": "FR et EN", "small": "Français et anglais" }
+    {
+      "big": "Depuis 2006",
+      "small": "Cours maman-bébé à Montréal"
+    },
+    {
+      "big": "Depuis 2013",
+      "small": "Formatrice de profs"
+    },
+    {
+      "big": "3 pays",
+      "small": "Canada, Japon, Brésil"
+    },
+    {
+      "big": "FR et EN",
+      "small": "Français et anglais"
+    }
   ],
   "foryou": {
     "title": "C'est pour vous *si...*",
@@ -52,7 +64,12 @@
     "tag": "Pour les profs",
     "title": "Votre premier cours *maman-bébé*",
     "sub": "Étape par étape",
-    "icons": ["Vidéos", "Plan", "Musique", "Salle"],
+    "icons": [
+      "Vidéos",
+      "Plan",
+      "Musique",
+      "Salle"
+    ],
     "foot": "Du bonjour à l'au revoir."
   },
   "compare": {
@@ -77,10 +94,22 @@
   "get": {
     "title": "Voici ce que vous *recevez tout de suite*",
     "items": [
-      { "name": "4 courtes vidéos.", "text": "Les principes. Tenir bébé. Le porte-bébé. Votre premier cours." },
-      { "name": "1 plan de cours complet.", "text": "Du bonjour à l'au revoir. Vous savez quoi faire à chaque moment." },
-      { "name": "1 liste de musique.", "text": "Les chansons pour votre cours, dans le bon ordre." },
-      { "name": "1 aide-mémoire : la salle et la sécurité.", "text": "Une page à imprimer. Pour préparer l'espace avant l'arrivée des mamans." }
+      {
+        "name": "4 courtes vidéos.",
+        "text": "Les principes. Tenir bébé. Le porte-bébé. Votre premier cours."
+      },
+      {
+        "name": "1 plan de cours complet.",
+        "text": "Du bonjour à l'au revoir. Vous savez quoi faire à chaque moment."
+      },
+      {
+        "name": "1 liste de musique.",
+        "text": "Les chansons pour votre cours, dans le bon ordre."
+      },
+      {
+        "name": "1 aide-mémoire : la salle et la sécurité.",
+        "text": "Une page à imprimer. Pour préparer l'espace avant l'arrivée des mamans."
+      }
     ],
     "button": "Je veux mon premier cours, 27 $"
   },
@@ -114,9 +143,21 @@
     "pill": "Dans leurs mots",
     "title": "Des profs que *j'ai formées*",
     "items": [
-      { "quote": "Témoignage à reprendre du site actuel, avec permission.", "name": "Marie-France Jacques", "town": "Baie-Comeau, QC" },
-      { "quote": "Témoignage à reprendre du site actuel, avec permission.", "name": "Johany", "town": "Sorel-Tracy, QC" },
-      { "quote": "Témoignage à reprendre du site actuel, avec permission.", "name": "Margie Williams", "town": "Ottawa, ON. Éducatrice à la petite enfance." }
+      {
+        "quote": "Témoignage à reprendre du site actuel, avec permission.",
+        "name": "Marie-France Jacques",
+        "town": "Baie-Comeau, QC"
+      },
+      {
+        "quote": "Témoignage à reprendre du site actuel, avec permission.",
+        "name": "Johany",
+        "town": "Sorel-Tracy, QC"
+      },
+      {
+        "quote": "Témoignage à reprendre du site actuel, avec permission.",
+        "name": "Margie Williams",
+        "town": "Ottawa, ON. Éducatrice à la petite enfance."
+      }
     ]
   },
   "price": {
@@ -127,12 +168,30 @@
   "faq": {
     "title": "Vos *questions*",
     "items": [
-      { "q": "Dois-je avoir de l'expérience avec les bébés ?", "a": "Vous devez déjà enseigner le mouvement. Pour les bébés, je vous montre comment les tenir, en vidéo." },
-      { "q": "Est-ce sécuritaire ?", "a": "La sécurité vient en premier. Une vidéo montre comment tenir bébé. L'aide-mémoire vous aide à préparer la salle." },
-      { "q": "Comment je reçois le kit ?", "a": "Tout de suite après l'achat, vous recevez un courriel. Vous ouvrez le kit dans Kajabi." },
-      { "q": "C'est en français ou en anglais ?", "a": "Les deux. Choisissez votre langue en haut de la page." },
-      { "q": "Et si ce n'est pas pour moi ?", "a": "Écrivez-moi dans les 30 jours. Je vous rembourse au complet." },
-      { "q": "Puis-je me certifier plus tard ?", "a": "Oui. La formation complète en ligne existe. Vos 27 $ sont déduits du prix." }
+      {
+        "q": "Dois-je avoir de l'expérience avec les bébés ?",
+        "a": "Vous devez déjà enseigner le mouvement. Pour les bébés, je vous montre comment les tenir, en vidéo."
+      },
+      {
+        "q": "Est-ce sécuritaire ?",
+        "a": "La sécurité vient en premier. Une vidéo montre comment tenir bébé. L'aide-mémoire vous aide à préparer la salle."
+      },
+      {
+        "q": "Comment je reçois le kit ?",
+        "a": "Tout de suite après l'achat, vous recevez un courriel. Vous ouvrez le kit dans Kajabi."
+      },
+      {
+        "q": "C'est en français ou en anglais ?",
+        "a": "Les deux. Choisissez votre langue en haut de la page."
+      },
+      {
+        "q": "Et si ce n'est pas pour moi ?",
+        "a": "Écrivez-moi dans les 30 jours. Je vous rembourse au complet."
+      },
+      {
+        "q": "Puis-je me certifier plus tard ?",
+        "a": "Oui. La formation complète en ligne existe. Vos 27 $ sont déduits du prix."
+      }
     ]
   },
   "final": {
@@ -166,9 +225,147 @@
     "total": "Total",
     "pay": "Payer",
     "guarantee": "Satisfaite ou remboursée 30 jours. Un seul paiement.",
-    "demo_notice": "Version brouillon. Le paiement Stripe n'est pas encore branché."
+    "demo_notice": "Version brouillon. Le paiement Stripe n'est pas encore branché.",
+    "continue": "Voir la suite (aperçu)"
   },
   "draft": {
     "confirm": "À confirmer"
+  },
+  "pages": {
+    "upsell-1": "Une option pour votre cours | MamanDanse",
+    "upsell-2": "Toute une saison de cours | MamanDanse",
+    "thank-you": "Merci ! | MamanDanse",
+    "apply": "Formation en personne à Montréal | MamanDanse"
+  },
+  "progress": {
+    "bought": "Achat confirmé",
+    "options": "Options",
+    "access": "Accès"
+  },
+  "upsell1": {
+    "pill": "Votre achat est confirmé",
+    "headline": "Ajoutez *la danse en porte-bébé* à votre premier cours",
+    "sub": "Les mamans aiment danser avec bébé dans le porte-bébé. Je vous montre comment, en deux vidéos.",
+    "video_placeholder": "Extrait : danser en porte-bébé",
+    "items_title": "Vous recevez :",
+    "items": [
+      "Vidéo 1 : danser avec bébé en porte-bébé.",
+      "Vidéo 2 : une chorégraphie avec bébé en porte-bébé.",
+      "Regardez, apprenez, puis enseignez-la."
+    ],
+    "price": "Seulement **27 $ CA**. Un seul paiement.",
+    "yes": "Oui, j'ajoute les vidéos, 27 $",
+    "yes_note": "Un clic. La même carte. Rien à remplir.",
+    "no": "Non merci, je continue sans les vidéos"
+  },
+  "upsell2": {
+    "pill": "Une dernière option",
+    "headline": "Après votre premier cours, *voici toute une saison*",
+    "sub": "Votre premier cours est prêt. Et la semaine d'après ? Recevez tous mes plans de cours et ma musique.",
+    "items_title": "Vous recevez :",
+    "items": [
+      "Tous mes plans de cours.",
+      "Ma musique pour les cours.",
+      "Mes listes de musique, prêtes à jouer."
+    ],
+    "price": "Seulement **97 $ CA**. Un seul paiement.",
+    "yes": "Oui, je veux toute la saison, 97 $",
+    "yes_note": "Un clic. La même carte. Satisfaite ou remboursée 30 jours.",
+    "no": "Non merci, un cours me suffit pour l'instant"
+  },
+  "thanks": {
+    "pill": "Merci !",
+    "headline": "C'est fait. *Votre premier cours vous attend.*",
+    "steps_title": "Que faire maintenant ?",
+    "steps": [
+      "Ouvrez vos courriels. Regardez aussi dans les indésirables.",
+      "Cliquez sur « Aller à mon cours ». Connectez-vous à Kajabi avec le même courriel.",
+      "Regardez la première vidéo aujourd'hui."
+    ],
+    "button": "Aller à mon cours dans Kajabi",
+    "next_title": "Quand vous serez prête, *la formation complète*",
+    "next_body": "Vous aimez ce premier cours ? La formation en ligne vous donne tout le programme maman-bébé.",
+    "next_items": [
+      "Plus de 12 heures de vidéo.",
+      "Les plans de cours et les listes de musique.",
+      "Un certificat.",
+      "Un an d'adhésion gratuite."
+    ],
+    "next_price": "1 035 $ CA, taxes incluses. Vos 27 $ sont déduits.",
+    "next_button": "Voir la formation en ligne",
+    "studio_title": "Vous préférez apprendre avec moi, *en studio* ?",
+    "studio_body": "Formation en personne à Montréal. Sur demande.",
+    "studio_button": "Faire une demande"
+  },
+  "apply": {
+    "pill": "Formation en personne, Montréal",
+    "headline": "Apprenez avec moi, *en studio, à Montréal*",
+    "sub": "5 jours par programme. 35 heures en studio avec moi. Un certificat à la fin.",
+    "programs_title": "Choisissez *votre programme*",
+    "programs": [
+      {
+        "name": "Maman et bébé",
+        "days": "5 jours",
+        "text": "Le cours maman-bébé, du début à la fin."
+      },
+      {
+        "name": "Parent et enfant",
+        "days": "5 jours",
+        "text": "Le cours pour les enfants de 1 à 4 ans et leur parent."
+      },
+      {
+        "name": "Les deux",
+        "days": "10 jours",
+        "text": "Les deux programmes, l'un après l'autre."
+      }
+    ],
+    "get_title": "Vous recevez",
+    "get": [
+      "35 heures en studio par programme, avec moi.",
+      "Un certificat.",
+      "Votre nom dans le répertoire du site MamanDanse."
+    ],
+    "dates": "Prix et dates 2027 : bientôt.",
+    "how_title": "Comment *ça marche*",
+    "how": [
+      "Remplissez la demande. Environ 5 minutes.",
+      "Je lis votre demande.",
+      "Nous parlons au téléphone ou en vidéo.",
+      "Si c'est un bon choix pour nous deux, vous réservez votre place."
+    ],
+    "form_title": "Votre *demande*",
+    "first_name": "Prénom",
+    "last_name": "Nom",
+    "email": "Courriel",
+    "phone": "Téléphone (facultatif)",
+    "town": "Ville et pays",
+    "role": "Que faites-vous aujourd'hui ?",
+    "roles": [
+      "Prof de danse",
+      "Prof de yoga",
+      "Thérapeute par la danse",
+      "Éducatrice en petite enfance",
+      "Propriétaire de studio",
+      "Autre"
+    ],
+    "program": "Quel programme ?",
+    "program_options": [
+      "Maman et bébé",
+      "Parent et enfant",
+      "Les deux"
+    ],
+    "bought": "Avez-vous le premier cours à 27 $ ?",
+    "yes_no": [
+      "Oui",
+      "Non"
+    ],
+    "why": "Pourquoi voulez-vous donner ce cours ?",
+    "submit": "Envoyer ma demande",
+    "success_title": "Merci ! J'ai reçu votre demande.",
+    "success_body": "Je vous écris bientôt pour fixer un appel.",
+    "demo_notice": "Version brouillon. Les demandes ne sont pas encore enregistrées."
+  },
+  "nav": {
+    "map": "Carte du tunnel"
   }
 }

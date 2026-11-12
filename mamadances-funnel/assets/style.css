@@ -325,3 +325,77 @@ body.draft .checks li[data-confirm]::before, body.draft .step[data-confirm]::bef
   .split { grid-template-columns: 1fr 1.2fr; max-width: 940px; margin: 0 auto; }
   .card { padding: 32px 34px; }
 }
+
+/* ---------- upsells, thank-you, application ---------- */
+.narrow { max-width: 680px; }
+.hero--slim { padding-bottom: 80px; }
+.hero__title--md { font-size: clamp(28px, 7vw, 44px); }
+.hero--slim .video { margin: 0 auto 22px; max-width: 560px; cursor: default; }
+.hero--slim .card { text-align: left; }
+
+.progress { list-style: none; display: flex; justify-content: center; gap: 6px; padding: 0; margin: 0 auto 18px; font-family: var(--font-head); font-weight: 700; font-size: 12.5px; }
+.progress li { display: flex; align-items: center; gap: 6px; color: var(--muted); }
+.progress li + li::before { content: ""; width: 18px; height: 2px; background: var(--line); }
+.progress li.done { color: var(--purple); }
+.progress li.done::after { content: "\2713"; }
+.progress li.now { color: var(--red); }
+
+.offer { background: var(--white); border-radius: 18px; box-shadow: var(--shadow); padding: 22px 20px; text-align: left; border: 1px solid var(--line); }
+.offer .btn { margin-top: 6px; }
+.offer__price { font-family: var(--font-head); font-size: 20px; font-weight: 700; text-align: center; margin: 4px 0 12px; }
+.nothanks { display: block; margin: 14px auto 0; border: 0; background: none; color: var(--muted); text-decoration: underline; font: inherit; font-size: 14.5px; cursor: pointer; padding: 8px; min-height: 44px; }
+.nothanks:hover { color: var(--text); }
+
+.kit-stack { position: relative; width: 260px; max-width: 100%; height: 300px; margin: 0 auto 26px; }
+.kit-stack .kit { position: absolute; left: 0; right: 0; margin: 0 auto; max-width: 240px; }
+.kit-stack .kit:first-child { z-index: 3; }
+.kit--back { transform: rotate(5deg) translate(18px, 8px); z-index: 2; opacity: .9; }
+.kit--back2 { transform: rotate(-8deg) translate(-18px, 14px); z-index: 1; opacity: .75; }
+
+.h3 { font-family: var(--font-head); font-size: 20px; font-weight: 800; margin: 0 0 14px; }
+.numbered { list-style: none; counter-reset: n; padding: 0; margin: 0 0 20px; }
+.numbered li { counter-increment: n; position: relative; padding-left: 44px; margin-bottom: 14px; min-height: 30px; }
+.numbered li::before {
+  content: counter(n); position: absolute; left: 0; top: -2px; width: 30px; height: 30px; border-radius: 50%;
+  background: var(--purple); color: var(--white); font-family: var(--font-head); font-weight: 800; display: grid; place-items: center;
+}
+.numbered--cards { display: grid; gap: 14px; max-width: 900px; margin: 0 auto; }
+.numbered--cards li { background: var(--white); border-radius: var(--radius); padding: 18px 18px 18px 60px; margin: 0; box-shadow: 0 10px 30px -18px rgba(62, 40, 82, .4); font-weight: 600; }
+.numbered--cards li::before { left: 18px; top: 16px; }
+
+.btn--purple { background: var(--purple); box-shadow: 0 10px 22px -10px rgba(121, 90, 148, .8); }
+.btn--purple:hover { background: var(--purple-dark); }
+.btn--ghost { background: var(--white); color: var(--purple); border: 2px solid var(--purple); box-shadow: none; max-width: 360px; margin: 6px auto 0; }
+.btn--ghost:hover { background: var(--purple-soft); }
+
+.programs { display: grid; gap: 14px; max-width: 900px; margin: 0 auto 26px; }
+.program { background: var(--bg); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 20px; }
+.program p { margin: 0; font-size: 15.5px; }
+.program__days { font-family: var(--font-head); font-weight: 800; color: var(--red); font-size: 14px; text-transform: uppercase; letter-spacing: .05em; }
+.program__name { font-family: var(--font-head); font-weight: 800; font-size: 21px !important; margin: 2px 0 6px !important; }
+.photo--wide { max-width: 520px; aspect-ratio: 16 / 9; margin: 0 auto; box-shadow: 10px 10px 0 var(--purple), var(--shadow); }
+
+.appform { text-align: left; }
+.row2 { display: grid; gap: 0 12px; }
+.field select, .field textarea {
+  display: block; width: 100%; margin-top: 4px; padding: 13px 14px; font: inherit; font-size: 16px; font-weight: 400;
+  border: 1.5px solid var(--line); border-radius: 10px; color: var(--text); background: var(--white);
+}
+.field select:focus, .field textarea:focus { outline: none; border-color: var(--purple); box-shadow: 0 0 0 3px var(--purple-soft); }
+.radios { border: 0; padding: 0; margin: 0 0 14px; min-width: 0; }
+.radios legend { padding: 0; margin-bottom: 6px; }
+.radios > div { display: flex; flex-wrap: wrap; gap: 8px; }
+.radio { display: inline-flex; align-items: center; gap: 8px; border: 1.5px solid var(--line); border-radius: 999px; padding: 9px 14px; font-weight: 600; font-size: 15px; cursor: pointer; min-height: 44px; }
+.radio input { accent-color: var(--purple); margin: 0; }
+.radio:has(input:checked) { border-color: var(--purple); background: var(--purple-soft); }
+.success { margin-top: 16px; background: var(--purple-soft); border-radius: 12px; padding: 16px; text-align: center; }
+.success p { margin: 0 0 6px; }
+.success .notice { background: var(--white); margin-top: 10px; }
+
+@media (min-width: 720px) {
+  .programs { grid-template-columns: repeat(3, 1fr); }
+  .row2 { grid-template-columns: 1fr 1fr; }
+  .numbered--cards { grid-template-columns: repeat(2, 1fr); }
+}
+.field .radio input { display: inline-block; width: 18px; height: 18px; padding: 0; margin: 0; border: 0; box-shadow: none; flex: none; }
+.radio span { white-space: nowrap; }

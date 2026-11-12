@@ -30,10 +30,22 @@
     "secure": "Secure payment. 30-day money-back guarantee."
   },
   "stats": [
-    { "big": "Since 2006", "small": "Mom and baby classes in Montreal" },
-    { "big": "Since 2013", "small": "Training other teachers" },
-    { "big": "3 countries", "small": "Canada, Japan, Brazil" },
-    { "big": "EN and FR", "small": "English and French" }
+    {
+      "big": "Since 2006",
+      "small": "Mom and baby classes in Montreal"
+    },
+    {
+      "big": "Since 2013",
+      "small": "Training other teachers"
+    },
+    {
+      "big": "3 countries",
+      "small": "Canada, Japan, Brazil"
+    },
+    {
+      "big": "EN and FR",
+      "small": "English and French"
+    }
   ],
   "foryou": {
     "title": "This is for you *if...*",
@@ -52,7 +64,12 @@
     "tag": "For teachers",
     "title": "Your First *Mom and Baby* Class",
     "sub": "Step by step",
-    "icons": ["Videos", "Plan", "Music", "Room"],
+    "icons": [
+      "Videos",
+      "Plan",
+      "Music",
+      "Room"
+    ],
     "foot": "From hello to good-bye."
   },
   "compare": {
@@ -77,10 +94,22 @@
   "get": {
     "title": "Here is what you *get right away*",
     "items": [
-      { "name": "4 short videos.", "text": "The principles. Holding babies. Babywearing. Your first class." },
-      { "name": "1 complete class plan.", "text": "From hello to good-bye. You know what to do at each step." },
-      { "name": "1 music playlist.", "text": "The songs for your class, in the right order." },
-      { "name": "1 checklist: the room and safety.", "text": "One page to print. Set up the space before the moms arrive." }
+      {
+        "name": "4 short videos.",
+        "text": "The principles. Holding babies. Babywearing. Your first class."
+      },
+      {
+        "name": "1 complete class plan.",
+        "text": "From hello to good-bye. You know what to do at each step."
+      },
+      {
+        "name": "1 music playlist.",
+        "text": "The songs for your class, in the right order."
+      },
+      {
+        "name": "1 checklist: the room and safety.",
+        "text": "One page to print. Set up the space before the moms arrive."
+      }
     ],
     "button": "Get my first class for CA$27"
   },
@@ -114,9 +143,21 @@
     "pill": "In their own words",
     "title": "Teachers *I have trained*",
     "items": [
-      { "quote": "Testimonial to copy from the current site, with permission.", "name": "Marie-France Jacques", "town": "Baie-Comeau, QC" },
-      { "quote": "Testimonial to copy from the current site, with permission.", "name": "Johany", "town": "Sorel-Tracy, QC" },
-      { "quote": "Testimonial to copy from the current site, with permission.", "name": "Margie Williams", "town": "Ottawa, ON. Registered Early Childhood Educator." }
+      {
+        "quote": "Testimonial to copy from the current site, with permission.",
+        "name": "Marie-France Jacques",
+        "town": "Baie-Comeau, QC"
+      },
+      {
+        "quote": "Testimonial to copy from the current site, with permission.",
+        "name": "Johany",
+        "town": "Sorel-Tracy, QC"
+      },
+      {
+        "quote": "Testimonial to copy from the current site, with permission.",
+        "name": "Margie Williams",
+        "town": "Ottawa, ON. Registered Early Childhood Educator."
+      }
     ]
   },
   "price": {
@@ -127,12 +168,30 @@
   "faq": {
     "title": "Your *questions*",
     "items": [
-      { "q": "Do I need experience with babies?", "a": "You should already teach movement. For babies, I show you how to hold them, on video." },
-      { "q": "Is it safe?", "a": "Safety comes first. One video shows how to hold babies. The checklist helps you set up the room." },
-      { "q": "How do I get it?", "a": "Right after you buy, you get an email. You open the kit in Kajabi." },
-      { "q": "Is it in French or English?", "a": "Both. Pick your language at the top of the page." },
-      { "q": "What if it is not for me?", "a": "Write to me within 30 days. I will refund you in full." },
-      { "q": "Can I become certified later?", "a": "Yes. The full online training is there. Your CA$27 is taken off the price." }
+      {
+        "q": "Do I need experience with babies?",
+        "a": "You should already teach movement. For babies, I show you how to hold them, on video."
+      },
+      {
+        "q": "Is it safe?",
+        "a": "Safety comes first. One video shows how to hold babies. The checklist helps you set up the room."
+      },
+      {
+        "q": "How do I get it?",
+        "a": "Right after you buy, you get an email. You open the kit in Kajabi."
+      },
+      {
+        "q": "Is it in French or English?",
+        "a": "Both. Pick your language at the top of the page."
+      },
+      {
+        "q": "What if it is not for me?",
+        "a": "Write to me within 30 days. I will refund you in full."
+      },
+      {
+        "q": "Can I become certified later?",
+        "a": "Yes. The full online training is there. Your CA$27 is taken off the price."
+      }
     ]
   },
   "final": {
@@ -166,9 +225,147 @@
     "total": "Total",
     "pay": "Pay",
     "guarantee": "30-day money-back guarantee. One charge.",
-    "demo_notice": "Draft version. Stripe payment is not connected yet."
+    "demo_notice": "Draft version. Stripe payment is not connected yet.",
+    "continue": "See what comes next (preview)"
   },
   "draft": {
     "confirm": "To confirm"
+  },
+  "pages": {
+    "upsell-1": "One option for your class | MamaDances",
+    "upsell-2": "A Full Season of Classes | MamaDances",
+    "thank-you": "Thank you! | MamaDances",
+    "apply": "In-Person Training in Montreal | MamaDances"
+  },
+  "progress": {
+    "bought": "Purchase confirmed",
+    "options": "Options",
+    "access": "Access"
+  },
+  "upsell1": {
+    "pill": "Your purchase is confirmed",
+    "headline": "Add *dancing with babies in carriers* to your first class",
+    "sub": "Moms love to dance with baby in the carrier. I show you how, in two videos.",
+    "video_placeholder": "Clip: dancing with babies in carriers",
+    "items_title": "You get:",
+    "items": [
+      "Video 1: dancing with babies in carriers.",
+      "Video 2: a dance with babies in carriers.",
+      "Watch it, learn it, then teach it."
+    ],
+    "price": "Just **CA$27**. One payment.",
+    "yes": "Yes, add the videos for CA$27",
+    "yes_note": "One click. Same card. Nothing to fill in.",
+    "no": "No thanks, I will go on without the videos"
+  },
+  "upsell2": {
+    "pill": "One last option",
+    "headline": "After your first class, *here is a full season*",
+    "sub": "Your first class is ready. What about the week after? Get all my class plans and my music.",
+    "items_title": "You get:",
+    "items": [
+      "All my class plans.",
+      "My music for classes.",
+      "My playlists, ready to play."
+    ],
+    "price": "Just **CA$97**. One payment.",
+    "yes": "Yes, I want the full season for CA$97",
+    "yes_note": "One click. Same card. 30-day money-back guarantee.",
+    "no": "No thanks, one class is enough for now"
+  },
+  "thanks": {
+    "pill": "Thank you!",
+    "headline": "You are in. *Your first class is waiting.*",
+    "steps_title": "What to do now",
+    "steps": [
+      "Open your email. Check your spam folder too.",
+      "Click \"Go to my course\". Log in to Kajabi with the same email.",
+      "Watch the first video today."
+    ],
+    "button": "Go to my course in Kajabi",
+    "next_title": "When you are ready, *the full training*",
+    "next_body": "Do you love this first class? The online training gives you the whole mom and baby program.",
+    "next_items": [
+      "More than 12 hours of video.",
+      "Class plans and playlists.",
+      "A certificate.",
+      "One year of free membership."
+    ],
+    "next_price": "CA$1,035, tax included. Your CA$27 is taken off.",
+    "next_button": "See the online training",
+    "studio_title": "Would you rather learn with me *in the studio*?",
+    "studio_body": "In-person training in Montreal. By application.",
+    "studio_button": "Apply now"
+  },
+  "apply": {
+    "pill": "In-person training, Montreal",
+    "headline": "Learn with me, *in the studio in Montreal*",
+    "sub": "5 days per program. 35 hours in the studio with me. A certificate at the end.",
+    "programs_title": "Pick *your program*",
+    "programs": [
+      {
+        "name": "Mom and Baby",
+        "days": "5 days",
+        "text": "The mom and baby class, from start to finish."
+      },
+      {
+        "name": "Parent and Child",
+        "days": "5 days",
+        "text": "The class for children 1 to 4 and their parent."
+      },
+      {
+        "name": "Both",
+        "days": "10 days",
+        "text": "Both programs, one after the other."
+      }
+    ],
+    "get_title": "You get",
+    "get": [
+      "35 hours in the studio per program, with me.",
+      "A certificate.",
+      "Your name in the directory on the MamanDanse site."
+    ],
+    "dates": "2027 price and dates: coming soon.",
+    "how_title": "How it *works*",
+    "how": [
+      "Fill in the form. About 5 minutes.",
+      "I read your application.",
+      "We talk by phone or video.",
+      "If it is a good fit for us both, you book your spot."
+    ],
+    "form_title": "Your *application*",
+    "first_name": "First name",
+    "last_name": "Last name",
+    "email": "Email",
+    "phone": "Phone (optional)",
+    "town": "Town and country",
+    "role": "What do you do today?",
+    "roles": [
+      "Dance teacher",
+      "Yoga teacher",
+      "Dance movement therapist",
+      "Early childhood educator",
+      "Studio owner",
+      "Other"
+    ],
+    "program": "Which program?",
+    "program_options": [
+      "Mom and Baby",
+      "Parent and Child",
+      "Both"
+    ],
+    "bought": "Do you have the CA$27 first class?",
+    "yes_no": [
+      "Yes",
+      "No"
+    ],
+    "why": "Why do you want to teach this class?",
+    "submit": "Send my application",
+    "success_title": "Thank you! I got your application.",
+    "success_body": "I will write to you soon to set up a call.",
+    "demo_notice": "Draft version. Applications are not saved yet."
+  },
+  "nav": {
+    "map": "Funnel map"
   }
 }

@@ -1,4 +1,4 @@
-// Local server that mirrors vercel.json: "/", "/fr/" and "/en/" all serve index.html.
+// Local server that mirrors vercel.json: every page route serves index.html.
 import http from "node:http";
 import { readFile } from "node:fs/promises";
 import { extname, join, normalize } from "node:path";
@@ -10,7 +10,7 @@ const types = { ".html": "text/html; charset=utf-8", ".css": "text/css", ".js": 
 
 http.createServer(async (req, res) => {
   let path = decodeURIComponent(new URL(req.url, "http://x").pathname);
-  if (path === "/" || /^\/(fr|en)\/?$/.test(path)) path = "/index.html";
+  if (path === "/" || /^\/((fr|en)(\/[a-z0-9-]*)?|upsell-1|upsell-2|thank-you|apply)\/?$/.test(path)) path = "/index.html";
   const file = normalize(join(root, path));
   if (!file.startsWith(root)) { res.writeHead(403).end(); return; }
   try {
